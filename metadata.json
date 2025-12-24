@@ -1,0 +1,8 @@
+{
+  "name": "THE CCN DAILY: Project Phoenix",
+  "description": "A virtual strategy room dashboard presenting the revised master plan for elevating 'THE CCN DAILY' spiritual wellness app from good to great.",
+  "requestFramePermissions": [
+    "microphone",
+    "camera"
+  ]
+}

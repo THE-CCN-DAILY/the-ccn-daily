@@ -1,0 +1,74 @@
+/* reader-theme.css */
+
+/* 
+  This file contains the specific theme variables for the EPUB Reader component.
+  It allows the reader to have its own theme (light, dark, sepia) independent
+  of the main application's global theme.
+*/
+
+/* --- Light Theme --- */
+.reader-container.theme-light {
+  --reader-bg: 255 255 255; /* #FFFFFF */
+  --reader-bg-alpha: 1;
+  --reader-text-primary: 28 28 28; /* #1C1C1C */
+  --reader-text-secondary: 74 85 104; /* #4A5568 */
+  --reader-border: 226 232 240; /* #E2E8F0 */
+  --reader-accent: 43 108 176; /* primary-blue */
+}
+
+/* --- Dark Theme --- */
+.reader-container.theme-dark {
+  --reader-bg: 26 26 26; /* #1A1A1A */
+  --reader-bg-alpha: 1;
+  --reader-text-primary: 224 224 224; /* #E0E0E0 */
+  --reader-text-secondary: 156 163 175; /* gray-400 */
+  --reader-border: 64 64 64; /* #404040 */
+  --reader-accent: 212 175 55; /* accent-gold */
+}
+
+/* --- Sepia Theme --- */
+.reader-container.theme-sepia {
+  --reader-bg: 244 241 232; /* #F4F1E8 */
+  --reader-bg-alpha: 1;
+  --reader-text-primary: 92 74 58; /* #5C4A3A */
+  --reader-text-secondary: 119 96 81; /* #776051 */
+  --reader-border: 224 213 201; /* #e0d5c9 */
+  --reader-accent: 139 69 19; /* A brown accent */
+}
+
+
+/* 
+  DEFINITIVE THEME OVERRIDES FOR TAILWIND PROSE
+  This approach uses higher specificity selectors to directly override
+  the default colors set by the @tailwindcss/typography plugin,
+  solving the load-order/specificity issue that caused previous fixes to fail.
+*/
+
+/* Apply the primary text color to the main prose container and links */
+.reader-container .prose,
+.reader-container .prose a {
+  color: rgb(var(--reader-text-primary));
+}
+
+/* Target all common prose elements to ensure they inherit the correct color */
+.reader-container .prose h1,
+.reader-container .prose h2,
+.reader-container .prose h3,
+.reader-container .prose h4,
+.reader-container .prose strong,
+.reader-container .prose b,
+.reader-container .prose thead,
+.reader-container .prose figcaption {
+  color: rgb(var(--reader-text-primary));
+}
+
+/* Style blockquotes with secondary text color and the theme's accent color for the border */
+.reader-container .prose blockquote {
+  color: rgb(var(--reader-text-secondary));
+  border-left-color: rgb(var(--reader-accent));
+}
+
+/* Style list markers (bullets/numbers) with the secondary text color */
+.reader-container .prose li::marker {
+  color: rgb(var(--reader-text-secondary));
+}
