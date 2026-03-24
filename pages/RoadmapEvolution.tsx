@@ -3,10 +3,13 @@ import React, { useState, useEffect } from 'react';
 import Card from '../components/Card';
 import { SparklesIcon, SpinnerIcon, AiIcon, CheckIcon, GiftIcon } from '../components/icons';
 import { runTechSentinelAudit, TechAudit } from '../services/sentinelService';
+import { useRoadmap } from '../contexts/RoadmapContext';
 
 const RoadmapEvolution: React.FC = () => {
   const [audits, setAudits] = useState<TechAudit[]>([]);
   const [isAuditing, setIsAuditing] = useState(false);
+  const [addedFeatures, setAddedFeatures] = useState<Set<string>>(new Set());
+  const { addCustomTask } = useRoadmap();
 
   const performAudit = async () => {
     setIsAuditing(true);
@@ -17,6 +20,16 @@ const RoadmapEvolution: React.FC = () => {
     });
     setAudits(suggestions);
     setIsAuditing(false);
+  };
+
+  const handleAddToRoadmap = (audit: TechAudit) => {
+    addCustomTask('phase-6', {
+        id: `audit-${Date.now()}`,
+        title: audit.featureId,
+        description: audit.recommendedUpdate,
+        status: 'Planned'
+    });
+    setAddedFeatures(prev => new Set(prev).add(audit.featureId));
   };
 
   useEffect(() => {
@@ -72,8 +85,16 @@ const RoadmapEvolution: React.FC = () => {
                 </p>
               </div>
               <div className="mt-6 flex justify-end">
-                <button className="text-xs font-bold text-brand-accent hover:underline flex items-center">
-                  <CheckIcon className="w-4 h-4 mr-1"/> Add to Roadmap
+                <button 
+                    onClick={() => handleAddToRoadmap(audit)}
+                    disabled={addedFeatures.has(audit.featureId)}
+                    className={`text-xs font-bold flex items-center ${addedFeatures.has(audit.featureId) ? 'text-status-success cursor-default' : 'text-brand-accent hover:underline'}`}
+                >
+                  {addedFeatures.has(audit.featureId) ? (
+                      <><CheckIcon className="w-4 h-4 mr-1"/> Added to Roadmap</>
+                  ) : (
+                      <><AiIcon className="w-4 h-4 mr-1"/> Add to Roadmap</>
+                  )}
                 </button>
               </div>
             </Card>

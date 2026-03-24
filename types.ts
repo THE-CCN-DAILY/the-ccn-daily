@@ -7,6 +7,9 @@ import type { Timestamp } from 'firebase/firestore';
 
 // For AuthContext.tsx
 export type FirebaseUser = User;
+export interface AppUser extends FirebaseUser {
+  role: 'admin' | 'user';
+}
 
 // For MasterPlan.tsx
 export interface PlanTask {

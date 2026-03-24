@@ -1,6 +1,6 @@
 import React from 'react';
-import type { ReaderSettings } from '../types';
-import { SunIcon, MoonIcon, ReaderIcon, TextIncreaseIcon, TextDecreaseIcon } from './icons';
+import type { ReaderSettings } from '../../types';
+import { SunIcon, MoonIcon, ReaderIcon, TextIncreaseIcon, TextDecreaseIcon } from '../icons';
 
 interface ReaderSettingsModalProps {
     settings: ReaderSettings;

@@ -11,19 +11,25 @@ const QuoteGeneratorPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [generatedImageUrl, setGeneratedImageUrl] = useState<string | null>(null);
   const [shareStatus, setShareStatus] = useState<'idle' | 'shared'>('idle');
+  const [error, setError] = useState<string | null>(null);
 
   const styles = ['Spiritual', 'Nature', 'Abstract', 'Modern', 'Vintage'];
 
   const handleGenerate = async () => {
     setIsLoading(true);
     setGeneratedImageUrl(null);
+    setError(null);
     try {
       const prompt = `A beautiful ${style} style background for a spiritual quote. Background only, no text. High quality, inspirational, ${style === 'Spiritual' ? 'ethereal lights and divine atmosphere' : style === 'Nature' ? 'serene mountain landscape at sunrise' : 'minimalist aesthetic'}.`;
       const imageUrl = await generateQuoteImage(prompt);
       setGeneratedImageUrl(imageUrl);
-    } catch (error) {
-      console.error("Failed to generate image:", error);
-      alert("AI Image generation failed. Please check your API key.");
+    } catch (err: any) {
+      console.error("Failed to generate image:", err);
+      if (err.message.includes("PREMIUM_FEATURE")) {
+        setError(err.message.replace("PREMIUM_FEATURE: ", ""));
+      } else {
+        setError("AI Image generation is currently unavailable. Please try again later.");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -86,11 +92,16 @@ const QuoteGeneratorPage: React.FC = () => {
                 </div>
                 <button 
                     onClick={handleGenerate}
-                    disabled={isLoading}
-                    className="w-full py-3 rounded-lg bg-brand-accent text-white font-bold flex items-center justify-center gap-2 hover:bg-opacity-90 disabled:opacity-50"
+                    disabled={true}
+                    className="w-full py-3 rounded-lg bg-brand-secondary text-brand-text-secondary font-bold flex items-center justify-center gap-2 cursor-not-allowed opacity-75"
                 >
-                    {isLoading ? <SpinnerIcon className="w-5 h-5"/> : <><SparklesIcon className="w-5 h-5"/> Generate Visual</>}
+                    <SparklesIcon className="w-5 h-5"/> Premium Feature
                 </button>
+                {error && (
+                    <div className="p-3 bg-brand-accent/10 border border-brand-accent/20 rounded-lg text-brand-accent text-xs">
+                        {error}
+                    </div>
+                )}
             </div>
           </Card>
         </div>
@@ -100,8 +111,13 @@ const QuoteGeneratorPage: React.FC = () => {
             <Card className="flex-1 flex flex-col items-center justify-center relative min-h-[400px] overflow-hidden group">
                 {!generatedImageUrl && !isLoading && (
                     <div className="text-center p-8">
+                        <div className="mb-4 inline-flex items-center px-3 py-1 rounded-full bg-brand-accent/10 text-brand-accent text-xs font-bold uppercase tracking-wider border border-brand-accent/20">
+                            Premium Tier
+                        </div>
                         <SparklesIcon className="w-16 h-16 text-brand-text-secondary/20 mx-auto mb-4"/>
-                        <p className="text-brand-text-secondary italic">Enter your text and click generate to see the AI creation.</p>
+                        <p className="text-brand-text-secondary italic max-w-xs mx-auto">
+                            AI Visual Generation is currently a premium feature to ensure sustainable resource allocation.
+                        </p>
                     </div>
                 )}
 
@@ -137,7 +153,7 @@ const QuoteGeneratorPage: React.FC = () => {
                 )}
             </Card>
             <p className="text-xs text-brand-text-secondary text-center mt-4 italic">
-                Note: This uses the gemini-2.5-flash-image model to create context-aware backgrounds for your selected scripture or notes.
+                Note: Image generation is currently disabled to prioritize cost-saving and free tier provisions.
             </p>
         </div>
       </div>

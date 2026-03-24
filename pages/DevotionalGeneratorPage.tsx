@@ -4,14 +4,8 @@ import { SparklesIcon, SpinnerIcon, UserIcon, CheckIcon } from '../components/ic
 import { generatePersonalizedDevotional } from '../services/geminiService';
 import type { DevotionalOutput } from '../types';
 import { useGamification } from '../contexts/GamificationContext';
+import { useAuth } from '../contexts/AuthContext';
 import ContentDisplay from '../components/reader/ContentDisplay';
-
-// Mock user context that would be fetched from Firestore
-const mockUserContext = {
-  name: 'Founder',
-  recentNoteThemes: ['courage', 'leadership'],
-  recentPrayerTopics: ['clarity for the project'],
-};
 
 const LOCAL_STORAGE_KEY = 'ccn_daily_devotional_data';
 
@@ -26,6 +20,7 @@ const DevotionalGeneratorPage: React.FC = () => {
   const [dailyDevotional, setDailyDevotional] = useState<DailyDevotionalData | null>(null);
   const [error, setError] = useState<string | null>(null);
   
+  const { user } = useAuth();
   const { dispatchGamificationEvent } = useGamification();
   
   const getTodayDateString = () => new Date().toISOString().split('T')[0];
@@ -52,6 +47,11 @@ const DevotionalGeneratorPage: React.FC = () => {
   }, [dailyDevotional]);
 
   const handleGenerate = async () => {
+    if (!user) {
+        setError("Please sign in to generate a personalized devotional.");
+        return;
+    }
+
     setIsLoading(true);
     setError(null);
     setDailyDevotional(null);
@@ -59,7 +59,7 @@ const DevotionalGeneratorPage: React.FC = () => {
     localStorage.removeItem(LOCAL_STORAGE_KEY);
 
     try {
-      const generatedObject = await generatePersonalizedDevotional(mockUserContext);
+      const generatedObject = await generatePersonalizedDevotional(user.uid, user.displayName || 'Friend');
       setDailyDevotional({
           data: generatedObject,
           date: getTodayDateString()
@@ -123,12 +123,13 @@ const DevotionalGeneratorPage: React.FC = () => {
             </h3>
             <div className="space-y-3 text-sm">
                 <div>
-                    <p className="text-xs font-semibold text-brand-text-secondary/80">Note Themes</p>
-                    <p className="text-brand-text-primary">{mockUserContext.recentNoteThemes.join(', ')}</p>
+                    <p className="text-xs font-semibold text-brand-text-secondary/80">User</p>
+                    <p className="text-brand-text-primary">{user?.displayName || 'Guest'}</p>
                 </div>
-                <div>
-                    <p className="text-xs font-semibold text-brand-text-secondary/80">Prayer Topics</p>
-                    <p className="text-brand-text-primary">{mockUserContext.recentPrayerTopics.join(', ')}</p>
+                <div className="p-3 bg-brand-accent/5 rounded border border-brand-accent/10">
+                    <p className="text-xs text-brand-text-secondary italic">
+                        The Genkit Orchestrator will fetch your recent notes to personalize this devotional.
+                    </p>
                 </div>
             </div>
             <button 

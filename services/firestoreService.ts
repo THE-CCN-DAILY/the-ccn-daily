@@ -1,4 +1,4 @@
-import { db } from './firebase';
+import { db } from '../firebase';
 import {
   collection,
   query,
@@ -11,6 +11,7 @@ import {
   serverTimestamp,
 } from 'firebase/firestore';
 import type { Highlight } from '../types';
+import { handleFirestoreError, OperationType } from '../utils/firestoreErrorHandler';
 
 // The collection for user notes/highlights, as defined in DataArchitecture.tsx
 const NOTES_COLLECTION = 'notes';
@@ -22,8 +23,8 @@ const NOTES_COLLECTION = 'notes';
  * @returns A promise that resolves to an array of Highlight objects.
  */
 export const getHighlightsForContent = async (userId: string, contentId: string): Promise<Highlight[]> => {
+  const notesRef = collection(db, 'users', userId, NOTES_COLLECTION);
   try {
-    const notesRef = collection(db, 'users', userId, NOTES_COLLECTION);
     const q = query(notesRef, where('contentId', '==', contentId));
     const querySnapshot = await getDocs(q);
     
@@ -34,8 +35,8 @@ export const getHighlightsForContent = async (userId: string, contentId: string)
     
     return highlights.sort((a, b) => a.createdAt.toMillis() - b.createdAt.toMillis());
   } catch (error) {
-    console.error("Error fetching highlights:", error);
-    throw new Error("Could not fetch user highlights.");
+    handleFirestoreError(error, OperationType.GET, notesRef.path);
+    return []; // Should not reach here
   }
 };
 
@@ -45,12 +46,11 @@ export const getHighlightsForContent = async (userId: string, contentId: string)
  * @param highlight - The highlight object to save.
  */
 export const saveHighlight = async (userId: string, highlight: Highlight): Promise<void> => {
+  const noteRef = doc(db, 'users', userId, NOTES_COLLECTION, highlight.id);
   try {
-    const noteRef = doc(db, 'users', userId, NOTES_COLLECTION, highlight.id);
     await setDoc(noteRef, { ...highlight, createdAt: serverTimestamp() });
   } catch (error) {
-    console.error("Error saving highlight:", error);
-    throw new Error("Could not save highlight.");
+    handleFirestoreError(error, OperationType.WRITE, noteRef.path);
   }
 };
 
@@ -60,12 +60,11 @@ export const saveHighlight = async (userId: string, highlight: Highlight): Promi
  * @param highlightId - The ID of the highlight to delete.
  */
 export const deleteHighlight = async (userId: string, highlightId: string): Promise<void> => {
+  const noteRef = doc(db, 'users', userId, NOTES_COLLECTION, highlightId);
   try {
-    const noteRef = doc(db, 'users', userId, NOTES_COLLECTION, highlightId);
     await deleteDoc(noteRef);
   } catch (error) {
-    console.error("Error deleting highlight:", error);
-    throw new Error("Could not delete highlight.");
+    handleFirestoreError(error, OperationType.DELETE, noteRef.path);
   }
 };
 
@@ -80,11 +79,10 @@ export const updateHighlight = async (
     highlightId: string, 
     data: Partial<Pick<Highlight, 'note' | 'voiceNoteUrl' | 'tags'>>
 ): Promise<void> => {
+  const noteRef = doc(db, 'users', userId, NOTES_COLLECTION, highlightId);
   try {
-    const noteRef = doc(db, 'users', userId, NOTES_COLLECTION, highlightId);
     await updateDoc(noteRef, data);
   } catch (error) {
-    console.error("Error updating highlight:", error);
-    throw new Error("Could not update highlight note.");
+    handleFirestoreError(error, OperationType.UPDATE, noteRef.path);
   }
 };

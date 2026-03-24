@@ -1,10 +1,11 @@
 import React, { createContext, useState, useContext, useEffect, useMemo, useCallback } from 'react';
-import { auth } from '../services/firebase';
-import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut as firebaseSignOut } from 'firebase/auth';
-import type { FirebaseUser } from '../types';
+import { auth, googleProvider, signInWithPopup, firebaseSignOut, onAuthStateChanged, db } from '../firebase';
+import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import type { AppUser } from '../types';
+import { handleFirestoreError, OperationType } from '../utils/firestoreErrorHandler';
 
 interface AuthContextType {
-  user: FirebaseUser | null;
+  user: AppUser | null;
   loading: boolean;
   signIn: () => Promise<void>;
   signOut: () => Promise<void>;
@@ -13,38 +14,67 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<FirebaseUser | null>(null);
+  const [user, setUser] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const fetchUserRole = useCallback(async (firebaseUser: any): Promise<AppUser> => {
+    const userRef = doc(db, 'users', firebaseUser.uid);
+    try {
+      const userSnap = await getDoc(userRef);
+      
+      if (userSnap.exists()) {
+        const userData = userSnap.data();
+        return { ...firebaseUser, role: userData.role || 'user' } as AppUser;
+      } else {
+        // Create new user document
+        const isDefaultAdmin = firebaseUser.email === "pastor.eryeza@gmail.com";
+        const role = isDefaultAdmin ? 'admin' : 'user';
+        const newUser = {
+          uid: firebaseUser.uid,
+          displayName: firebaseUser.displayName,
+          email: firebaseUser.email,
+          photoURL: firebaseUser.photoURL,
+          role: role,
+          createdAt: serverTimestamp(),
+          lastActive: serverTimestamp()
+        };
+        await setDoc(userRef, newUser);
+        return { ...firebaseUser, role } as AppUser;
+      }
+    } catch (error) {
+      handleFirestoreError(error, OperationType.GET, `users/${firebaseUser.uid}`);
+      return { ...firebaseUser, role: 'user' } as AppUser;
+    }
+  }, []);
+
   useEffect(() => {
-    // This is the core Firebase listener for authentication state.
-    // It runs on mount and anytime the user's login state changes.
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-      setUser(firebaseUser);
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
+        const appUser = await fetchUserRole(firebaseUser);
+        setUser(appUser);
+      } else {
+        setUser(null);
+      }
       setLoading(false);
     });
 
-    // Cleanup the listener when the component unmounts
     return () => unsubscribe();
-  }, []);
+  }, [fetchUserRole]);
 
   const signIn = useCallback(async () => {
     setLoading(true);
     try {
-      const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
-      // The onAuthStateChanged listener will handle setting the user state.
+      await signInWithPopup(auth, googleProvider);
     } catch (error) {
       console.error("Error during sign-in:", error);
-      alert("Could not sign in. Please check the console for more details. This may be due to placeholder Firebase credentials.");
-      setLoading(false); // Ensure loading is false on error
+      alert("Could not sign in. Please ensure popups are allowed.");
+      setLoading(false);
     }
   }, []);
 
   const signOut = useCallback(async () => {
     try {
       await firebaseSignOut(auth);
-      // The onAuthStateChanged listener will handle setting user to null.
     } catch (error) {
       console.error("Error during sign-out:", error);
     }

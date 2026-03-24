@@ -1,7 +1,13 @@
 
 import { GoogleGenAI, Modality, LiveServerMessage } from '@google/genai';
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+const platformKey = process.env.GEMINI_API_KEY;
+const userKey = process.env.API_KEY;
+const isPlatformKeyValid = !!(platformKey && platformKey.startsWith('AIza') && platformKey !== 'undefined');
+const apiKey = isPlatformKeyValid ? platformKey : userKey;
+
+const ai = new GoogleGenAI({ apiKey: apiKey || "" });
+const LIVE_MODEL = 'gemini-2.5-flash-native-audio-preview-12-2025';
 
 export interface LiveSessionCallbacks {
   onAudioData: (base64Audio: string) => void;

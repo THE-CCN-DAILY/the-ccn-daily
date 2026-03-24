@@ -1,0 +1,169 @@
+{
+  "entities": {
+    "User": {
+      "title": "User Profile",
+      "description": "Stores user profile information, roles, and preferences.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "Unique identifier from Firebase Auth." },
+        "displayName": { "type": "string", "description": "The user's display name." },
+        "email": { "type": "string", "format": "email", "description": "The user's email address." },
+        "photoURL": { "type": "string", "description": "URL to the user's profile picture." },
+        "role": { "type": "string", "enum": ["admin", "user"], "description": "The user's role in the system." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "When the user profile was created." },
+        "lastActive": { "type": "string", "format": "date-time", "description": "When the user was last active." },
+        "stats": {
+          "type": "object",
+          "properties": {
+            "currentStreak": { "type": "integer" },
+            "longestStreak": { "type": "integer" },
+            "points": { "type": "integer" }
+          }
+        },
+        "unlockedAchievements": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      },
+      "required": ["uid", "email", "role"]
+    },
+    "Challenge": {
+      "title": "Interactive Course/Challenge",
+      "description": "AI-generated courses or challenges for the community.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "content": { "type": "string", "description": "The raw content or AI-generated structure." },
+        "modules": { "type": "array", "items": { "type": "object" } },
+        "authorUid": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "status": { "type": "string", "enum": ["draft", "published"] }
+      },
+      "required": ["title", "authorUid", "status"]
+    },
+    "Event": {
+      "title": "Live Event",
+      "description": "Online or physical events for the community.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "date": { "type": "string", "format": "date-time" },
+        "description": { "type": "string" },
+        "location": { "type": "string" },
+        "type": { "type": "string", "enum": ["online", "physical"] },
+        "streamingPlatform": { "type": "string" },
+        "attendeeCount": { "type": "integer" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "date", "type"]
+    },
+    "Notification": {
+      "title": "Broadcast Notification",
+      "description": "In-app announcements and broadcasts.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "message": { "type": "string" },
+        "date": { "type": "string", "format": "date-time" },
+        "type": { "type": "string", "enum": ["in-app", "email", "both"] },
+        "target": { "type": "string", "description": "Target audience segment (e.g., 'all', 'admins')." }
+      },
+      "required": ["title", "message", "date"]
+    },
+    "PrayerRequest": {
+      "title": "Prayer Request",
+      "description": "A prayer request shared on the community wall.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "text": { "type": "string" },
+        "author": { "type": "string" },
+        "authorUid": { "type": "string" },
+        "prayerCount": { "type": "integer" },
+        "testimony": { "type": "string" },
+        "isAnonymous": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["text", "author", "prayerCount", "createdAt"]
+    },
+    "Donation": {
+      "title": "Donation",
+      "description": "A record of a donation or partnership.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "amount": { "type": "number" },
+        "type": { "type": "string", "enum": ["one-time", "monthly"] },
+        "method": { "type": "string", "enum": ["stripe", "flutterwave"] },
+        "userUid": { "type": "string" },
+        "userEmail": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "completed", "failed"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["amount", "type", "method", "status", "createdAt"]
+    },
+    "Note": {
+      "title": "User Note/Highlight",
+      "description": "Personal highlights and notes on content.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "contentId": { "type": "string" },
+        "text": { "type": "string" },
+        "note": { "type": "string" },
+        "voiceNoteUrl": { "type": "string" },
+        "tags": { "type": "array", "items": { "type": "string" } },
+        "color": { "type": "string", "enum": ["yellow", "blue", "green", "pink"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["contentId", "text", "color", "createdAt"]
+    },
+    "SystemHealth": {
+      "title": "System Health Check",
+      "description": "Used for diagnostic health checks.",
+      "type": "object",
+      "properties": {
+        "status": { "type": "string" },
+        "lastChecked": { "type": "string", "format": "date-time" }
+      }
+    }
+  },
+  "firestore": {
+    "/_system_health/{checkId}": {
+      "schema": "SystemHealth",
+      "description": "Diagnostic collection for system health checks."
+    },
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "Individual user profiles."
+    },
+    "/users/{userId}/notes/{noteId}": {
+      "schema": "Note",
+      "description": "Personal highlights and notes for a user."
+    },
+    "/challenges/{challengeId}": {
+      "schema": "Challenge",
+      "description": "Collection of courses and challenges."
+    },
+    "/events/{eventId}": {
+      "schema": "Event",
+      "description": "Collection of live events."
+    },
+    "/notifications/{notificationId}": {
+      "schema": "Notification",
+      "description": "Collection of global broadcasts."
+    },
+    "/prayerRequests/{requestId}": {
+      "schema": "PrayerRequest",
+      "description": "Collection of community prayer requests."
+    },
+    "/donations/{donationId}": {
+      "schema": "Donation",
+      "description": "Donation and partnership records."
+    }
+  }
+}
