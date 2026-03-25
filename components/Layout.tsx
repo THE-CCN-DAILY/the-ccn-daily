@@ -34,6 +34,7 @@ const sanctuaryItems = [
   { to: '/events', text: 'Live Events', icon: CalendarIcon },
   { to: '/live', text: 'Live Broadcast', icon: SpeakerWaveIcon },
   { to: '/giving', text: 'Giving & Support', icon: CreditCardIcon },
+  { to: '/pricing', text: 'Upgrade Plan', icon: SparklesIcon },
 ];
 
 const commandCenterItems = [

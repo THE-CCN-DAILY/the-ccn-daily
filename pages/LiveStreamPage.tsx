@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import Card from '../components/Card';
 import { SpeakerWaveIcon, ChatIcon, UserCircleIcon, SparklesIcon } from '../components/icons';
 import { db, auth } from '../firebase';
-import { collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, limit } from 'firebase/firestore';
+import { collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, limit, doc } from 'firebase/firestore';
+import { handleFirestoreError, OperationType } from '../utils/firestoreErrorHandler';
 import { useAuth } from '../contexts/AuthContext';
 import MuxPlayer from '@mux/mux-player-react';
 
@@ -15,13 +16,27 @@ interface ChatMessage {
 }
 
 const LiveStreamPage: React.FC = () => {
-  const [isLive, setIsLive] = useState(true);
+  const [isLive, setIsLive] = useState(false);
   const [chatMessage, setChatMessage] = useState('');
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [playbackId, setPlaybackId] = useState<string | null>(null);
   const { user } = useAuth();
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    // Listen for the active live stream playback ID
+    const unsubscribeStream = onSnapshot(doc(db, 'settings', 'livestream'), (docSnap) => {
+      if (docSnap.exists() && docSnap.data().playbackId) {
+        setPlaybackId(docSnap.data().playbackId);
+        setIsLive(true);
+      } else {
+        setPlaybackId(null);
+        setIsLive(false);
+      }
+    }, (error) => {
+      console.error("Error fetching live stream settings:", error);
+    });
+
     const q = query(
       collection(db, 'liveChat'),
       orderBy('createdAt', 'asc'),
@@ -42,9 +57,14 @@ const LiveStreamPage: React.FC = () => {
       });
       setChatMessages(messages);
       scrollToBottom();
+    }, (error) => {
+      handleFirestoreError(error, OperationType.GET, 'liveChat');
     });
 
-    return () => unsubscribe();
+    return () => {
+      unsubscribe();
+      unsubscribeStream();
+    };
   }, []);
 
   const scrollToBottom = () => {
@@ -66,7 +86,7 @@ const LiveStreamPage: React.FC = () => {
         createdAt: serverTimestamp()
       });
     } catch (error) {
-      console.error("Error sending message:", error);
+      handleFirestoreError(error, OperationType.CREATE, 'liveChat');
     }
   };
 
@@ -92,18 +112,26 @@ const LiveStreamPage: React.FC = () => {
         <div className="lg:col-span-2">
           <Card className="p-0 overflow-hidden relative group">
             <div className="aspect-video bg-black relative flex items-center justify-center">
-              <MuxPlayer
-                streamType="live"
-                playbackId="v00g01v000000000000000000000000000000000000000" // Replace with actual Mux playback ID
-                metadata={{
-                  video_id: 'sunday-gathering',
-                  video_title: 'Sunday Gathering',
-                  viewer_user_id: user?.uid || 'anonymous',
-                }}
-                autoPlay
-                muted
-                className="w-full h-full object-cover"
-              />
+              {playbackId ? (
+                <MuxPlayer
+                  streamType="live"
+                  playbackId={playbackId}
+                  metadata={{
+                    video_id: 'sunday-gathering',
+                    video_title: 'Sunday Gathering',
+                    viewer_user_id: user?.uid || 'anonymous',
+                  }}
+                  autoPlay
+                  muted
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="text-center p-8">
+                  <SpeakerWaveIcon className="w-16 h-16 text-brand-text-secondary mx-auto mb-4 opacity-50" />
+                  <h3 className="text-xl font-bold text-brand-text-primary mb-2">Broadcast Offline</h3>
+                  <p className="text-brand-text-secondary">We are not currently live. Please check back later.</p>
+                </div>
+              )}
             </div>
           </Card>
 

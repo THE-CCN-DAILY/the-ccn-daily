@@ -98,7 +98,7 @@
         "id": { "type": "string" },
         "amount": { "type": "number" },
         "type": { "type": "string", "enum": ["one-time", "monthly"] },
-        "method": { "type": "string", "enum": ["stripe", "flutterwave"] },
+        "method": { "type": "string", "enum": ["flutterwave"] },
         "userUid": { "type": "string" },
         "userEmail": { "type": "string" },
         "status": { "type": "string", "enum": ["pending", "completed", "failed"] },
@@ -130,6 +130,46 @@
         "status": { "type": "string" },
         "lastChecked": { "type": "string", "format": "date-time" }
       }
+    },
+    "Resource": {
+      "title": "Uploaded Resource",
+      "description": "A file uploaded by an admin.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "url": { "type": "string" },
+        "type": { "type": "string" },
+        "size": { "type": "number" },
+        "uploadedBy": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "url", "type", "size", "uploadedBy", "createdAt"]
+    },
+    "LiveChatMessage": {
+      "title": "Live Chat Message",
+      "description": "A message sent during a live broadcast.",
+      "type": "object",
+      "properties": {
+        "user": { "type": "string" },
+        "userId": { "type": "string" },
+        "text": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["user", "userId", "text", "createdAt"]
+    },
+    "Discount": {
+      "title": "Discount Campaign",
+      "description": "A promotional discount campaign.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "percentage": { "type": "number" },
+        "startDate": { "type": "string", "format": "date-time" },
+        "endDate": { "type": "string", "format": "date-time" },
+        "isActive": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "percentage", "startDate", "endDate", "isActive"]
     }
   },
   "firestore": {
@@ -164,6 +204,18 @@
     "/donations/{donationId}": {
       "schema": "Donation",
       "description": "Donation and partnership records."
+    },
+    "/resources/{resourceId}": {
+      "schema": "Resource",
+      "description": "Uploaded files and media."
+    },
+    "/liveChat/{messageId}": {
+      "schema": "LiveChatMessage",
+      "description": "Live broadcast chat messages."
+    },
+    "/settings/{settingId}": {
+      "schema": "Discount",
+      "description": "Global application settings, including active discounts."
     }
   }
 }

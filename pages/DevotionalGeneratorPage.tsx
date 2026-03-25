@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import Card from '../components/Card';
-import { SparklesIcon, SpinnerIcon, UserIcon, CheckIcon } from '../components/icons';
+import { SparklesIcon, SpinnerIcon, UserIcon, CheckIcon, LockIcon } from '../components/icons';
 import { generatePersonalizedDevotional } from '../services/geminiService';
 import type { DevotionalOutput } from '../types';
 import { useGamification } from '../contexts/GamificationContext';
 import { useAuth } from '../contexts/AuthContext';
 import ContentDisplay from '../components/reader/ContentDisplay';
+import { TIER_CONFIGS } from '../types/pricing';
+import { useUpgradeModal } from '../contexts/UpgradeModalContext';
 
 const LOCAL_STORAGE_KEY = 'ccn_daily_devotional_data';
 
@@ -22,6 +24,7 @@ const DevotionalGeneratorPage: React.FC = () => {
   
   const { user } = useAuth();
   const { dispatchGamificationEvent } = useGamification();
+  const { openUpgradeModal } = useUpgradeModal();
   
   const getTodayDateString = () => new Date().toISOString().split('T')[0];
 
@@ -49,6 +52,12 @@ const DevotionalGeneratorPage: React.FC = () => {
   const handleGenerate = async () => {
     if (!user) {
         setError("Please sign in to generate a personalized devotional.");
+        return;
+    }
+
+    const userTier = user.tier || 'free';
+    if (!TIER_CONFIGS[userTier].canGeneratePersonalizedDevotionals) {
+        openUpgradeModal('Deeply Personalized AI Devotionals', 'pro');
         return;
     }
 
@@ -106,6 +115,9 @@ const DevotionalGeneratorPage: React.FC = () => {
     `;
   };
   
+  const userTier = user?.tier || 'free';
+  const canGenerate = TIER_CONFIGS[userTier].canGeneratePersonalizedDevotionals;
+
   return (
     <div>
       <h1 className="text-4xl font-bold text-brand-text-primary mb-2">Personalized Devotional</h1>
@@ -137,7 +149,7 @@ const DevotionalGeneratorPage: React.FC = () => {
               disabled={isLoading || !!dailyDevotional} 
               className="w-full mt-6 px-4 py-2 rounded-lg bg-brand-accent text-white font-semibold flex items-center justify-center disabled:bg-opacity-50 disabled:cursor-not-allowed"
             >
-                {isLoading ? <SpinnerIcon className="w-5 h-5" /> : dailyDevotional ? 'Generated for Today' : <><SparklesIcon className="w-5 h-5 mr-2"/> Generate Devotional</>}
+                {isLoading ? <SpinnerIcon className="w-5 h-5" /> : dailyDevotional ? 'Generated for Today' : canGenerate ? <><SparklesIcon className="w-5 h-5 mr-2"/> Generate Devotional</> : <><LockIcon className="w-5 h-5 mr-2"/> Unlock Devotionals</>}
             </button>
             {dailyDevotional && (
                  <button

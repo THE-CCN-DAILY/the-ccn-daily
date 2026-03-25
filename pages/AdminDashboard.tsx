@@ -6,6 +6,8 @@ import { UserIcon, PlusCircleIcon, ChatBubbleLeftRightIcon, PencilIcon, SpeakerW
 import { useNotifications } from '../contexts/NotificationContext';
 import { db } from '../firebase';
 import { collection, query, orderBy, onSnapshot, addDoc, serverTimestamp } from 'firebase/firestore';
+import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
+import { storage } from '../firebase';
 import { handleFirestoreError, OperationType } from '../utils/firestoreErrorHandler';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -32,7 +34,7 @@ const StatCard: React.FC<{ title: string; value: string | number; change: string
 
 const AdminDashboard: React.FC = () => {
     const { user } = useAuth();
-    const [activeTab, setActiveTab] = useState<'users' | 'challenges' | 'broadcasts' | 'events' | 'payments' | 'tenancy'>('users');
+    const [activeTab, setActiveTab] = useState<'users' | 'challenges' | 'broadcasts' | 'events' | 'payments' | 'discounts' | 'tenancy' | 'resources' | 'inbox'>('users');
     const { addNotification } = useNotifications();
     const [broadcastTitle, setBroadcastTitle] = useState('');
     const [broadcastMsg, setBroadcastMsg] = useState('');
@@ -52,10 +54,166 @@ const AdminDashboard: React.FC = () => {
     const [users, setUsers] = useState<AppUser[]>([]);
     const [loadingUsers, setLoadingUsers] = useState(true);
 
+    // Inbox state
+    const [inboxMessages, setInboxMessages] = useState<any[]>([]);
+    const [loadingInbox, setLoadingInbox] = useState(true);
+
+    // Resource Management State
+    const [uploadFile, setUploadFile] = useState<File | null>(null);
+    const [uploadProgress, setUploadProgress] = useState(0);
+    const [isUploading, setIsUploading] = useState(false);
+    const [uploadMessage, setUploadMessage] = useState('');
+
+    // Mux State
+    const [muxStreamKey, setMuxStreamKey] = useState('');
+    const [muxPlaybackId, setMuxPlaybackId] = useState('');
+    const [isCreatingMuxStream, setIsCreatingMuxStream] = useState(false);
+
+    // Discounts State
+    const [discounts, setDiscounts] = useState<any[]>([]);
+    const [loadingDiscounts, setLoadingDiscounts] = useState(true);
+    const [discountName, setDiscountName] = useState('');
+    const [discountPercentage, setDiscountPercentage] = useState('');
+    const [discountStartDate, setDiscountStartDate] = useState('');
+    const [discountEndDate, setDiscountEndDate] = useState('');
+    const [isCreatingDiscount, setIsCreatingDiscount] = useState(false);
+
+    const handleCreateMuxStream = async () => {
+        setIsCreatingMuxStream(true);
+        try {
+            const response = await fetch('/api/mux/live', { method: 'POST' });
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to create Mux stream');
+            }
+            const data = await response.json();
+            setMuxStreamKey(data.streamKey);
+            setMuxPlaybackId(data.playbackId);
+            
+            // Save the active playback ID to Firestore so the LiveStreamPage can read it
+            const { doc, setDoc } = await import('firebase/firestore');
+            await setDoc(doc(db, 'settings', 'livestream'), {
+                playbackId: data.playbackId,
+                streamId: data.streamId,
+                updatedAt: serverTimestamp()
+            });
+
+            alert('Mux Live Stream created successfully! Save your Stream Key securely.');
+        } catch (error: any) {
+            console.error('Mux error:', error);
+            alert(`Failed to create Mux stream: ${error.message}`);
+        } finally {
+            setIsCreatingMuxStream(false);
+        }
+    };
+
+    const handleMuxUpload = async () => {
+        if (!uploadFile) return;
+        setIsUploading(true);
+        setUploadMessage('Requesting Mux upload URL...');
+        
+        try {
+            // 1. Get direct upload URL from our backend
+            const response = await fetch('/api/mux/upload', { method: 'POST' });
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to get Mux upload URL');
+            }
+            const { uploadUrl, uploadId } = await response.json();
+
+            setUploadMessage('Uploading to Mux...');
+            
+            // 2. Upload file directly to Mux
+            const uploadResponse = await fetch(uploadUrl, {
+                method: 'PUT',
+                body: uploadFile,
+                headers: {
+                    'Content-Type': uploadFile.type,
+                }
+            });
+
+            if (!uploadResponse.ok) {
+                throw new Error('Failed to upload file to Mux');
+            }
+
+            // 3. Save metadata to Firestore
+            await addDoc(collection(db, 'resources'), {
+                name: uploadFile.name,
+                muxUploadId: uploadId,
+                type: uploadFile.type,
+                size: uploadFile.size,
+                uploadedBy: user?.uid,
+                createdAt: serverTimestamp(),
+                provider: 'mux'
+            });
+
+            setUploadMessage('Video uploaded to Mux successfully! It will be ready to play shortly.');
+            setUploadFile(null);
+        } catch (error: any) {
+            console.error('Mux upload error:', error);
+            setUploadMessage(`Upload failed: ${error.message}`);
+        } finally {
+            setIsUploading(false);
+        }
+    };
+
+    const handleFileUpload = async () => {
+        if (!uploadFile) return;
+        setIsUploading(true);
+        setUploadMessage('');
+        
+        try {
+            const storageRef = ref(storage, `resources/${Date.now()}_${uploadFile.name}`);
+            const uploadTask = uploadBytesResumable(storageRef, uploadFile);
+
+            uploadTask.on('state_changed', 
+                (snapshot) => {
+                    const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                    setUploadProgress(progress);
+                }, 
+                (error) => {
+                    console.error("Upload failed:", error);
+                    setUploadMessage('Upload failed. Please try again.');
+                    setIsUploading(false);
+                }, 
+                async () => {
+                    try {
+                        const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+                        
+                        // Save file metadata to Firestore
+                        await addDoc(collection(db, 'resources'), {
+                            name: uploadFile.name,
+                            url: downloadURL,
+                            type: uploadFile.type,
+                            size: uploadFile.size,
+                            uploadedBy: user?.uid,
+                            createdAt: serverTimestamp()
+                        });
+
+                        setUploadMessage('File uploaded successfully!');
+                        setIsUploading(false);
+                        setUploadFile(null);
+                        setUploadProgress(0);
+                    } catch (error) {
+                        handleFirestoreError(error, OperationType.CREATE, 'resources');
+                        setUploadMessage('Failed to save file metadata.');
+                        setIsUploading(false);
+                    }
+                }
+            );
+        } catch (error) {
+            console.error(error);
+            setUploadMessage('An error occurred during upload.');
+            setIsUploading(false);
+        }
+    };
+
     useEffect(() => {
         if (!user || user.role !== 'admin') {
             setUsers([]);
             setLoadingUsers(false);
+            setInboxMessages([]);
+            setLoadingInbox(false);
             return;
         }
         const q = query(collection(db, 'users'), orderBy('createdAt', 'desc'));
@@ -71,26 +229,96 @@ const AdminDashboard: React.FC = () => {
             handleFirestoreError(error, OperationType.LIST, 'users');
         });
 
-        return () => unsubscribe();
+        const inboxQ = query(collection(db, 'inbox'), orderBy('receivedAt', 'desc'));
+        const unsubscribeInbox = onSnapshot(inboxQ, (snapshot) => {
+            const messages = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data(),
+                receivedAt: doc.data().receivedAt?.toDate()?.toLocaleString() || 'N/A'
+            }));
+            setInboxMessages(messages);
+            setLoadingInbox(false);
+        }, (error) => {
+            handleFirestoreError(error, OperationType.LIST, 'inbox');
+        });
+
+        const discountsQ = query(collection(db, 'settings'), orderBy('createdAt', 'desc'));
+        const unsubscribeDiscounts = onSnapshot(discountsQ, (snapshot) => {
+            const fetchedDiscounts = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data(),
+                startDate: doc.data().startDate?.toDate()?.toLocaleDateString() || 'N/A',
+                endDate: doc.data().endDate?.toDate()?.toLocaleDateString() || 'N/A'
+            }));
+            setDiscounts(fetchedDiscounts);
+            setLoadingDiscounts(false);
+        }, (error) => {
+            handleFirestoreError(error, OperationType.LIST, 'settings');
+        });
+
+        return () => {
+            unsubscribe();
+            unsubscribeInbox();
+            unsubscribeDiscounts();
+        };
     }, [user]);
 
     const handleSendBroadcast = async () => {
         if (!broadcastMsg.trim()) return;
         setIsSending(true);
         try {
-            await addNotification({
-                title: broadcastTitle || 'Community Update',
-                message: broadcastMsg,
-                date: new Date().toISOString(),
-                type: sendInApp && sendEmail ? 'both' : sendInApp ? 'in-app' : 'email',
-                // @ts-ignore - adding target for future use
-                target: broadcastTarget
-            });
+            if (sendInApp) {
+                await addNotification({
+                    title: broadcastTitle || 'Community Update',
+                    message: broadcastMsg,
+                    date: new Date().toISOString(),
+                    type: sendInApp && sendEmail ? 'both' : sendInApp ? 'in-app' : 'email',
+                    // @ts-ignore - adding target for future use
+                    target: broadcastTarget
+                });
+            }
+
+            if (sendEmail) {
+                // In a real app, you'd fetch the users' emails based on the target.
+                // For this demo, we'll send it to the users we have loaded.
+                // Note: Resend free tier requires verifying the domain or sending only to the verified email.
+                // We'll pass the emails to the backend.
+                const targetEmails = users.map(u => u.email).filter(Boolean);
+                
+                if (targetEmails.length > 0) {
+                    const response = await fetch('/api/send-email', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            to: targetEmails,
+                            subject: broadcastTitle || 'Community Update',
+                            html: `
+                                <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                                    <h2 style="color: #F27D26;">${broadcastTitle || 'Community Update'}</h2>
+                                    <p style="color: #333; line-height: 1.6; font-size: 16px;">${broadcastMsg.replace(/\n/g, '<br>')}</p>
+                                    <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;" />
+                                    <p style="color: #999; font-size: 12px; text-align: center;">Sent via Project Phoenix Broadcast Engine</p>
+                                </div>
+                            `
+                        })
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.error || 'Failed to send email');
+                    }
+                }
+            }
+
             setIsSending(false);
             setBroadcastMsg('');
             setBroadcastTitle('');
-            alert('Broadcast sent successfully! Users will see it in their Inbox.');
-        } catch (error) {
+            alert('Broadcast sent successfully!');
+        } catch (error: any) {
+            console.error('Broadcast error:', error);
+            alert(`Failed to send broadcast: ${error.message}`);
             setIsSending(false);
         }
     };
@@ -118,6 +346,30 @@ const AdminDashboard: React.FC = () => {
         }
     };
 
+    const handleCreateDiscount = async () => {
+        if (!discountName || !discountPercentage || !discountStartDate || !discountEndDate) return;
+        setIsCreatingDiscount(true);
+        try {
+            await addDoc(collection(db, 'settings'), {
+                name: discountName,
+                percentage: Number(discountPercentage),
+                startDate: new Date(discountStartDate),
+                endDate: new Date(discountEndDate),
+                isActive: true,
+                createdAt: serverTimestamp()
+            });
+            setIsCreatingDiscount(false);
+            setDiscountName('');
+            setDiscountPercentage('');
+            setDiscountStartDate('');
+            setDiscountEndDate('');
+            alert('Discount created successfully!');
+        } catch (error) {
+            setIsCreatingDiscount(false);
+            handleFirestoreError(error, OperationType.CREATE, 'settings');
+        }
+    };
+
     return (
         <div className="max-w-6xl mx-auto pb-20">
             <h1 className="text-4xl font-bold text-brand-text-primary mb-2">Nexus Admin Hub</h1>
@@ -132,7 +384,7 @@ const AdminDashboard: React.FC = () => {
             </div>
 
             <div className="flex flex-wrap gap-4 mb-6">
-                {(['users', 'challenges', 'broadcasts', 'events', 'payments', 'tenancy'] as const).map((tab) => (
+                {(['users', 'inbox', 'challenges', 'broadcasts', 'events', 'payments', 'discounts', 'tenancy', 'resources'] as const).map((tab) => (
                     <button 
                         key={tab}
                         onClick={() => setActiveTab(tab)}
@@ -189,6 +441,39 @@ const AdminDashboard: React.FC = () => {
                                         ))}
                                     </tbody>
                                 </table>
+                            </div>
+                        </Card>
+                    ) : activeTab === 'inbox' ? (
+                        <Card className="animate-fade-in">
+                            <h2 className="text-xl font-bold text-brand-text-primary mb-4">Support Inbox</h2>
+                            <p className="text-sm text-brand-text-secondary mb-6">Incoming emails received via Resend Webhooks.</p>
+                            
+                            <div className="space-y-4">
+                                {loadingInbox ? (
+                                    <div className="p-8 text-center text-brand-text-secondary">
+                                        <SpinnerIcon className="w-8 h-8 mx-auto mb-4 animate-spin text-brand-accent" />
+                                        <p>Loading messages...</p>
+                                    </div>
+                                ) : inboxMessages.length === 0 ? (
+                                    <div className="p-8 text-center border border-dashed border-brand-border rounded-xl bg-brand-secondary/30">
+                                        <p className="text-brand-text-secondary">No messages in your inbox.</p>
+                                    </div>
+                                ) : (
+                                    inboxMessages.map((msg) => (
+                                        <div key={msg.id} className="p-4 border border-brand-border rounded-xl bg-brand-secondary/30 hover:bg-brand-secondary/50 transition-colors">
+                                            <div className="flex justify-between items-start mb-2">
+                                                <div>
+                                                    <h3 className="font-bold text-brand-text-primary">{msg.subject}</h3>
+                                                    <p className="text-xs text-brand-text-secondary">From: {msg.from}</p>
+                                                </div>
+                                                <span className="text-xs text-brand-text-secondary">{msg.receivedAt}</span>
+                                            </div>
+                                            <div className="mt-4 p-3 bg-brand-dark rounded-lg text-sm text-brand-text-primary whitespace-pre-wrap">
+                                                {msg.text || 'No text content available.'}
+                                            </div>
+                                        </div>
+                                    ))
+                                )}
                             </div>
                         </Card>
                     ) : activeTab === 'challenges' ? (
@@ -304,6 +589,37 @@ const AdminDashboard: React.FC = () => {
                                         </button>
                                     </div>
                                 </div>
+
+                                <div className="p-6 border border-brand-border rounded-xl bg-brand-secondary/30">
+                                    <h3 className="font-bold text-brand-text-primary mb-4">Mux Live Stream Configuration</h3>
+                                    <p className="text-sm text-brand-text-secondary mb-4">Generate a secure stream key for OBS or other broadcasting software.</p>
+                                    
+                                    {muxStreamKey ? (
+                                        <div className="space-y-4">
+                                            <div className="p-4 bg-brand-dark rounded-xl border border-brand-border">
+                                                <p className="text-xs text-status-success uppercase font-bold mb-1">Stream is Active & Ready</p>
+                                                <p className="text-sm text-brand-text-secondary mb-2">The Live Stream page is now automatically using this Playback ID.</p>
+                                            </div>
+                                            <div className="p-4 bg-brand-dark rounded-xl border border-brand-border">
+                                                <p className="text-xs text-brand-text-secondary uppercase font-bold mb-1">Stream Key (Keep Secret)</p>
+                                                <p className="font-mono text-brand-text-primary break-all">{muxStreamKey}</p>
+                                            </div>
+                                            <div className="p-4 bg-brand-dark rounded-xl border border-brand-border">
+                                                <p className="text-xs text-brand-text-secondary uppercase font-bold mb-1">Playback ID</p>
+                                                <p className="font-mono text-brand-text-primary break-all">{muxPlaybackId}</p>
+                                            </div>
+                                            <p className="text-xs text-brand-accent">Use the Stream Key in OBS Studio (Server: rtmp://global-live.mux.com:5222/app)</p>
+                                        </div>
+                                    ) : (
+                                        <button 
+                                            onClick={handleCreateMuxStream}
+                                            disabled={isCreatingMuxStream}
+                                            className="w-full py-3 bg-[#FB9129] text-white rounded-xl font-bold hover:scale-[1.02] transition-transform flex items-center justify-center gap-2 disabled:opacity-50"
+                                        >
+                                            {isCreatingMuxStream ? <><SpinnerIcon className="w-5 h-5"/> Generating...</> : 'Generate Mux Stream Key'}
+                                        </button>
+                                    )}
+                                </div>
                             </div>
                         </Card>
                     ) : activeTab === 'payments' ? (
@@ -313,28 +629,166 @@ const AdminDashboard: React.FC = () => {
                             <div className="space-y-4">
                                 <div className="flex items-center justify-between p-4 border border-brand-border rounded-xl bg-brand-secondary/30">
                                     <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 bg-[#635BFF]/10 rounded-lg flex items-center justify-center">
-                                            <DbIcon className="w-6 h-6 text-[#635BFF]" />
-                                        </div>
-                                        <div>
-                                            <h3 className="font-bold text-brand-text-primary">Stripe Integration</h3>
-                                            <p className="text-xs text-brand-text-secondary">Global Cards, Apple Pay, Google Pay</p>
-                                        </div>
-                                    </div>
-                                    <span className="px-2 py-1 bg-green-500/20 text-green-400 text-[10px] font-bold uppercase rounded-full">Connected</span>
-                                </div>
-                                <div className="flex items-center justify-between p-4 border border-brand-border rounded-xl bg-brand-secondary/30">
-                                    <div className="flex items-center gap-3">
                                         <div className="w-10 h-10 bg-[#FB9129]/10 rounded-lg flex items-center justify-center">
                                             <DbIcon className="w-6 h-6 text-[#FB9129]" />
                                         </div>
                                         <div>
                                             <h3 className="font-bold text-brand-text-primary">Flutterwave Integration</h3>
-                                            <p className="text-xs text-brand-text-secondary">Mobile Money (M-Pesa, MTN) & Local Cards</p>
+                                            <p className="text-xs text-brand-text-secondary">Global Cards, Mobile Money & Local Payments</p>
                                         </div>
                                     </div>
-                                    <button className="px-3 py-1 bg-brand-accent text-white rounded text-xs font-bold hover:scale-105 transition-transform">Connect</button>
+                                    <span className="px-2 py-1 bg-green-500/20 text-green-400 text-[10px] font-bold uppercase rounded-full">Connected</span>
                                 </div>
+                            </div>
+                        </Card>
+                    ) : activeTab === 'discounts' ? (
+                        <Card className="animate-fade-in">
+                            <h2 className="text-xl font-bold text-brand-text-primary mb-4">Discount Management</h2>
+                            <p className="text-sm text-brand-text-secondary mb-6">Configure seasonal discounts and promotional offers for subscriptions.</p>
+                            
+                            <div className="space-y-6">
+                                <div className="p-6 border border-brand-border rounded-xl bg-brand-secondary/30">
+                                    <h3 className="font-bold text-brand-text-primary mb-4">Active Promotions</h3>
+                                    <div className="space-y-4">
+                                        <div className="flex items-center justify-between p-4 bg-brand-dark rounded-xl border border-brand-border">
+                                            <div>
+                                                <h4 className="font-bold text-brand-text-primary">Yearly Subscription Discount</h4>
+                                                <p className="text-xs text-brand-text-secondary">Applies automatically to all yearly plans</p>
+                                            </div>
+                                            <div className="flex items-center gap-4">
+                                                <span className="text-lg font-black text-brand-accent">20% OFF</span>
+                                                <span className="px-2 py-1 bg-green-500/20 text-green-400 text-[10px] font-bold uppercase rounded-full">Active</span>
+                                            </div>
+                                        </div>
+                                        {loadingDiscounts ? (
+                                            <div className="text-center text-brand-text-secondary py-4">Loading discounts...</div>
+                                        ) : (
+                                            discounts.map((discount) => (
+                                                <div key={discount.id} className="flex items-center justify-between p-4 bg-brand-dark rounded-xl border border-brand-border">
+                                                    <div>
+                                                        <h4 className="font-bold text-brand-text-primary">{discount.name}</h4>
+                                                        <p className="text-xs text-brand-text-secondary">Valid: {discount.startDate} - {discount.endDate}</p>
+                                                    </div>
+                                                    <div className="flex items-center gap-4">
+                                                        <span className="text-lg font-black text-brand-accent">{discount.percentage}% OFF</span>
+                                                        <span className={`px-2 py-1 text-[10px] font-bold uppercase rounded-full ${discount.isActive ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
+                                                            {discount.isActive ? 'Active' : 'Inactive'}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            ))
+                                        )}
+                                    </div>
+                                </div>
+
+                                <div className="p-6 border border-brand-border rounded-xl bg-brand-secondary/30">
+                                    <h3 className="font-bold text-brand-text-primary mb-4">Create Seasonal Discount</h3>
+                                    <div className="space-y-4">
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="block text-xs font-bold text-brand-text-secondary uppercase mb-2">Campaign Name</label>
+                                                <input 
+                                                    type="text" 
+                                                    value={discountName}
+                                                    onChange={(e) => setDiscountName(e.target.value)}
+                                                    className="w-full bg-brand-dark border border-brand-border rounded-xl p-3 text-brand-text-primary focus:border-brand-accent outline-none" 
+                                                    placeholder="e.g., Easter Special 2026"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-bold text-brand-text-secondary uppercase mb-2">Discount Percentage</label>
+                                                <input 
+                                                    type="number" 
+                                                    value={discountPercentage}
+                                                    onChange={(e) => setDiscountPercentage(e.target.value)}
+                                                    className="w-full bg-brand-dark border border-brand-border rounded-xl p-3 text-brand-text-primary focus:border-brand-accent outline-none" 
+                                                    placeholder="e.g., 15"
+                                                    min="1"
+                                                    max="100"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="block text-xs font-bold text-brand-text-secondary uppercase mb-2">Start Date</label>
+                                                <input 
+                                                    type="date" 
+                                                    value={discountStartDate}
+                                                    onChange={(e) => setDiscountStartDate(e.target.value)}
+                                                    className="w-full bg-brand-dark border border-brand-border rounded-xl p-3 text-brand-text-primary focus:border-brand-accent outline-none" 
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-bold text-brand-text-secondary uppercase mb-2">End Date</label>
+                                                <input 
+                                                    type="date" 
+                                                    value={discountEndDate}
+                                                    onChange={(e) => setDiscountEndDate(e.target.value)}
+                                                    className="w-full bg-brand-dark border border-brand-border rounded-xl p-3 text-brand-text-primary focus:border-brand-accent outline-none" 
+                                                />
+                                            </div>
+                                        </div>
+                                        <button 
+                                            className="w-full py-3 bg-brand-accent text-white rounded-xl font-bold hover:scale-[1.02] transition-transform flex items-center justify-center gap-2 disabled:opacity-50"
+                                            onClick={handleCreateDiscount}
+                                            disabled={isCreatingDiscount || !discountName || !discountPercentage || !discountStartDate || !discountEndDate}
+                                        >
+                                            {isCreatingDiscount ? <><SpinnerIcon className="w-5 h-5"/> Creating...</> : 'Create Discount Campaign'}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </Card>
+                    ) : activeTab === 'resources' ? (
+                        <Card className="animate-fade-in">
+                            <h2 className="text-xl font-bold text-brand-text-primary mb-4">Resource Manager</h2>
+                            <p className="text-sm text-brand-text-secondary mb-6">Upload videos, documents, and media directly to Firebase Cloud Storage.</p>
+                            
+                            <div className="p-6 border-2 border-dashed border-brand-border rounded-xl bg-brand-secondary/30 text-center">
+                                <input 
+                                    type="file" 
+                                    id="file-upload" 
+                                    className="hidden" 
+                                    onChange={(e) => setUploadFile(e.target.files?.[0] || null)}
+                                />
+                                <label htmlFor="file-upload" className="cursor-pointer flex flex-col items-center justify-center">
+                                    <div className="w-16 h-16 bg-brand-accent/20 rounded-full flex items-center justify-center mb-4">
+                                        <PlusCircleIcon className="w-8 h-8 text-brand-accent" />
+                                    </div>
+                                    <p className="font-bold text-brand-text-primary mb-1">
+                                        {uploadFile ? uploadFile.name : 'Click to select a file'}
+                                    </p>
+                                    <p className="text-xs text-brand-text-secondary">
+                                        {uploadFile ? `${(uploadFile.size / 1024 / 1024).toFixed(2)} MB` : 'MP4, PDF, JPG, PNG (Max 500MB)'}
+                                    </p>
+                                </label>
+
+                                {uploadFile && (
+                                    <div className="mt-6 flex gap-4 justify-center">
+                                        <button 
+                                            onClick={handleFileUpload}
+                                            disabled={isUploading}
+                                            className="px-8 py-3 bg-brand-accent text-white rounded-xl font-bold hover:scale-[1.02] transition-transform disabled:opacity-50"
+                                        >
+                                            {isUploading ? `Uploading... ${Math.round(uploadProgress)}%` : 'Upload to Firebase'}
+                                        </button>
+                                        {uploadFile.type.startsWith('video/') && (
+                                            <button 
+                                                onClick={handleMuxUpload}
+                                                disabled={isUploading}
+                                                className="px-8 py-3 bg-[#FB9129] text-white rounded-xl font-bold hover:scale-[1.02] transition-transform disabled:opacity-50"
+                                            >
+                                                {isUploading ? 'Uploading to Mux...' : 'Upload Video to Mux'}
+                                            </button>
+                                        )}
+                                    </div>
+                                )}
+
+                                {uploadMessage && (
+                                    <p className={`mt-4 text-sm font-bold ${uploadMessage.includes('success') ? 'text-status-success' : 'text-status-error'}`}>
+                                        {uploadMessage}
+                                    </p>
+                                )}
                             </div>
                         </Card>
                     ) : (

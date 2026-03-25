@@ -1,16 +1,29 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Card from '../components/Card';
-import { SoundWaveIcon, MicrophoneIcon, StopIcon, SparklesIcon } from '../components/icons';
+import { SoundWaveIcon, MicrophoneIcon, StopIcon, SparklesIcon, LockIcon } from '../components/icons';
 import { connectToSentientGuide } from '../services/liveService';
+import { useAuth } from '../contexts/AuthContext';
+import { useUpgradeModal } from '../contexts/UpgradeModalContext';
+import { TIER_CONFIGS } from '../types/pricing';
 
 const VoiceCompanion: React.FC = () => {
   const [isActive, setIsActive] = useState(false);
   const [transcript, setTranscript] = useState<{text: string, isUser: boolean}[]>([]);
   const [status, setStatus] = useState('Standby');
   const sessionRef = useRef<any>(null);
+  const { user } = useAuth();
+  const { openUpgradeModal } = useUpgradeModal();
+
+  const userTier = user?.tier || 'free';
+  const canUseLiveVoice = TIER_CONFIGS[userTier].canUseGeminiLiveVoice;
 
   const startSession = async () => {
+    if (!canUseLiveVoice) {
+      openUpgradeModal('Gemini Live Voice Companion', 'max');
+      return;
+    }
+
     setIsActive(true);
     setStatus('Connecting...');
     try {
@@ -67,7 +80,11 @@ const VoiceCompanion: React.FC = () => {
                     onClick={startSession}
                     className="mt-6 px-10 py-4 bg-brand-accent text-white rounded-full font-bold text-xl shadow-2xl hover:scale-105 transition-transform flex items-center gap-3"
                 >
-                    <MicrophoneIcon className="w-6 h-6"/> Begin Journey
+                    {canUseLiveVoice ? (
+                      <><MicrophoneIcon className="w-6 h-6"/> Begin Journey</>
+                    ) : (
+                      <><LockIcon className="w-6 h-6"/> Unlock Voice Companion</>
+                    )}
                 </button>
             ) : (
                 <button 

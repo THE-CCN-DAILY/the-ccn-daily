@@ -69,10 +69,28 @@ service cloud.firestore {
     // Fields:
     //   - amount: number (required, > 0)
     //   - type: string (required, enum: ['one-time', 'monthly'])
-    //   - method: string (required, enum: ['stripe', 'flutterwave'])
+    //   - method: string (required, enum: ['flutterwave'])
     //   - userUid: string (optional)
     //   - userEmail: string (optional)
     //   - status: string (required, enum: ['pending', 'completed', 'failed'])
+    //   - createdAt: timestamp (required)
+    //
+    // Collection: resources
+    // Document ID: {resourceId}
+    // Fields:
+    //   - name: string (required, < 200 chars)
+    //   - url: string (required, < 1000 chars)
+    //   - type: string (required, < 100 chars)
+    //   - size: number (required, >= 0)
+    //   - uploadedBy: string (required)
+    //   - createdAt: timestamp (required)
+    //
+    // Collection: liveChat
+    // Document ID: {messageId}
+    // Fields:
+    //   - user: string (required, < 100 chars)
+    //   - userId: string (required)
+    //   - text: string (required, < 1000 chars)
     //   - createdAt: timestamp (required)
     //
     // Subcollection: users/{userId}/notes
@@ -192,7 +210,7 @@ service cloud.firestore {
       return hasRequiredFields(['amount', 'type', 'method', 'status', 'createdAt']) &&
              data.amount is number && data.amount > 0 &&
              data.type in ['one-time', 'monthly'] &&
-             data.method in ['stripe', 'flutterwave'] &&
+             data.method in ['flutterwave'] &&
              data.status in ['pending', 'completed', 'failed'] &&
              data.createdAt is timestamp &&
              (!('userUid' in data) || (data.userUid is string)) &&
@@ -208,6 +226,34 @@ service cloud.firestore {
              (!('note' in data) || (data.note is string && data.note.size() < 2000)) &&
              (!('voiceNoteUrl' in data) || (data.voiceNoteUrl is string && data.voiceNoteUrl.size() < 500)) &&
              (!('tags' in data) || (data.tags is list && data.tags.size() < 10));
+    }
+
+    function isValidResource(data) {
+      return hasRequiredFields(['name', 'url', 'type', 'size', 'uploadedBy', 'createdAt']) &&
+             data.name is string && data.name.size() < 200 &&
+             data.url is string && data.url.size() < 1000 &&
+             data.type is string && data.type.size() < 100 &&
+             data.size is number && data.size >= 0 &&
+             data.uploadedBy == request.auth.uid &&
+             data.createdAt is timestamp;
+    }
+
+    function isValidLiveChatMessage(data) {
+      return hasRequiredFields(['user', 'userId', 'text', 'createdAt']) &&
+             data.user is string && data.user.size() < 100 &&
+             data.userId == request.auth.uid &&
+             data.text is string && data.text.size() < 1000 &&
+             data.createdAt is timestamp;
+    }
+
+    function isValidDiscount(data) {
+      return hasRequiredFields(['name', 'percentage', 'startDate', 'endDate', 'isActive', 'createdAt']) &&
+             data.name is string && data.name.size() < 100 &&
+             data.percentage is number && data.percentage >= 0 && data.percentage <= 100 &&
+             data.startDate is timestamp &&
+             data.endDate is timestamp &&
+             data.isActive is bool &&
+             data.createdAt is timestamp;
     }
 
     // ===============================================================
@@ -268,6 +314,32 @@ service cloud.firestore {
       allow read: if isAdmin() || (isAuthenticated() && resource.data.userUid == request.auth.uid);
       allow create: if isAuthenticated() && isValidDonation(request.resource.data) && 
                       (!('userUid' in request.resource.data) || request.resource.data.userUid == request.auth.uid);
+    }
+
+    match /settings/{settingId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin() && isValidDiscount(request.resource.data);
+    }
+
+    match /resources/{resourceId} {
+      allow read: if isAuthenticated();
+      allow create: if isAdmin() && isValidResource(request.resource.data);
+      allow update: if isAdmin() && isValidResource(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    match /inbox/{messageId} {
+      allow read: if isAdmin();
+      allow delete: if isAdmin();
+      allow update: if isAdmin();
+      allow create: if false; // Only the server webhook can create
+    }
+
+    match /liveChat/{messageId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isValidLiveChatMessage(request.resource.data);
+      allow update: if isAdmin() && isValidLiveChatMessage(request.resource.data);
+      allow delete: if isAdmin();
     }
 
     match /_system_health/{checkId} {

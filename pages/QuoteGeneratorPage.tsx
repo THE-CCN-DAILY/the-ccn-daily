@@ -1,8 +1,11 @@
 
 import React, { useState } from 'react';
 import Card from '../components/Card';
-import { AiIcon, SparklesIcon, SpinnerIcon, ShareIcon, DownloadIcon, CheckIcon } from '../components/icons';
+import { AiIcon, SparklesIcon, SpinnerIcon, ShareIcon, DownloadIcon, CheckIcon, LockIcon } from '../components/icons';
 import { generateQuoteImage } from '../services/geminiService';
+import { useAuth } from '../contexts/AuthContext';
+import { useUpgradeModal } from '../contexts/UpgradeModalContext';
+import { TIER_CONFIGS } from '../types/pricing';
 
 const QuoteGeneratorPage: React.FC = () => {
   const [quoteText, setQuoteText] = useState("Commit your way to the LORD, trust also in Him, and He shall bring it to pass. - Psalm 37:5, NKJV");
@@ -13,9 +16,20 @@ const QuoteGeneratorPage: React.FC = () => {
   const [shareStatus, setShareStatus] = useState<'idle' | 'shared'>('idle');
   const [error, setError] = useState<string | null>(null);
 
+  const { user } = useAuth();
+  const { openUpgradeModal } = useUpgradeModal();
+
+  const userTier = user?.tier || 'free';
+  const canGenerateQuoteImages = TIER_CONFIGS[userTier].canGenerateQuoteImages;
+
   const styles = ['Spiritual', 'Nature', 'Abstract', 'Modern', 'Vintage'];
 
   const handleGenerate = async () => {
+    if (!canGenerateQuoteImages) {
+      openUpgradeModal('AI Quote Image Generation', 'pro');
+      return;
+    }
+
     setIsLoading(true);
     setGeneratedImageUrl(null);
     setError(null);
@@ -92,10 +106,17 @@ const QuoteGeneratorPage: React.FC = () => {
                 </div>
                 <button 
                     onClick={handleGenerate}
-                    disabled={true}
-                    className="w-full py-3 rounded-lg bg-brand-secondary text-brand-text-secondary font-bold flex items-center justify-center gap-2 cursor-not-allowed opacity-75"
+                    className={`w-full py-3 rounded-lg font-bold flex items-center justify-center gap-2 transition-colors ${
+                      canGenerateQuoteImages 
+                        ? 'bg-brand-accent text-white hover:bg-opacity-90' 
+                        : 'bg-brand-secondary text-brand-text-secondary hover:bg-brand-border'
+                    }`}
                 >
-                    <SparklesIcon className="w-5 h-5"/> Premium Feature
+                    {canGenerateQuoteImages ? (
+                      <><SparklesIcon className="w-5 h-5"/> Generate Image</>
+                    ) : (
+                      <><LockIcon className="w-5 h-5"/> Unlock Image Generation</>
+                    )}
                 </button>
                 {error && (
                     <div className="p-3 bg-brand-accent/10 border border-brand-accent/20 rounded-lg text-brand-accent text-xs">
@@ -111,12 +132,16 @@ const QuoteGeneratorPage: React.FC = () => {
             <Card className="flex-1 flex flex-col items-center justify-center relative min-h-[400px] overflow-hidden group">
                 {!generatedImageUrl && !isLoading && (
                     <div className="text-center p-8">
-                        <div className="mb-4 inline-flex items-center px-3 py-1 rounded-full bg-brand-accent/10 text-brand-accent text-xs font-bold uppercase tracking-wider border border-brand-accent/20">
-                            Premium Tier
-                        </div>
+                        {!canGenerateQuoteImages && (
+                          <div className="mb-4 inline-flex items-center px-3 py-1 rounded-full bg-brand-accent/10 text-brand-accent text-xs font-bold uppercase tracking-wider border border-brand-accent/20">
+                              Premium Tier
+                          </div>
+                        )}
                         <SparklesIcon className="w-16 h-16 text-brand-text-secondary/20 mx-auto mb-4"/>
                         <p className="text-brand-text-secondary italic max-w-xs mx-auto">
-                            AI Visual Generation is currently a premium feature to ensure sustainable resource allocation.
+                            {canGenerateQuoteImages 
+                              ? "Ready to generate your visual inspiration." 
+                              : "AI Visual Generation is currently a premium feature to ensure sustainable resource allocation."}
                         </p>
                     </div>
                 )}

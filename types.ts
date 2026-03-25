@@ -9,6 +9,7 @@ import type { Timestamp } from 'firebase/firestore';
 export type FirebaseUser = User;
 export interface AppUser extends FirebaseUser {
   role: 'admin' | 'user';
+  tier?: import('./types/pricing').SubscriptionTier;
 }
 
 // For MasterPlan.tsx
@@ -214,3 +215,5 @@ export interface QuoteGraphic {
   imageUrl: string;
   style: string;
 }
+
+export * from './types/pricing';
