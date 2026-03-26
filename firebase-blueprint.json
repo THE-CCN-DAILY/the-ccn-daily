@@ -170,6 +170,51 @@
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["name", "percentage", "startDate", "endDate", "isActive"]
+    },
+    "UserPurchase": {
+      "title": "User Purchase",
+      "description": "A record of a successful product purchase.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "resourceId": { "type": "string" },
+        "txRef": { "type": "string" },
+        "status": { "type": "string", "enum": ["active", "refunded"] },
+        "purchasedAt": { "type": "string", "format": "date-time" },
+        "refundedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "resourceId", "txRef", "status", "purchasedAt"]
+    },
+    "UserEntitlement": {
+      "title": "User Entitlement",
+      "description": "A record of a user's access rights to a resource.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "resourceId": { "type": "string" },
+        "accessType": { "type": "string", "enum": ["owned_perpetual", "subscription"] },
+        "source": { "type": "string", "enum": ["purchase", "admin_grant"] },
+        "startsAt": { "type": "string", "format": "date-time" },
+        "endsAt": { "type": "string", "format": "date-time" },
+        "isActive": { "type": "boolean" },
+        "revokedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "resourceId", "accessType", "source", "startsAt", "isActive"]
+    },
+    "AuditLog": {
+      "title": "Audit Log",
+      "description": "Immutable record of sensitive system actions.",
+      "type": "object",
+      "properties": {
+        "action": { "type": "string" },
+        "actorId": { "type": "string" },
+        "userId": { "type": "string" },
+        "resourceId": { "type": "string" },
+        "subscriptionId": { "type": "string" },
+        "metadata": { "type": "object" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["action", "createdAt"]
     }
   },
   "firestore": {
@@ -216,6 +261,18 @@
     "/settings/{settingId}": {
       "schema": "Discount",
       "description": "Global application settings, including active discounts."
+    },
+    "/user_purchases/{purchaseId}": {
+      "schema": "UserPurchase",
+      "description": "Records of user purchases."
+    },
+    "/user_entitlements/{entitlementId}": {
+      "schema": "UserEntitlement",
+      "description": "User access rights."
+    },
+    "/auditLogs/{logId}": {
+      "schema": "AuditLog",
+      "description": "Immutable audit logs."
     }
   }
 }

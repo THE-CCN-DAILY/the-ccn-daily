@@ -104,6 +104,39 @@ service cloud.firestore {
     //   - color: string (required, enum: ['yellow', 'blue', 'green', 'pink'])
     //   - createdAt: timestamp (required)
     //
+    // Collection: user_purchases
+    // Document ID: {userId}_{resourceId}_{txRef}
+    // Fields:
+    //   - userId: string (required)
+    //   - resourceId: string (required)
+    //   - txRef: string (required)
+    //   - status: string (required, enum: ['active', 'refunded'])
+    //   - purchasedAt: timestamp (required)
+    //   - refundedAt: timestamp (optional)
+    //
+    // Collection: user_entitlements
+    // Document ID: {userId}_{resourceId}_owned
+    // Fields:
+    //   - userId: string (required)
+    //   - resourceId: string (required)
+    //   - accessType: string (required, enum: ['owned_perpetual', 'subscription'])
+    //   - source: string (required, enum: ['purchase', 'admin_grant'])
+    //   - startsAt: timestamp (required)
+    //   - endsAt: timestamp (optional)
+    //   - isActive: boolean (required)
+    //   - revokedAt: timestamp (optional)
+    //
+    // Collection: auditLogs
+    // Document ID: {logId}
+    // Fields:
+    //   - action: string (required)
+    //   - actorId: string (optional)
+    //   - userId: string (optional)
+    //   - resourceId: string (optional)
+    //   - subscriptionId: string (optional)
+    //   - metadata: map (optional)
+    //   - createdAt: timestamp (required)
+    //
     // ===============================================================
 
     // ===============================================================
@@ -256,6 +289,36 @@ service cloud.firestore {
              data.createdAt is timestamp;
     }
 
+    function isValidUserPurchase(data) {
+      return hasRequiredFields(['userId', 'resourceId', 'txRef', 'status', 'purchasedAt']) &&
+             data.userId is string && data.resourceId is string && data.txRef is string &&
+             data.status in ['active', 'refunded'] &&
+             data.purchasedAt is timestamp &&
+             (!('refundedAt' in data) || data.refundedAt is timestamp);
+    }
+
+    function isValidUserEntitlement(data) {
+      return hasRequiredFields(['userId', 'resourceId', 'accessType', 'source', 'startsAt', 'isActive']) &&
+             data.userId is string && data.resourceId is string &&
+             data.accessType in ['owned_perpetual', 'subscription'] &&
+             data.source in ['purchase', 'admin_grant'] &&
+             data.startsAt is timestamp &&
+             data.isActive is bool &&
+             (!('endsAt' in data) || data.endsAt is timestamp) &&
+             (!('revokedAt' in data) || data.revokedAt is timestamp);
+    }
+
+    function isValidAuditLog(data) {
+      return hasRequiredFields(['action', 'createdAt']) &&
+             data.action is string &&
+             data.createdAt is timestamp &&
+             (!('actorId' in data) || data.actorId is string) &&
+             (!('userId' in data) || data.userId is string) &&
+             (!('resourceId' in data) || data.resourceId is string) &&
+             (!('subscriptionId' in data) || data.subscriptionId is string) &&
+             (!('metadata' in data) || data.metadata is map);
+    }
+
     // ===============================================================
     // Match Rules
     // ===============================================================
@@ -340,6 +403,21 @@ service cloud.firestore {
       allow create: if isAuthenticated() && isValidLiveChatMessage(request.resource.data);
       allow update: if isAdmin() && isValidLiveChatMessage(request.resource.data);
       allow delete: if isAdmin();
+    }
+
+    match /user_purchases/{purchaseId} {
+      allow read: if isAdmin() || (isAuthenticated() && resource.data.userId == request.auth.uid);
+      allow write: if false; // Only server-side admin SDK
+    }
+
+    match /user_entitlements/{entitlementId} {
+      allow read: if isAdmin() || (isAuthenticated() && resource.data.userId == request.auth.uid);
+      allow write: if false; // Only server-side admin SDK
+    }
+
+    match /auditLogs/{logId} {
+      allow read: if isAdmin();
+      allow write: if false; // Only server-side admin SDK
     }
 
     match /_system_health/{checkId} {

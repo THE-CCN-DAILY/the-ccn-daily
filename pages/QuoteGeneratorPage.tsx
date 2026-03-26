@@ -5,7 +5,7 @@ import { AiIcon, SparklesIcon, SpinnerIcon, ShareIcon, DownloadIcon, CheckIcon, 
 import { generateQuoteImage } from '../services/geminiService';
 import { useAuth } from '../contexts/AuthContext';
 import { useUpgradeModal } from '../contexts/UpgradeModalContext';
-import { TIER_CONFIGS } from '../types/pricing';
+import { getTierFeatures } from '../types/pricing';
 
 import { useNotifications } from '../contexts/NotificationContext';
 
@@ -23,7 +23,7 @@ const QuoteGeneratorPage: React.FC = () => {
   const { openUpgradeModal } = useUpgradeModal();
 
   const userTier = user?.tier || 'free';
-  const canGenerateQuoteImages = TIER_CONFIGS[userTier].canGenerateQuoteImages;
+  const canGenerateQuoteImages = getTierFeatures(userTier).canGenerateQuoteImages;
 
   const styles = ['Spiritual', 'Nature', 'Abstract', 'Modern', 'Vintage'];
 

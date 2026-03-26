@@ -9,7 +9,12 @@ import { initializeApp as initAdmin, applicationDefault } from 'firebase-admin/a
 import { getFirestore as getAdminFirestore } from 'firebase-admin/firestore';
 import { getAuth as getAdminAuth } from 'firebase-admin/auth';
 import { z } from 'zod';
-import { rateLimit } from 'express-rate-limit';
+import { rateLimit as expressRateLimit } from 'express-rate-limit';
+import { requireAuth, type AuthedRequest } from './server/middleware/requireAuth';
+import { requireAdmin } from './server/middleware/requireAdmin';
+import { withIdempotency } from './server/middleware/idempotency';
+import { paymentWebhookHandler } from './server/webhooks/paymentWebhook';
+import { runReconciliationJob } from './jobs/reconciliationJob';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -23,9 +28,10 @@ const firebaseConfig = fs.existsSync(firebaseConfigPath)
 const projectId = firebaseConfig.projectId || 'ccn-daily';
 const databaseId = firebaseConfig.firestoreDatabaseId || '(default)';
 
+let adminApp: any = null;
 let adminDb: any = null;
 try {
-  const adminApp = initAdmin({
+  adminApp = initAdmin({
     credential: applicationDefault(),
     projectId: projectId
   });
@@ -41,49 +47,22 @@ async function startServer() {
   app.use(express.json());
 
   // --- Security Middleware ---
-  const verifyToken = async (req: any, res: any, next: any) => {
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({ error: 'Unauthorized: Missing token' });
-    }
-
-    const idToken = authHeader.split('Bearer ')[1];
-    try {
-      const decodedToken = await getAdminAuth().verifyIdToken(idToken);
-      req.user = decodedToken;
-      next();
-    } catch (error) {
-      console.error('Error verifying token:', error);
-      res.status(401).json({ error: 'Unauthorized: Invalid token' });
-    }
-  };
-
-  const requireAdmin = async (req: any, res: any, next: any) => {
-    if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
-    
-    try {
-      if (!adminDb) throw new Error('Admin DB not initialized');
-      const userDoc = await adminDb.collection('users').doc(req.user.uid).get();
-      if (!userDoc.exists || userDoc.data().role !== 'admin') {
-        return res.status(403).json({ error: 'Forbidden: Admin access required' });
-      }
-      next();
-    } catch (error) {
-      console.error('Error checking admin role:', error);
-      res.status(500).json({ error: 'Internal server error' });
-    }
-  };
-
-  const broadcastLimiter = rateLimit({
+  const broadcastLimiter = expressRateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
     max: 10, // Limit each IP to 10 broadcast requests per window
     message: { error: 'Too many broadcasts sent. Please try again later.' }
   });
 
-  const mediaLimiter = rateLimit({
+  const mediaLimiter = expressRateLimit({
     windowMs: 60 * 60 * 1000, // 1 hour
     max: 5, // Limit each IP to 5 media creation requests per hour
     message: { error: 'Too many media requests. Please try again later.' }
+  });
+
+  const aiLimiter = expressRateLimit({
+    windowMs: 1 * 60 * 1000, // 1 minute
+    max: 20,
+    message: { error: 'Too many AI requests. Please try again later.' }
   });
 
   // --- Schemas ---
@@ -94,7 +73,7 @@ async function startServer() {
   });
 
   // Diagnostic Endpoint (Passive - No AI calls)
-  app.get('/api/ai/diagnostics', async (req, res) => {
+  app.get('/api/ai/diagnostics', aiLimiter, async (req, res) => {
     const platformKey = process.env.GEMINI_API_KEY;
     const userKey = process.env.API_KEY;
     
@@ -115,7 +94,7 @@ async function startServer() {
   });
 
   // --- Resend Email Endpoint ---
-  app.post('/api/send-email', verifyToken, requireAdmin, broadcastLimiter, async (req, res) => {
+  app.post('/api/send-email', requireAuth, requireAdmin, broadcastLimiter, async (req, res) => {
     try {
       const validation = emailSchema.safeParse(req.body);
       if (!validation.success) {
@@ -212,7 +191,7 @@ async function startServer() {
   });
 
   // --- Mux Video Endpoints ---
-  app.post('/api/mux/live', verifyToken, requireAdmin, mediaLimiter, async (req, res) => {
+  app.post('/api/mux/live', requireAuth, requireAdmin, mediaLimiter, async (req, res) => {
     try {
       if (!process.env.MUX_TOKEN_ID || !process.env.MUX_TOKEN_SECRET) {
         return res.status(500).json({ error: 'Mux API keys are not configured.' });
@@ -240,7 +219,7 @@ async function startServer() {
     }
   });
 
-  app.post('/api/mux/upload', verifyToken, requireAdmin, mediaLimiter, async (req, res) => {
+  app.post('/api/mux/upload', requireAuth, requireAdmin, mediaLimiter, async (req, res) => {
     try {
       if (!process.env.MUX_TOKEN_ID || !process.env.MUX_TOKEN_SECRET) {
         return res.status(500).json({ error: 'Mux API keys are not configured.' });
@@ -264,6 +243,33 @@ async function startServer() {
     } catch (error: any) {
       console.error('Error creating Mux upload:', error);
       res.status(500).json({ error: error.message || 'Failed to create upload URL' });
+    }
+  });
+
+  // --- Monetization Endpoints ---
+  app.post('/api/purchase/complete', requireAuth, withIdempotency, async (req: AuthedRequest, res) => {
+    // This endpoint is called by the client after a successful frontend purchase
+    // to trigger immediate entitlement grant (webhook is the backup/source of truth)
+    const { productId, txRef } = req.body;
+    if (!productId || !txRef) return res.status(400).json({ error: 'Missing productId or txRef' });
+
+    try {
+      const { grantOwnedEntitlement } = await import('./services/entitlementAdminService');
+      await grantOwnedEntitlement(req.user!.uid, productId, txRef);
+      res.json({ success: true });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post('/api/webhooks/payment', paymentWebhookHandler);
+
+  app.post('/api/admin/reconcile', requireAuth, requireAdmin, async (req, res) => {
+    try {
+      const result = await runReconciliationJob();
+      res.json(result);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
     }
   });
 

@@ -6,7 +6,7 @@ import type { DevotionalOutput } from '../types';
 import { useGamification } from '../contexts/GamificationContext';
 import { useAuth } from '../contexts/AuthContext';
 import ContentDisplay from '../components/reader/ContentDisplay';
-import { TIER_CONFIGS } from '../types/pricing';
+import { getTierFeatures } from '../types/pricing';
 import { useUpgradeModal } from '../contexts/UpgradeModalContext';
 
 const LOCAL_STORAGE_KEY = 'ccn_daily_devotional_data';
@@ -56,7 +56,7 @@ const DevotionalGeneratorPage: React.FC = () => {
     }
 
     const userTier = user.tier || 'free';
-    if (!TIER_CONFIGS[userTier].canGeneratePersonalizedDevotionals) {
+    if (!getTierFeatures(userTier).canGeneratePersonalizedDevotionals) {
         openUpgradeModal('Deeply Personalized AI Devotionals', 'pro');
         return;
     }
@@ -116,7 +116,7 @@ const DevotionalGeneratorPage: React.FC = () => {
   };
   
   const userTier = user?.tier || 'free';
-  const canGenerate = TIER_CONFIGS[userTier].canGeneratePersonalizedDevotionals;
+  const canGenerate = getTierFeatures(userTier).canGeneratePersonalizedDevotionals;
 
   return (
     <div>

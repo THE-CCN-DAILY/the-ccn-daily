@@ -15,7 +15,11 @@ const userKey = process.env.API_KEY;
 const isPlatformKeyValid = !!(platformKey && platformKey.startsWith('AIza') && platformKey !== 'undefined');
 const apiKey = isPlatformKeyValid ? platformKey : userKey;
 
-const ai = new GoogleGenAI({ apiKey: apiKey || "" });
+if (!apiKey || apiKey === 'undefined') {
+    console.warn("Gemini API Key is missing. AI features will be disabled.");
+}
+
+const ai = new GoogleGenAI({ apiKey: apiKey || "MISSING_KEY" });
 
 // 3-Lane AI Policy for Cost Governance
 // LITE: Ultra-low cost, high speed. Used for 90% of basic interactions.
@@ -23,7 +27,7 @@ const ai = new GoogleGenAI({ apiKey: apiKey || "" });
 // PRO: High cost, high reasoning. Reserved for Max users and deep study.
 export const LITE_MODEL = 'gemini-3.1-flash-lite-preview'; 
 export const FLASH_MODEL = 'gemini-3-flash-preview';      
-export const PRO_MODEL = 'gemini-3.1-pro-preview';        
+export const PRO_MODEL = 'gemini-3-flash-preview';        
 
 export type UserTier = 'free' | 'pro' | 'max' | 'admin';
 
@@ -61,6 +65,9 @@ export const checkCapability = (feature: string, userTier: UserTier = 'free'): {
 };
 
 export const getAiCoachResponse = async (newMessage: string, history: Message[], userTier: UserTier = 'free', userId: string = 'anonymous'): Promise<string> => {
+    if (!apiKey || apiKey === 'undefined' || apiKey === 'MISSING_KEY') {
+        throw new Error("AI_KEY_MISSING: Please configure your Gemini API Key in the settings.");
+    }
     try {
         const capability = CAPABILITIES.coach;
         const contents = history.map(msg => ({
@@ -89,6 +96,9 @@ export const getAiCoachResponse = async (newMessage: string, history: Message[],
  * Uses Search Grounding to find real-world events for prayer.
  */
 export const getGroundedPrayerTopics = async (userTier: UserTier = 'free', userId: string = 'anonymous'): Promise<any[]> => {
+    if (!apiKey || apiKey === 'undefined' || apiKey === 'MISSING_KEY') {
+        return [];
+    }
     const { allowed, message } = checkCapability('groundedPrayer', userTier);
     if (!allowed) throw new Error(message);
 
@@ -118,6 +128,9 @@ export const getGroundedPrayerTopics = async (userTier: UserTier = 'free', userI
 };
 
 export const getDeepTheologicalInsight = async (question: string, userTier: UserTier = 'free', userId: string = 'anonymous'): Promise<string> => {
+    if (!apiKey || apiKey === 'undefined' || apiKey === 'MISSING_KEY') {
+        throw new Error("AI_KEY_MISSING: Please configure your Gemini API Key in the settings.");
+    }
     const { allowed, message } = checkCapability('deepStudy', userTier);
     if (!allowed) throw new Error(message);
 
@@ -148,6 +161,9 @@ export const generateQuoteImage = async (prompt: string, userTier: UserTier = 'f
 };
 
 export const generateTagsForNote = async (noteText: string): Promise<string[]> => {
+    if (!apiKey || apiKey === 'undefined' || apiKey === 'MISSING_KEY') {
+        return ["Reflection"];
+    }
     try {
         const response = await ai.models.generateContent({
             model: LITE_MODEL,
@@ -218,6 +234,9 @@ You are strictly forbidden from using the following in your writing. Adherence i
  * to fetch user notes directly from Firestore.
  */
 export const generatePersonalizedDevotional = async (userId: string, name: string, userTier: UserTier = 'free'): Promise<DevotionalOutput> => {
+    if (!apiKey || apiKey === 'undefined' || apiKey === 'MISSING_KEY') {
+        throw new Error("AI_KEY_MISSING: Please configure your Gemini API Key in the settings.");
+    }
     const { allowed, message } = checkCapability('devotional', userTier);
     if (!allowed) throw new Error(message);
 

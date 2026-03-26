@@ -1,5 +1,5 @@
 import React, { createContext, useState, useContext, useEffect, useMemo, useCallback } from 'react';
-import { auth, googleProvider, signInWithPopup, firebaseSignOut, onAuthStateChanged, db } from '../firebase';
+import { auth, googleProvider, signInWithPopup, firebaseSignOut, onAuthStateChanged, db, testFirestoreConnection } from '../firebase';
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import type { AppUser } from '../types';
 import { handleFirestoreError, OperationType } from '../utils/firestoreErrorHandler';
@@ -50,14 +50,37 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (firebaseUser) {
-        const appUser = await fetchUserRole(firebaseUser);
-        setUser(appUser);
-      } else {
-        setUser(null);
-      }
+    // Safety timeout to prevent infinite "authenticating" hang
+    const safetyTimeout = setTimeout(() => {
       setLoading(false);
+      console.warn("Auth safety timeout reached. Forcing loading to false.");
+    }, 10000);
+
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      clearTimeout(safetyTimeout);
+      try {
+        if (firebaseUser) {
+          // Use a timeout for the profile fetch to avoid hanging the app
+          const profilePromise = fetchUserRole(firebaseUser);
+          const timeoutPromise = new Promise<null>((resolve) => setTimeout(() => resolve(null), 5000));
+          
+          const appUser = await Promise.race([profilePromise, timeoutPromise]);
+          
+          if (appUser) {
+            setUser(appUser as AppUser);
+          } else {
+            console.warn("Profile fetch timed out after 5s, using default user data to prevent hang");
+            setUser({ ...firebaseUser, role: 'user' } as AppUser);
+          }
+        } else {
+          setUser(null);
+        }
+      } catch (error) {
+        console.error("Error in auth state change:", error);
+        setUser(null);
+      } finally {
+        setLoading(false);
+      }
     });
 
     return () => unsubscribe();

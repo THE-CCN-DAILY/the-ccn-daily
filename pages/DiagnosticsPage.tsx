@@ -21,6 +21,11 @@ const DiagnosticsPage: React.FC = () => {
             if (!response.ok) throw new Error('Failed to fetch diagnostics');
             const data = await response.json();
             
+            // Check if user has selected an API key via AI Studio
+            if (window.aistudio) {
+                data.hasSelectedApiKey = await window.aistudio.hasSelectedApiKey();
+            }
+            
             // Check Firestore from the frontend
             try {
                 await getDoc(doc(db, '_system_health', 'check'));
@@ -158,6 +163,12 @@ const DiagnosticsPage: React.FC = () => {
                                             </span>
                                         </div>
                                         <div className="flex items-center justify-between text-sm p-2 bg-brand-secondary rounded">
+                                            <span className="text-brand-text-secondary">Custom Key Selected</span>
+                                            <span className={status.hasSelectedApiKey ? 'text-status-success font-bold' : 'text-brand-text-secondary'}>
+                                                {status.hasSelectedApiKey ? 'YES' : 'NO'}
+                                            </span>
+                                        </div>
+                                        <div className="flex items-center justify-between text-sm p-2 bg-brand-secondary rounded">
                                             <span className="text-brand-text-secondary">Test Model</span>
                                             <span className="text-brand-accent font-bold">GEMINI-3-FLASH-PREVIEW</span>
                                         </div>
@@ -165,6 +176,26 @@ const DiagnosticsPage: React.FC = () => {
                                             <span className="text-brand-text-secondary">Mode</span>
                                             <span className="text-brand-accent font-bold">COST-SAVING</span>
                                         </div>
+                                    </div>
+                                    
+                                    {/* API Key Selection for Enterprise/Pro features */}
+                                    <div className="mt-4 p-3 bg-brand-accent/5 border border-brand-accent/20 rounded-lg">
+                                        <p className="text-xs text-brand-text-secondary mb-2">
+                                            If you are experiencing RPC errors (500) with the platform key, please select your own paid Google Cloud API key.
+                                        </p>
+                                        <button 
+                                            onClick={async () => {
+                                                if (window.aistudio) {
+                                                    await window.aistudio.openSelectKey();
+                                                    checkSystem();
+                                                } else {
+                                                    alert("API Key selection is only available in the AI Studio environment.");
+                                                }
+                                            }}
+                                            className="text-xs font-bold text-brand-accent hover:underline flex items-center gap-1"
+                                        >
+                                            <SparklesIcon className="w-3 h-3" /> Select Custom API Key
+                                        </button>
                                     </div>
                                 </div>
                                 

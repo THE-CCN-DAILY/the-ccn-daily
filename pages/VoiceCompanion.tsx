@@ -5,7 +5,7 @@ import { SoundWaveIcon, MicrophoneIcon, StopIcon, SparklesIcon, LockIcon } from 
 import { connectToSentientGuide } from '../services/liveService';
 import { useAuth } from '../contexts/AuthContext';
 import { useUpgradeModal } from '../contexts/UpgradeModalContext';
-import { TIER_CONFIGS } from '../types/pricing';
+import { getTierFeatures } from '../types/pricing';
 
 const VoiceCompanion: React.FC = () => {
   const [isActive, setIsActive] = useState(false);
@@ -16,7 +16,7 @@ const VoiceCompanion: React.FC = () => {
   const { openUpgradeModal } = useUpgradeModal();
 
   const userTier = user?.tier || 'free';
-  const canUseLiveVoice = TIER_CONFIGS[userTier].canUseGeminiLiveVoice;
+  const canUseLiveVoice = getTierFeatures(userTier).canUseGeminiLiveVoice;
 
   const startSession = async () => {
     if (!canUseLiveVoice) {

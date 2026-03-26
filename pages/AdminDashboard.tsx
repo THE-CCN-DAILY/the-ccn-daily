@@ -60,6 +60,13 @@ const AdminDashboard: React.FC = () => {
     const [loadingInbox, setLoadingInbox] = useState(true);
 
     // Resource Management State
+    const [resources, setResources] = useState<any[]>([]);
+    const [loadingResources, setLoadingResources] = useState(true);
+    const [resourceTitle, setResourceTitle] = useState('');
+    const [resourceType, setResourceType] = useState<'book' | 'course' | 'audiobook' | 'challenge'>('book');
+    const [resourceAccessLane, setResourceAccessLane] = useState<'included' | 'owned' | 'hybrid'>('included');
+    const [resourcePrice, setResourcePrice] = useState('');
+    const [resourceTier, setResourceTier] = useState<'free' | 'pro' | 'max'>('free');
     const [uploadFile, setUploadFile] = useState<File | null>(null);
     const [uploadProgress, setUploadProgress] = useState(0);
     const [isUploading, setIsUploading] = useState(false);
@@ -158,10 +165,14 @@ const AdminDashboard: React.FC = () => {
 
             // 3. Save metadata to Firestore
             await addDoc(collection(db, 'resources'), {
-                name: uploadFile.name,
+                title: resourceTitle || uploadFile.name,
                 muxUploadId: uploadId,
-                type: uploadFile.type,
+                type: resourceType,
                 size: uploadFile.size,
+                accessLane: resourceAccessLane,
+                priceUsd: resourceAccessLane !== 'included' ? Number(resourcePrice) : 0,
+                tierRequired: resourceAccessLane !== 'owned' ? resourceTier : null,
+                isPremium: resourceAccessLane !== 'included' || resourceTier !== 'free',
                 uploadedBy: user?.uid,
                 createdAt: serverTimestamp(),
                 provider: 'mux'
@@ -169,6 +180,7 @@ const AdminDashboard: React.FC = () => {
 
             setUploadMessage('Video uploaded to Mux successfully! It will be ready to play shortly.');
             setUploadFile(null);
+            setResourceTitle('');
         } catch (error: any) {
             console.error('Mux upload error:', error);
             setUploadMessage(`Upload failed: ${error.message}`);
@@ -202,10 +214,14 @@ const AdminDashboard: React.FC = () => {
                         
                         // Save file metadata to Firestore
                         await addDoc(collection(db, 'resources'), {
-                            name: uploadFile.name,
+                            title: resourceTitle || uploadFile.name,
                             url: downloadURL,
-                            type: uploadFile.type,
+                            type: resourceType,
                             size: uploadFile.size,
+                            accessLane: resourceAccessLane,
+                            priceUsd: resourceAccessLane !== 'included' ? Number(resourcePrice) : 0,
+                            tierRequired: resourceAccessLane !== 'owned' ? resourceTier : null,
+                            isPremium: resourceAccessLane !== 'included' || resourceTier !== 'free',
                             uploadedBy: user?.uid,
                             createdAt: serverTimestamp()
                         });
@@ -213,6 +229,7 @@ const AdminDashboard: React.FC = () => {
                         setUploadMessage('File uploaded successfully!');
                         setIsUploading(false);
                         setUploadFile(null);
+                        setResourceTitle('');
                         setUploadProgress(0);
                     } catch (error) {
                         handleFirestoreError(error, OperationType.CREATE, 'resources');
@@ -303,12 +320,38 @@ const AdminDashboard: React.FC = () => {
             handleFirestoreError(error, OperationType.LIST, 'settings');
         });
 
+        const resourcesQ = query(collection(db, 'resources'), orderBy('createdAt', 'desc'));
+        const unsubscribeResources = onSnapshot(resourcesQ, (snapshot) => {
+            const fetchedResources = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data(),
+                createdAt: doc.data().createdAt?.toDate()?.toLocaleDateString() || 'N/A'
+            }));
+            setResources(fetchedResources);
+            setLoadingResources(false);
+        }, (error) => {
+            handleFirestoreError(error, OperationType.LIST, 'resources');
+        });
+
         return () => {
             unsubscribe();
             unsubscribeInbox();
             unsubscribeDiscounts();
+            unsubscribeResources();
         };
     }, [user]);
+
+    const handleDeleteResource = async (id: string) => {
+        if (!window.confirm('Are you sure you want to delete this resource?')) return;
+        try {
+            const { doc, deleteDoc } = await import('firebase/firestore');
+            await deleteDoc(doc(db, 'resources', id));
+            notify('Resource deleted successfully!', 'success');
+        } catch (error) {
+            handleFirestoreError(error, OperationType.DELETE, 'resources');
+            notify('Failed to delete resource.', 'error');
+        }
+    };
 
     const handleSendBroadcast = async () => {
         if (!broadcastMsg.trim()) return;
@@ -981,53 +1024,160 @@ const AdminDashboard: React.FC = () => {
                     ) : activeTab === 'resources' ? (
                         <Card className="animate-fade-in">
                             <h2 className="text-xl font-bold text-brand-text-primary mb-4">Resource Manager</h2>
-                            <p className="text-sm text-brand-text-secondary mb-6">Upload videos, documents, and media directly to Firebase Cloud Storage.</p>
+                            <p className="text-sm text-brand-text-secondary mb-6">Upload and manage books, courses, and media with monetization settings.</p>
                             
-                            <div className="p-6 border-2 border-dashed border-brand-border rounded-xl bg-brand-secondary/30 text-center">
-                                <input 
-                                    type="file" 
-                                    id="file-upload" 
-                                    className="hidden" 
-                                    onChange={(e) => setUploadFile(e.target.files?.[0] || null)}
-                                />
-                                <label htmlFor="file-upload" className="cursor-pointer flex flex-col items-center justify-center">
-                                    <div className="w-16 h-16 bg-brand-accent/20 rounded-full flex items-center justify-center mb-4">
-                                        <PlusCircleIcon className="w-8 h-8 text-brand-accent" />
-                                    </div>
-                                    <p className="font-bold text-brand-text-primary mb-1">
-                                        {uploadFile ? uploadFile.name : 'Click to select a file'}
-                                    </p>
-                                    <p className="text-xs text-brand-text-secondary">
-                                        {uploadFile ? `${(uploadFile.size / 1024 / 1024).toFixed(2)} MB` : 'MP4, PDF, JPG, PNG (Max 500MB)'}
-                                    </p>
-                                </label>
+                            <div className="space-y-8">
+                                <div className="p-6 border border-brand-border rounded-xl bg-brand-secondary/30">
+                                    <h3 className="font-bold text-brand-text-primary mb-4">Add New Resource</h3>
+                                    <div className="space-y-4">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="block text-xs font-bold text-brand-text-secondary uppercase mb-2">Resource Title</label>
+                                                <input 
+                                                    type="text" 
+                                                    value={resourceTitle}
+                                                    onChange={(e) => setResourceTitle(e.target.value)}
+                                                    className="w-full bg-brand-dark border border-brand-border rounded-xl p-3 text-brand-text-primary focus:border-brand-accent outline-none" 
+                                                    placeholder="e.g., The Art of Prayer"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-bold text-brand-text-secondary uppercase mb-2">Resource Type</label>
+                                                <select 
+                                                    value={resourceType}
+                                                    onChange={(e) => setResourceType(e.target.value as any)}
+                                                    className="w-full bg-brand-dark border border-brand-border rounded-xl p-3 text-brand-text-primary focus:border-brand-accent outline-none"
+                                                >
+                                                    <option value="book">Book (PDF/EPUB)</option>
+                                                    <option value="course">Course (Video/Text)</option>
+                                                    <option value="audiobook">Audiobook (MP3)</option>
+                                                    <option value="challenge">Challenge (Program)</option>
+                                                </select>
+                                            </div>
+                                        </div>
 
-                                {uploadFile && (
-                                    <div className="mt-6 flex gap-4 justify-center">
-                                        <button 
-                                            onClick={handleFileUpload}
-                                            disabled={isUploading}
-                                            className="px-8 py-3 bg-brand-accent text-white rounded-xl font-bold hover:scale-[1.02] transition-transform disabled:opacity-50"
-                                        >
-                                            {isUploading ? `Uploading... ${Math.round(uploadProgress)}%` : 'Upload to Firebase'}
-                                        </button>
-                                        {uploadFile.type.startsWith('video/') && (
-                                            <button 
-                                                onClick={handleMuxUpload}
-                                                disabled={isUploading}
-                                                className="px-8 py-3 bg-[#FB9129] text-white rounded-xl font-bold hover:scale-[1.02] transition-transform disabled:opacity-50"
-                                            >
-                                                {isUploading ? 'Uploading to Mux...' : 'Upload Video to Mux'}
-                                            </button>
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                            <div>
+                                                <label className="block text-xs font-bold text-brand-text-secondary uppercase mb-2">Access Lane</label>
+                                                <select 
+                                                    value={resourceAccessLane}
+                                                    onChange={(e) => setResourceAccessLane(e.target.value as any)}
+                                                    className="w-full bg-brand-dark border border-brand-border rounded-xl p-3 text-brand-text-primary focus:border-brand-accent outline-none"
+                                                >
+                                                    <option value="included">Included in Subscription</option>
+                                                    <option value="owned">Buy Once (Owned Forever)</option>
+                                                    <option value="hybrid">Hybrid (Both)</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-bold text-brand-text-secondary uppercase mb-2">Price (USD)</label>
+                                                <input 
+                                                    type="number" 
+                                                    value={resourcePrice}
+                                                    onChange={(e) => setResourcePrice(e.target.value)}
+                                                    disabled={resourceAccessLane === 'included'}
+                                                    className="w-full bg-brand-dark border border-brand-border rounded-xl p-3 text-brand-text-primary focus:border-brand-accent outline-none disabled:opacity-50" 
+                                                    placeholder="e.g., 19.99"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-bold text-brand-text-secondary uppercase mb-2">Tier Required</label>
+                                                <select 
+                                                    value={resourceTier}
+                                                    onChange={(e) => setResourceTier(e.target.value as any)}
+                                                    disabled={resourceAccessLane === 'owned'}
+                                                    className="w-full bg-brand-dark border border-brand-border rounded-xl p-3 text-brand-text-primary focus:border-brand-accent outline-none disabled:opacity-50"
+                                                >
+                                                    <option value="free">Free Tier</option>
+                                                    <option value="pro">Pro Tier</option>
+                                                    <option value="max">Max Tier</option>
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <div className="p-6 border-2 border-dashed border-brand-border rounded-xl bg-brand-secondary/30 text-center">
+                                            <input 
+                                                type="file" 
+                                                id="file-upload" 
+                                                className="hidden" 
+                                                onChange={(e) => setUploadFile(e.target.files?.[0] || null)}
+                                            />
+                                            <label htmlFor="file-upload" className="cursor-pointer flex flex-col items-center justify-center">
+                                                <div className="w-16 h-16 bg-brand-accent/20 rounded-full flex items-center justify-center mb-4">
+                                                    <PlusCircleIcon className="w-8 h-8 text-brand-accent" />
+                                                </div>
+                                                <p className="font-bold text-brand-text-primary mb-1">
+                                                    {uploadFile ? uploadFile.name : 'Click to select a file'}
+                                                </p>
+                                                <p className="text-xs text-brand-text-secondary">
+                                                    {uploadFile ? `${(uploadFile.size / 1024 / 1024).toFixed(2)} MB` : 'MP4, PDF, JPG, PNG (Max 500MB)'}
+                                                </p>
+                                            </label>
+
+                                            {uploadFile && (
+                                                <div className="mt-6 flex gap-4 justify-center">
+                                                    <button 
+                                                        onClick={handleFileUpload}
+                                                        disabled={isUploading || !resourceTitle}
+                                                        className="px-8 py-3 bg-brand-accent text-white rounded-xl font-bold hover:scale-[1.02] transition-transform disabled:opacity-50"
+                                                    >
+                                                        {isUploading ? `Uploading... ${Math.round(uploadProgress)}%` : 'Upload to Firebase'}
+                                                    </button>
+                                                    {uploadFile.type.startsWith('video/') && (
+                                                        <button 
+                                                            onClick={handleMuxUpload}
+                                                            disabled={isUploading || !resourceTitle}
+                                                            className="px-8 py-3 bg-[#FB9129] text-white rounded-xl font-bold hover:scale-[1.02] transition-transform disabled:opacity-50"
+                                                        >
+                                                            {isUploading ? 'Uploading to Mux...' : 'Upload Video to Mux'}
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            )}
+
+                                            {uploadMessage && (
+                                                <p className={`mt-4 text-sm font-bold ${uploadMessage.includes('success') ? 'text-status-success' : 'text-status-error'}`}>
+                                                    {uploadMessage}
+                                                </p>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="p-6 border border-brand-border rounded-xl bg-brand-secondary/30">
+                                    <h3 className="font-bold text-brand-text-primary mb-4">Existing Resources</h3>
+                                    <div className="space-y-4">
+                                        {loadingResources ? (
+                                            <div className="text-center text-brand-text-secondary py-4">Loading resources...</div>
+                                        ) : resources.length === 0 ? (
+                                            <div className="text-center text-brand-text-secondary py-4 italic">No resources found.</div>
+                                        ) : (
+                                            resources.map((res) => (
+                                                <div key={res.id} className="flex items-center justify-between p-4 bg-brand-dark rounded-xl border border-brand-border">
+                                                    <div className="flex-1">
+                                                        <h4 className="font-bold text-brand-text-primary">{res.title}</h4>
+                                                        <p className="text-xs text-brand-text-secondary">
+                                                            {res.type.toUpperCase()} • {res.accessLane.toUpperCase()}
+                                                            {res.priceUsd > 0 && ` • $${res.priceUsd}`}
+                                                            {res.tierRequired && ` • ${res.tierRequired.toUpperCase()} Required`}
+                                                        </p>
+                                                        <p className="text-[10px] text-brand-text-secondary mt-1">
+                                                            Uploaded: {res.createdAt}
+                                                        </p>
+                                                    </div>
+                                                    <div className="flex items-center gap-4">
+                                                        <button 
+                                                            onClick={() => handleDeleteResource(res.id)}
+                                                            className="text-[10px] text-brand-text-secondary hover:text-status-error uppercase font-bold"
+                                                        >
+                                                            Delete
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            ))
                                         )}
                                     </div>
-                                )}
-
-                                {uploadMessage && (
-                                    <p className={`mt-4 text-sm font-bold ${uploadMessage.includes('success') ? 'text-status-success' : 'text-status-error'}`}>
-                                        {uploadMessage}
-                                    </p>
-                                )}
+                                </div>
                             </div>
                         </Card>
                     ) : (

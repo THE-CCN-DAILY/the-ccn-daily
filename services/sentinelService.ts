@@ -21,7 +21,12 @@ export const runTechSentinelAudit = async (currentRoadmap: any): Promise<TechAud
     const isPlatformKeyValid = !!(platformKey && platformKey.startsWith('AIza') && platformKey !== 'undefined');
     const apiKey = isPlatformKeyValid ? platformKey : userKey;
 
-    const ai = new GoogleGenAI({ apiKey: apiKey || "" });
+    if (!apiKey || apiKey === 'undefined') {
+      console.warn("Sentinel: Gemini API Key is missing.");
+      return [];
+    }
+
+    const ai = new GoogleGenAI({ apiKey: apiKey || "MISSING_KEY" });
     const model = 'gemini-3-flash-preview';
 
     const prompt = `You are the Project Phoenix Strategic Sentinel. 
