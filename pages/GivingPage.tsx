@@ -8,7 +8,10 @@ import { useFlutterwave, closePaymentModal } from 'flutterwave-react-v3';
 
 const FLUTTERWAVE_PUBLIC_KEY = (import.meta as any).env.VITE_FLUTTERWAVE_PUBLIC_KEY || 'FLWPUBK_TEST-SANDBOXDEMOKEY-X';
 
+import { useNotifications } from '../contexts/NotificationContext';
+
 const GivingPage: React.FC = () => {
+  const { notify } = useNotifications();
   const [amount, setAmount] = useState<number>(50);
   const [type, setType] = useState<'one-time' | 'monthly'>('monthly');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -46,7 +49,7 @@ const GivingPage: React.FC = () => {
              await recordDonation();
          } else {
              setIsProcessing(false);
-             alert("Payment was not successful. Please try again.");
+             notify("Payment was not successful. Please try again.", "error");
          }
       },
       onClose: () => {

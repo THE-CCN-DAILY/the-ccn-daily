@@ -20,41 +20,41 @@ declare global {
 }
 
 const sanctuaryItems = [
-  { to: '/guided-journey', text: 'Guided Daily Journey', icon: StepsIcon },
-  { to: '/bible', text: 'Bible Reader', icon: ReaderIcon },
-  { to: '/podcasts', text: 'Podcast Library', icon: SpeakerWaveIcon },
-  { to: '/the-community', text: 'The Community', icon: PrayingHandsIcon },
-  { to: '/expert-council', text: 'Expert Council', icon: PrayingHandsIcon },
-  { to: '/testimonies', text: 'Testimonies', icon: SparklesIcon },
-  { to: '/gamification', text: 'Your Journey', icon: GamificationIcon },
-  { to: '/grace-link', text: 'Grace Links', icon: GiftIcon },
-  { to: '/sentient-guide', text: 'Sentient Guide (Kai)', icon: MicrophoneIcon },
-  { to: '/visual-sanctuary', text: 'Visual Sanctuary', icon: PaintBrushIcon },
-  { to: '/inbox', text: 'Inbox & Updates', icon: BellIcon },
-  { to: '/events', text: 'Live Events', icon: CalendarIcon },
-  { to: '/live', text: 'Live Broadcast', icon: SpeakerWaveIcon },
-  { to: '/giving', text: 'Giving & Support', icon: CreditCardIcon },
-  { to: '/pricing', text: 'Upgrade Plan', icon: SparklesIcon },
+  { to: '/app/guided-journey', text: 'Guided Daily Journey', icon: StepsIcon, group: 'Pray' },
+  { to: '/app/bible', text: 'Bible Reader', icon: ReaderIcon, group: 'Read' },
+  { to: '/app/podcasts', text: 'Podcast Library', icon: SpeakerWaveIcon, group: 'Read' },
+  { to: '/app/the-community', text: 'The Community', icon: PrayingHandsIcon, group: 'Community' },
+  { to: '/app/expert-council', text: 'Expert Council', icon: PrayingHandsIcon, group: 'Community' },
+  { to: '/app/testimonies', text: 'Testimonies', icon: SparklesIcon, group: 'Community' },
+  { to: '/app/gamification', text: 'Your Journey', icon: GamificationIcon, group: 'Account' },
+  { to: '/app/grace-link', text: 'Grace Links', icon: GiftIcon, group: 'Community' },
+  { to: '/app/sentient-guide', text: 'Sentient Guide (Kai)', icon: MicrophoneIcon, group: 'Pray' },
+  { to: '/app/visual-sanctuary', text: 'Visual Sanctuary', icon: PaintBrushIcon, group: 'Pray' },
+  { to: '/app/inbox', text: 'Inbox & Updates', icon: BellIcon, group: 'Account' },
+  { to: '/app/events', text: 'Live Events', icon: CalendarIcon, group: 'Live' },
+  { to: '/app/live', text: 'Live Broadcast', icon: SpeakerWaveIcon, group: 'Live' },
+  { to: '/app/giving', text: 'Giving & Support', icon: CreditCardIcon, group: 'Account' },
+  { to: '/pricing', text: 'Upgrade Plan', icon: SparklesIcon, group: 'Account' },
 ];
 
 const commandCenterItems = [
-  { to: '/plan', text: 'Master Plan', icon: PlanIcon },
-  { to: '/roadmap-evolution', text: 'Roadmap Evolution', icon: SparklesIcon },
-  { to: '/visionary-lab', text: 'Visionary Tech Lab', icon: DesignSystemIcon },
-  { to: '/data', text: 'Data Architecture', icon: DbIcon },
-  { to: '/roles', text: 'Roles & Permissions', icon: AdminIcon },
-  { to: '/multi-tenancy', text: 'Multi-Tenancy', icon: AdminIcon },
-  { to: '/devotional-generator', text: 'Devotional Generator', icon: AiIcon },
-  { to: '/quote-generator', text: 'Quote Graphics', icon: SparklesIcon },
-  { to: '/admin', text: 'Admin Dashboard', icon: DashboardIcon },
-  { to: '/dynamic-theming', text: 'Dynamic Theming', icon: PaintBrushIcon },
-  { to: '/atmospheric-music', text: 'Atmospheric Music', icon: SoundWaveIcon },
-  { to: '/media-plan', text: 'Media Player Plan', icon: UiIcon },
-  { to: '/design-system', text: 'Design System', icon: DesignSystemIcon },
-  { to: '/diagnostics', text: 'System Diagnostics', icon: CheckIcon },
-  { to: '/team', text: 'Virtual Team', icon: TeamIcon },
-  { to: '/next-steps', text: 'Founder Actions', icon: CheckIcon },
-  { to: '/chat', text: 'Chat with Team', icon: ChatIcon },
+  { to: '/studio/admin', text: 'Admin Dashboard', icon: DashboardIcon },
+  { to: '/studio/plan', text: 'Master Plan', icon: PlanIcon },
+  { to: '/studio/roadmap-evolution', text: 'Roadmap Evolution', icon: SparklesIcon },
+  { to: '/studio/visionary-lab', text: 'Visionary Tech Lab', icon: DesignSystemIcon },
+  { to: '/studio/data', text: 'Data Architecture', icon: DbIcon },
+  { to: '/studio/roles', text: 'Roles & Permissions', icon: AdminIcon },
+  { to: '/studio/multi-tenancy', text: 'Multi-Tenancy', icon: AdminIcon },
+  { to: '/studio/devotional-generator', text: 'Devotional Generator', icon: AiIcon },
+  { to: '/studio/quote-generator', text: 'Quote Graphics', icon: SparklesIcon },
+  { to: '/studio/dynamic-theming', text: 'Dynamic Theming', icon: PaintBrushIcon },
+  { to: '/studio/atmospheric-music', text: 'Atmospheric Music', icon: SoundWaveIcon },
+  { to: '/studio/media-plan', text: 'Media Player Plan', icon: UiIcon },
+  { to: '/studio/design-system', text: 'Design System', icon: DesignSystemIcon },
+  { to: '/studio/diagnostics', text: 'System Diagnostics', icon: CheckIcon },
+  { to: '/studio/team', text: 'Virtual Team', icon: TeamIcon },
+  { to: '/studio/next-steps', text: 'Founder Actions', icon: CheckIcon },
+  { to: '/studio/chat', text: 'Chat with Team', icon: ChatIcon },
 ];
 
 const Sidebar: React.FC = () => {
@@ -64,7 +64,13 @@ const Sidebar: React.FC = () => {
     return localStorage.getItem('phoenix_mode') === 'strategy';
   });
 
+  const { notify } = useNotifications();
+
   const toggleMode = () => {
+    if (user?.role !== 'admin') {
+      notify("Strategy mode is reserved for the Founder.", "error");
+      return;
+    }
     const newMode = !isStrategyMode;
     setIsStrategyMode(newMode);
     localStorage.setItem('phoenix_mode', newMode ? 'strategy' : 'sanctuary');
@@ -103,24 +109,51 @@ const Sidebar: React.FC = () => {
       </div>
 
       <nav className="flex-grow overflow-y-auto custom-scrollbar pr-2">
-        <div className="mb-2 px-3">
-          <p className="text-[10px] font-bold text-brand-text-secondary uppercase tracking-widest">
-            {isStrategyMode ? 'Management' : 'Daily Journey'}
-          </p>
-        </div>
-        <ul>
-          {activeItems.map(item => (
-            <li key={item.to}>
-              <NavLink
-                to={item.to}
-                className={({ isActive }) => `${baseLinkClasses} ${isActive ? activeLinkClasses : inactiveLinkClasses}`}
-              >
-                <item.icon className="h-5 w-5 mr-3" />
-                <span className="text-sm font-medium">{item.text}</span>
-              </NavLink>
-            </li>
-          ))}
-        </ul>
+        {isStrategyMode ? (
+          <>
+            <div className="mb-2 px-3">
+              <p className="text-[10px] font-bold text-brand-text-secondary uppercase tracking-widest">
+                Management
+              </p>
+            </div>
+            <ul>
+              {commandCenterItems.map(item => (
+                <li key={item.to}>
+                  <NavLink
+                    to={item.to}
+                    className={({ isActive }) => `${baseLinkClasses} ${isActive ? activeLinkClasses : inactiveLinkClasses}`}
+                  >
+                    <item.icon className="h-5 w-5 mr-3" />
+                    <span className="text-sm font-medium">{item.text}</span>
+                  </NavLink>
+                </li>
+              ))}
+            </ul>
+          </>
+        ) : (
+          ['Read', 'Pray', 'Community', 'Live', 'Account'].map(group => (
+            <div key={group} className="mb-4">
+              <div className="mb-2 px-3">
+                <p className="text-[10px] font-bold text-brand-text-secondary uppercase tracking-widest">
+                  {group}
+                </p>
+              </div>
+              <ul>
+                {sanctuaryItems.filter(item => item.group === group).map(item => (
+                  <li key={item.to}>
+                    <NavLink
+                      to={item.to}
+                      className={({ isActive }) => `${baseLinkClasses} ${isActive ? activeLinkClasses : inactiveLinkClasses}`}
+                    >
+                      <item.icon className="h-5 w-5 mr-3" />
+                      <span className="text-sm font-medium">{item.text}</span>
+                    </NavLink>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))
+        )}
       </nav>
       <div className="mt-auto">
         <div className="p-2 my-2 border-t border-b border-brand-border">

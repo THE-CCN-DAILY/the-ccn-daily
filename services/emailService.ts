@@ -26,7 +26,7 @@ export const sendGiftEmail = async (payload: GiftEmailPayload): Promise<{ succes
 
   const msg = {
     to: payload.recipientEmail,
-    from: 'hello@theccndaily.com', // Replace with your verified sender
+    from: 'hello@updates.theccndaily.com', // Replace with your verified sender
     subject: `You've received a gift: ${payload.giftedItemTitle}!`,
     text: `Hello! ${payload.senderName || 'Someone'} has sent you a gift: ${payload.giftedItemTitle}.\n\nMessage: ${payload.personalMessage}`,
     html: `

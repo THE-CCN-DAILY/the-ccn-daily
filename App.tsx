@@ -45,6 +45,9 @@ import LiveStreamPage from './pages/LiveStreamPage';
 
 import ErrorBoundary from './components/ErrorBoundary';
 
+import RequireAuth from './components/auth/RequireAuth';
+import RequireRole from './components/auth/RequireRole';
+
 const App: React.FC = () => {
   return (
     <ErrorBoundary>
@@ -58,40 +61,53 @@ const App: React.FC = () => {
                     <UpgradeModalProvider>
                       <Layout>
                         <Routes>
-                          <Route path="/" element={<Navigate to="/plan" replace />} />
-                          <Route path="/plan" element={<MasterPlan />} />
-                          <Route path="/roadmap-evolution" element={<RoadmapEvolution />} />
-                          <Route path="/sentient-guide" element={<VoiceCompanion />} />
-                          <Route path="/visual-sanctuary" element={<VisualSanctuary />} />
-                          <Route path="/visionary-lab" element={<VisionaryLab />} />
-                          <Route path="/guided-journey" element={<GuidedJourneyPage />} />
-                          <Route path="/data" element={<DataArchitecture />} />
-                          <Route path="/roles" element={<Roles />} />
-                          <Route path="/reader-prototype" element={<ReaderPrototype />} />
-                          <Route path="/bible" element={<BibleReaderPage />} />
-                          <Route path="/podcasts" element={<PodcastPage />} />
-                          <Route path="/devotional-generator" element={<DevotionalGeneratorPage />} />
-                          <Route path="/quote-generator" element={<QuoteGeneratorPage />} />
-                          <Route path="/the-community" element={<TheCommunity />} />
-                          <Route path="/expert-council" element={<ExpertCouncilPage />} />
-                          <Route path="/testimonies" element={<TestimoniesPage />} />
-                          <Route path="/gamification" element={<GamificationPage />} />
-                          <Route path="/grace-link" element={<GraceLinkPage />} />
-                          <Route path="/inbox" element={<InboxPage />} />
-                          <Route path="/events" element={<EventsPage />} />
-                          <Route path="/live" element={<LiveStreamPage />} />
-                          <Route path="/giving" element={<GivingPage />} />
+                          {/* Public Routes */}
+                          <Route path="/" element={<Navigate to="/app/guided-journey" replace />} />
                           <Route path="/pricing" element={<PricingPage />} />
-                          <Route path="/admin" element={<AdminDashboard />} />
-                          <Route path="/multi-tenancy" element={<MultiTenancyAdmin />} />
-                          <Route path="/dynamic-theming" element={<DynamicTheming />} />
-                          <Route path="/atmospheric-music" element={<AtmosphericMusicPage />} />
-                          <Route path="/media-plan" element={<MediaPlayerPlan />} />
-                          <Route path="/design-system" element={<DesignSystem />} />
-                          <Route path="/diagnostics" element={<DiagnosticsPage />} />
-                          <Route path="/team" element={<Team />} />
-                          <Route path="/next-steps" element={<NextSteps />} />
-                          <Route path="/chat" element={<ChatWithTeam />} />
+                          
+                          {/* Member Sanctuary Routes */}
+                          <Route path="/app/*">
+                            <Route index element={<Navigate to="guided-journey" replace />} />
+                            <Route path="guided-journey" element={<RequireAuth><GuidedJourneyPage /></RequireAuth>} />
+                            <Route path="bible" element={<RequireAuth><BibleReaderPage /></RequireAuth>} />
+                            <Route path="podcasts" element={<RequireAuth><PodcastPage /></RequireAuth>} />
+                            <Route path="the-community" element={<RequireAuth><TheCommunity /></RequireAuth>} />
+                            <Route path="expert-council" element={<RequireAuth><ExpertCouncilPage /></RequireAuth>} />
+                            <Route path="testimonies" element={<RequireAuth><TestimoniesPage /></RequireAuth>} />
+                            <Route path="gamification" element={<RequireAuth><GamificationPage /></RequireAuth>} />
+                            <Route path="grace-link" element={<RequireAuth><GraceLinkPage /></RequireAuth>} />
+                            <Route path="sentient-guide" element={<RequireAuth><VoiceCompanion /></RequireAuth>} />
+                            <Route path="visual-sanctuary" element={<RequireAuth><VisualSanctuary /></RequireAuth>} />
+                            <Route path="inbox" element={<RequireAuth><InboxPage /></RequireAuth>} />
+                            <Route path="events" element={<RequireAuth><EventsPage /></RequireAuth>} />
+                            <Route path="live" element={<RequireAuth><LiveStreamPage /></RequireAuth>} />
+                            <Route path="giving" element={<RequireAuth><GivingPage /></RequireAuth>} />
+                          </Route>
+
+                          {/* Founder Command Center Routes (Admin Only) */}
+                          <Route path="/studio/*">
+                            <Route index element={<Navigate to="admin" replace />} />
+                            <Route path="admin" element={<RequireRole role="admin"><AdminDashboard /></RequireRole>} />
+                            <Route path="plan" element={<RequireRole role="admin"><MasterPlan /></RequireRole>} />
+                            <Route path="roadmap-evolution" element={<RequireRole role="admin"><RoadmapEvolution /></RequireRole>} />
+                            <Route path="visionary-lab" element={<RequireRole role="admin"><VisionaryLab /></RequireRole>} />
+                            <Route path="data" element={<RequireRole role="admin"><DataArchitecture /></RequireRole>} />
+                            <Route path="roles" element={<RequireRole role="admin"><Roles /></RequireRole>} />
+                            <Route path="multi-tenancy" element={<RequireRole role="admin"><MultiTenancyAdmin /></RequireRole>} />
+                            <Route path="devotional-generator" element={<RequireRole role="admin"><DevotionalGeneratorPage /></RequireRole>} />
+                            <Route path="quote-generator" element={<RequireRole role="admin"><QuoteGeneratorPage /></RequireRole>} />
+                            <Route path="dynamic-theming" element={<RequireRole role="admin"><DynamicTheming /></RequireRole>} />
+                            <Route path="atmospheric-music" element={<RequireRole role="admin"><AtmosphericMusicPage /></RequireRole>} />
+                            <Route path="media-plan" element={<RequireRole role="admin"><MediaPlayerPlan /></RequireRole>} />
+                            <Route path="design-system" element={<RequireRole role="admin"><DesignSystem /></RequireRole>} />
+                            <Route path="diagnostics" element={<RequireRole role="admin"><DiagnosticsPage /></RequireRole>} />
+                            <Route path="team" element={<RequireRole role="admin"><Team /></RequireRole>} />
+                            <Route path="next-steps" element={<RequireRole role="admin"><NextSteps /></RequireRole>} />
+                            <Route path="chat" element={<RequireRole role="admin"><ChatWithTeam /></RequireRole>} />
+                          </Route>
+
+                          {/* Catch-all */}
+                          <Route path="*" element={<Navigate to="/app/guided-journey" replace />} />
                         </Routes>
                       </Layout>
                     </UpgradeModalProvider>

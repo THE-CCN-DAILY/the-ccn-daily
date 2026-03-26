@@ -13,6 +13,8 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+import { toast } from 'sonner';
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(true);
@@ -67,7 +69,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await signInWithPopup(auth, googleProvider);
     } catch (error) {
       console.error("Error during sign-in:", error);
-      alert("Could not sign in. Please ensure popups are allowed.");
+      toast.error("Could not sign in. Please ensure popups are allowed.");
       setLoading(false);
     }
   }, []);

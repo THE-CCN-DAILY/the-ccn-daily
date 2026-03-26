@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import { useNavigate } from 'react-router-dom';
 import { XIcon, CheckIcon, SparklesIcon, LockIcon } from './icons';
 import { getLocalizedPrice } from '../utils/ppp';
 
@@ -12,6 +13,7 @@ interface UpgradeModalProps {
 
 const UpgradeModal: React.FC<UpgradeModalProps> = ({ isOpen, onClose, featureName, requiredTier = 'pro' }) => {
     const [userCountry, setUserCountry] = useState('US');
+    const navigate = useNavigate();
 
     useEffect(() => {
         // In a real app, we would fetch the user's country via IP geolocation
@@ -21,12 +23,12 @@ const UpgradeModal: React.FC<UpgradeModalProps> = ({ isOpen, onClose, featureNam
 
     if (!isOpen) return null;
 
-    const proPrice = getLocalizedPrice('pro', userCountry);
-    const maxPrice = getLocalizedPrice('max', userCountry);
+    const proPrice = getLocalizedPrice(7.99, userCountry);
+    const maxPrice = getLocalizedPrice(14.99, userCountry);
 
     const handleUpgradeClick = () => {
         onClose();
-        window.location.href = '#/pricing';
+        navigate('/pricing');
     };
 
     return (
@@ -79,7 +81,7 @@ const UpgradeModal: React.FC<UpgradeModalProps> = ({ isOpen, onClose, featureNam
                                     )}
                                     <h3 className="text-xl font-bold text-brand-text-primary mb-2">Pro</h3>
                                     <div className="mb-6">
-                                        <span className="text-3xl font-black text-brand-text-primary">{proPrice.formatted}</span>
+                                        <span className="text-3xl font-black text-brand-text-primary">{proPrice.currencySymbol}{proPrice.discountedPriceUSD}</span>
                                         <span className="text-brand-text-secondary">/mo</span>
                                     </div>
                                     
@@ -118,7 +120,7 @@ const UpgradeModal: React.FC<UpgradeModalProps> = ({ isOpen, onClose, featureNam
                                         Max <SparklesIcon className="w-5 h-5 text-secondary-purple" />
                                     </h3>
                                     <div className="mb-6">
-                                        <span className="text-3xl font-black text-brand-text-primary">{maxPrice.formatted}</span>
+                                        <span className="text-3xl font-black text-brand-text-primary">{maxPrice.currencySymbol}{maxPrice.discountedPriceUSD}</span>
                                         <span className="text-brand-text-secondary">/mo</span>
                                     </div>
                                     

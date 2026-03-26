@@ -11,7 +11,10 @@ const moodConfigs: { name: Mood; className: string; }[] = [
   { name: 'Courageous', className: 'bg-secondary-purple' },
 ];
 
+import { useNotifications } from '../contexts/NotificationContext';
+
 const AtmosphericMusicPage: React.FC = () => {
+    const { notify } = useNotifications();
     const [activeMood, setActiveMood] = useState<Mood | null>(null);
     const [currentTrack, setCurrentTrack] = useState<{ title: string; url: string } | null>(null);
     const [isPlaying, setIsPlaying] = useState(false);
@@ -65,7 +68,7 @@ const AtmosphericMusicPage: React.FC = () => {
             }
         } catch (error) {
             console.error("Failed to get music:", error);
-            alert("Could not load atmospheric music.");
+            notify("Could not load atmospheric music.", "error");
         } finally {
             setIsLoading(false);
         }

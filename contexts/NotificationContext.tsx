@@ -4,6 +4,8 @@ import { collection, query, orderBy, onSnapshot, addDoc, serverTimestamp, doc, u
 import { handleFirestoreError, OperationType } from '../utils/firestoreErrorHandler';
 import { useAuth } from './AuthContext';
 
+import { Toaster, toast } from 'sonner';
+
 export interface AppNotification {
   id: string;
   title: string;
@@ -19,6 +21,7 @@ interface NotificationContextType {
   markAsRead: (id: string) => Promise<void>;
   markAllAsRead: () => Promise<void>;
   unreadCount: number;
+  notify: (message: string, type?: 'success' | 'error' | 'info') => void;
 }
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
@@ -55,8 +58,17 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
         ...notification,
         date: serverTimestamp()
       });
+      toast.success(notification.title);
     } catch (error) {
       handleFirestoreError(error, OperationType.CREATE, 'notifications');
+    }
+  };
+
+  const notify = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
+    switch (type) {
+      case 'success': toast.success(message); break;
+      case 'error': toast.error(message); break;
+      default: toast(message);
     }
   };
 
@@ -73,7 +85,8 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
   const unreadCount = notifications.filter(n => !n.read).length;
 
   return (
-    <NotificationContext.Provider value={{ notifications, addNotification, markAsRead, markAllAsRead, unreadCount }}>
+    <NotificationContext.Provider value={{ notifications, addNotification, markAsRead, markAllAsRead, unreadCount, notify }}>
+      <Toaster position="top-right" richColors />
       {children}
     </NotificationContext.Provider>
   );

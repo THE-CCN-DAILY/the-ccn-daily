@@ -4,7 +4,10 @@ import Card from '../components/Card';
 import { AiIcon, SparklesIcon, SpinnerIcon, SearchIcon, SoundWaveIcon, CheckIcon, MicrophoneIcon } from '../components/icons';
 import { getGroundedPrayerTopics, getDeepTheologicalInsight, generateSanctuaryVideo } from '../services/geminiService';
 
+import { useNotifications } from '../contexts/NotificationContext';
+
 const VisionaryLab: React.FC = () => {
+  const { notify } = useNotifications();
   const [isGrounding, setIsGrounding] = useState(false);
   const [groundedTopics, setGroundedTopics] = useState<any[]>([]);
   const [deepQuestion, setDeepQuestion] = useState('');
@@ -23,7 +26,7 @@ const VisionaryLab: React.FC = () => {
       const topics = await getGroundedPrayerTopics();
       setGroundedTopics(topics);
     } catch (e) {
-      alert("Grounding test failed.");
+      notify("Grounding test failed.", "error");
     } finally {
       setIsGrounding(false);
     }
@@ -37,7 +40,7 @@ const VisionaryLab: React.FC = () => {
       const result = await getDeepTheologicalInsight(deepQuestion);
       setDeepInsight(result);
     } catch (e) {
-      alert("Thinking test failed.");
+      notify("Thinking test failed.", "error");
     } finally {
       setIsThinking(false);
     }
@@ -62,7 +65,7 @@ const VisionaryLab: React.FC = () => {
             // @ts-ignore
             await window.aistudio.openSelectKey();
         } else {
-            alert("Video generation error. Check console.");
+            notify("Video generation error. Check console.", "error");
         }
     } finally {
         setIsVideoLoading(false);

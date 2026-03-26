@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import type { Highlight } from '../types';
 import { NoteIcon, MicrophoneIcon, StopIcon, SpeakerWaveIcon, SpinnerIcon } from './icons';
 import { generateTagsForNote } from '../services/geminiService';
+import { useNotifications } from '../contexts/NotificationContext';
 
 // FIX: Add types for the browser's SpeechRecognition API to resolve TypeScript errors.
 // This API is not yet part of the standard TypeScript DOM library.
@@ -84,6 +85,7 @@ const Tag: React.FC<{ label: string; isActive?: boolean; onClick?: () => void; }
 );
 
 const HighlightsSidebar: React.FC<HighlightsSidebarProps> = ({ highlights, editingHighlight, onEditNote, onSaveNote }) => {
+  const { notify } = useNotifications();
   const [noteText, setNoteText] = useState('');
   const [isTagging, setIsTagging] = useState(false);
   const [activeTag, setActiveTag] = useState<string | null>(null);
@@ -124,7 +126,7 @@ const HighlightsSidebar: React.FC<HighlightsSidebarProps> = ({ highlights, editi
     
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition || !navigator.mediaDevices?.getUserMedia) {
-        alert("Sorry, your browser doesn't support the required voice note APIs.");
+        notify("Sorry, your browser doesn't support the required voice note APIs.", "error");
         return;
     }
 
@@ -183,7 +185,7 @@ const HighlightsSidebar: React.FC<HighlightsSidebarProps> = ({ highlights, editi
 
     } catch (err) {
         console.error("Error accessing microphone:", err);
-        alert("Could not access the microphone. Please check your browser permissions.");
+        notify("Could not access the microphone. Please check your browser permissions.", "error");
     }
   };
   

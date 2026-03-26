@@ -6,10 +6,12 @@ import { GoogleGenAI } from "@google/genai";
 import { db } from '../../firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { handleFirestoreError, OperationType } from '../../utils/firestoreErrorHandler';
+import { useNotifications } from '../../contexts/NotificationContext';
 
 type SourceType = 'Newsletter' | 'Book' | 'Manual' | 'URL';
 
 const ChallengeCreator: React.FC = () => {
+    const { notify } = useNotifications();
     const [sourceType, setSourceType] = useState<SourceType>('Newsletter');
     const [sourceValue, setSourceValue] = useState('');
     const [isGenerating, setIsGenerating] = useState(false);
@@ -55,7 +57,7 @@ const ChallengeCreator: React.FC = () => {
             setGeneratedChallenge(result);
         } catch (error) {
             console.error('AI Generation Error:', error);
-            alert('Failed to generate course. Please try again.');
+            notify('Failed to generate course. Please try again.', 'error');
         } finally {
             setIsGenerating(false);
         }
@@ -72,7 +74,7 @@ const ChallengeCreator: React.FC = () => {
                 status: 'published',
                 participants: 0
             });
-            alert('Challenge published successfully to the community!');
+            notify('Challenge published successfully to the community!', 'success');
             setGeneratedChallenge(null);
             setSourceValue('');
         } catch (error) {

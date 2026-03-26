@@ -4,10 +4,9 @@ import Card from '../components/Card';
 import ChallengeCreator from '../components/admin/ChallengeCreator';
 import { UserIcon, PlusCircleIcon, ChatBubbleLeftRightIcon, PencilIcon, SpeakerWaveIcon, ReaderIcon, EllipsisHorizontalIcon, CommunityIcon, DbIcon, TrophyIcon, SpinnerIcon, CalendarIcon } from '../components/icons';
 import { useNotifications } from '../contexts/NotificationContext';
-import { db } from '../firebase';
-import { collection, query, orderBy, onSnapshot, addDoc, serverTimestamp } from 'firebase/firestore';
+import { db, storage, auth } from '../firebase';
+import { collection, addDoc, serverTimestamp, query, orderBy, onSnapshot } from 'firebase/firestore';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
-import { storage } from '../firebase';
 import { handleFirestoreError, OperationType } from '../utils/firestoreErrorHandler';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -34,8 +33,10 @@ const StatCard: React.FC<{ title: string; value: string | number; change: string
 
 const AdminDashboard: React.FC = () => {
     const { user } = useAuth();
-    const [activeTab, setActiveTab] = useState<'users' | 'challenges' | 'broadcasts' | 'events' | 'payments' | 'discounts' | 'tenancy' | 'resources' | 'inbox'>('users');
-    const { addNotification } = useNotifications();
+    const [activeTab, setActiveTab] = useState<'users' | 'challenges' | 'broadcasts' | 'events' | 'payments' | 'discounts' | 'tenancy' | 'resources' | 'inbox' | 'budget'>('users');
+    const { addNotification, notify } = useNotifications();
+    const [usageStats, setUsageStats] = useState<any>(null);
+    const [loadingBudget, setLoadingBudget] = useState(false);
     const [broadcastTitle, setBroadcastTitle] = useState('');
     const [broadcastMsg, setBroadcastMsg] = useState('');
     const [broadcastTarget, setBroadcastTarget] = useState('All Active Members');
@@ -69,6 +70,10 @@ const AdminDashboard: React.FC = () => {
     const [muxPlaybackId, setMuxPlaybackId] = useState('');
     const [isCreatingMuxStream, setIsCreatingMuxStream] = useState(false);
 
+    // Payment Settings State
+    const [flutterwaveKey, setFlutterwaveKey] = useState('');
+    const [isUpdatingPayment, setIsUpdatingPayment] = useState(false);
+
     // Discounts State
     const [discounts, setDiscounts] = useState<any[]>([]);
     const [loadingDiscounts, setLoadingDiscounts] = useState(true);
@@ -76,12 +81,21 @@ const AdminDashboard: React.FC = () => {
     const [discountPercentage, setDiscountPercentage] = useState('');
     const [discountStartDate, setDiscountStartDate] = useState('');
     const [discountEndDate, setDiscountEndDate] = useState('');
+    const [discountType, setDiscountType] = useState<'seasonal' | 'yearly' | 'custom'>('seasonal');
+    const [targetTier, setTargetTier] = useState<'pro' | 'max' | 'all'>('all');
+    const [targetBilling, setTargetBilling] = useState<'monthly' | 'yearly' | 'both'>('both');
     const [isCreatingDiscount, setIsCreatingDiscount] = useState(false);
 
     const handleCreateMuxStream = async () => {
         setIsCreatingMuxStream(true);
         try {
-            const response = await fetch('/api/mux/live', { method: 'POST' });
+            const token = await auth.currentUser?.getIdToken();
+            const response = await fetch('/api/mux/live', { 
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
             if (!response.ok) {
                 const errorData = await response.json();
                 throw new Error(errorData.error || 'Failed to create Mux stream');
@@ -98,10 +112,10 @@ const AdminDashboard: React.FC = () => {
                 updatedAt: serverTimestamp()
             });
 
-            alert('Mux Live Stream created successfully! Save your Stream Key securely.');
+            notify('Mux Live Stream created successfully! Save your Stream Key securely.', 'success');
         } catch (error: any) {
             console.error('Mux error:', error);
-            alert(`Failed to create Mux stream: ${error.message}`);
+            notify(`Failed to create Mux stream: ${error.message}`, 'error');
         } finally {
             setIsCreatingMuxStream(false);
         }
@@ -114,7 +128,13 @@ const AdminDashboard: React.FC = () => {
         
         try {
             // 1. Get direct upload URL from our backend
-            const response = await fetch('/api/mux/upload', { method: 'POST' });
+            const token = await auth.currentUser?.getIdToken();
+            const response = await fetch('/api/mux/upload', { 
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
             if (!response.ok) {
                 const errorData = await response.json();
                 throw new Error(errorData.error || 'Failed to get Mux upload URL');
@@ -209,6 +229,25 @@ const AdminDashboard: React.FC = () => {
     };
 
     useEffect(() => {
+        if (activeTab === 'budget') {
+            fetchBudgetStats();
+        }
+    }, [activeTab]);
+
+    const fetchBudgetStats = async () => {
+        setLoadingBudget(true);
+        try {
+            const { getUsageStats } = await import('../services/budgetService');
+            const stats = await getUsageStats();
+            setUsageStats(stats);
+        } catch (error) {
+            console.error("Error fetching budget stats:", error);
+        } finally {
+            setLoadingBudget(false);
+        }
+    };
+
+    useEffect(() => {
         if (!user || user.role !== 'admin') {
             setUsers([]);
             setLoadingUsers(false);
@@ -244,14 +283,22 @@ const AdminDashboard: React.FC = () => {
 
         const discountsQ = query(collection(db, 'settings'), orderBy('createdAt', 'desc'));
         const unsubscribeDiscounts = onSnapshot(discountsQ, (snapshot) => {
-            const fetchedDiscounts = snapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data(),
-                startDate: doc.data().startDate?.toDate()?.toLocaleDateString() || 'N/A',
-                endDate: doc.data().endDate?.toDate()?.toLocaleDateString() || 'N/A'
-            }));
+            const fetchedDiscounts = snapshot.docs
+                .filter(doc => doc.data().category === 'discount' || doc.data().percentage !== undefined)
+                .map(doc => ({
+                    id: doc.id,
+                    ...doc.data(),
+                    startDate: doc.data().startDate?.toDate()?.toLocaleDateString() || 'N/A',
+                    endDate: doc.data().endDate?.toDate()?.toLocaleDateString() || 'N/A'
+                }));
             setDiscounts(fetchedDiscounts);
             setLoadingDiscounts(false);
+            
+            // Also check for payment settings in the same collection
+            const paymentDoc = snapshot.docs.find(doc => doc.id === 'payment_settings');
+            if (paymentDoc) {
+                setFlutterwaveKey(paymentDoc.data().flutterwavePublicKey || '');
+            }
         }, (error) => {
             handleFirestoreError(error, OperationType.LIST, 'settings');
         });
@@ -286,10 +333,12 @@ const AdminDashboard: React.FC = () => {
                 const targetEmails = users.map(u => u.email).filter(Boolean);
                 
                 if (targetEmails.length > 0) {
+                    const token = await auth.currentUser?.getIdToken();
                     const response = await fetch('/api/send-email', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
                         },
                         body: JSON.stringify({
                             to: targetEmails,
@@ -315,10 +364,10 @@ const AdminDashboard: React.FC = () => {
             setIsSending(false);
             setBroadcastMsg('');
             setBroadcastTitle('');
-            alert('Broadcast sent successfully!');
+            notify('Broadcast sent successfully!', 'success');
         } catch (error: any) {
             console.error('Broadcast error:', error);
-            alert(`Failed to send broadcast: ${error.message}`);
+            notify(`Failed to send broadcast: ${error.message}`, 'error');
             setIsSending(false);
         }
     };
@@ -339,10 +388,54 @@ const AdminDashboard: React.FC = () => {
             setEventTitle('');
             setEventDate('');
             setEventDesc('');
-            alert('Event created successfully!');
+            notify('Event created successfully!', 'success');
         } catch (error) {
             setIsCreatingEvent(false);
             handleFirestoreError(error, OperationType.CREATE, 'events');
+            notify('Failed to create event.', 'error');
+        }
+    };
+
+    const handleToggleDiscount = async (id: string, currentStatus: boolean) => {
+        try {
+            const { doc, updateDoc } = await import('firebase/firestore');
+            await updateDoc(doc(db, 'settings', id), {
+                isActive: !currentStatus,
+                updatedAt: serverTimestamp()
+            });
+            notify(`Discount ${!currentStatus ? 'activated' : 'deactivated'} successfully!`, 'success');
+        } catch (error) {
+            handleFirestoreError(error, OperationType.UPDATE, 'settings');
+            notify('Failed to update discount status.', 'error');
+        }
+    };
+
+    const handleDeleteDiscount = async (id: string) => {
+        if (!window.confirm('Are you sure you want to delete this discount campaign?')) return;
+        try {
+            const { doc, deleteDoc } = await import('firebase/firestore');
+            await deleteDoc(doc(db, 'settings', id));
+            notify('Discount campaign deleted successfully!', 'success');
+        } catch (error) {
+            handleFirestoreError(error, OperationType.DELETE, 'settings');
+            notify('Failed to delete discount.', 'error');
+        }
+    };
+
+    const handleUpdatePaymentSettings = async () => {
+        setIsUpdatingPayment(true);
+        try {
+            const { doc, setDoc } = await import('firebase/firestore');
+            await setDoc(doc(db, 'settings', 'payment_settings'), {
+                flutterwavePublicKey: flutterwaveKey,
+                updatedAt: serverTimestamp()
+            }, { merge: true });
+            notify('Payment settings updated successfully!', 'success');
+        } catch (error) {
+            handleFirestoreError(error, OperationType.UPDATE, 'settings');
+            notify('Failed to update payment settings.', 'error');
+        } finally {
+            setIsUpdatingPayment(false);
         }
     };
 
@@ -355,7 +448,11 @@ const AdminDashboard: React.FC = () => {
                 percentage: Number(discountPercentage),
                 startDate: new Date(discountStartDate),
                 endDate: new Date(discountEndDate),
+                type: discountType,
+                targetTier: targetTier,
+                targetBilling: targetBilling,
                 isActive: true,
+                category: 'discount',
                 createdAt: serverTimestamp()
             });
             setIsCreatingDiscount(false);
@@ -363,10 +460,11 @@ const AdminDashboard: React.FC = () => {
             setDiscountPercentage('');
             setDiscountStartDate('');
             setDiscountEndDate('');
-            alert('Discount created successfully!');
+            notify('Discount campaign created successfully!', 'success');
         } catch (error) {
             setIsCreatingDiscount(false);
             handleFirestoreError(error, OperationType.CREATE, 'settings');
+            notify('Failed to create discount.', 'error');
         }
     };
 
@@ -384,13 +482,13 @@ const AdminDashboard: React.FC = () => {
             </div>
 
             <div className="flex flex-wrap gap-4 mb-6">
-                {(['users', 'inbox', 'challenges', 'broadcasts', 'events', 'payments', 'discounts', 'tenancy', 'resources'] as const).map((tab) => (
+                {(['users', 'inbox', 'challenges', 'broadcasts', 'events', 'payments', 'discounts', 'tenancy', 'resources', 'budget'] as const).map((tab) => (
                     <button 
                         key={tab}
                         onClick={() => setActiveTab(tab)}
                         className={`px-6 py-2 rounded-full text-sm font-bold border transition-all ${activeTab === tab ? 'bg-brand-accent text-white' : 'bg-brand-secondary text-brand-text-secondary border-brand-border'}`}
                     >
-                        {tab === 'challenges' ? 'AI Course Studio' : tab === 'tenancy' ? 'Multi-Tenant (P7)' : tab.charAt(0).toUpperCase() + tab.slice(1)}
+                        {tab === 'challenges' ? 'AI Course Studio' : tab === 'tenancy' ? 'Multi-Tenant (P7)' : tab === 'budget' ? 'AI Budget' : tab.charAt(0).toUpperCase() + tab.slice(1)}
                     </button>
                 ))}
             </div>
@@ -476,6 +574,66 @@ const AdminDashboard: React.FC = () => {
                                 )}
                             </div>
                         </Card>
+                    ) : activeTab === 'budget' ? (
+                        <div className="space-y-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <Card className="p-6">
+                                    <h3 className="text-xl font-bold mb-4">AI Cost Overview (Last 30 Days)</h3>
+                                    {loadingBudget ? (
+                                        <SpinnerIcon className="w-8 h-8 animate-spin text-brand-accent" />
+                                    ) : (
+                                        <>
+                                            <div className="text-4xl font-bold text-brand-accent mb-2">
+                                                ${usageStats?.totalCost.toFixed(4) || '0.0000'}
+                                            </div>
+                                            <p className="text-sm text-brand-text-secondary">Estimated platform cost for AI operations.</p>
+                                        </>
+                                    )}
+                                </Card>
+                                <Card className="p-6">
+                                    <h3 className="text-xl font-bold mb-4">Feature Breakdown</h3>
+                                    <div className="space-y-2">
+                                        {usageStats?.featureBreakdown && Object.entries(usageStats.featureBreakdown).map(([feature, cost]: [string, any]) => (
+                                            <div key={feature} className="flex justify-between items-center">
+                                                <span className="capitalize">{feature}</span>
+                                                <span className="font-mono text-brand-accent">${cost.toFixed(4)}</span>
+                                            </div>
+                                        ))}
+                                        {(!usageStats?.featureBreakdown || Object.keys(usageStats.featureBreakdown).length === 0) && (
+                                            <p className="text-sm text-brand-text-secondary italic">No usage data yet.</p>
+                                        )}
+                                    </div>
+                                </Card>
+                            </div>
+
+                            <Card className="p-6">
+                                <h3 className="text-xl font-bold mb-4">Recent AI Operations</h3>
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-left">
+                                        <thead>
+                                            <tr className="border-b border-brand-border">
+                                                <th className="pb-3 font-semibold text-xs uppercase text-brand-text-secondary">Feature</th>
+                                                <th className="pb-3 font-semibold text-xs uppercase text-brand-text-secondary">Model</th>
+                                                <th className="pb-3 font-semibold text-xs uppercase text-brand-text-secondary">Cost</th>
+                                                <th className="pb-3 font-semibold text-xs uppercase text-brand-text-secondary">Time</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-brand-border">
+                                            {usageStats?.recentLogs.map((log: any, idx: number) => (
+                                                <tr key={idx}>
+                                                    <td className="py-3 capitalize text-sm">{log.feature}</td>
+                                                    <td className="py-3 text-[10px] font-mono text-brand-text-secondary">{log.model}</td>
+                                                    <td className="py-3 font-mono text-sm text-brand-accent">${log.costEstimate?.toFixed(4)}</td>
+                                                    <td className="py-3 text-xs text-brand-text-secondary">
+                                                        {log.timestamp?.toDate()?.toLocaleString() || 'Just now'}
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </Card>
+                        </div>
                     ) : activeTab === 'challenges' ? (
                         <ChallengeCreator />
                     ) : activeTab === 'broadcasts' ? (
@@ -626,7 +784,7 @@ const AdminDashboard: React.FC = () => {
                         <Card className="animate-fade-in">
                             <h2 className="text-xl font-bold text-brand-text-primary mb-4">Global Payment Gateways</h2>
                             <p className="text-sm text-brand-text-secondary mb-6">Manage monetization, subscriptions, and international/local payments.</p>
-                            <div className="space-y-4">
+                            <div className="space-y-6">
                                 <div className="flex items-center justify-between p-4 border border-brand-border rounded-xl bg-brand-secondary/30">
                                     <div className="flex items-center gap-3">
                                         <div className="w-10 h-10 bg-[#FB9129]/10 rounded-lg flex items-center justify-center">
@@ -638,6 +796,32 @@ const AdminDashboard: React.FC = () => {
                                         </div>
                                     </div>
                                     <span className="px-2 py-1 bg-green-500/20 text-green-400 text-[10px] font-bold uppercase rounded-full">Connected</span>
+                                </div>
+
+                                <div className="p-6 border border-brand-border rounded-xl bg-brand-secondary/30">
+                                    <h3 className="font-bold text-brand-text-primary mb-4">Payment Configuration</h3>
+                                    <div className="space-y-4">
+                                        <div>
+                                            <label className="block text-xs font-bold text-brand-text-secondary uppercase mb-2">Flutterwave Public Key</label>
+                                            <input 
+                                                type="password" 
+                                                value={flutterwaveKey}
+                                                onChange={(e) => setFlutterwaveKey(e.target.value)}
+                                                className="w-full bg-brand-dark border border-brand-border rounded-xl p-3 text-brand-text-primary focus:border-brand-accent outline-none font-mono text-sm" 
+                                                placeholder="FLWPUBK_TEST-..."
+                                            />
+                                            <p className="text-[10px] text-brand-text-secondary mt-2 italic">
+                                                This key is used for client-side payment initialization. Keep it secure.
+                                            </p>
+                                        </div>
+                                        <button 
+                                            onClick={handleUpdatePaymentSettings}
+                                            disabled={isUpdatingPayment || !flutterwaveKey}
+                                            className="w-full py-3 bg-brand-accent text-white rounded-xl font-bold hover:scale-[1.02] transition-transform flex items-center justify-center gap-2 disabled:opacity-50"
+                                        >
+                                            {isUpdatingPayment ? <><SpinnerIcon className="w-5 h-5"/> Updating...</> : 'Save Payment Settings'}
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </Card>
@@ -665,15 +849,32 @@ const AdminDashboard: React.FC = () => {
                                         ) : (
                                             discounts.map((discount) => (
                                                 <div key={discount.id} className="flex items-center justify-between p-4 bg-brand-dark rounded-xl border border-brand-border">
-                                                    <div>
+                                                    <div className="flex-1">
                                                         <h4 className="font-bold text-brand-text-primary">{discount.name}</h4>
-                                                        <p className="text-xs text-brand-text-secondary">Valid: {discount.startDate} - {discount.endDate}</p>
+                                                        <p className="text-xs text-brand-text-secondary">
+                                                            Valid: {discount.startDate} - {discount.endDate}
+                                                            <span className="ml-2 px-1 bg-brand-secondary rounded text-[10px] uppercase">{discount.type}</span>
+                                                        </p>
+                                                        <p className="text-[10px] text-brand-text-secondary mt-1">
+                                                            Target: {discount.targetTier} plans ({discount.targetBilling})
+                                                        </p>
                                                     </div>
                                                     <div className="flex items-center gap-4">
                                                         <span className="text-lg font-black text-brand-accent">{discount.percentage}% OFF</span>
-                                                        <span className={`px-2 py-1 text-[10px] font-bold uppercase rounded-full ${discount.isActive ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
-                                                            {discount.isActive ? 'Active' : 'Inactive'}
-                                                        </span>
+                                                        <div className="flex flex-col gap-2">
+                                                            <button 
+                                                                onClick={() => handleToggleDiscount(discount.id, discount.isActive)}
+                                                                className={`px-3 py-1 text-[10px] font-bold uppercase rounded-full transition-colors ${discount.isActive ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30' : 'bg-red-500/20 text-red-400 hover:bg-red-500/30'}`}
+                                                            >
+                                                                {discount.isActive ? 'Active' : 'Inactive'}
+                                                            </button>
+                                                            <button 
+                                                                onClick={() => handleDeleteDiscount(discount.id)}
+                                                                className="text-[10px] text-brand-text-secondary hover:text-status-error uppercase font-bold"
+                                                            >
+                                                                Delete
+                                                            </button>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             ))
@@ -682,9 +883,9 @@ const AdminDashboard: React.FC = () => {
                                 </div>
 
                                 <div className="p-6 border border-brand-border rounded-xl bg-brand-secondary/30">
-                                    <h3 className="font-bold text-brand-text-primary mb-4">Create Seasonal Discount</h3>
+                                    <h3 className="font-bold text-brand-text-primary mb-4">Create Discount Campaign</h3>
                                     <div className="space-y-4">
-                                        <div className="grid grid-cols-2 gap-4">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             <div>
                                                 <label className="block text-xs font-bold text-brand-text-secondary uppercase mb-2">Campaign Name</label>
                                                 <input 
@@ -696,7 +897,21 @@ const AdminDashboard: React.FC = () => {
                                                 />
                                             </div>
                                             <div>
-                                                <label className="block text-xs font-bold text-brand-text-secondary uppercase mb-2">Discount Percentage</label>
+                                                <label className="block text-xs font-bold text-brand-text-secondary uppercase mb-2">Discount Type</label>
+                                                <select 
+                                                    value={discountType}
+                                                    onChange={(e) => setDiscountType(e.target.value as any)}
+                                                    className="w-full bg-brand-dark border border-brand-border rounded-xl p-3 text-brand-text-primary focus:border-brand-accent outline-none"
+                                                >
+                                                    <option value="seasonal">Seasonal Discount</option>
+                                                    <option value="yearly">Yearly Incentive</option>
+                                                    <option value="custom">Custom Promotion</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                            <div>
+                                                <label className="block text-xs font-bold text-brand-text-secondary uppercase mb-2">Percentage (%)</label>
                                                 <input 
                                                     type="number" 
                                                     value={discountPercentage}
@@ -706,6 +921,30 @@ const AdminDashboard: React.FC = () => {
                                                     min="1"
                                                     max="100"
                                                 />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-bold text-brand-text-secondary uppercase mb-2">Target Plan</label>
+                                                <select 
+                                                    value={targetTier}
+                                                    onChange={(e) => setTargetTier(e.target.value as any)}
+                                                    className="w-full bg-brand-dark border border-brand-border rounded-xl p-3 text-brand-text-primary focus:border-brand-accent outline-none"
+                                                >
+                                                    <option value="all">All Paid Plans</option>
+                                                    <option value="pro">Pro Only</option>
+                                                    <option value="max">Max Only</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-bold text-brand-text-secondary uppercase mb-2">Billing Cycle</label>
+                                                <select 
+                                                    value={targetBilling}
+                                                    onChange={(e) => setTargetBilling(e.target.value as any)}
+                                                    className="w-full bg-brand-dark border border-brand-border rounded-xl p-3 text-brand-text-primary focus:border-brand-accent outline-none"
+                                                >
+                                                    <option value="both">Monthly & Yearly</option>
+                                                    <option value="monthly">Monthly Only</option>
+                                                    <option value="yearly">Yearly Only</option>
+                                                </select>
                                             </div>
                                         </div>
                                         <div className="grid grid-cols-2 gap-4">
@@ -733,7 +972,7 @@ const AdminDashboard: React.FC = () => {
                                             onClick={handleCreateDiscount}
                                             disabled={isCreatingDiscount || !discountName || !discountPercentage || !discountStartDate || !discountEndDate}
                                         >
-                                            {isCreatingDiscount ? <><SpinnerIcon className="w-5 h-5"/> Creating...</> : 'Create Discount Campaign'}
+                                            {isCreatingDiscount ? <><SpinnerIcon className="w-5 h-5"/> Creating...</> : 'Launch Discount Campaign'}
                                         </button>
                                     </div>
                                 </div>

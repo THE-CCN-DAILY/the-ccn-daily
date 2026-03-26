@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAudioPlayer } from '../../contexts/AudioPlayerContext';
+import { useNotifications } from '../../contexts/NotificationContext';
 import { ChevronLeftIcon, ShareIcon, DownloadIcon, SkipBackIcon, SkipForwardIcon, PlayIcon, PauseIcon, SpinnerIcon, EllipsisHorizontalIcon, MoonIcon, CheckIcon, SparklesIcon, QueueListIcon, BookmarkSquareIcon, ChatBubbleLeftRightIcon } from '../icons';
 import useMediaQuery from '../../hooks/useMediaQuery';
 import CommentsSection from '../shared/CommentsSection';
@@ -123,6 +124,7 @@ const DetailedPlayerModal: React.FC = () => {
         currentTrack, isPlaying, progress, duration, togglePlayPause, closeDetailedPlayer, seek, skip, isLoading,
         playbackRate, setPlaybackRate, sleepTimerRemaining, setSleepTimer 
     } = useAudioPlayer();
+    const { notify } = useNotifications();
     const [activeTab, setActiveTab] = useState<'summary' | 'transcript' | 'chapters' | 'comments'>('summary');
     const [isOptionsOpen, setOptionsOpen] = useState(false);
     const [shareStatus, setShareStatus] = useState<'idle' | 'copied'>('idle');
@@ -194,7 +196,7 @@ const DetailedPlayerModal: React.FC = () => {
                 setTimeout(() => setShareStatus('idle'), 2000);
             } catch (err) {
                 console.error("Copy to clipboard failed:", err);
-                alert("Failed to copy link.");
+                notify("Failed to copy link.", "error");
             }
         }
     };

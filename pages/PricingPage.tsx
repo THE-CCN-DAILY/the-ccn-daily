@@ -3,25 +3,41 @@ import Card from '../components/Card';
 import { SparklesIcon, CheckIcon, LockIcon } from '../components/icons';
 import { getLocalizedPrice } from '../utils/ppp';
 import { useAuth } from '../contexts/AuthContext';
+import { useNotifications } from '../contexts/NotificationContext';
 import { useFlutterwave, closePaymentModal } from 'flutterwave-react-v3';
 import { db } from '../firebase';
-import { doc, setDoc, serverTimestamp, collection, query, where, getDocs } from 'firebase/firestore';
+import { doc, setDoc, serverTimestamp, collection, query, where, getDocs, getDoc } from 'firebase/firestore';
 import { handleFirestoreError, OperationType } from '../utils/firestoreErrorHandler';
 
-const FLUTTERWAVE_PUBLIC_KEY = (import.meta as any).env.VITE_FLUTTERWAVE_PUBLIC_KEY || 'FLWPUBK_TEST-SANDBOXDEMOKEY-X';
+const DEFAULT_FLUTTERWAVE_KEY = (import.meta as any).env.VITE_FLUTTERWAVE_PUBLIC_KEY || 'FLWPUBK_TEST-SANDBOXDEMOKEY-X';
 
 const PricingPage: React.FC = () => {
     const { user } = useAuth();
+    const { notify } = useNotifications();
     const [userCountry, setUserCountry] = useState('US');
     const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
     const [isProcessing, setIsProcessing] = useState(false);
     const [selectedTier, setSelectedTier] = useState<'pro' | 'max' | null>(null);
-    const [activeDiscount, setActiveDiscount] = useState<{name: string, percentage: number} | null>(null);
+    const [activeDiscount, setActiveDiscount] = useState<{name: string, percentage: number, targetTier: string, targetBilling: string} | null>(null);
+    const [flutterwaveKey, setFlutterwaveKey] = useState(DEFAULT_FLUTTERWAVE_KEY);
 
     useEffect(() => {
         setUserCountry('US'); // Simulate IP geolocation
         fetchActiveDiscount();
-    }, []);
+        fetchPaymentSettings();
+    }, [billingCycle]);
+
+    const fetchPaymentSettings = async () => {
+        try {
+            const docRef = doc(db, 'settings', 'payment_settings');
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists() && docSnap.data().flutterwavePublicKey) {
+                setFlutterwaveKey(docSnap.data().flutterwavePublicKey);
+            }
+        } catch (error) {
+            console.error("Error fetching payment settings:", error);
+        }
+    };
 
     const fetchActiveDiscount = async () => {
         try {
@@ -37,26 +53,33 @@ const PricingPage: React.FC = () => {
                 const endDate = data.endDate?.toDate();
 
                 if (startDate && endDate && now >= startDate && now <= endDate) {
-                    if (!bestDiscount || data.percentage > bestDiscount.percentage) {
-                        bestDiscount = { name: data.name, percentage: data.percentage };
+                    // Check if it matches current billing cycle or is for 'both'
+                    const matchesBilling = data.targetBilling === 'both' || data.targetBilling === billingCycle;
+                    
+                    if (matchesBilling) {
+                        if (!bestDiscount || data.percentage > bestDiscount.percentage) {
+                            bestDiscount = { 
+                                name: data.name, 
+                                percentage: data.percentage,
+                                targetTier: data.targetTier || 'all',
+                                targetBilling: data.targetBilling || 'both'
+                            };
+                        }
                     }
                 }
             });
 
-            if (bestDiscount) {
-                setActiveDiscount(bestDiscount);
-            }
+            setActiveDiscount(bestDiscount);
         } catch (error) {
             console.error("Error fetching discounts:", error);
-            // We don't throw an error here to not break the pricing page if discounts fail
         }
     };
 
-    const proPrice = getLocalizedPrice('pro', userCountry);
-    const maxPrice = getLocalizedPrice('max', userCountry);
+    const proPrice = getLocalizedPrice(7.99, userCountry);
+    const maxPrice = getLocalizedPrice(14.99, userCountry);
 
     const getAmount = (tier: 'pro' | 'max') => {
-        const basePrice = tier === 'pro' ? proPrice.amount : maxPrice.amount;
+        const basePrice = tier === 'pro' ? proPrice.discountedPriceUSD : maxPrice.discountedPriceUSD;
         let finalPrice = basePrice;
         
         if (billingCycle === 'yearly') {
@@ -64,14 +87,17 @@ const PricingPage: React.FC = () => {
         }
         
         if (activeDiscount) {
-            finalPrice = finalPrice * (1 - (activeDiscount.percentage / 100));
+            // Only apply if it targets this tier or 'all'
+            if (activeDiscount.targetTier === 'all' || activeDiscount.targetTier === tier) {
+                finalPrice = finalPrice * (1 - (activeDiscount.percentage / 100));
+            }
         }
         
         return finalPrice;
     };
 
     const handleFlutterPayment = useFlutterwave({
-        public_key: FLUTTERWAVE_PUBLIC_KEY,
+        public_key: flutterwaveKey,
         tx_ref: `sub_${Date.now()}`,
         amount: selectedTier ? getAmount(selectedTier) : 0,
         currency: 'USD',
@@ -90,7 +116,7 @@ const PricingPage: React.FC = () => {
 
     const handleSubscribe = (tier: 'pro' | 'max') => {
         if (!user) {
-            alert("Please sign in to subscribe.");
+            notify("Please sign in to subscribe.", 'error');
             return;
         }
         
@@ -107,7 +133,7 @@ const PricingPage: React.FC = () => {
                         await updateUserTier(tier);
                     } else {
                         setIsProcessing(false);
-                        alert("Payment was not successful. Please try again.");
+                        notify("Payment was not successful. Please try again.", 'error');
                     }
                 },
                 onClose: () => {
@@ -128,7 +154,7 @@ const PricingPage: React.FC = () => {
             }, { merge: true });
             
             setIsProcessing(false);
-            alert(`Successfully subscribed to ${tier.toUpperCase()} tier!`);
+            notify(`Successfully subscribed to ${tier.toUpperCase()} tier!`, 'success');
             // In a real app, you might want to refresh the user context here
             window.location.reload();
         } catch (error) {
@@ -165,7 +191,7 @@ const PricingPage: React.FC = () => {
                     <div className="mt-4 inline-block bg-brand-accent/10 border border-brand-accent/30 rounded-lg px-4 py-2">
                         <p className="text-sm font-bold text-brand-accent flex items-center gap-2">
                             <SparklesIcon className="w-4 h-4" />
-                            {activeDiscount.name}: Extra {activeDiscount.percentage}% OFF applied at checkout!
+                            {activeDiscount.name}: Extra {activeDiscount.percentage}% OFF applied to {activeDiscount.targetTier === 'all' ? 'all plans' : `${activeDiscount.targetTier.toUpperCase()} plan`}!
                         </p>
                     </div>
                 )}
@@ -220,7 +246,7 @@ const PricingPage: React.FC = () => {
                         <p className="text-brand-text-secondary text-sm h-10">Deep personalization and unlimited guidance.</p>
                         <div className="mt-6 flex items-baseline">
                             <span className="text-4xl font-black text-brand-text-primary">
-                                {billingCycle === 'monthly' ? proPrice.formatted : `$${(proPrice.amount * 12 * 0.8).toFixed(2)}`}
+                                {billingCycle === 'monthly' ? `${proPrice.currencySymbol}${proPrice.discountedPriceUSD}` : `${proPrice.currencySymbol}${(proPrice.discountedPriceUSD * 12 * 0.8).toFixed(2)}`}
                             </span>
                             <span className="text-brand-text-secondary ml-2">/{billingCycle === 'monthly' ? 'mo' : 'yr'}</span>
                         </div>
@@ -267,7 +293,7 @@ const PricingPage: React.FC = () => {
                         <p className="text-brand-text-secondary text-sm h-10">The ultimate immersive spiritual experience.</p>
                         <div className="mt-6 flex items-baseline">
                             <span className="text-4xl font-black text-brand-text-primary">
-                                {billingCycle === 'monthly' ? maxPrice.formatted : `$${(maxPrice.amount * 12 * 0.8).toFixed(2)}`}
+                                {billingCycle === 'monthly' ? `${maxPrice.currencySymbol}${maxPrice.discountedPriceUSD}` : `${maxPrice.currencySymbol}${(maxPrice.discountedPriceUSD * 12 * 0.8).toFixed(2)}`}
                             </span>
                             <span className="text-brand-text-secondary ml-2">/{billingCycle === 'monthly' ? 'mo' : 'yr'}</span>
                         </div>

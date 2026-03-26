@@ -7,7 +7,10 @@ import { useAuth } from '../contexts/AuthContext';
 import { useUpgradeModal } from '../contexts/UpgradeModalContext';
 import { TIER_CONFIGS } from '../types/pricing';
 
+import { useNotifications } from '../contexts/NotificationContext';
+
 const QuoteGeneratorPage: React.FC = () => {
+  const { notify } = useNotifications();
   const [quoteText, setQuoteText] = useState("Commit your way to the LORD, trust also in Him, and He shall bring it to pass. - Psalm 37:5, NKJV");
   const [attribution, setAttribution] = useState("Psalm 37:5");
   const [style, setStyle] = useState('Spiritual');
@@ -61,7 +64,7 @@ const QuoteGeneratorPage: React.FC = () => {
             setTimeout(() => setShareStatus('idle'), 2000);
         } catch (e) { console.error(e); }
     } else {
-        alert("Sharing not supported on this device. You can download the image.");
+        notify("Sharing not supported on this device. You can download the image.", "error");
     }
   };
 

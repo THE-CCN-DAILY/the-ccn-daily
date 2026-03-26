@@ -13,9 +13,10 @@ import HighlightActionPopover from './HighlightActionPopover';
 import { getPremiumTtsAudio } from '../../services/ttsService';
 import VoiceSelectionPopover from './VoiceSelectionPopover';
 import { useAuth } from '../../contexts/AuthContext';
+import { useNotifications } from '../../contexts/NotificationContext';
 import { getHighlightsForContent, saveHighlight, deleteHighlight, updateHighlight } from '../../services/firestoreService';
 import { serverTimestamp, doc } from 'firebase/firestore';
-import { db } from '../../services/firebase';
+import { db } from '../../firebase';
 import { useGamification } from '../../contexts/GamificationContext';
 
 interface ContentDisplayProps {
@@ -26,6 +27,7 @@ interface ContentDisplayProps {
 
 const ContentDisplay: React.FC<ContentDisplayProps> = ({ contentId, initialContent, title }) => {
   const { user } = useAuth();
+  const { notify } = useNotifications();
   const { dispatchGamificationEvent } = useGamification();
   const [highlights, setHighlights] = useState<Highlight[]>([]);
   const [isLoadingHighlights, setIsLoadingHighlights] = useState(true);
@@ -117,13 +119,13 @@ const ContentDisplay: React.FC<ContentDisplayProps> = ({ contentId, initialConte
       newAudio.onpause = () => setIsReadingAloud(false);
       newAudio.onended = () => setIsReadingAloud(false);
       newAudio.onerror = () => {
-        alert("Sorry, an audio playback error occurred.");
+        notify("Sorry, an audio playback error occurred.", "error");
         setIsReadingAloud(false);
         ttsAudioRef.current = null;
       };
       newAudio.play();
     } catch (error) {
-      alert("Sorry, the premium audio narration could not be played.");
+      notify("Sorry, the premium audio narration could not be played.", "error");
       setIsReadingAloud(false);
     }
   };
@@ -242,7 +244,7 @@ const ContentDisplay: React.FC<ContentDisplayProps> = ({ contentId, initialConte
       try {
         await navigator.clipboard.writeText(`"${selectedText}"\n\n- From THE CCN DAILY App`);
       } catch (err) {
-        alert("Could not copy text.");
+        notify("Could not copy text.", "error");
       } finally {
         clearSelection();
       }

@@ -4,6 +4,8 @@ import type { DevotionalOutput, Message } from '../types';
 import { db } from '../firebase';
 import { collection, query, where, orderBy, limit, getDocs } from 'firebase/firestore';
 
+import { trackAiUsage } from './budgetService';
+
 // The "Direct Link" (Dashboard) for snappy client interactions
 // Using the most cost-effective Flash models to stay within free tier quotas.
 const platformKey = process.env.GEMINI_API_KEY;
@@ -14,11 +16,53 @@ const isPlatformKeyValid = !!(platformKey && platformKey.startsWith('AIza') && p
 const apiKey = isPlatformKeyValid ? platformKey : userKey;
 
 const ai = new GoogleGenAI({ apiKey: apiKey || "" });
-const CLIENT_MODEL = 'gemini-3-flash-preview';
-const REASONING_MODEL = 'gemini-3-flash-preview'; // Using Flash 3 for speed and cost efficiency
 
-export const getAiCoachResponse = async (newMessage: string, history: Message[]): Promise<string> => {
+// 3-Lane AI Policy for Cost Governance
+// LITE: Ultra-low cost, high speed. Used for 90% of basic interactions.
+// FLASH: Balanced cost/reasoning. Used for complex features that need grounding.
+// PRO: High cost, high reasoning. Reserved for Max users and deep study.
+export const LITE_MODEL = 'gemini-3.1-flash-lite-preview'; 
+export const FLASH_MODEL = 'gemini-3-flash-preview';      
+export const PRO_MODEL = 'gemini-3.1-pro-preview';        
+
+export type UserTier = 'free' | 'pro' | 'max' | 'admin';
+
+export interface Capability {
+    feature: string;
+    minTier: UserTier;
+    model: string;
+}
+
+export const CAPABILITIES: Record<string, Capability> = {
+    coach: { feature: 'AI Spiritual Coach', minTier: 'free', model: LITE_MODEL },
+    devotional: { feature: 'Personalized Devotional', minTier: 'pro', model: LITE_MODEL },
+    deepStudy: { feature: 'Deep Theological Study', minTier: 'max', model: PRO_MODEL },
+    groundedPrayer: { feature: 'Grounded Prayer Topics', minTier: 'pro', model: FLASH_MODEL },
+    quoteImage: { feature: 'AI Quote Image', minTier: 'pro', model: FLASH_MODEL },
+    sanctuaryVideo: { feature: 'AI Cinematic Video', minTier: 'max', model: PRO_MODEL },
+};
+
+export const checkCapability = (feature: string, userTier: UserTier = 'free'): { allowed: boolean; message?: string } => {
+    const capability = CAPABILITIES[feature];
+    if (!capability) return { allowed: false, message: "Feature not found." };
+
+    const tiers: UserTier[] = ['free', 'pro', 'max', 'admin'];
+    const userIndex = tiers.indexOf(userTier);
+    const minIndex = tiers.indexOf(capability.minTier);
+
+    if (userIndex < minIndex) {
+        return { 
+            allowed: false, 
+            message: `This feature (${capability.feature}) is reserved for ${capability.minTier.toUpperCase()} members. Upgrade to unlock!` 
+        };
+    }
+
+    return { allowed: true };
+};
+
+export const getAiCoachResponse = async (newMessage: string, history: Message[], userTier: UserTier = 'free', userId: string = 'anonymous'): Promise<string> => {
     try {
+        const capability = CAPABILITIES.coach;
         const contents = history.map(msg => ({
             role: msg.sender === 'user' ? 'user' : 'model',
             parts: [{ text: msg.text }]
@@ -26,10 +70,14 @@ export const getAiCoachResponse = async (newMessage: string, history: Message[])
         contents.push({ role: 'user', parts: [{ text: newMessage }] });
 
         const response = await ai.models.generateContent({
-            model: CLIENT_MODEL,
+            model: capability.model,
             contents: contents,
             config: { systemInstruction: "You are Kai, an empathetic AI Spiritual Coach." }
         });
+
+        // Track usage (lite model is very cheap, but we track it for visibility)
+        await trackAiUsage(userId, 'coach', capability.model, 500); // Approximate tokens
+
         return response.text || "";
     } catch (error) {
         console.error("Coach Error:", error);
@@ -39,18 +87,22 @@ export const getAiCoachResponse = async (newMessage: string, history: Message[])
 
 /**
  * Uses Search Grounding to find real-world events for prayer.
- * Part of the "Direct Link" for immediate community pulse.
  */
-export const getGroundedPrayerTopics = async (): Promise<any[]> => {
+export const getGroundedPrayerTopics = async (userTier: UserTier = 'free', userId: string = 'anonymous'): Promise<any[]> => {
+    const { allowed, message } = checkCapability('groundedPrayer', userTier);
+    if (!allowed) throw new Error(message);
+
     try {
         const response = await ai.models.generateContent({
-            model: CLIENT_MODEL,
+            model: CAPABILITIES.groundedPrayer.model,
             contents: "List 3 significant global or humanitarian events happening today that need prayer and empathy.",
             config: {
                 tools: [{ googleSearch: {} }]
             }
         });
         
+        await trackAiUsage(userId, 'groundedPrayer', CAPABILITIES.groundedPrayer.model, 1000); // Grounding uses more tokens
+
         const text = response.text || "";
         const chunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks || [];
         
@@ -65,15 +117,21 @@ export const getGroundedPrayerTopics = async (): Promise<any[]> => {
     }
 };
 
-export const getDeepTheologicalInsight = async (question: string): Promise<string> => {
+export const getDeepTheologicalInsight = async (question: string, userTier: UserTier = 'free', userId: string = 'anonymous'): Promise<string> => {
+    const { allowed, message } = checkCapability('deepStudy', userTier);
+    if (!allowed) throw new Error(message);
+
     try {
         const response = await ai.models.generateContent({
-            model: REASONING_MODEL,
+            model: CAPABILITIES.deepStudy.model,
             contents: question,
             config: {
                 systemInstruction: "You are a scholarly theologian providing balanced, deep insights into spiritual questions. Be compassionate yet rigorous."
             }
         });
+
+        await trackAiUsage(userId, 'deepStudy', CAPABILITIES.deepStudy.model, 2000); // Deep study is expensive
+
         return response.text || "";
     } catch (e) {
         console.error("Reasoning Error:", e);
@@ -81,16 +139,18 @@ export const getDeepTheologicalInsight = async (question: string): Promise<strin
     }
 };
 
-export const generateQuoteImage = async (prompt: string): Promise<string> => {
+export const generateQuoteImage = async (prompt: string, userTier: UserTier = 'free'): Promise<string> => {
+    const { allowed, message } = checkCapability('quoteImage', userTier);
+    if (!allowed) throw new Error(message);
+
     // Image generation is temporarily disabled to save costs.
-    // In a production app, this would be gated by a premium subscription.
-    throw new Error("PREMIUM_FEATURE: AI Image generation is currently reserved for Premium members to ensure sustainable growth.");
+    throw new Error("PREMIUM_FEATURE: AI Image generation is currently reserved for Pro members to ensure sustainable growth.");
 };
 
 export const generateTagsForNote = async (noteText: string): Promise<string[]> => {
     try {
         const response = await ai.models.generateContent({
-            model: CLIENT_MODEL,
+            model: LITE_MODEL,
             contents: `Analyze the following spiritual note and generate 3-5 short, one-word tags: "${noteText}"`,
             config: {
                 responseMimeType: "application/json",
@@ -157,7 +217,10 @@ You are strictly forbidden from using the following in your writing. Adherence i
  * This calls our custom Genkit flow on the server, which now uses RAG
  * to fetch user notes directly from Firestore.
  */
-export const generatePersonalizedDevotional = async (userId: string, name: string): Promise<DevotionalOutput> => {
+export const generatePersonalizedDevotional = async (userId: string, name: string, userTier: UserTier = 'free'): Promise<DevotionalOutput> => {
+    const { allowed, message } = checkCapability('devotional', userTier);
+    if (!allowed) throw new Error(message);
+
     try {
         // Step 1: Fetch user context directly from Firestore (Frontend RAG)
         const notesRef = collection(db, 'users', userId, 'notes');
@@ -178,7 +241,7 @@ export const generatePersonalizedDevotional = async (userId: string, name: strin
         `;
 
         const response = await ai.models.generateContent({
-            model: CLIENT_MODEL,
+            model: CAPABILITIES.devotional.model,
             contents: prompt,
             config: {
                 systemInstruction: DEVOTIONAL_SYSTEM_INSTRUCTION,
@@ -199,6 +262,8 @@ export const generatePersonalizedDevotional = async (userId: string, name: strin
             }
         });
 
+        await trackAiUsage(userId, 'devotional', CAPABILITIES.devotional.model, 1500);
+
         if (!response.text) throw new Error("No response from AI");
         
         return JSON.parse(response.text);
@@ -212,8 +277,10 @@ export const generatePersonalizedDevotional = async (userId: string, name: strin
  * For long-running video generation, we still use the direct API for now
  * but wrapped in our enterprise mindset.
  */
-export const generateSanctuaryVideo = async (prompt: string, onProgress: (msg: string) => void): Promise<string> => {
+export const generateSanctuaryVideo = async (prompt: string, onProgress: (msg: string) => void, userTier: UserTier = 'free'): Promise<string> => {
+    const { allowed, message } = checkCapability('sanctuaryVideo', userTier);
+    if (!allowed) throw new Error(message);
+
     // Video generation is temporarily disabled to save costs.
-    // In a production app, this would be gated by a premium subscription.
-    throw new Error("PREMIUM_FEATURE: AI Cinematic Video generation is currently reserved for Premium members to ensure sustainable growth.");
+    throw new Error("PREMIUM_FEATURE: AI Cinematic Video generation is currently reserved for Max members to ensure sustainable growth.");
 };

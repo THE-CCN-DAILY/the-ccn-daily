@@ -4,7 +4,10 @@ import Card from '../components/Card';
 import { SparklesIcon, SpinnerIcon, PaintBrushIcon, DownloadIcon, ChevronLeftIcon } from '../components/icons';
 import { generateSanctuaryVideo } from '../services/geminiService';
 
+import { useNotifications } from '../contexts/NotificationContext';
+
 const VisualSanctuary: React.FC = () => {
+    const { notify } = useNotifications();
     const [prompt, setPrompt] = useState('A serene garden at sunset with golden light filtering through ancient oak trees, extremely peaceful and spiritual.');
     const [isGenerating, setIsGenerating] = useState(false);
     const [progressMsg, setProgressMsg] = useState('');
@@ -19,7 +22,7 @@ const VisualSanctuary: React.FC = () => {
             const url = await generateSanctuaryVideo(prompt, (msg) => setProgressMsg(msg));
             setGeneratedUrl(url);
         } catch (e) {
-            alert("Video generation failed. Ensure your API key is active and supports Veo.");
+            notify("Video generation failed. Ensure your API key is active and supports Veo.", "error");
         } finally {
             setIsGenerating(false);
             setProgressMsg('');

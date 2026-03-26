@@ -16,8 +16,11 @@ interface AppEvent {
   streamingPlatform?: string;
 }
 
+import { useNotifications } from '../contexts/NotificationContext';
+
 const EventsPage: React.FC = () => {
   const { user } = useAuth();
+  const { notify } = useNotifications();
   const [events, setEvents] = useState<AppEvent[]>([]);
   const [registered, setRegistered] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(true);
@@ -51,7 +54,7 @@ const EventsPage: React.FC = () => {
         attendeeCount: increment(1)
       });
       setRegistered(prev => ({ ...prev, [id]: true }));
-      alert('Successfully registered! A Grace Link has been sent to your email.');
+      notify('Successfully registered! A Grace Link has been sent to your email.', 'success');
     } catch (error) {
       handleFirestoreError(error, OperationType.UPDATE, `events/${id}`);
     }
@@ -60,7 +63,7 @@ const EventsPage: React.FC = () => {
   const handleShare = (id: string) => {
     const shareUrl = `${window.location.origin}/#/events/${id}`;
     navigator.clipboard.writeText(shareUrl);
-    alert(`Grace Link copied to clipboard! Share this link to invite others.`);
+    notify(`Grace Link copied to clipboard! Share this link to invite others.`, 'success');
   };
 
   if (loading) {

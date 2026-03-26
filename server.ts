@@ -7,6 +7,9 @@ import { Resend } from 'resend';
 import Mux from '@mux/mux-node';
 import { initializeApp as initAdmin, applicationDefault } from 'firebase-admin/app';
 import { getFirestore as getAdminFirestore } from 'firebase-admin/firestore';
+import { getAuth as getAdminAuth } from 'firebase-admin/auth';
+import { z } from 'zod';
+import { rateLimit } from 'express-rate-limit';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -37,6 +40,59 @@ async function startServer() {
 
   app.use(express.json());
 
+  // --- Security Middleware ---
+  const verifyToken = async (req: any, res: any, next: any) => {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'Unauthorized: Missing token' });
+    }
+
+    const idToken = authHeader.split('Bearer ')[1];
+    try {
+      const decodedToken = await getAdminAuth().verifyIdToken(idToken);
+      req.user = decodedToken;
+      next();
+    } catch (error) {
+      console.error('Error verifying token:', error);
+      res.status(401).json({ error: 'Unauthorized: Invalid token' });
+    }
+  };
+
+  const requireAdmin = async (req: any, res: any, next: any) => {
+    if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
+    
+    try {
+      if (!adminDb) throw new Error('Admin DB not initialized');
+      const userDoc = await adminDb.collection('users').doc(req.user.uid).get();
+      if (!userDoc.exists || userDoc.data().role !== 'admin') {
+        return res.status(403).json({ error: 'Forbidden: Admin access required' });
+      }
+      next();
+    } catch (error) {
+      console.error('Error checking admin role:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  };
+
+  const broadcastLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 10, // Limit each IP to 10 broadcast requests per window
+    message: { error: 'Too many broadcasts sent. Please try again later.' }
+  });
+
+  const mediaLimiter = rateLimit({
+    windowMs: 60 * 60 * 1000, // 1 hour
+    max: 5, // Limit each IP to 5 media creation requests per hour
+    message: { error: 'Too many media requests. Please try again later.' }
+  });
+
+  // --- Schemas ---
+  const emailSchema = z.object({
+    to: z.union([z.string().email(), z.array(z.string().email())]),
+    subject: z.string().min(1).max(200),
+    html: z.string().min(1)
+  });
+
   // Diagnostic Endpoint (Passive - No AI calls)
   app.get('/api/ai/diagnostics', async (req, res) => {
     const platformKey = process.env.GEMINI_API_KEY;
@@ -59,9 +115,13 @@ async function startServer() {
   });
 
   // --- Resend Email Endpoint ---
-  app.post('/api/send-email', async (req, res) => {
+  app.post('/api/send-email', verifyToken, requireAdmin, broadcastLimiter, async (req, res) => {
     try {
-      const { to, subject, html } = req.body;
+      const validation = emailSchema.safeParse(req.body);
+      if (!validation.success) {
+        return res.status(400).json({ error: 'Invalid payload', details: validation.error.format() });
+      }
+      const { to, subject, html } = validation.data;
       
       if (!process.env.RESEND_API_KEY) {
         return res.status(500).json({ error: 'RESEND_API_KEY is not configured.' });
@@ -152,7 +212,7 @@ async function startServer() {
   });
 
   // --- Mux Video Endpoints ---
-  app.post('/api/mux/live', async (req, res) => {
+  app.post('/api/mux/live', verifyToken, requireAdmin, mediaLimiter, async (req, res) => {
     try {
       if (!process.env.MUX_TOKEN_ID || !process.env.MUX_TOKEN_SECRET) {
         return res.status(500).json({ error: 'Mux API keys are not configured.' });
@@ -180,7 +240,7 @@ async function startServer() {
     }
   });
 
-  app.post('/api/mux/upload', async (req, res) => {
+  app.post('/api/mux/upload', verifyToken, requireAdmin, mediaLimiter, async (req, res) => {
     try {
       if (!process.env.MUX_TOKEN_ID || !process.env.MUX_TOKEN_SECRET) {
         return res.status(500).json({ error: 'Mux API keys are not configured.' });
