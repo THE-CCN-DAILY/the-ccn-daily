@@ -1,0 +1,59 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary-blue: rgb(var(--color-primary-blue-raw));
+  --color-secondary-purple: rgb(var(--color-secondary-purple-raw));
+  --color-accent-gold: rgb(var(--color-accent-gold-raw));
+  
+  --color-brand-dark: rgb(var(--surface-raw));
+  --color-brand-secondary: rgb(var(--bg-raw));
+  --color-brand-light: rgb(var(--text-primary-raw));
+  --color-brand-text-primary: rgb(var(--text-primary-raw));
+  --color-brand-text-secondary: rgb(var(--text-secondary-raw));
+  --color-brand-border: rgb(var(--border-raw));
+  --color-brand-gold: rgb(var(--accent-gold-raw));
+  --color-brand-accent: rgb(var(--color-primary-blue-raw));
+
+  --color-dynamic-accent: var(--color-primary-blue-raw);
+}
+
+:root {
+  --color-primary-blue-raw: 43 108 176;
+  --color-secondary-purple-raw: 128 90 213;
+  --color-accent-gold-raw: 214 158 46;
+  
+  /* Default to light mode variables */
+  --bg-raw: 250 251 252;
+  --surface-raw: 255 255 255;
+  --text-primary-raw: 45 55 72;
+  --text-secondary-raw: 74 85 104;
+  --border-raw: 226 232 240;
+  --accent-gold-raw: 214 158 46;
+}
+
+.dark {
+  --bg-raw: 26 26 26;
+  --surface-raw: 42 42 42;
+  --text-primary-raw: 224 224 224;
+  --text-secondary-raw: 156 163 175;
+  --border-raw: 64 64 64;
+  --accent-gold-raw: 212 175 55;
+}
+
+.sepia {
+  --bg-raw: 244 241 232;
+  --surface-raw: 255 255 255;
+  --text-primary-raw: 92 74 58;
+  --text-secondary-raw: 119 96 81;
+  --border-raw: 224 213 201;
+  --accent-gold-raw: 139 69 19;
+}
+
+@layer base {
+  body {
+    background-color: rgb(var(--bg-raw));
+    color: rgb(var(--text-primary-raw));
+    transition: background-color 0.3s ease, color 0.3s ease;
+    @apply min-h-screen;
+  }
+}

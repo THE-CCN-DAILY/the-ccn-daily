@@ -1,5 +1,3 @@
-
-<!-- Forcing a hard refresh of the application preview -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,83 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>THE CCN DAILY: Project Phoenix</title>
   <link rel="stylesheet" href="/reader-theme.css">
-  <script src="https://cdn.tailwindcss.com"></script>
   <script>
-    // Polyfill process for browser environment to prevent Gemini SDK crash
     window.process = { env: { API_KEY: "" } };
   </script>
-  <style>
-    :root.light {
-      --color-primary-blue: 43 108 176;
-      --color-secondary-purple: 128 90 213;
-      --color-accent-gold: 214 158 46;
-      --color-background: 250 251 252;
-      --color-surface: 255 255 255;
-      --color-text-primary: 45 55 72;
-      --color-text-secondary: 74 85 104;
-      --color-border: 226 232 240;
-      --color-success: 56 161 105;
-      --color-warning: 214 158 46;
-      --color-error: 229 62 62;
-      --color-dynamic-accent: var(--color-primary-blue);
-      --color-brand-dark: var(--color-surface);
-      --color-brand-secondary: var(--color-background);
-      --color-brand-light: var(--color-text-primary);
-      --color-brand-text-primary: var(--color-text-primary);
-      --color-brand-text-secondary: var(--color-text-secondary);
-      --color-brand-border: var(--color-border);
-      --color-brand-gold: var(--color-accent-gold);
-      --color-highlight-yellow: 214 158 46 / 0.3;
-      --color-highlight-blue: 43 108 176 / 0.3;
-      --color-highlight-green: 56 161 105 / 0.3;
-      --color-highlight-pink: 229 62 62 / 0.2;
-    }
-    :root.dark {
-      --color-primary-blue: 43 108 176;
-      --color-secondary-purple: 128 90 213;
-      --color-accent-gold: 212 175 55;
-      --color-background: 26 26 26;
-      --color-surface: 42 42 42;
-      --color-text-primary: 224 224 224;
-      --color-text-secondary: 156 163 175;
-      --color-border: 64 64 64;
-      --color-success: 56 161 105;
-      --color-warning: 212 175 55;
-      --color-error: 229 62 62;
-      --color-dynamic-accent: var(--color-primary-blue);
-      --color-brand-dark: var(--color-surface);
-      --color-brand-secondary: var(--color-background);
-      --color-brand-light: var(--color-text-primary);
-      --color-brand-text-primary: var(--color-text-primary);
-      --color-brand-text-secondary: var(--color-text-secondary);
-      --color-brand-border: var(--color-border);
-      --color-brand-gold: var(--color-accent-gold);
-      --color-highlight-yellow: 212 175 55 / 0.3;
-      --color-highlight-blue: 43 108 176 / 0.3;
-      --color-highlight-green: 56 161 105 / 0.3;
-      --color-highlight-pink: 229 62 62 / 0.3;
-    }
-    body {
-      background-color: rgb(var(--color-brand-secondary));
-      color: rgb(var(--color-brand-text-primary));
-      transition: background-color 0.3s ease, color 0.3s ease;
-      margin: 0;
-      overflow: hidden;
-    }
-  </style>
-  <script type="importmap">
-  {
-    "imports": {
-      "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
-      "react-router-dom": "https://aistudiocdn.com/react-router-dom@^7.9.4",
-      "@google/genai": "https://aistudiocdn.com/@google/genai@^1.23.0",
-      "react/": "https://aistudiocdn.com/react@^19.2.0/",
-      "react": "https://aistudiocdn.com/react@^19.2.0",
-      "firebase/": "https://aistudiocdn.com/firebase@^12.4.0/"
-    }
-  }
-  </script>
-<link rel="stylesheet" href="/index.css">
+  <link rel="stylesheet" href="/index.css">
 </head>
 <body>
   <div id="root"></div>
