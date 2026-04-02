@@ -51,6 +51,8 @@ const commandCenterItems = [
   { to: '/studio/atmospheric-music', text: 'Atmospheric Music', icon: SoundWaveIcon },
   { to: '/studio/media-plan', text: 'Media Player Plan', icon: UiIcon },
   { to: '/studio/design-system', text: 'Design System', icon: DesignSystemIcon },
+  { to: '/studio/growth', text: 'Growth Console', icon: DashboardIcon },
+  { to: '/studio/release-ops', text: 'Release Ops', icon: CheckIcon },
   { to: '/studio/diagnostics', text: 'System Diagnostics', icon: CheckIcon },
   { to: '/studio/team', text: 'Virtual Team', icon: TeamIcon },
   { to: '/studio/next-steps', text: 'Founder Actions', icon: CheckIcon },

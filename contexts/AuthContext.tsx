@@ -26,26 +26,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       if (userSnap.exists()) {
         const userData = userSnap.data();
-        return { ...firebaseUser, role: userData.role || 'user' } as AppUser;
+        return { 
+          ...firebaseUser, 
+          role: userData.role || 'user',
+          tier: userData.tier || 'free'
+        } as AppUser;
       } else {
         // Create new user document
         const isDefaultAdmin = firebaseUser.email === "pastor.eryeza@gmail.com";
         const role = isDefaultAdmin ? 'admin' : 'user';
+        const tier = isDefaultAdmin ? 'max' : 'free';
         const newUser = {
           uid: firebaseUser.uid,
           displayName: firebaseUser.displayName,
           email: firebaseUser.email,
           photoURL: firebaseUser.photoURL,
           role: role,
+          tier: tier,
           createdAt: serverTimestamp(),
           lastActive: serverTimestamp()
         };
         await setDoc(userRef, newUser);
-        return { ...firebaseUser, role } as AppUser;
+        return { ...firebaseUser, role, tier } as AppUser;
       }
     } catch (error) {
       handleFirestoreError(error, OperationType.GET, `users/${firebaseUser.uid}`);
-      return { ...firebaseUser, role: 'user' } as AppUser;
+      return { ...firebaseUser, role: 'user', tier: 'free' } as AppUser;
     }
   }, []);
 

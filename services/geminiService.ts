@@ -29,7 +29,7 @@ export const LITE_MODEL = 'gemini-3.1-flash-lite-preview';
 export const FLASH_MODEL = 'gemini-3-flash-preview';      
 export const PRO_MODEL = 'gemini-3-flash-preview';        
 
-export type UserTier = 'free' | 'pro' | 'max' | 'admin';
+export type UserTier = 'guest' | 'free' | 'pro' | 'max' | 'admin';
 
 export interface Capability {
     feature: string;
@@ -50,9 +50,11 @@ export const checkCapability = (feature: string, userTier: UserTier = 'free'): {
     const capability = CAPABILITIES[feature];
     if (!capability) return { allowed: false, message: "Feature not found." };
 
-    const tiers: UserTier[] = ['free', 'pro', 'max', 'admin'];
+    const tiers: UserTier[] = ['guest', 'free', 'pro', 'max', 'admin'];
     const userIndex = tiers.indexOf(userTier);
     const minIndex = tiers.indexOf(capability.minTier);
+
+    console.log(`Checking capability: ${feature} for tier: ${userTier} (rank: ${userIndex}) vs min: ${capability.minTier} (rank: ${minIndex})`);
 
     if (userIndex < minIndex) {
         return { 

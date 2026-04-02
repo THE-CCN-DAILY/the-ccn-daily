@@ -3,10 +3,11 @@ import React, { useState } from 'react';
 import Card from '../components/Card';
 import { AiIcon, SparklesIcon, SpinnerIcon, SearchIcon, SoundWaveIcon, CheckIcon, MicrophoneIcon } from '../components/icons';
 import { getGroundedPrayerTopics, getDeepTheologicalInsight, generateSanctuaryVideo } from '../services/geminiService';
-
+import { useAuth } from '../contexts/AuthContext';
 import { useNotifications } from '../contexts/NotificationContext';
 
 const VisionaryLab: React.FC = () => {
+  const { user } = useAuth();
   const { notify } = useNotifications();
   const [isGrounding, setIsGrounding] = useState(false);
   const [groundedTopics, setGroundedTopics] = useState<any[]>([]);
@@ -21,9 +22,10 @@ const VisionaryLab: React.FC = () => {
   const [isVideoLoading, setIsVideoLoading] = useState(false);
 
   const handleTestGrounding = async () => {
+    if (!user) return;
     setIsGrounding(true);
     try {
-      const topics = await getGroundedPrayerTopics();
+      const topics = await getGroundedPrayerTopics(user.role as any, user.uid);
       setGroundedTopics(topics);
     } catch (e) {
       notify("Grounding test failed.", "error");
@@ -33,11 +35,11 @@ const VisionaryLab: React.FC = () => {
   };
 
   const handleDeepStudy = async () => {
-    if (!deepQuestion.trim()) return;
+    if (!deepQuestion.trim() || !user) return;
     setIsThinking(true);
     setDeepInsight('');
     try {
-      const result = await getDeepTheologicalInsight(deepQuestion);
+      const result = await getDeepTheologicalInsight(deepQuestion, user.role as any, user.uid);
       setDeepInsight(result);
     } catch (e) {
       notify("Thinking test failed.", "error");
@@ -47,6 +49,7 @@ const VisionaryLab: React.FC = () => {
   };
 
   const handleGenerateVideo = async () => {
+    if (!user) return;
     // @ts-ignore
     const hasKey = await window.aistudio.hasSelectedApiKey();
     if (!hasKey) {
@@ -58,7 +61,7 @@ const VisionaryLab: React.FC = () => {
     setIsVideoLoading(true);
     setVideoUrl(null);
     try {
-        const url = await generateSanctuaryVideo(videoPrompt, (msg) => setVideoStatus(msg));
+        const url = await generateSanctuaryVideo(videoPrompt, (msg) => setVideoStatus(msg), user.role as any);
         setVideoUrl(url);
     } catch (e: any) {
         if (e.message?.includes("Requested entity was not found")) {

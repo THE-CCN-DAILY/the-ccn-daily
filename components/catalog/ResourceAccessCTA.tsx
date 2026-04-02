@@ -1,6 +1,8 @@
 import React from 'react';
 import type { Resource } from '../../types/entitlements';
 import { useEffectiveAccess } from '../../hooks/useEffectiveAccess';
+import { trackAnalyticsEvent, nowIso } from '../../services/analyticsService';
+import { useAuth } from '../../contexts/AuthContext';
 
 type UserLike = { uid: string } | null;
 
@@ -21,12 +23,33 @@ const ResourceAccessCTA: React.FC<Props> = ({
   onUpgrade,
   onSignIn,
 }) => {
-  const { loading, ctaPrimary, ctaSecondary } = useEffectiveAccess(user, resource);
+  const { user: authUser } = useAuth();
+  const { loading, ctaPrimary, ctaSecondary, reason } = useEffectiveAccess(user, resource);
 
   const runAction = (label: string) => {
-    if (label === 'Open') return onOpen();
-    if (label === 'Buy Once') return onPurchase();
-    if (label === 'Upgrade Plan') return onUpgrade();
+    if (label === 'Open') {
+      return onOpen();
+    }
+    if (label === 'Buy Once') {
+      trackAnalyticsEvent({
+        name: 'upgrade_cta_clicked',
+        userId: user?.uid,
+        tier: (authUser?.tier as any) || 'free',
+        timestamp: nowIso(),
+        meta: { resourceId: resource.id, action: 'buy_once' },
+      });
+      return onPurchase();
+    }
+    if (label === 'Upgrade Plan') {
+      trackAnalyticsEvent({
+        name: 'upgrade_cta_clicked',
+        userId: user?.uid,
+        tier: (authUser?.tier as any) || 'free',
+        timestamp: nowIso(),
+        meta: { resourceId: resource.id, action: 'upgrade_plan', reason },
+      });
+      return onUpgrade();
+    }
     if (label === 'Sign In') return onSignIn();
   };
 

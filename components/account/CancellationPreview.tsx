@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { buildCancelPreview } from '../../services/cancelPreviewService';
 import type { UserEntitlement, UserPurchase } from '../../types/entitlements';
+import { trackAnalyticsEvent, nowIso } from '../../services/analyticsService';
+import { useAuth } from '../../contexts/AuthContext';
 
 interface Props {
   purchases: UserPurchase[];
@@ -15,7 +17,29 @@ const CancellationPreview: React.FC<Props> = ({
   onConfirmCancel,
   onKeepPlan,
 }) => {
+  const { user } = useAuth();
   const preview = buildCancelPreview({ purchases, entitlements });
+
+  useEffect(() => {
+    trackAnalyticsEvent({
+      name: 'cancellation_preview_viewed',
+      userId: user?.uid,
+      tier: (user?.tier as any) || 'free',
+      route: '/account/cancel-preview',
+      timestamp: nowIso(),
+    });
+  }, [user]);
+
+  const handleConfirmCancel = () => {
+    trackAnalyticsEvent({
+      name: 'cancellation_completed',
+      userId: user?.uid,
+      tier: (user?.tier as any) || 'free',
+      route: '/account/cancel-preview',
+      timestamp: nowIso(),
+    });
+    onConfirmCancel();
+  };
 
   return (
     <div className="max-w-3xl mx-auto space-y-8 bg-brand-secondary/20 p-8 rounded-2xl border border-brand-border">
@@ -66,7 +90,7 @@ const CancellationPreview: React.FC<Props> = ({
           Keep my plan
         </button>
         <button 
-          onClick={onConfirmCancel} 
+          onClick={handleConfirmCancel} 
           className="flex-1 px-6 py-3 rounded-xl border border-brand-border text-brand-text-secondary hover:text-brand-text-primary hover:bg-brand-secondary/40 transition-all"
         >
           Confirm cancellation

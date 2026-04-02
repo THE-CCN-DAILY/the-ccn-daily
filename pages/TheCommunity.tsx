@@ -48,9 +48,10 @@ const TheCommunity: React.FC = () => {
 
     useEffect(() => {
         const fetchGrounded = async () => {
+            if (!user) return;
             setIsFetchingGrounded(true);
             try {
-                const topics = await getGroundedPrayerTopics();
+                const topics = await getGroundedPrayerTopics(user.role as any, user.uid);
                 setGroundedTopics(topics);
             } catch (error) {
                 console.error('Error fetching grounded topics:', error);
@@ -59,7 +60,7 @@ const TheCommunity: React.FC = () => {
             }
         };
         fetchGrounded();
-    }, []);
+    }, [user]);
 
     const handlePray = async (id: string) => {
         if (prayedFor.includes(id)) return;

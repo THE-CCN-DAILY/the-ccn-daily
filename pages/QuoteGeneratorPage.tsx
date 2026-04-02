@@ -38,7 +38,7 @@ const QuoteGeneratorPage: React.FC = () => {
     setError(null);
     try {
       const prompt = `A beautiful ${style} style background for a spiritual quote. Background only, no text. High quality, inspirational, ${style === 'Spiritual' ? 'ethereal lights and divine atmosphere' : style === 'Nature' ? 'serene mountain landscape at sunrise' : 'minimalist aesthetic'}.`;
-      const imageUrl = await generateQuoteImage(prompt);
+      const imageUrl = await generateQuoteImage(prompt, user.tier || 'free');
       setGeneratedImageUrl(imageUrl);
     } catch (err: any) {
       console.error("Failed to generate image:", err);

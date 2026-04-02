@@ -14,7 +14,7 @@ const podcastData: PodcastEpisode[] = [
         duration: 167, // duration in seconds
         coverArt: 'https://picsum.photos/seed/ambition/500/500',
         releaseDate: 'Feb 28, 2024',
-        audioUrl: 'https://storage.googleapis.com/media-session/sintel/snow-fight.mp3',
+        audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
         isFeatured: true,
         summary: 'This episode explores the concept of "holy ambition," differentiating it from worldly ambition. It provides a framework for listeners to discern whether their personal desires align with God\'s will, using biblical examples to illustrate how to pursue God-given dreams with faith and integrity, rather than striving for personal glory.',
         keyTakeaways: [
@@ -60,7 +60,7 @@ const podcastData: PodcastEpisode[] = [
         duration: 32 * 60,
         coverArt: 'https://picsum.photos/seed/morality/500/500',
         releaseDate: 'Oct 02, 2023',
-        audioUrl: 'https://storage.googleapis.com/media-session/sintel/survivor.mp3',
+        audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3',
     },
     {
         id: 3,
@@ -70,7 +70,7 @@ const podcastData: PodcastEpisode[] = [
         duration: 25 * 60,
         coverArt: 'https://picsum.photos/seed/forgiveness/500/500',
         releaseDate: 'Sep 25, 2023',
-        audioUrl: 'https://storage.googleapis.com/media-session/sintel/things-can-get-worse.mp3',
+        audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3',
     },
     {
         id: 4,
@@ -80,7 +80,7 @@ const podcastData: PodcastEpisode[] = [
         duration: 35 * 60,
         coverArt: 'https://picsum.photos/seed/peace/500/500',
         releaseDate: 'Sep 18, 2023',
-        audioUrl: 'https://storage.googleapis.com/media-session/sintel/train-ride.mp3',
+        audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3',
     },
 ];
 

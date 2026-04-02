@@ -113,8 +113,18 @@ const ContentDisplay: React.FC<ContentDisplayProps> = ({ contentId, initialConte
     try {
       const textToSpeak = articleRef.current.innerText;
       const audioUrl = await getPremiumTtsAudio(textToSpeak, settings.narratorVoice);
-      const newAudio = new Audio(audioUrl);
-      ttsAudioRef.current = newAudio;
+      const newAudio = new Audio();
+      
+      const handleCanPlay = () => {
+        newAudio.play().catch(err => {
+          if (err.name !== 'AbortError') {
+            console.error("Audio playback failed:", err.message);
+            notify("Sorry, an audio playback error occurred.", "error");
+          }
+        });
+      };
+
+      newAudio.addEventListener('canplay', handleCanPlay, { once: true });
       newAudio.onplay = () => setIsReadingAloud(true);
       newAudio.onpause = () => setIsReadingAloud(false);
       newAudio.onended = () => setIsReadingAloud(false);
@@ -123,7 +133,9 @@ const ContentDisplay: React.FC<ContentDisplayProps> = ({ contentId, initialConte
         setIsReadingAloud(false);
         ttsAudioRef.current = null;
       };
-      newAudio.play();
+
+      newAudio.src = audioUrl;
+      ttsAudioRef.current = newAudio;
     } catch (error) {
       notify("Sorry, the premium audio narration could not be played.", "error");
       setIsReadingAloud(false);

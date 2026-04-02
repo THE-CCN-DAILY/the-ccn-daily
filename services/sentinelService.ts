@@ -18,15 +18,14 @@ export const runTechSentinelAudit = async (currentRoadmap: any): Promise<TechAud
   try {
     const platformKey = process.env.GEMINI_API_KEY;
     const userKey = process.env.API_KEY;
-    const isPlatformKeyValid = !!(platformKey && platformKey.startsWith('AIza') && platformKey !== 'undefined');
-    const apiKey = isPlatformKeyValid ? platformKey : userKey;
+    const apiKey = (platformKey && platformKey !== 'undefined') ? platformKey : userKey;
 
     if (!apiKey || apiKey === 'undefined') {
       console.warn("Sentinel: Gemini API Key is missing.");
       return [];
     }
 
-    const ai = new GoogleGenAI({ apiKey: apiKey || "MISSING_KEY" });
+    const ai = new GoogleGenAI({ apiKey });
     const model = 'gemini-3-flash-preview';
 
     const prompt = `You are the Project Phoenix Strategic Sentinel. 
@@ -38,35 +37,40 @@ export const runTechSentinelAudit = async (currentRoadmap: any): Promise<TechAud
     3. Multimodal opportunities (Veo for visuals, Lyria for music).
     
     Return a JSON array of specific, actionable tech updates to make the app better and more affordable.
-    Each update must have: featureId, currentTech, recommendedUpdate, reason, affordabilityGain (Higher/Lower/Neutral), impact.`;
+    Each update must be an object with these fields:
+    - featureId: string
+    - currentTech: string
+    - recommendedUpdate: string
+    - reason: string
+    - affordabilityGain: "Higher" | "Lower" | "Neutral"
+    - impact: string
+
+    Return ONLY the JSON array.`;
 
     const response = await ai.models.generateContent({
       model: model,
       contents: prompt,
       config: {
         responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.ARRAY,
-          items: {
-            type: Type.OBJECT,
-            properties: {
-              featureId: { type: Type.STRING },
-              currentTech: { type: Type.STRING },
-              recommendedUpdate: { type: Type.STRING },
-              reason: { type: Type.STRING },
-              affordabilityGain: { type: Type.STRING, enum: ['Higher', 'Lower', 'Neutral'] },
-              impact: { type: Type.STRING },
-            },
-            required: ["featureId", "currentTech", "recommendedUpdate", "reason", "affordabilityGain", "impact"]
-          }
-        }
       }
     });
 
-    if (!response.text) return [];
-    return JSON.parse(response.text);
+    if (!response.text) {
+      console.warn("Sentinel: AI response text is empty.");
+      return [];
+    }
+    
+    try {
+      // Clean up the response text in case there's markdown
+      const cleanText = response.text.replace(/```json/g, '').replace(/```/g, '').trim();
+      const parsed = JSON.parse(cleanText);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (parseError) {
+      console.error("Sentinel: Failed to parse AI response:", response.text);
+      return [];
+    }
   } catch (error) {
     console.error("Sentinel Audit Failed:", error);
-    return [];
+    throw error; // Re-throw to allow hooks to catch it
   }
 };

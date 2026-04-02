@@ -68,7 +68,7 @@ const DevotionalGeneratorPage: React.FC = () => {
     localStorage.removeItem(LOCAL_STORAGE_KEY);
 
     try {
-      const generatedObject = await generatePersonalizedDevotional(user.uid, user.displayName || 'Friend');
+      const generatedObject = await generatePersonalizedDevotional(user.uid, user.displayName || 'Friend', user.tier || 'free');
       setDailyDevotional({
           data: generatedObject,
           date: getTodayDateString()

@@ -162,29 +162,31 @@ export const AudioPlayerProvider: React.FC<{ children: React.ReactNode }> = ({ c
     clearSleepTimer();
     setCurrentTrack(track);
     setDetailedPlayerOpen(true);
-    setIsLoading(true);
-    setIsPlaying(false);
-    setProgress(0);
-    setDuration(0);
-
-    audio.src = track.audioUrl;
-    audio.load();
-
     const handleCanPlay = () => {
       const playPromise = audio.play();
       if (playPromise !== undefined) {
         playPromise.then(() => {
+          setIsPlaying(true);
         }).catch(error => {
-          console.error(`Audio playback failed: ${error.name} - ${error.message}`);
+          if (error.name !== 'AbortError') {
+            console.error(`Audio playback failed: ${error.name} - ${error.message}`);
+          }
         }).finally(() => {
             setIsLoading(false);
         });
       } else {
         setIsLoading(false);
+        setIsPlaying(true);
       }
     };
 
-    audio.addEventListener('canplaythrough', handleCanPlay, { once: true });
+    setIsLoading(true);
+    setIsPlaying(false);
+    setProgress(0);
+    setDuration(0);
+
+    audio.addEventListener('canplay', handleCanPlay, { once: true });
+    audio.src = track.audioUrl;
   };
 
   const togglePlayPause = () => {

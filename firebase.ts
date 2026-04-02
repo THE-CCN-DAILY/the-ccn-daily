@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut as firebaseSignOut, onAuthStateChanged, User } from 'firebase/auth';
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut as firebaseSignOut, onAuthStateChanged, User, setPersistence, browserLocalPersistence } from 'firebase/auth';
 import { getFirestore, doc, getDocFromServer } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 import firebaseConfig from './firebase-applet-config.json';
@@ -9,6 +9,12 @@ console.log('Initializing Firebase with config:', JSON.stringify({ ...firebaseCo
 const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
 export const auth = getAuth(app);
+
+// Set persistence to local to help with token refresh issues in iframes
+setPersistence(auth, browserLocalPersistence).catch(err => {
+  console.error("Could not set auth persistence:", err);
+});
+
 export const storage = getStorage(app);
 export const googleProvider = new GoogleAuthProvider();
 

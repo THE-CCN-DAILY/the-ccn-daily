@@ -10,13 +10,16 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [theme, setTheme] = useState<Theme>('dark');
+  const [theme, setTheme] = useState<Theme>(() => {
+    return (localStorage.getItem('phoenix_theme') as Theme) || 'dark';
+  });
 
   useEffect(() => {
     const root = window.document.documentElement;
     
     root.classList.remove('light', 'dark', 'sepia');
     root.classList.add(theme);
+    localStorage.setItem('phoenix_theme', theme);
 
   }, [theme]);
 

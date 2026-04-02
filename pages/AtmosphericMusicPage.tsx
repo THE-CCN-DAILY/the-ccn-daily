@@ -59,12 +59,19 @@ const AtmosphericMusicPage: React.FC = () => {
             const track = await getAtmosphericMusic(mood);
             setCurrentTrack(track);
             if (audioRef.current) {
-                audioRef.current.src = track.url;
-                audioRef.current.load();
-                const playPromise = audioRef.current.play();
-                if(playPromise !== undefined) {
-                    playPromise.catch(error => console.error("Audio playback failed:", error));
-                }
+                const audio = audioRef.current;
+                const handleCanPlay = () => {
+                    const playPromise = audio.play();
+                    if(playPromise !== undefined) {
+                        playPromise.catch(error => {
+                            if (error.name !== 'AbortError') {
+                                console.error("Audio playback failed:", error);
+                            }
+                        });
+                    }
+                };
+                audio.addEventListener('canplay', handleCanPlay, { once: true });
+                audio.src = track.url;
             }
         } catch (error) {
             console.error("Failed to get music:", error);

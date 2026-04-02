@@ -284,8 +284,16 @@ const HighlightsSidebar: React.FC<HighlightsSidebarProps> = ({ highlights, editi
              const borderColorClass = colorClasses[h.color];
              const playAudio = () => {
                 if (h.voiceNoteUrl) {
-                    const audio = new Audio(h.voiceNoteUrl);
-                    audio.play().catch(e => console.error("Audio playback failed:", e));
+                    const audio = new Audio();
+                    const handleCanPlay = () => {
+                        audio.play().catch(e => {
+                            if (e.name !== 'AbortError') {
+                                console.error("Audio playback failed:", e);
+                            }
+                        });
+                    };
+                    audio.addEventListener('canplay', handleCanPlay, { once: true });
+                    audio.src = h.voiceNoteUrl;
                 }
              }
              return (

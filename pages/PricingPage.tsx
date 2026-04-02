@@ -8,6 +8,8 @@ import { useFlutterwave, closePaymentModal } from 'flutterwave-react-v3';
 import { db } from '../firebase';
 import { doc, setDoc, serverTimestamp, collection, query, where, getDocs, getDoc } from 'firebase/firestore';
 import { handleFirestoreError, OperationType } from '../utils/firestoreErrorHandler';
+import { trackAnalyticsEvent, nowIso } from '../services/analyticsService';
+import { useExperiment } from '../hooks/useExperiment';
 
 const DEFAULT_FLUTTERWAVE_KEY = (import.meta as any).env.VITE_FLUTTERWAVE_PUBLIC_KEY || 'FLWPUBK_TEST-SANDBOXDEMOKEY-X';
 
@@ -21,11 +23,22 @@ const PricingPage: React.FC = () => {
     const [activeDiscount, setActiveDiscount] = useState<{name: string, percentage: number, targetTier: string, targetBilling: string} | null>(null);
     const [flutterwaveKey, setFlutterwaveKey] = useState(DEFAULT_FLUTTERWAVE_KEY);
 
+    const paywallVariant = useExperiment(user?.uid, 'paywall_layout_v1');
+
     useEffect(() => {
         setUserCountry('US'); // Simulate IP geolocation
         fetchActiveDiscount();
         fetchPaymentSettings();
-    }, [billingCycle]);
+
+        trackAnalyticsEvent({
+            name: 'paywall_viewed',
+            userId: user?.uid,
+            tier: (user?.tier as any) || 'free',
+            route: '/pricing',
+            timestamp: nowIso(),
+            experiments: { paywall_layout_v1: paywallVariant },
+        });
+    }, [billingCycle, paywallVariant]);
 
     const fetchPaymentSettings = async () => {
         try {
@@ -123,6 +136,24 @@ const PricingPage: React.FC = () => {
         setSelectedTier(tier);
         setIsProcessing(true);
 
+        trackAnalyticsEvent({
+            name: 'plan_selected',
+            userId: user?.uid,
+            tier: (user?.tier as any) || 'free',
+            route: '/pricing',
+            timestamp: nowIso(),
+            meta: { selectedTier: tier, billingCycle },
+        });
+
+        trackAnalyticsEvent({
+            name: 'purchase_started',
+            userId: user?.uid,
+            tier: (user?.tier as any) || 'free',
+            route: '/pricing',
+            timestamp: nowIso(),
+            meta: { tier, billingCycle },
+        });
+
         // We need a small timeout to let the state update before calling the hook
         setTimeout(() => {
             handleFlutterPayment({
@@ -130,9 +161,25 @@ const PricingPage: React.FC = () => {
                     console.log(response);
                     closePaymentModal();
                     if (response.status === 'successful') {
+                        trackAnalyticsEvent({
+                            name: 'purchase_completed',
+                            userId: user?.uid,
+                            tier: (user?.tier as any) || 'free',
+                            route: '/pricing',
+                            timestamp: nowIso(),
+                            meta: { tier, billingCycle, tx_ref: response.tx_ref },
+                        });
                         await updateUserTier(tier);
                     } else {
                         setIsProcessing(false);
+                        trackAnalyticsEvent({
+                            name: 'purchase_failed',
+                            userId: user?.uid,
+                            tier: (user?.tier as any) || 'free',
+                            route: '/pricing',
+                            timestamp: nowIso(),
+                            meta: { tier, billingCycle, status: response.status },
+                        });
                         notify("Payment was not successful. Please try again.", 'error');
                     }
                 },

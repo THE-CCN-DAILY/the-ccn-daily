@@ -42,6 +42,8 @@ import PricingPage from './pages/PricingPage';
 import ExpertCouncilPage from './pages/ExpertCouncilPage';
 import MultiTenancyAdmin from './pages/MultiTenancyAdmin';
 import LiveStreamPage from './pages/LiveStreamPage';
+import GrowthConsole from './pages/GrowthConsole';
+import ReleaseOpsConsole from './pages/ReleaseOpsConsole';
 
 import ErrorBoundary from './components/ErrorBoundary';
 
@@ -101,6 +103,8 @@ const App: React.FC = () => {
                             <Route path="media-plan" element={<RequireRole role="admin"><MediaPlayerPlan /></RequireRole>} />
                             <Route path="design-system" element={<RequireRole role="admin"><DesignSystem /></RequireRole>} />
                             <Route path="diagnostics" element={<RequireRole role="admin"><DiagnosticsPage /></RequireRole>} />
+                            <Route path="growth" element={<RequireRole role="admin"><GrowthConsole /></RequireRole>} />
+                            <Route path="release-ops" element={<RequireRole role="admin"><ReleaseOpsConsole /></RequireRole>} />
                             <Route path="team" element={<RequireRole role="admin"><Team /></RequireRole>} />
                             <Route path="next-steps" element={<RequireRole role="admin"><NextSteps /></RequireRole>} />
                             <Route path="chat" element={<RequireRole role="admin"><ChatWithTeam /></RequireRole>} />
