@@ -264,3 +264,13 @@ export const TIER_CONFIGS: Record<SubscriptionTier, TierConfig> = {
 export function getTierFeatures(tier: SubscriptionTier): TierFeatures {
   return TIER_CONFIGS[tier].features;
 }
+
+export function getTierLabel(tier: SubscriptionTier): string {
+  switch (tier) {
+    case 'free': return 'Foundation';
+    case 'pro': return 'Growth';
+    case 'max': return 'Family';
+    case 'guest': return 'Guest';
+    default: return 'Foundation';
+  }
+}
