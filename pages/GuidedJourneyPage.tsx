@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Card from '../components/Card';
 // FIX: Added SoundWaveIcon to the imported icons list
@@ -7,6 +7,17 @@ import { CheckIcon, FlagIcon, PencilIcon, PrayingHandsIcon, ReaderIcon, Sparkles
 import RichTextJournal from '../components/RichTextJournal';
 import PrayerTimer from '../components/PrayerTimer';
 import { getScriptureSnippet } from '../services/bibleService';
+import { db } from '../firebase';
+import { collection, query, where, getDocs, limit } from 'firebase/firestore';
+import ReactMarkdown from 'react-markdown';
+
+interface Devotional {
+  id: string;
+  title: string;
+  content: string;
+  date: string;
+  audioUrl?: string;
+}
 
 const journeySteps = [
   { id: 'start', name: 'Start', icon: FlagIcon },
@@ -69,7 +80,7 @@ const ScriptureSnippetModal: React.FC<{
     );
 };
 
-const StepContent: React.FC<{ stepIndex: number; onComplete: () => void }> = ({ stepIndex, onComplete }) => {
+const StepContent: React.FC<{ stepIndex: number; onComplete: () => void; devotional: Devotional | null }> = ({ stepIndex, onComplete, devotional }) => {
     const [isPrayerComplete, setIsPrayerComplete] = useState(false);
     const [activeSnippet, setActiveSnippet] = useState<string | null>(null);
     const isPrayerStep = stepIndex === 4;
@@ -104,9 +115,26 @@ const StepContent: React.FC<{ stepIndex: number; onComplete: () => void }> = ({ 
                             <ReaderIcon className="w-10 h-10 text-brand-accent"/>
                         </div>
                         <h2 className="text-2xl font-bold text-brand-text-primary mb-4">Today's Reflection</h2>
-                        <p className="text-brand-text-secondary max-w-md mx-auto">
-                            The Devotional Content is now loaded. Focus on the core message of <strong>"Unshakeable Peace"</strong>.
-                        </p>
+                        {devotional ? (
+                            <div className="text-left max-w-2xl mx-auto">
+                                <h3 className="text-xl font-bold text-brand-accent mb-4 text-center">{devotional.title}</h3>
+                                {devotional.audioUrl && (
+                                    <div className="mb-6">
+                                        <audio controls className="w-full h-10 rounded-full bg-brand-secondary">
+                                            <source src={devotional.audioUrl} type="audio/mpeg" />
+                                            Your browser does not support the audio element.
+                                        </audio>
+                                    </div>
+                                )}
+                                <div className="prose prose-sm text-brand-text-secondary mx-auto">
+                                    <ReactMarkdown>{devotional.content}</ReactMarkdown>
+                                </div>
+                            </div>
+                        ) : (
+                            <p className="text-brand-text-secondary max-w-md mx-auto">
+                                Today's devotional is not available yet. Focus on the core message of <strong>"Unshakeable Peace"</strong>.
+                            </p>
+                        )}
                     </div>
                 );
             case 3:
@@ -195,6 +223,35 @@ const StepContent: React.FC<{ stepIndex: number; onComplete: () => void }> = ({ 
 
 const GuidedJourneyPage: React.FC = () => {
     const [currentStep, setCurrentStep] = useState(0);
+    const [devotional, setDevotional] = useState<Devotional | null>(null);
+
+    useEffect(() => {
+        const fetchTodayDevotional = async () => {
+            try {
+                // Get today's date in YYYY-MM-DD format (local time)
+                const today = new Date();
+                const year = today.getFullYear();
+                const month = String(today.getMonth() + 1).padStart(2, '0');
+                const day = String(today.getDate()).padStart(2, '0');
+                const todayString = `${year}-${month}-${day}`;
+
+                const q = query(
+                    collection(db, 'devotionals'),
+                    where('date', '==', todayString),
+                    limit(1)
+                );
+                const snapshot = await getDocs(q);
+                if (!snapshot.empty) {
+                    const doc = snapshot.docs[0];
+                    setDevotional({ id: doc.id, ...doc.data() } as Devotional);
+                }
+            } catch (error) {
+                console.error("Error fetching today's devotional:", error);
+            }
+        };
+
+        fetchTodayDevotional();
+    }, []);
     
     const handleNextStep = () => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -235,7 +292,7 @@ const GuidedJourneyPage: React.FC = () => {
 
             {/* Content with smoother movement */}
             <div className="mt-20">
-                <StepContent key={currentStep} stepIndex={currentStep} onComplete={handleNextStep} />
+                <StepContent key={currentStep} stepIndex={currentStep} onComplete={handleNextStep} devotional={devotional} />
             </div>
 
         </div>

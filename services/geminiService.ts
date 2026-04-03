@@ -29,7 +29,7 @@ export const LITE_MODEL = 'gemini-3.1-flash-lite-preview';
 export const FLASH_MODEL = 'gemini-3-flash-preview';      
 export const PRO_MODEL = 'gemini-3-flash-preview';        
 
-export type UserTier = 'guest' | 'free' | 'pro' | 'max' | 'admin';
+export type UserTier = 'guest' | 'free' | 'pro' | 'max' | 'partner' | 'admin';
 
 export interface Capability {
     feature: string;

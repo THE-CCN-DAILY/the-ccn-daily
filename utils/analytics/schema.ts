@@ -16,7 +16,7 @@ export type AnalyticsEventName =
 export interface AnalyticsEvent<TMeta = Record<string, unknown>> {
   name: AnalyticsEventName;
   userId?: string | null;
-  tier?: 'guest' | 'free' | 'pro' | 'max';
+  tier?: 'guest' | 'free' | 'pro' | 'max' | 'partner';
   route?: string;
   timestamp: string;
   experiments?: Record<string, string>;

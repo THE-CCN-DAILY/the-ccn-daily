@@ -88,8 +88,8 @@ const podcastData: PodcastEpisode[] = [
 const PodcastPage: React.FC = () => {
     const { playTrack, currentTrack, isPlaying, togglePlayPause } = useAudioPlayer();
     const [activeTab, setActiveTab] = useState('Recent');
-    const [favorites, setFavorites] = useState<number[]>([1]);
-    const [downloads] = useState<number[]>([3, 4]); // Mocked for prototype
+    const [favorites, setFavorites] = useState<(string | number)[]>([1]);
+    const [downloads] = useState<(string | number)[]>([3, 4]); // Mocked for prototype
     
     // State for Thematic Search
     const [searchQuery, setSearchQuery] = useState('');
@@ -98,7 +98,7 @@ const PodcastPage: React.FC = () => {
 
     const featuredEpisode = podcastData.find(e => e.isFeatured);
     
-    const toggleFavorite = (episodeId: number) => {
+    const toggleFavorite = (episodeId: string | number) => {
         setFavorites(prev => 
             prev.includes(episodeId) 
                 ? prev.filter(id => id !== episodeId)

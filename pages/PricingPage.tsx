@@ -14,55 +14,67 @@ import { getTierLabel } from '../types/pricing';
 
 const DEFAULT_FLUTTERWAVE_KEY = (import.meta as any).env.VITE_FLUTTERWAVE_PUBLIC_KEY || 'FLWPUBK_TEST-SANDBOXDEMOKEY-X';
 
-type PaidTier = 'pro' | 'max';
+type PaidTier = 'pro' | 'max' | 'partner';
 
 const PLAN_UI = {
   free: {
     label: getTierLabel('free'),
-    tagline: 'Build a daily spiritual rhythm.',
+    tagline: 'Start your daily spiritual rhythm.',
     bullets: [
-      'Daily human-written devotional',
-      'Weekly devotional newsletter',
-      'Basic Bible reader + notes',
-      'Open community challenges',
-      'Weekly devotional podcast (audio)',
+      'Daily devotional',
+      'Weekly newsletter/podcast',
+      'Basic Bible reader',
+      'Open challenges',
+      'Basic notes/comments',
     ],
-    support: 'Smart assistance included where helpful.',
+    support: 'Basic tools included.',
     cta: 'Current Plan',
   },
   pro: {
     label: getTierLabel('pro'),
-    tagline: 'Go deeper with structured formation paths.',
+    tagline: 'Build depth and consistency.',
     bullets: [
-      'Premium courses and study packs',
-      'Subscriber audiobook library (standard)',
-      'Challenge archive + premium discussion rooms',
-      'Journaling templates and progress tools',
-      'Discounted premium events',
+      'Premium courses (core set)',
+      'Standard audiobook library (rotating)',
+      'Premium challenge archive',
+      'Journaling templates',
+      'Community rooms',
     ],
-    support: 'Includes smart guidance tools in context.',
+    support: '7-day trial on annual plan.',
     cta: 'Choose Growth',
     badge: 'Most Popular',
   },
   max: {
     label: getTierLabel('max'),
-    tagline: 'Grow together with shared progress.',
+    tagline: 'Grow together at home.',
     bullets: [
       'Everything in Growth',
       'Up to 5 seats',
-      'Shared family challenges',
-      'Household progress dashboard',
-      'Group prayer/discussion spaces',
+      'Shared challenge board',
+      'Family progress dashboard',
     ],
-    support: 'Smart assistance is included, never intrusive.',
+    support: '14-day trial on annual plan.',
     cta: 'Choose Family',
+  },
+  partner: {
+    label: getTierLabel('partner'),
+    tagline: 'Guide groups with structure and insight.',
+    bullets: [
+      'Everything in Family',
+      'Cohort facilitation tools',
+      'Assignment workflows',
+      'Group analytics',
+    ],
+    support: '30-day pilot for approved cohorts.',
+    cta: 'Choose Leader',
   },
 } as const;
 
 const OWNERSHIP_NOTES = [
-  'Books, courses, and audiobooks can be purchased once and kept forever.',
-  'Subscriptions include rotating premium libraries and live/community experiences.',
-  'Premium events can be included, discounted, or ticketed per plan.',
+  'Included with subscription: rotating course/audiobook library, premium discussions, challenge archives.',
+  'Own forever: selected books, flagship courses, premium audiobooks.',
+  'Always separate add-on: 1:1 mentorship.',
+  'Events: free/open events + premium ticketed events (subscriber discounts).',
 ];
 
 const PricingPage: React.FC = () => {
@@ -139,15 +151,21 @@ const PricingPage: React.FC = () => {
     }
   };
 
-  const proPrice = getLocalizedPrice(9.99, userCountry);
-  const maxPrice = getLocalizedPrice(19.99, userCountry);
+  const proPrice = getLocalizedPrice(8.99, userCountry);
+  const maxPrice = getLocalizedPrice(14.99, userCountry);
+  const partnerPrice = getLocalizedPrice(24.99, userCountry);
 
   const getAmount = (tier: PaidTier) => {
-    const basePrice = tier === 'pro' ? proPrice.discountedPriceUSD : maxPrice.discountedPriceUSD;
+    let basePrice = proPrice.discountedPriceUSD;
+    if (tier === 'max') basePrice = maxPrice.discountedPriceUSD;
+    if (tier === 'partner') basePrice = partnerPrice.discountedPriceUSD;
+    
     let finalPrice = basePrice;
 
     if (billingCycle === 'yearly') {
-      finalPrice = basePrice * 12 * 0.8; // 20% annual discount
+      if (tier === 'pro') finalPrice = 59.99;
+      else if (tier === 'max') finalPrice = 129.99;
+      else if (tier === 'partner') finalPrice = 199.99;
     }
 
     if (activeDiscount && (activeDiscount.targetTier === 'all' || activeDiscount.targetTier === tier)) {
@@ -158,9 +176,23 @@ const PricingPage: React.FC = () => {
   };
 
   const formatPrice = (tier: PaidTier) => {
-    const currencySymbol = tier === 'pro' ? proPrice.currencySymbol : maxPrice.currencySymbol;
+    let currencySymbol = proPrice.currencySymbol;
+    if (tier === 'max') currencySymbol = maxPrice.currencySymbol;
+    if (tier === 'partner') currencySymbol = partnerPrice.currencySymbol;
     const amount = getAmount(tier);
     return `${currencySymbol}${amount}`;
+  };
+
+  const getSavingsPercentage = (tier: PaidTier) => {
+    const monthlyTotal = getAmount(tier) * (billingCycle === 'monthly' ? 1 : (tier === 'pro' ? 8.99 : tier === 'max' ? 14.99 : 24.99)) * 12;
+    let yearlyTotal = 0;
+    if (tier === 'pro') yearlyTotal = 59.99;
+    else if (tier === 'max') yearlyTotal = 129.99;
+    else if (tier === 'partner') yearlyTotal = 199.99;
+    
+    const monthlyAnnualized = (tier === 'pro' ? 8.99 : tier === 'max' ? 14.99 : 24.99) * 12;
+    const savings = ((monthlyAnnualized - yearlyTotal) / monthlyAnnualized) * 100;
+    return Math.round(savings);
   };
 
   const handleFlutterPayment = useFlutterwave({
@@ -294,7 +326,7 @@ const PricingPage: React.FC = () => {
                 : 'text-brand-text-secondary hover:text-brand-text-primary'
             }`}
           >
-            Yearly <span className="text-[10px] bg-status-success/20 text-status-success px-2 py-0.5 rounded-full">Save 20%</span>
+            Yearly <span className="text-[10px] bg-status-success/20 text-status-success px-2 py-0.5 rounded-full">Save up to 44%</span>
           </button>
         </div>
 
@@ -308,7 +340,7 @@ const PricingPage: React.FC = () => {
         )}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* Foundation */}
         <Card className="flex flex-col border-brand-border bg-brand-dark/30">
           <div className="mb-8">
@@ -354,6 +386,9 @@ const PricingPage: React.FC = () => {
               <span className="text-4xl font-black text-brand-text-primary">{formatPrice('pro')}</span>
               <span className="text-brand-text-secondary ml-2">/{billingCycle === 'monthly' ? 'mo' : 'yr'}</span>
             </div>
+            {billingCycle === 'yearly' && (
+              <p className="text-xs text-status-success mt-1 font-semibold">Save {getSavingsPercentage('pro')}% vs monthly</p>
+            )}
           </div>
 
           <ul className="space-y-4 mb-8 flex-1">
@@ -391,6 +426,9 @@ const PricingPage: React.FC = () => {
               <span className="text-4xl font-black text-brand-text-primary">{formatPrice('max')}</span>
               <span className="text-brand-text-secondary ml-2">/{billingCycle === 'monthly' ? 'mo' : 'yr'}</span>
             </div>
+            {billingCycle === 'yearly' && (
+              <p className="text-xs text-status-success mt-1 font-semibold">Save {getSavingsPercentage('max')}% vs monthly</p>
+            )}
           </div>
 
           <ul className="space-y-4 mb-8 flex-1">
@@ -416,6 +454,46 @@ const PricingPage: React.FC = () => {
             {isProcessing && selectedTier === 'max' ? 'Processing...' : PLAN_UI.max.cta}
           </button>
         </Card>
+
+        {/* Leader */}
+        <Card className="flex flex-col border-brand-border bg-brand-dark/30">
+          <div className="mb-8">
+            <h3 className="text-2xl font-bold text-brand-text-primary mb-2 flex items-center gap-2">
+              {PLAN_UI.partner.label}
+            </h3>
+            <p className="text-brand-text-secondary text-sm h-10">{PLAN_UI.partner.tagline}</p>
+            <div className="mt-6 flex items-baseline">
+              <span className="text-4xl font-black text-brand-text-primary">{formatPrice('partner')}</span>
+              <span className="text-brand-text-secondary ml-2">/{billingCycle === 'monthly' ? 'mo' : 'yr'}</span>
+            </div>
+            {billingCycle === 'yearly' && (
+              <p className="text-xs text-status-success mt-1 font-semibold">Save {getSavingsPercentage('partner')}% vs monthly</p>
+            )}
+          </div>
+
+          <ul className="space-y-4 mb-8 flex-1">
+            {PLAN_UI.partner.bullets.map((item) => (
+              <li key={item} className="flex items-start gap-3 text-sm text-brand-text-secondary">
+                <CheckIcon className="w-5 h-5 text-brand-text-primary flex-shrink-0" />
+                <span className={item === 'Everything in Family' ? 'font-semibold text-brand-text-primary' : ''}>{item}</span>
+              </li>
+            ))}
+          </ul>
+
+          <p className="text-xs text-brand-text-secondary mb-4">{PLAN_UI.partner.support}</p>
+
+          <button
+            onClick={() => handleSubscribe('partner')}
+            disabled={isProcessing}
+            className={`w-full py-3 rounded-xl font-bold transition-colors border border-brand-border ${
+              isProcessing && selectedTier === 'partner'
+                ? 'bg-brand-secondary text-brand-text-secondary cursor-wait'
+                : 'bg-brand-dark text-brand-text-primary hover:bg-brand-secondary'
+            }`}
+          >
+            {isProcessing && selectedTier === 'partner' ? 'Processing...' : PLAN_UI.partner.cta}
+          </button>
+        </Card>
       </div>
 
       <div className="mt-10 p-5 rounded-2xl border border-brand-border bg-brand-secondary/30">
@@ -432,23 +510,23 @@ const PricingPage: React.FC = () => {
 
       <div className="mt-10 grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card className="border-brand-border bg-brand-dark/20">
-          <h3 className="text-xl font-bold text-brand-text-primary mb-2">Add-ons (All Plans)</h3>
+          <h3 className="text-xl font-bold text-brand-text-primary mb-2">Add-ons (Simple & Non-conflicting)</h3>
           <ul className="space-y-2 text-sm text-brand-text-secondary">
-            <li>• Books (Own Forever): $4.99–$19.99</li>
-            <li>• Premium Courses (Own Forever): $19–$99</li>
-            <li>• Premium Audiobooks (Own Forever): $9.99–$29.99</li>
-            <li>• Premium Events: ticketed (subscriber discounts apply)</li>
-            <li>• 1:1 Mentorship Calls: separate service</li>
+            <li>• Books (Own Forever): $4.99–$14.99</li>
+            <li>• Flagship Courses (Own Forever): $29–$99</li>
+            <li>• Premium Audiobooks (Own Forever): $9.99–$24.99</li>
+            <li>• Mentorship Session: $39–$99 (subscriber discount optional)</li>
+            <li>• Premium Event Ticket: dynamic, with 10–20% subscriber discount</li>
           </ul>
         </Card>
 
         <Card className="border-brand-border bg-brand-dark/20">
-          <h3 className="text-xl font-bold text-brand-text-primary mb-2">Partner (Leader)</h3>
+          <h3 className="text-xl font-bold text-brand-text-primary mb-2">Mission-Access Lane</h3>
           <p className="text-sm text-brand-text-secondary mb-4">
-            For cohort leaders, churches, and ministry teams. Includes facilitation tools and group analytics.
+            We believe everyone should have access to spiritual formation tools. If you cannot afford a subscription, please apply for our scholarship program or regional pricing.
           </p>
           <button className="px-5 py-2 rounded-lg border border-brand-border text-brand-text-primary hover:bg-brand-secondary transition-colors">
-            Contact for Partner Plan
+            Apply for Scholarship
           </button>
         </Card>
       </div>

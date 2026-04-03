@@ -1,4 +1,4 @@
-export type SubscriptionTier = 'guest' | 'free' | 'pro' | 'max';
+export type SubscriptionTier = 'guest' | 'free' | 'pro' | 'max' | 'partner';
 export type LimitMode = 'hard' | 'soft';
 export type BillingCycle = 'monthly' | 'yearly';
 
@@ -170,7 +170,7 @@ export const TIER_CONFIGS: Record<SubscriptionTier, TierConfig> = {
     }
   },
   pro: {
-    pricing: { monthlyUsd: 7.99, yearlyUsd: 76.70, annualSavingsPct: 20, featured: true },
+    pricing: { monthlyUsd: 8.99, yearlyUsd: 59.99, featured: true },
     cogsGuardrailUsdPerMonth: 3.0,
     targetGrossMarginPct: 60,
     features: {
@@ -215,7 +215,7 @@ export const TIER_CONFIGS: Record<SubscriptionTier, TierConfig> = {
     }
   },
   max: {
-    pricing: { monthlyUsd: 14.99, yearlyUsd: 143.90, annualSavingsPct: 20 },
+    pricing: { monthlyUsd: 14.99, yearlyUsd: 129.99 },
     cogsGuardrailUsdPerMonth: 7.0,
     targetGrossMarginPct: 50,
     features: {
@@ -259,6 +259,51 @@ export const TIER_CONFIGS: Record<SubscriptionTier, TierConfig> = {
       }
     }
   },
+  partner: {
+    pricing: { monthlyUsd: 24.99, yearlyUsd: 199.99 },
+    cogsGuardrailUsdPerMonth: 12.0,
+    targetGrossMarginPct: 50,
+    features: {
+      canReadDailyDevotional: true,
+      canReadNewsletter: true,
+      canWatchPublicMedia: true,
+      canAccessFreeResources: true,
+      canAccessPremiumCourses: true,
+      canAccessExclusiveMasterclasses: true,
+      canAccessAudiobooksStandard: true,
+      canAccessAudiobooksPremium: true,
+      canJoinChallenges: true,
+      maxActiveChallenges: -1,
+      maxConcurrentCourses: -1,
+      canDonate: true,
+      canPurchaseALaCarte: true,
+      canGiftContent: true,
+      canTrackProgress: true,
+      canJournal: true,
+      canPostToPrayerWall: true,
+      canSharePremiumContent: true,
+      aiCoachAccess: 'unlimited',
+      dailyAiMessageLimit: -1,
+      canGeneratePersonalizedDevotionals: true,
+      canGenerateQuoteImages: true,
+      canUsePremiumAudioNarration: true,
+      canUseAdaptiveMusic: true,
+      canUseGeminiLiveVoice: true,
+      canUseVeoCinematicBackgrounds: true,
+      canUseGroundedIntercession: true,
+      quotas: {
+        aiChatMessages: UNLIMITED_QUOTA,
+        personalizedDevotionals: UNLIMITED_QUOTA,
+        verseExplainers: UNLIMITED_QUOTA,
+        studyPlanGenerations: UNLIMITED_QUOTA,
+        quoteImageGenerations: UNLIMITED_QUOTA,
+        cinematicVideoGenerations: { limit: 15, reset: 'monthly', mode: 'soft', overagePackEligible: true },
+        ttsMinutes: { limit: 300, reset: 'monthly', mode: 'soft', overagePackEligible: true },
+        courseSummaryGenerations: UNLIMITED_QUOTA,
+        audiobookAiCompanionPrompts: UNLIMITED_QUOTA,
+      }
+    }
+  },
 };
 
 export function getTierFeatures(tier: SubscriptionTier): TierFeatures {
@@ -270,6 +315,7 @@ export function getTierLabel(tier: SubscriptionTier): string {
     case 'free': return 'Foundation';
     case 'pro': return 'Growth';
     case 'max': return 'Family';
+    case 'partner': return 'Leader';
     case 'guest': return 'Guest';
     default: return 'Foundation';
   }

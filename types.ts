@@ -89,7 +89,7 @@ export interface ReaderSettings {
 
 // For PodcastPage.tsx and AudioPlayerContext.tsx
 export interface PodcastEpisode {
-  id: number;
+  id: string | number;
   title: string;
   description: string;
   author: string;

@@ -204,7 +204,9 @@ service cloud.firestore {
              data.createdAt is timestamp &&
              (!('description' in data) || (data.description is string && data.description.size() < 1000)) &&
              (!('content' in data) || (data.content is string && data.content.size() < 10000)) &&
-             (!('modules' in data) || (data.modules is list && data.modules.size() < 20));
+             (!('modules' in data) || (data.modules is list && data.modules.size() < 20)) &&
+             (!('isPremium' in data) || data.isPremium is bool) &&
+             (!('price' in data) || data.price is number);
     }
 
     function isValidEvent(data) {
@@ -319,6 +321,42 @@ service cloud.firestore {
              (!('metadata' in data) || data.metadata is map);
     }
 
+    function isValidDevotional(data) {
+      return hasRequiredFields(['title', 'content', 'date', 'authorUid', 'createdAt']) &&
+             data.title is string && data.title.size() < 200 &&
+             data.content is string && data.content.size() < 50000 &&
+             data.date is string && data.date.size() < 20 &&
+             data.authorUid == request.auth.uid &&
+             data.createdAt is timestamp &&
+             (!('audioUrl' in data) || (data.audioUrl is string && data.audioUrl.size() < 1000)) &&
+             (!('isPremium' in data) || data.isPremium is bool) &&
+             (!('price' in data) || data.price is number);
+    }
+
+    function isValidAudiobook(data) {
+      return hasRequiredFields(['title', 'author', 'authorUid', 'createdAt']) &&
+             data.title is string && data.title.size() < 200 &&
+             data.author is string && data.author.size() < 200 &&
+             data.authorUid == request.auth.uid &&
+             data.createdAt is timestamp &&
+             (!('coverUrl' in data) || (data.coverUrl is string && data.coverUrl.size() < 1000)) &&
+             (!('audioUrl' in data) || (data.audioUrl is string && data.audioUrl.size() < 1000)) &&
+             (!('isPremium' in data) || data.isPremium is bool) &&
+             (!('price' in data) || data.price is number);
+    }
+
+    function isValidBook(data) {
+      return hasRequiredFields(['title', 'author', 'authorUid', 'createdAt']) &&
+             data.title is string && data.title.size() < 200 &&
+             data.author is string && data.author.size() < 200 &&
+             data.authorUid == request.auth.uid &&
+             data.createdAt is timestamp &&
+             (!('coverUrl' in data) || (data.coverUrl is string && data.coverUrl.size() < 1000)) &&
+             (!('fileUrl' in data) || (data.fileUrl is string && data.fileUrl.size() < 1000)) &&
+             (!('isPremium' in data) || data.isPremium is bool) &&
+             (!('price' in data) || data.price is number);
+    }
+
     // ===============================================================
     // Match Rules
     // ===============================================================
@@ -333,17 +371,77 @@ service cloud.firestore {
       allow create: if isOwner(userId) && isValidUser(request.resource.data) && (request.resource.data.role == 'user' || isAdmin());
       allow update: if isOwner(userId) && isValidUser(request.resource.data) && (request.resource.data.role == resource.data.role || isAdmin());
 
+      match /courseProgress/{courseId} {
+        allow read: if isOwner(userId) || isAdmin();
+        allow create, update: if isOwner(userId) &&
+                              hasOnlyAllowedFields(['completedModules', 'lastAccessed']) &&
+                              request.resource.data.completedModules is list &&
+                              request.resource.data.lastAccessed is timestamp;
+        allow delete: if isOwner(userId) || isAdmin();
+      }
+
       match /notes/{noteId} {
         allow read, write: if isOwner(userId);
         allow create, update: if isOwner(userId) && isValidNote(request.resource.data);
       }
     }
 
+    match /devotionals/{devotionalId} {
+      allow read: if isAuthenticated();
+      allow create: if isAdmin() && isValidDevotional(request.resource.data);
+      allow update: if isAdmin() && isValidDevotional(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    match /audiobooks/{audiobookId} {
+      allow read: if isAuthenticated();
+      allow create: if isAdmin() && isValidAudiobook(request.resource.data);
+      allow update: if isAdmin() && isValidAudiobook(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    match /books/{bookId} {
+      allow read: if isAuthenticated();
+      allow create: if isAdmin() && isValidBook(request.resource.data);
+      allow update: if isAdmin() && isValidBook(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
     match /challenges/{challengeId} {
       allow read: if isAuthenticated();
       allow create: if isAdmin() && isValidChallenge(request.resource.data);
-      allow update: if isAdmin() && isValidChallenge(request.resource.data);
+      allow update: if isAuthenticated() && (
+        (isAdmin() && isValidChallenge(request.resource.data)) ||
+        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['participantsCount']) &&
+         request.resource.data.participantsCount == resource.data.participantsCount + 1)
+      );
       allow delete: if isAdmin();
+
+      match /participants/{userId} {
+        allow read: if isAuthenticated();
+        allow create: if isOwner(userId) && 
+                      hasOnlyAllowedFields(['joinedAt', 'completedModules']) &&
+                      request.resource.data.joinedAt is timestamp;
+        allow update: if isOwner(userId) &&
+                      request.resource.data.diff(resource.data).affectedKeys().hasOnly(['completedModules']) &&
+                      request.resource.data.completedModules is list;
+        allow delete: if isOwner(userId);
+      }
+
+      match /modules/{moduleId} {
+        allow read: if isAuthenticated();
+        allow create, update, delete: if isAdmin();
+      }
+    }
+
+    match /courses/{courseId} {
+      allow read: if isAuthenticated();
+      allow create, update, delete: if isAdmin();
+
+      match /modules/{moduleId} {
+        allow read: if isAuthenticated();
+        allow create, update, delete: if isAdmin();
+      }
     }
 
     match /events/{eventId} {
@@ -380,7 +478,7 @@ service cloud.firestore {
     }
 
     match /settings/{settingId} {
-      allow read: if isAuthenticated();
+      allow read: if true;
       allow write: if isAdmin() && isValidDiscount(request.resource.data);
     }
 
