@@ -64,6 +64,8 @@ import ErrorBoundary from './components/ErrorBoundary';
 import RequireAuth from './components/auth/RequireAuth';
 import RequireRole from './components/auth/RequireRole';
 
+import NewsletterPage from './pages/NewsletterPage';
+
 const App: React.FC = () => {
   return (
     <ErrorBoundary>
@@ -95,6 +97,7 @@ const App: React.FC = () => {
                             <Route path="sentient-guide" element={<RequireAuth><VoiceCompanion /></RequireAuth>} />
                             <Route path="visual-sanctuary" element={<RequireAuth><VisualSanctuary /></RequireAuth>} />
                             <Route path="inbox" element={<RequireAuth><InboxPage /></RequireAuth>} />
+                            <Route path="newsletters" element={<RequireAuth><NewsletterPage /></RequireAuth>} />
                             <Route path="events" element={<RequireAuth><EventsPage /></RequireAuth>} />
                             <Route path="live" element={<RequireAuth><LiveStreamPage /></RequireAuth>} />
                             <Route path="giving" element={<RequireAuth><GivingPage /></RequireAuth>} />
@@ -106,35 +109,35 @@ const App: React.FC = () => {
                             <Route path="challenges/:challengeId/modules/:moduleId" element={<RequireAuth><ChallengeModuleViewerPage /></RequireAuth>} />
                             <Route path="journaling" element={<RequireAuth><JournalingPage /></RequireAuth>} />
                             <Route path="community-rooms" element={<RequireAuth><CommunityRoomsPage /></RequireAuth>} />
-                            <Route path="family-dashboard" element={<RequireAuth><FamilyDashboardPage /></RequireAuth>} />
-                            <Route path="leader-dashboard" element={<RequireAuth><LeaderDashboardPage /></RequireAuth>} />
+                            <Route path="family-dashboard" element={<RequireRole allowedRoles={['admin', 'family_lead']}><FamilyDashboardPage /></RequireRole>} />
+                            <Route path="leader-dashboard" element={<RequireRole allowedRoles={['admin', 'group_lead']}><LeaderDashboardPage /></RequireRole>} />
                           </Route>
 
                           {/* Founder Command Center Routes (Admin Only) */}
                           <Route path="/studio/*">
                             <Route index element={<Navigate to="admin" replace />} />
-                            <Route path="admin" element={<RequireRole role="admin"><AdminDashboard /></RequireRole>} />
-                            <Route path="plan" element={<RequireRole role="admin"><MasterPlan /></RequireRole>} />
-                            <Route path="roadmap-evolution" element={<RequireRole role="admin"><RoadmapEvolution /></RequireRole>} />
-                            <Route path="visionary-lab" element={<RequireRole role="admin"><VisionaryLab /></RequireRole>} />
-                            <Route path="data" element={<RequireRole role="admin"><DataArchitecture /></RequireRole>} />
-                            <Route path="roles" element={<RequireRole role="admin"><Roles /></RequireRole>} />
-                            <Route path="multi-tenancy" element={<RequireRole role="admin"><MultiTenancyAdmin /></RequireRole>} />
-                            <Route path="devotional-generator" element={<RequireRole role="admin"><DevotionalGeneratorPage /></RequireRole>} />
-                            <Route path="quote-generator" element={<RequireRole role="admin"><QuoteGeneratorPage /></RequireRole>} />
-                            <Route path="dynamic-theming" element={<RequireRole role="admin"><DynamicTheming /></RequireRole>} />
-                            <Route path="atmospheric-music" element={<RequireRole role="admin"><AtmosphericMusicPage /></RequireRole>} />
-                            <Route path="media-plan" element={<RequireRole role="admin"><MediaPlayerPlan /></RequireRole>} />
-                            <Route path="design-system" element={<RequireRole role="admin"><DesignSystem /></RequireRole>} />
-                            <Route path="diagnostics" element={<RequireRole role="admin"><DiagnosticsPage /></RequireRole>} />
-                            <Route path="content-manager" element={<RequireRole role="admin"><ContentManagerPage /></RequireRole>} />
-                            <Route path="challenges/:challengeId/modules" element={<RequireRole role="admin"><ChallengeModuleManagerPage /></RequireRole>} />
-                            <Route path="courses/:courseId/modules" element={<RequireRole role="admin"><CourseModuleManagerPage /></RequireRole>} />
-                            <Route path="growth" element={<RequireRole role="admin"><GrowthConsole /></RequireRole>} />
-                            <Route path="release-ops" element={<RequireRole role="admin"><ReleaseOpsConsole /></RequireRole>} />
-                            <Route path="team" element={<RequireRole role="admin"><Team /></RequireRole>} />
-                            <Route path="next-steps" element={<RequireRole role="admin"><NextSteps /></RequireRole>} />
-                            <Route path="chat" element={<RequireRole role="admin"><ChatWithTeam /></RequireRole>} />
+                            <Route path="admin" element={<RequireRole allowedRoles={['admin']}><AdminDashboard /></RequireRole>} />
+                            <Route path="plan" element={<RequireRole allowedRoles={['admin']}><MasterPlan /></RequireRole>} />
+                            <Route path="roadmap-evolution" element={<RequireRole allowedRoles={['admin']}><RoadmapEvolution /></RequireRole>} />
+                            <Route path="visionary-lab" element={<RequireRole allowedRoles={['admin']}><VisionaryLab /></RequireRole>} />
+                            <Route path="data" element={<RequireRole allowedRoles={['admin']}><DataArchitecture /></RequireRole>} />
+                            <Route path="roles" element={<RequireRole allowedRoles={['admin']}><Roles /></RequireRole>} />
+                            <Route path="multi-tenancy" element={<RequireRole allowedRoles={['admin']}><MultiTenancyAdmin /></RequireRole>} />
+                            <Route path="devotional-generator" element={<RequireRole allowedRoles={['admin']}><DevotionalGeneratorPage /></RequireRole>} />
+                            <Route path="quote-generator" element={<RequireRole allowedRoles={['admin']}><QuoteGeneratorPage /></RequireRole>} />
+                            <Route path="dynamic-theming" element={<RequireRole allowedRoles={['admin']}><DynamicTheming /></RequireRole>} />
+                            <Route path="atmospheric-music" element={<RequireRole allowedRoles={['admin']}><AtmosphericMusicPage /></RequireRole>} />
+                            <Route path="media-plan" element={<RequireRole allowedRoles={['admin']}><MediaPlayerPlan /></RequireRole>} />
+                            <Route path="design-system" element={<RequireRole allowedRoles={['admin']}><DesignSystem /></RequireRole>} />
+                            <Route path="diagnostics" element={<RequireRole allowedRoles={['admin']}><DiagnosticsPage /></RequireRole>} />
+                            <Route path="content-manager" element={<RequireRole allowedRoles={['admin', 'lead_developer']}><ContentManagerPage /></RequireRole>} />
+                            <Route path="challenges/:challengeId/modules" element={<RequireRole allowedRoles={['admin', 'lead_developer']}><ChallengeModuleManagerPage /></RequireRole>} />
+                            <Route path="courses/:courseId/modules" element={<RequireRole allowedRoles={['admin', 'lead_developer']}><CourseModuleManagerPage /></RequireRole>} />
+                            <Route path="growth" element={<RequireRole allowedRoles={['admin']}><GrowthConsole /></RequireRole>} />
+                            <Route path="release-ops" element={<RequireRole allowedRoles={['admin', 'lead_developer']}><ReleaseOpsConsole /></RequireRole>} />
+                            <Route path="team" element={<RequireRole allowedRoles={['admin']}><Team /></RequireRole>} />
+                            <Route path="next-steps" element={<RequireRole allowedRoles={['admin']}><NextSteps /></RequireRole>} />
+                            <Route path="chat" element={<RequireRole allowedRoles={['admin']}><ChatWithTeam /></RequireRole>} />
                           </Route>
 
                           {/* Catch-all */}

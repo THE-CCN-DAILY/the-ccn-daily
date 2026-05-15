@@ -4,6 +4,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
 import admin from 'firebase-admin';
+import Parser from 'rss-parser';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -43,9 +44,26 @@ async function startServer() {
     }
   };
 
+  const parser = new Parser();
+
   // --- Routes ---
   app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', firebase: !!admin.apps.length });
+  });
+
+  app.get('/api/rss', async (req, res) => {
+    const { url } = req.query;
+    if (!url || typeof url !== 'string') {
+      return res.status(400).json({ error: 'Missing or invalid url parameter' });
+    }
+
+    try {
+      const feed = await parser.parseURL(url);
+      res.json(feed);
+    } catch (error) {
+      console.error(`❌ RSS Fetch Error for ${url}:`, error);
+      res.status(500).json({ error: 'Failed to fetch or parse RSS feed' });
+    }
   });
 
   app.get('/api/user/profile', authenticateUser, async (req: any, res) => {

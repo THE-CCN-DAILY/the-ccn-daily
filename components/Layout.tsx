@@ -22,6 +22,7 @@ declare global {
 const sanctuaryItems = [
   { to: '/app/guided-journey', text: 'Guided Daily Journey', icon: StepsIcon, group: 'Pray' },
   { to: '/app/bible', text: 'Bible Reader', icon: ReaderIcon, group: 'Read' },
+  { to: '/app/newsletters', text: 'The CCN Daily News', icon: ReaderIcon, group: 'Read' },
   { to: '/app/podcasts', text: 'Podcast Library', icon: SpeakerWaveIcon, group: 'Read' },
   { to: '/app/courses', text: 'Courses', icon: SparklesIcon, group: 'Read' },
   { to: '/app/audiobook-library', text: 'Audiobook Library', icon: SpeakerWaveIcon, group: 'Read' },
@@ -77,8 +78,8 @@ const Sidebar: React.FC = () => {
   const { notify } = useNotifications();
 
   const toggleMode = () => {
-    if (user?.role !== 'admin') {
-      notify("Strategy mode is reserved for the Founder.", "error");
+    if (user?.role !== 'admin' && user?.role !== 'lead_developer') {
+      notify("Strategy mode is reserved for Admins and Lead Developers.", "error");
       return;
     }
     const newMode = !isStrategyMode;
@@ -86,7 +87,25 @@ const Sidebar: React.FC = () => {
     localStorage.setItem('phoenix_mode', newMode ? 'strategy' : 'sanctuary');
   };
 
-  const activeItems = isStrategyMode ? commandCenterItems : sanctuaryItems;
+  const filteredCommandCenterItems = commandCenterItems.filter(item => {
+    if (user?.role === 'admin') return true;
+    if (user?.role === 'lead_developer') {
+      return ['/studio/visionary-lab', '/studio/data', '/studio/design-system', '/studio/diagnostics', '/studio/release-ops', '/studio/content-manager', '/studio/challenges/:challengeId/modules', '/studio/courses/:courseId/modules'].includes(item.to) || item.to.startsWith('/studio/content-manager') || item.to.startsWith('/studio/release-ops');
+    }
+    return false;
+  });
+
+  const filteredSanctuaryItems = sanctuaryItems.filter(item => {
+    if (item.to === '/app/family-dashboard') {
+      return user?.role === 'admin' || user?.role === 'family_lead';
+    }
+    if (item.to === '/app/leader-dashboard') {
+      return user?.role === 'admin' || user?.role === 'group_lead';
+    }
+    return true;
+  });
+
+  const activeItems = isStrategyMode ? filteredCommandCenterItems : filteredSanctuaryItems;
 
   const baseLinkClasses = "flex items-center p-3 my-1 rounded-lg transition-all duration-200";
   const inactiveLinkClasses = "text-brand-text-secondary hover:bg-brand-secondary hover:text-brand-text-primary";
@@ -127,7 +146,7 @@ const Sidebar: React.FC = () => {
               </p>
             </div>
             <ul>
-              {commandCenterItems.map(item => (
+              {filteredCommandCenterItems.map(item => (
                 <li key={item.to}>
                   <NavLink
                     to={item.to}
@@ -149,7 +168,7 @@ const Sidebar: React.FC = () => {
                 </p>
               </div>
               <ul>
-                {sanctuaryItems.filter(item => item.group === group).map(item => (
+                {filteredSanctuaryItems.filter(item => item.group === group).map(item => (
                   <li key={item.to}>
                     <NavLink
                       to={item.to}

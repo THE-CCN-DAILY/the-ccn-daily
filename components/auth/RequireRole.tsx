@@ -1,13 +1,14 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import type { UserRoleType } from '../../types';
 
 interface RequireRoleProps {
   children: React.ReactNode;
-  role: 'admin' | 'user' | 'pro' | 'max';
+  allowedRoles: UserRoleType[];
 }
 
-const RequireRole: React.FC<RequireRoleProps> = ({ children, role }) => {
+const RequireRole: React.FC<RequireRoleProps> = ({ children, allowedRoles }) => {
   const { user, loading } = useAuth();
   const location = useLocation();
 
@@ -29,9 +30,9 @@ const RequireRole: React.FC<RequireRoleProps> = ({ children, role }) => {
     return <>{children}</>;
   }
 
-  if (user.role !== role) {
+  if (!allowedRoles.includes(user.role)) {
     // If they don't have the role, redirect to sanctuary home
-    return <Navigate to="/plan" replace />;
+    return <Navigate to="/app/guided-journey" replace />;
   }
 
   return <>{children}</>;

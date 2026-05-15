@@ -7,8 +7,10 @@ import type { Timestamp } from 'firebase/firestore';
 
 // For AuthContext.tsx
 export type FirebaseUser = User;
+export type UserRoleType = 'admin' | 'lead_developer' | 'group_lead' | 'family_lead' | 'user';
+
 export interface AppUser extends FirebaseUser {
-  role: 'admin' | 'user';
+  role: UserRoleType;
   tier?: import('./types/pricing').SubscriptionTier;
 }
 
