@@ -6,7 +6,15 @@ import { PlayIcon, PauseIcon, DownloadIcon, ChevronLeftIcon, HeartIcon, Sparkles
 import Card from '../components/Card';
 import { fetchRSSFeed } from '../services/rssService';
 
-const SUBSTACK_FEED_URL = 'https://theccndaily.substack.com/feed';
+const PODCAST_FEED_URL = 'https://anchor.fm/s/f7311ecc/podcast/rss';
+
+const parseDuration = (value?: string) => {
+    if (!value) return 0;
+    if (/^\d+$/.test(value)) return Number(value);
+    const parts = value.split(':').map(Number);
+    if (parts.some(Number.isNaN)) return 0;
+    return parts.reduce((total, part) => total * 60 + part, 0);
+};
 
 const PodcastPage: React.FC = () => {
     const { playTrack, currentTrack, isPlaying, togglePlayPause } = useAudioPlayer();
@@ -24,10 +32,8 @@ const PodcastPage: React.FC = () => {
     useEffect(() => {
         const loadEpisodes = async () => {
             try {
-                // Fetch from Substack feed which often includes podcasts
-                const feed = await fetchRSSFeed(SUBSTACK_FEED_URL);
+                const feed = await fetchRSSFeed(PODCAST_FEED_URL);
                 
-                // Filter items that have audio enclosures (actual podcast episodes)
                 const podcastItems = feed.items
                     .filter(item => item.enclosure && item.enclosure.type.startsWith('audio'))
                     .map((item, index) => ({
@@ -35,7 +41,7 @@ const PodcastPage: React.FC = () => {
                         title: item.title || 'Untitled Episode',
                         description: item.contentSnippet || item.content || '',
                         author: 'THE CCN DAILY',
-                        duration: 0, // Duration often requires pre-loading or extra metadata
+                        duration: parseDuration(item.itunes?.duration),
                         coverArt: item.itunes?.image || 'https://picsum.photos/seed/podcast/800/800',
                         releaseDate: item.pubDate ? new Date(item.pubDate).toLocaleDateString() : 'Unknown Date',
                         audioUrl: item.enclosure?.url || '',
@@ -122,7 +128,7 @@ const PodcastPage: React.FC = () => {
         return (
             <Card className="flex flex-col">
                 {isCurrentlyPlaying && <span className="text-xs font-bold text-brand-gold uppercase tracking-wider mb-2">Now Playing</span>}
-                <h3 className="text-lg font-bold text-brand-text-primary">Episode {episode.id}: {episode.title}</h3>
+                <h3 className="text-lg font-bold text-brand-text-primary">{episode.title}</h3>
                 <p className="text-xs text-brand-text-secondary mb-2">{episode.releaseDate} &middot; {Math.floor(episode.duration / 60)} min</p>
                 <p className="text-sm text-brand-text-secondary flex-grow mb-4">{episode.description}</p>
                 <div className="flex items-center justify-between mt-auto">

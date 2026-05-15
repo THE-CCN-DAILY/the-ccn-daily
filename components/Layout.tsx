@@ -1,7 +1,46 @@
 
 import React from 'react';
-import { NavLink } from 'react-router-dom';
-import { PlanIcon, TeamIcon, StepsIcon, ChatIcon, LogoIcon, DbIcon, AdminIcon, ReaderIcon, SpeakerWaveIcon, UiIcon, DesignSystemIcon, AiIcon, PrayingHandsIcon, SparklesIcon, GamificationIcon, GiftIcon, DashboardIcon, PaintBrushIcon, SoundWaveIcon, UserCircleIcon, CheckIcon, SearchIcon, MicrophoneIcon, BellIcon, CalendarIcon, CreditCardIcon } from './icons';
+import { NavLink, useLocation } from 'react-router-dom';
+import {
+  Activity,
+  BookOpen,
+  BookPlus,
+  Building2,
+  CalendarDays,
+  ClipboardList,
+  Component,
+  Crown,
+  Database,
+  FlaskConical,
+  FolderOpen,
+  Gift,
+  GraduationCap,
+  Headphones,
+  HeartHandshake,
+  Image,
+  ImagePlus,
+  Inbox,
+  LayoutDashboard,
+  ListTodo,
+  Map,
+  MessagesSquare,
+  Mic,
+  Music,
+  Newspaper,
+  NotebookPen,
+  Palette,
+  Radio,
+  Rocket,
+  Route,
+  ShieldCheck,
+  SlidersHorizontal,
+  TrendingUp,
+  Trophy,
+  UserRoundCheck,
+  Users,
+  Quote,
+} from 'lucide-react';
+import { ChatIcon, LogoIcon, UserCircleIcon, BellIcon } from './icons';
 import ThemeSwitcher from './ThemeSwitcher';
 import { useAudioPlayer } from '../contexts/AudioPlayerContext';
 import DetailedPlayerModal from './player/DetailedPlayerModal';
@@ -20,51 +59,51 @@ declare global {
 }
 
 const sanctuaryItems = [
-  { to: '/app/guided-journey', text: 'Guided Daily Journey', icon: StepsIcon, group: 'Pray' },
-  { to: '/app/bible', text: 'Bible Reader', icon: ReaderIcon, group: 'Read' },
-  { to: '/app/newsletters', text: 'The CCN Daily News', icon: ReaderIcon, group: 'Read' },
-  { to: '/app/podcasts', text: 'Podcast Library', icon: SpeakerWaveIcon, group: 'Read' },
-  { to: '/app/courses', text: 'Courses', icon: SparklesIcon, group: 'Read' },
-  { to: '/app/audiobook-library', text: 'Audiobook Library', icon: SpeakerWaveIcon, group: 'Read' },
-  { to: '/app/challenges', text: 'Challenges', icon: GamificationIcon, group: 'Community' },
-  { to: '/app/journaling', text: 'Journaling', icon: PaintBrushIcon, group: 'Pray' },
-  { to: '/app/community-rooms', text: 'Community Rooms', icon: PrayingHandsIcon, group: 'Community' },
-  { to: '/app/family-dashboard', text: 'Family Dashboard', icon: TeamIcon, group: 'Account' },
-  { to: '/app/leader-dashboard', text: 'Leader Dashboard', icon: AdminIcon, group: 'Account' },
-  { to: '/app/the-community', text: 'The Community', icon: PrayingHandsIcon, group: 'Community' },
-  { to: '/app/expert-council', text: 'Expert Council', icon: PrayingHandsIcon, group: 'Community' },
-  { to: '/app/testimonies', text: 'Testimonies', icon: SparklesIcon, group: 'Community' },
-  { to: '/app/gamification', text: 'Your Journey', icon: GamificationIcon, group: 'Account' },
-  { to: '/app/grace-link', text: 'Grace Links', icon: GiftIcon, group: 'Community' },
-  { to: '/app/sentient-guide', text: 'Sentient Guide (Kai)', icon: MicrophoneIcon, group: 'Pray' },
-  { to: '/app/visual-sanctuary', text: 'Visual Sanctuary', icon: PaintBrushIcon, group: 'Pray' },
-  { to: '/app/inbox', text: 'Inbox & Updates', icon: BellIcon, group: 'Account' },
-  { to: '/app/events', text: 'Live Events', icon: CalendarIcon, group: 'Live' },
-  { to: '/app/live', text: 'Live Broadcast', icon: SpeakerWaveIcon, group: 'Live' },
-  { to: '/app/giving', text: 'Giving & Support', icon: CreditCardIcon, group: 'Account' },
-  { to: '/pricing', text: 'Upgrade Plan', icon: SparklesIcon, group: 'Account' },
+  { to: '/app/guided-journey', text: 'Guided Daily Journey', icon: Route, group: 'Pray' },
+  { to: '/app/bible', text: 'Bible Reader', icon: BookOpen, group: 'Read' },
+  { to: '/app/newsletters', text: 'The CCN Daily News', icon: Newspaper, group: 'Read' },
+  { to: '/app/podcasts', text: 'Podcast Library', icon: Headphones, group: 'Read' },
+  { to: '/app/courses', text: 'Courses', icon: GraduationCap, group: 'Read' },
+  { to: '/app/audiobook-library', text: 'Audiobook Library', icon: Headphones, group: 'Read' },
+  { to: '/app/challenges', text: 'Challenges', icon: Trophy, group: 'Community' },
+  { to: '/app/journaling', text: 'Journaling', icon: NotebookPen, group: 'Pray' },
+  { to: '/app/community-rooms', text: 'Community Rooms', icon: MessagesSquare, group: 'Community' },
+  { to: '/app/family-dashboard', text: 'Family Dashboard', icon: Users, group: 'Account' },
+  { to: '/app/leader-dashboard', text: 'Leader Dashboard', icon: ShieldCheck, group: 'Account' },
+  { to: '/app/the-community', text: 'The Community', icon: MessagesSquare, group: 'Community' },
+  { to: '/app/expert-council', text: 'Expert Council', icon: UserRoundCheck, group: 'Community' },
+  { to: '/app/testimonies', text: 'Testimonies', icon: Quote, group: 'Community' },
+  { to: '/app/gamification', text: 'Your Journey', icon: Trophy, group: 'Account' },
+  { to: '/app/grace-link', text: 'Grace Links', icon: Gift, group: 'Community' },
+  { to: '/app/sentient-guide', text: 'Sentient Guide (Kai)', icon: Mic, group: 'Pray' },
+  { to: '/app/visual-sanctuary', text: 'Visual Sanctuary', icon: Image, group: 'Pray' },
+  { to: '/app/inbox', text: 'Inbox & Updates', icon: Inbox, group: 'Account' },
+  { to: '/app/events', text: 'Live Events', icon: CalendarDays, group: 'Live' },
+  { to: '/app/live', text: 'Live Broadcast', icon: Radio, group: 'Live' },
+  { to: '/app/giving', text: 'Giving & Support', icon: HeartHandshake, group: 'Account' },
+  { to: '/pricing', text: 'Upgrade Plan', icon: Crown, group: 'Account' },
 ];
 
 const commandCenterItems = [
-  { to: '/studio/admin', text: 'Admin Dashboard', icon: DashboardIcon },
-  { to: '/studio/plan', text: 'Master Plan', icon: PlanIcon },
-  { to: '/studio/roadmap-evolution', text: 'Roadmap Evolution', icon: SparklesIcon },
-  { to: '/studio/visionary-lab', text: 'Visionary Tech Lab', icon: DesignSystemIcon },
-  { to: '/studio/content-manager', text: 'Content Manager', icon: DbIcon },
-  { to: '/studio/data', text: 'Data Architecture', icon: DbIcon },
-  { to: '/studio/roles', text: 'Roles & Permissions', icon: AdminIcon },
-  { to: '/studio/multi-tenancy', text: 'Multi-Tenancy', icon: AdminIcon },
-  { to: '/studio/devotional-generator', text: 'Devotional Generator', icon: AiIcon },
-  { to: '/studio/quote-generator', text: 'Quote Graphics', icon: SparklesIcon },
-  { to: '/studio/dynamic-theming', text: 'Dynamic Theming', icon: PaintBrushIcon },
-  { to: '/studio/atmospheric-music', text: 'Atmospheric Music', icon: SoundWaveIcon },
-  { to: '/studio/media-plan', text: 'Media Player Plan', icon: UiIcon },
-  { to: '/studio/design-system', text: 'Design System', icon: DesignSystemIcon },
-  { to: '/studio/growth', text: 'Growth Console', icon: DashboardIcon },
-  { to: '/studio/release-ops', text: 'Release Ops', icon: CheckIcon },
-  { to: '/studio/diagnostics', text: 'System Diagnostics', icon: CheckIcon },
-  { to: '/studio/team', text: 'Virtual Team', icon: TeamIcon },
-  { to: '/studio/next-steps', text: 'Founder Actions', icon: CheckIcon },
+  { to: '/studio/admin', text: 'Admin Dashboard', icon: LayoutDashboard },
+  { to: '/studio/plan', text: 'Master Plan', icon: ClipboardList },
+  { to: '/studio/roadmap-evolution', text: 'Roadmap Evolution', icon: Map },
+  { to: '/studio/visionary-lab', text: 'Visionary Tech Lab', icon: FlaskConical },
+  { to: '/studio/content-manager', text: 'Content Manager', icon: FolderOpen },
+  { to: '/studio/data', text: 'Data Architecture', icon: Database },
+  { to: '/studio/roles', text: 'Roles & Permissions', icon: ShieldCheck },
+  { to: '/studio/multi-tenancy', text: 'Multi-Tenancy', icon: Building2 },
+  { to: '/studio/devotional-generator', text: 'Devotional Generator', icon: BookPlus },
+  { to: '/studio/quote-generator', text: 'Quote Graphics', icon: ImagePlus },
+  { to: '/studio/dynamic-theming', text: 'Dynamic Theming', icon: Palette },
+  { to: '/studio/atmospheric-music', text: 'Atmospheric Music', icon: Music },
+  { to: '/studio/media-plan', text: 'Media Player Plan', icon: SlidersHorizontal },
+  { to: '/studio/design-system', text: 'Design System', icon: Component },
+  { to: '/studio/growth', text: 'Growth Console', icon: TrendingUp },
+  { to: '/studio/release-ops', text: 'Release Ops', icon: Rocket },
+  { to: '/studio/diagnostics', text: 'System Diagnostics', icon: Activity },
+  { to: '/studio/team', text: 'Virtual Team', icon: Users },
+  { to: '/studio/next-steps', text: 'Founder Actions', icon: ListTodo },
   { to: '/studio/chat', text: 'Chat with Team', icon: ChatIcon },
 ];
 
@@ -212,9 +251,21 @@ const Sidebar: React.FC = () => {
 };
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const location = useLocation();
   const { currentTrack, isDetailedPlayerOpen } = useAudioPlayer();
   const alerts = useSentinel();
   const { unreadCount } = useNotifications();
+  const isPublicRoute = ['/', '/blog', '/newsletter', '/podcasts', '/pricing'].includes(location.pathname);
+
+  if (isPublicRoute) {
+    return (
+      <>
+        {children}
+        {isDetailedPlayerOpen && <DetailedPlayerModal />}
+        {currentTrack && !isDetailedPlayerOpen && <MiniPlayer />}
+      </>
+    );
+  }
 
   return (
     <div className="flex h-screen overflow-hidden bg-brand-dark">
@@ -226,7 +277,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         
         <div className="relative z-10 max-w-7xl mx-auto">
           <div className="flex justify-end mb-4">
-            <NavLink to="/inbox" className="relative p-2 text-brand-text-secondary hover:text-brand-text-primary transition-colors">
+            <NavLink to="/app/inbox" className="relative p-2 text-brand-text-secondary hover:text-brand-text-primary transition-colors">
               <BellIcon className="w-6 h-6" />
               {unreadCount > 0 && (
                 <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-brand-dark"></span>
@@ -236,9 +287,9 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
           {alerts.length > 0 && (
               <div className="mb-6 p-3 bg-brand-accent/10 border border-brand-accent/30 rounded-lg animate-pulse flex items-center justify-between">
                   <p className="text-xs font-bold text-brand-accent flex items-center">
-                    <SparklesIcon className="w-4 h-4 mr-2"/> Sentinel Alert: New tech/cost optimizations available for review in Roadmap Evolution.
+                    <Activity className="w-4 h-4 mr-2"/> Sentinel Alert: New tech/cost optimizations available for review in Roadmap Evolution.
                   </p>
-                  <NavLink to="/roadmap-evolution" className="text-[10px] underline text-brand-accent font-bold">VIEW</NavLink>
+                  <NavLink to="/studio/roadmap-evolution" className="text-[10px] underline text-brand-accent font-bold">VIEW</NavLink>
               </div>
           )}
           {children}

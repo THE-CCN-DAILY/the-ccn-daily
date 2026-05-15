@@ -2,6 +2,8 @@
 import React from 'react';
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/Layout';
+import LandingPage from './pages/LandingPage';
+import BlogPage from './pages/BlogPage';
 import MasterPlan from './pages/MasterPlan';
 import Team from './pages/Team';
 import NextSteps from './pages/NextSteps';
@@ -80,7 +82,10 @@ const App: React.FC = () => {
                       <Layout>
                         <Routes>
                           {/* Public Routes */}
-                          <Route path="/" element={<Navigate to="/app/guided-journey" replace />} />
+                          <Route path="/" element={<LandingPage />} />
+                          <Route path="/blog" element={<BlogPage />} />
+                          <Route path="/newsletter" element={<NewsletterPage />} />
+                          <Route path="/podcasts" element={<PodcastPage />} />
                           <Route path="/pricing" element={<PricingPage />} />
                           
                           {/* Member Sanctuary Routes */}

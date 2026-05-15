@@ -1,0 +1,13 @@
+# Cloudflare Pages compatibility shell for Project Phoenix.
+# Phase 1 keeps the original app contracts intact while Cloudflare preview is introduced.
+name = "project-phoenix-ccn-daily"
+compatibility_date = "2026-05-15"
+compatibility_flags = ["nodejs_compat"]
+pages_build_output_dir = "dist"
+
+[vars]
+FIREBASE_PROJECT_ID = ""
+PRODUCTION_ORIGIN = "https://theccndaily.com"
+
+[dev]
+port = 8788

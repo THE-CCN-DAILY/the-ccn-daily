@@ -1,4 +1,10 @@
 import React from 'react';
+import {
+  Flame as LucideFlame,
+  HandHeart as LucideHandHeart,
+  Rewind as LucideRewind,
+  Share2 as LucideShare2,
+} from 'lucide-react';
 
 export const PlusIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
@@ -37,9 +43,7 @@ export const ChatIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
 );
 
 export const LogoIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.898 20.543L16.5 21.75l-.398-1.207a3.375 3.375 0 00-2.455-2.456L12.75 18l1.207-.398a3.375 3.375 0 002.455-2.456L16.5 14.25l.398 1.207a3.375 3.375 0 002.456 2.456L20.25 18l-1.207.398a3.375 3.375 0 00-2.456 2.456z" />
-    </svg>
+    <LucideFlame {...props} />
 );
 
 export const UiIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
@@ -208,9 +212,7 @@ export const DownloadIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => 
 );
 
 export const ShareIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
-    </svg>
+    <LucideShare2 {...props} />
 );
 
 export const ChevronLeftIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
@@ -234,10 +236,7 @@ export const SkipForwardIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) 
 );
 
 export const SkipBackIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 5.653c0-1.426-1.529-2.33-2.779-1.643L5.18 10.66c-1.295.742-1.295 2.545 0 3.286l11.54 6.647c1.25.717 2.779-.217-2.779-1.643V5.653Z" />
-        <path strokeLinecap="round" strokeLinejoin="round" d="M6 5.25v13.5" />
-    </svg>
+    <LucideRewind {...props} />
 );
 
 export const HeartIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
@@ -321,9 +320,7 @@ export const CopyIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
 );
 
 export const PrayingHandsIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345h5.364c.518 0 .734.654.372 1.014l-4.341 3.16a.563.563 0 00-.182.635l2.125 5.111a.563.563 0 01-.84.622l-4.341-3.16a.563.563 0 00-.652 0l-4.341 3.16a.563.563 0 01-.84-.622l2.125-5.111a.563.563 0 00-.182-.635l-4.341-3.16a.563.563 0 01.372-1.014h5.364a.563.563 0 00.475-.345L11.48 3.5z" />
-    </svg>
+    <LucideHandHeart {...props} />
 );
 
 export const ChatBubbleLeftRightIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (

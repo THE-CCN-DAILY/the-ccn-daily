@@ -1,35 +1,48 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Libre+Baskerville:wght@400;700&family=Source+Code+Pro:wght@400;500;600&display=swap');
 @import "tailwindcss";
 
 :root {
-  --color-primary-blue-raw: 43 108 176;
-  --color-secondary-purple-raw: 128 90 213;
-  --color-accent-gold-raw: 214 158 46;
-  
-  /* Default to light mode variables */
-  --bg-raw: 250 251 252;
-  --surface-raw: 255 255 255;
-  --text-primary-raw: 45 55 72;
-  --text-secondary-raw: 74 85 104;
-  --border-raw: 226 232 240;
-  --accent-gold-raw: 214 158 46;
+  --color-primary-blue-raw: 120 113 108;
+  --color-secondary-purple-raw: 168 162 158;
+  --color-accent-gold-raw: 120 113 108;
+
+  --bg-raw: 250 250 249;
+  --surface-raw: 245 245 244;
+  --surface-raised-raw: 239 237 235;
+  --text-primary-raw: 28 25 23;
+  --text-secondary-raw: 87 83 78;
+  --text-tertiary-raw: 168 162 158;
+  --border-raw: 231 229 228;
+  --border-strong-raw: 168 162 158;
+  --accent-gold-raw: 120 113 108;
+
+  --font-display: "Libre Baskerville", Georgia, "Times New Roman", serif;
+  --font-ui: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: "Source Code Pro", "Fira Code", Consolas, monospace;
 }
 
 .dark {
-  --bg-raw: 26 26 26;
-  --surface-raw: 42 42 42;
-  --text-primary-raw: 224 224 224;
-  --text-secondary-raw: 156 163 175;
-  --border-raw: 64 64 64;
-  --accent-gold-raw: 212 175 55;
+  --bg-raw: 28 25 23;
+  --surface-raw: 41 37 36;
+  --surface-raised-raw: 58 51 45;
+  --text-primary-raw: 250 250 249;
+  --text-secondary-raw: 214 211 209;
+  --text-tertiary-raw: 168 162 158;
+  --border-raw: 68 64 60;
+  --border-strong-raw: 120 113 108;
+  --accent-gold-raw: 168 162 158;
 }
 
 .sepia {
-  --bg-raw: 244 241 232;
-  --surface-raw: 255 255 255;
-  --text-primary-raw: 92 74 58;
-  --text-secondary-raw: 119 96 81;
-  --border-raw: 224 213 201;
-  --accent-gold-raw: 139 69 19;
+  --bg-raw: 245 242 232;
+  --surface-raw: 237 230 216;
+  --surface-raised-raw: 226 215 196;
+  --text-primary-raw: 41 32 22;
+  --text-secondary-raw: 92 74 58;
+  --text-tertiary-raw: 139 116 94;
+  --border-raw: 214 199 176;
+  --border-strong-raw: 139 116 94;
+  --accent-gold-raw: 92 74 58;
 }
 
 @theme {
@@ -50,10 +63,27 @@
 }
 
 @layer base {
+  html {
+    font-family: var(--font-ui);
+  }
+
   body {
     background-color: rgb(var(--bg-raw));
     color: rgb(var(--text-primary-raw));
     transition: background-color 0.3s ease, color 0.3s ease;
     @apply min-h-screen;
+  }
+
+  h1,
+  h2,
+  h3,
+  .font-display {
+    font-family: var(--font-display);
+  }
+
+  code,
+  pre,
+  kbd {
+    font-family: var(--font-mono);
   }
 }
