@@ -3,7 +3,6 @@
 import React from 'react';
 import type { Theme } from './contexts/ThemeContext';
 import type { User } from 'firebase/auth';
-import type { Timestamp } from 'firebase/firestore';
 
 // For AuthContext.tsx
 export type FirebaseUser = User;
@@ -77,7 +76,7 @@ export interface Highlight {
   voiceNoteUrl?: string;
   tags?: string[];
   color: 'yellow' | 'blue' | 'green' | 'pink';
-  createdAt: Timestamp;
+  createdAt: string;
 }
 
 export interface ReaderSettings {

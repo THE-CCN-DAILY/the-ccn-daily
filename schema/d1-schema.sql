@@ -36,6 +36,22 @@ CREATE TABLE IF NOT EXISTS blog_posts (
 CREATE INDEX IF NOT EXISTS idx_blog_posts_status_published ON blog_posts(status, published_at DESC);
 CREATE INDEX IF NOT EXISTS idx_blog_posts_slug ON blog_posts(slug);
 
+CREATE TABLE IF NOT EXISTS highlights (
+  id TEXT NOT NULL,
+  user_id TEXT NOT NULL,
+  content_id TEXT NOT NULL,
+  text TEXT NOT NULL,
+  note TEXT,
+  voice_note_url TEXT,
+  tags TEXT,
+  color TEXT NOT NULL DEFAULT 'yellow',
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (user_id, id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_highlights_user_content ON highlights(user_id, content_id, created_at DESC);
+
 CREATE TABLE IF NOT EXISTS audit_logs (
   id TEXT PRIMARY KEY,
   actor_email TEXT,

@@ -38,6 +38,19 @@ type BlogPostRow = {
   updated_at?: string | null;
 };
 
+type HighlightRow = {
+  id: string;
+  user_id: string;
+  content_id: string;
+  text: string;
+  note?: string | null;
+  voice_note_url?: string | null;
+  tags?: string | null;
+  color: 'yellow' | 'blue' | 'green' | 'pink';
+  created_at?: string | null;
+  updated_at?: string | null;
+};
+
 const fallbackPosts: BlogPostRow[] = [
   {
     id: 'seed-faith-monday',
@@ -104,6 +117,29 @@ const mapPost = (row: BlogPostRow) => ({
   createdAt: row.created_at || undefined,
   updatedAt: row.updated_at || undefined,
 });
+
+const parseTags = (value?: string | null) => {
+  if (!value) return undefined;
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) ? parsed : undefined;
+  } catch {
+    return undefined;
+  }
+};
+
+const mapHighlight = (row: HighlightRow) => ({
+  id: row.id,
+  contentId: row.content_id,
+  text: row.text,
+  note: row.note || undefined,
+  voiceNoteUrl: row.voice_note_url || undefined,
+  tags: parseTags(row.tags),
+  color: row.color,
+  createdAt: row.created_at || new Date().toISOString(),
+});
+
+const isSafeId = (value: string) => /^[a-zA-Z0-9._:@-]{1,160}$/.test(value);
 
 const isAdminRequest = (c: any) => {
   const expected = (c.env.ADMIN_EMAIL || 'pastor.eryeza@gmail.com').toLowerCase();
@@ -346,6 +382,112 @@ app.delete('/api/admin/blog/posts/:id', async (c) => {
   if (!c.env.DB) return c.json({ error: 'D1 database binding is not configured' }, 503);
 
   await c.env.DB.prepare(`DELETE FROM blog_posts WHERE id = ?`).bind(c.req.param('id')).run();
+  return c.json({ ok: true });
+});
+
+app.get('/api/users/:userId/highlights', async (c) => {
+  const userId = c.req.param('userId');
+  const contentId = c.req.query('contentId') || '';
+  if (!isSafeId(userId)) return c.json({ error: 'Invalid user id' }, 400);
+  if (!contentId) return c.json({ error: 'Missing contentId' }, 400);
+  if (!c.env.DB) return c.json({ highlights: [], source: 'fallback' });
+
+  const result = await c.env.DB.prepare(
+    `SELECT * FROM highlights
+     WHERE user_id = ? AND content_id = ?
+     ORDER BY created_at ASC`
+  ).bind(userId, contentId).all<HighlightRow>();
+
+  return c.json({ highlights: result.results.map(mapHighlight), source: 'd1' });
+});
+
+app.post('/api/users/:userId/highlights', async (c) => {
+  const userId = c.req.param('userId');
+  if (!isSafeId(userId)) return c.json({ error: 'Invalid user id' }, 400);
+  if (!c.env.DB) return c.json({ error: 'D1 database binding is not configured' }, 503);
+
+  const body = await c.req.json();
+  const id = String(body.id || crypto.randomUUID());
+  if (!isSafeId(id)) return c.json({ error: 'Invalid highlight id' }, 400);
+
+  const contentId = String(body.contentId || '').trim();
+  const text = String(body.text || '').trim();
+  if (!contentId) return c.json({ error: 'contentId is required' }, 400);
+  if (!text) return c.json({ error: 'text is required' }, 400);
+
+  const color = ['yellow', 'blue', 'green', 'pink'].includes(body.color) ? body.color : 'yellow';
+  const tags = Array.isArray(body.tags) ? JSON.stringify(body.tags.slice(0, 20)) : null;
+
+  await c.env.DB.prepare(
+    `INSERT INTO highlights (
+      id, user_id, content_id, text, note, voice_note_url, tags, color, created_at, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, COALESCE(?, CURRENT_TIMESTAMP), CURRENT_TIMESTAMP)
+    ON CONFLICT(user_id, id) DO UPDATE SET
+      content_id = excluded.content_id,
+      text = excluded.text,
+      note = excluded.note,
+      voice_note_url = excluded.voice_note_url,
+      tags = excluded.tags,
+      color = excluded.color,
+      updated_at = CURRENT_TIMESTAMP`
+  ).bind(
+    id,
+    userId,
+    contentId,
+    text,
+    body.note ?? null,
+    body.voiceNoteUrl ?? null,
+    tags,
+    color,
+    body.createdAt || null
+  ).run();
+
+  const highlight = await c.env.DB.prepare(
+    `SELECT * FROM highlights WHERE user_id = ? AND id = ? LIMIT 1`
+  ).bind(userId, id).first<HighlightRow>();
+
+  return c.json({ highlight: highlight ? mapHighlight(highlight) : null });
+});
+
+app.patch('/api/users/:userId/highlights/:id', async (c) => {
+  const userId = c.req.param('userId');
+  const id = c.req.param('id');
+  if (!isSafeId(userId) || !isSafeId(id)) return c.json({ error: 'Invalid highlight identifier' }, 400);
+  if (!c.env.DB) return c.json({ error: 'D1 database binding is not configured' }, 503);
+
+  const body = await c.req.json();
+  const tags = Array.isArray(body.tags) ? JSON.stringify(body.tags.slice(0, 20)) : null;
+
+  await c.env.DB.prepare(
+    `UPDATE highlights
+     SET note = COALESCE(?, note),
+         voice_note_url = COALESCE(?, voice_note_url),
+         tags = COALESCE(?, tags),
+         updated_at = CURRENT_TIMESTAMP
+     WHERE user_id = ? AND id = ?`
+  ).bind(
+    body.note ?? null,
+    body.voiceNoteUrl ?? null,
+    tags,
+    userId,
+    id
+  ).run();
+
+  const highlight = await c.env.DB.prepare(
+    `SELECT * FROM highlights WHERE user_id = ? AND id = ? LIMIT 1`
+  ).bind(userId, id).first<HighlightRow>();
+
+  if (!highlight) return c.json({ error: 'Highlight not found' }, 404);
+  return c.json({ highlight: mapHighlight(highlight) });
+});
+
+app.delete('/api/users/:userId/highlights/:id', async (c) => {
+  const userId = c.req.param('userId');
+  const id = c.req.param('id');
+  if (!isSafeId(userId) || !isSafeId(id)) return c.json({ error: 'Invalid highlight identifier' }, 400);
+  if (!c.env.DB) return c.json({ error: 'D1 database binding is not configured' }, 503);
+
+  await c.env.DB.prepare(`DELETE FROM highlights WHERE user_id = ? AND id = ?`).bind(userId, id).run();
   return c.json({ ok: true });
 });
 

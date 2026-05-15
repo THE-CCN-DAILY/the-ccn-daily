@@ -15,8 +15,6 @@ import VoiceSelectionPopover from './VoiceSelectionPopover';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotifications } from '../../contexts/NotificationContext';
 import { getHighlightsForContent, saveHighlight, deleteHighlight, updateHighlight } from '../../services/firestoreService';
-import { serverTimestamp, doc } from 'firebase/firestore';
-import { db } from '../../firebase';
 import { useGamification } from '../../contexts/GamificationContext';
 
 interface ContentDisplayProps {
@@ -197,13 +195,13 @@ const ContentDisplay: React.FC<ContentDisplayProps> = ({ contentId, initialConte
 
   const addHighlight = (color: Highlight['color']) => {
     if (selectedText && user) {
-      const newHighlightRef = doc(db, `users/${user.uid}/notes`, new Date().toISOString());
+      const highlightId = `highlight-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
       const newHighlight: Highlight = {
-        id: newHighlightRef.id,
+        id: highlightId,
         contentId,
         text: selectedText,
         color: color,
-        createdAt: serverTimestamp() as any, // Let server set the time
+        createdAt: new Date().toISOString(),
       };
       setHighlights(prev => [...prev, newHighlight]); // Optimistic update
       saveHighlight(user.uid, newHighlight).catch(err => {
@@ -229,14 +227,14 @@ const ContentDisplay: React.FC<ContentDisplayProps> = ({ contentId, initialConte
 
   const addNoteToSelection = () => {
      if (selectedText && user) {
-      const newHighlightRef = doc(db, `users/${user.uid}/notes`, new Date().toISOString());
+      const highlightId = `highlight-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
       const newHighlight: Highlight = {
-        id: newHighlightRef.id,
+        id: highlightId,
         contentId,
         text: selectedText,
         note: '',
         color: 'yellow',
-        createdAt: serverTimestamp() as any,
+        createdAt: new Date().toISOString(),
       };
       
       setHighlights(prev => [...prev, newHighlight]);

@@ -1,88 +1,53 @@
-import { db } from '../firebase';
-import {
-  collection,
-  query,
-  where,
-  getDocs,
-  setDoc,
-  deleteDoc,
-  doc,
-  updateDoc,
-  serverTimestamp,
-} from 'firebase/firestore';
 import type { Highlight } from '../types';
-import { handleFirestoreError, OperationType } from '../utils/firestoreErrorHandler';
 
-// The collection for user notes/highlights, as defined in DataArchitecture.tsx
-const NOTES_COLLECTION = 'notes';
+const requestJson = async <T>(url: string, init?: RequestInit): Promise<T> => {
+  const response = await fetch(url, {
+    ...init,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(init?.headers || {}),
+    },
+  });
 
-/**
- * Fetches all highlights/notes for a specific piece of content for a given user.
- * @param userId - The UID of the authenticated user.
- * @param contentId - The unique identifier for the content (e.g., 'epub-1').
- * @returns A promise that resolves to an array of Highlight objects.
- */
+  if (!response.ok) {
+    const body = await response.json().catch(() => ({}));
+    throw new Error(body.message || body.error || `Request failed (${response.status})`);
+  }
+
+  return response.json() as Promise<T>;
+};
+
+const userHighlightsUrl = (userId: string, suffix = '') =>
+  `/api/users/${encodeURIComponent(userId)}/highlights${suffix}`;
+
 export const getHighlightsForContent = async (userId: string, contentId: string): Promise<Highlight[]> => {
-  const notesRef = collection(db, 'users', userId, NOTES_COLLECTION);
-  try {
-    const q = query(notesRef, where('contentId', '==', contentId));
-    const querySnapshot = await getDocs(q);
-    
-    const highlights: Highlight[] = [];
-    querySnapshot.forEach((doc) => {
-      highlights.push({ id: doc.id, ...doc.data() } as Highlight);
-    });
-    
-    return highlights.sort((a, b) => a.createdAt.toMillis() - b.createdAt.toMillis());
-  } catch (error) {
-    handleFirestoreError(error, OperationType.GET, notesRef.path);
-    return []; // Should not reach here
-  }
+  const data = await requestJson<{ highlights: Highlight[] }>(
+    `${userHighlightsUrl(userId)}?contentId=${encodeURIComponent(contentId)}`
+  );
+
+  return data.highlights.sort((a, b) => Date.parse(a.createdAt) - Date.parse(b.createdAt));
 };
 
-/**
- * Saves a new highlight to Firestore.
- * @param userId - The UID of the authenticated user.
- * @param highlight - The highlight object to save.
- */
 export const saveHighlight = async (userId: string, highlight: Highlight): Promise<void> => {
-  const noteRef = doc(db, 'users', userId, NOTES_COLLECTION, highlight.id);
-  try {
-    await setDoc(noteRef, { ...highlight, createdAt: serverTimestamp() });
-  } catch (error) {
-    handleFirestoreError(error, OperationType.WRITE, noteRef.path);
-  }
+  await requestJson<{ highlight: Highlight }>(userHighlightsUrl(userId), {
+    method: 'POST',
+    body: JSON.stringify(highlight),
+  });
 };
 
-/**
- * Deletes a highlight from Firestore.
- * @param userId - The UID of the authenticated user.
- * @param highlightId - The ID of the highlight to delete.
- */
 export const deleteHighlight = async (userId: string, highlightId: string): Promise<void> => {
-  const noteRef = doc(db, 'users', userId, NOTES_COLLECTION, highlightId);
-  try {
-    await deleteDoc(noteRef);
-  } catch (error) {
-    handleFirestoreError(error, OperationType.DELETE, noteRef.path);
-  }
+  await requestJson<{ ok: true }>(userHighlightsUrl(userId, `/${encodeURIComponent(highlightId)}`), {
+    method: 'DELETE',
+  });
 };
 
-/**
- * Updates an existing highlight, typically to add/edit a note.
- * @param userId - The UID of the authenticated user.
- * @param highlightId - The ID of the highlight to update.
- * @param data - The data to update (e.g., { note: 'new note text' }).
- */
 export const updateHighlight = async (
-    userId: string, 
-    highlightId: string, 
-    data: Partial<Pick<Highlight, 'note' | 'voiceNoteUrl' | 'tags'>>
+  userId: string,
+  highlightId: string,
+  data: Partial<Pick<Highlight, 'note' | 'voiceNoteUrl' | 'tags'>>
 ): Promise<void> => {
-  const noteRef = doc(db, 'users', userId, NOTES_COLLECTION, highlightId);
-  try {
-    await updateDoc(noteRef, data);
-  } catch (error) {
-    handleFirestoreError(error, OperationType.UPDATE, noteRef.path);
-  }
+  await requestJson<{ highlight: Highlight }>(userHighlightsUrl(userId, `/${encodeURIComponent(highlightId)}`), {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  });
 };
