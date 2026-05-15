@@ -55,7 +55,7 @@ const VoiceCompanion: React.FC = () => {
           <SparklesIcon className="w-10 h-10 mr-4 text-brand-accent"/>
           Sentient Guide: Kai
         </h1>
-        <p className="text-lg text-brand-text-secondary">Phase 5: Experience real-time, empathetic spiritual companionship.</p>
+        <p className="text-lg text-brand-text-secondary">A calm voice companion for prayerful reflection, listening, and guided next steps.</p>
       </div>
 
       <Card className="flex-1 flex flex-col items-center justify-center relative overflow-hidden">
@@ -108,12 +108,12 @@ const VoiceCompanion: React.FC = () => {
       
       <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card className="p-4 bg-brand-accent/5">
-            <p className="text-xs font-bold text-brand-accent uppercase mb-1">Affordability</p>
-            <p className="text-sm text-brand-text-primary">Powered by Flash-Native models for 10x lower latency at 5x lower cost.</p>
+            <p className="text-xs font-bold text-brand-accent uppercase mb-1">Sustainable</p>
+            <p className="text-sm text-brand-text-primary">Designed to stay fast, affordable, and available without exhausting the ministry budget.</p>
         </Card>
         <Card className="p-4 bg-brand-accent/5">
-            <p className="text-xs font-bold text-brand-accent uppercase mb-1">Sentience</p>
-            <p className="text-sm text-brand-text-primary">Kai listens for emotional timber, not just keywords.</p>
+            <p className="text-xs font-bold text-brand-accent uppercase mb-1">Attentive</p>
+            <p className="text-sm text-brand-text-primary">Kai is shaped around reflective prompts, Scripture-aware guidance, and careful listening.</p>
         </Card>
         <Card className="p-4 bg-brand-accent/5">
             <p className="text-xs font-bold text-brand-accent uppercase mb-1">Privacy</p>

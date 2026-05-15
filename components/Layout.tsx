@@ -24,6 +24,7 @@ import {
   LayoutDashboard,
   ListTodo,
   Map,
+  Menu,
   MessagesSquare,
   Mic,
   Music,
@@ -39,6 +40,7 @@ import {
   Trophy,
   UserRoundCheck,
   Users,
+  X,
   Quote,
 } from 'lucide-react';
 import { ChatIcon, LogoIcon, UserCircleIcon, BellIcon } from './icons';
@@ -109,7 +111,12 @@ const commandCenterItems = [
   { to: '/studio/chat', text: 'Chat with Team', icon: ChatIcon },
 ];
 
-const Sidebar: React.FC = () => {
+interface SidebarProps {
+  className?: string;
+  onNavigate?: () => void;
+}
+
+const Sidebar: React.FC<SidebarProps> = ({ className = '', onNavigate }) => {
   const { user, loading, signIn, signOut } = useAuth();
 
   const [isStrategyMode, setIsStrategyMode] = React.useState(() => {
@@ -148,12 +155,12 @@ const Sidebar: React.FC = () => {
 
   const activeItems = isStrategyMode ? filteredCommandCenterItems : filteredSanctuaryItems;
 
-  const baseLinkClasses = "flex items-center p-3 my-1 rounded-lg transition-all duration-200";
+  const baseLinkClasses = "flex min-w-0 items-center p-3 my-1 rounded-lg transition-all duration-200";
   const inactiveLinkClasses = "text-brand-text-secondary hover:bg-brand-secondary hover:text-brand-text-primary";
   const activeLinkClasses = "bg-brand-accent text-white shadow-lg scale-[1.02]";
 
   return (
-    <aside className="w-64 bg-brand-dark flex-shrink-0 p-4 border-r border-brand-border flex flex-col">
+    <aside className={`w-64 bg-brand-dark flex-shrink-0 p-4 border-r border-brand-border flex flex-col ${className}`}>
       <div className="flex items-center mb-6">
         <LogoIcon className="h-10 w-10 text-brand-accent" />
         <div className="ml-3">
@@ -191,10 +198,11 @@ const Sidebar: React.FC = () => {
                 <li key={item.to}>
                   <NavLink
                     to={item.to}
+                    onClick={onNavigate}
                     className={({ isActive }) => `${baseLinkClasses} ${isActive ? activeLinkClasses : inactiveLinkClasses}`}
                   >
-                    <item.icon className="h-5 w-5 mr-3" />
-                    <span className="text-sm font-medium">{item.text}</span>
+                    <item.icon className="h-5 w-5 mr-3 flex-shrink-0" />
+                    <span className="min-w-0 truncate text-sm font-medium" title={item.text}>{item.text}</span>
                   </NavLink>
                 </li>
               ))}
@@ -213,10 +221,11 @@ const Sidebar: React.FC = () => {
                   <li key={item.to}>
                     <NavLink
                       to={item.to}
+                      onClick={onNavigate}
                       className={({ isActive }) => `${baseLinkClasses} ${isActive ? activeLinkClasses : inactiveLinkClasses}`}
                     >
-                      <item.icon className="h-5 w-5 mr-3" />
-                      <span className="text-sm font-medium">{item.text}</span>
+                      <item.icon className="h-5 w-5 mr-3 flex-shrink-0" />
+                      <span className="min-w-0 truncate text-sm font-medium" title={item.text}>{item.text}</span>
                     </NavLink>
                   </li>
                 ))}
@@ -257,6 +266,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { currentTrack, isDetailedPlayerOpen } = useAudioPlayer();
   const alerts = useSentinel();
   const { unreadCount } = useNotifications();
+  const [isMobileNavOpen, setIsMobileNavOpen] = React.useState(false);
   const isPublicRoute =
     ['/', '/blog', '/newsletter', '/podcasts', '/pricing'].includes(location.pathname) ||
     location.pathname.startsWith('/blog/');
@@ -273,14 +283,53 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
   return (
     <div className="flex h-screen overflow-hidden bg-brand-dark">
-      <Sidebar />
-      <main className="flex-1 overflow-y-auto p-8 relative">
-        <div className="fixed top-0 left-64 right-0 h-full pointer-events-none z-0">
+      <Sidebar className="hidden md:flex" />
+
+      <div className="fixed inset-x-0 top-0 z-40 flex items-center justify-between border-b border-brand-border bg-brand-dark px-4 py-3 md:hidden">
+        <button
+          type="button"
+          onClick={() => setIsMobileNavOpen(true)}
+          className="inline-flex items-center gap-2 border border-brand-border px-3 py-2 text-sm font-semibold text-brand-text-primary"
+        >
+          <Menu className="h-5 w-5" /> Menu
+        </button>
+        <NavLink to="/app/inbox" className="relative p-2 text-brand-text-secondary hover:text-brand-text-primary transition-colors">
+          <BellIcon className="w-6 h-6" />
+          {unreadCount > 0 && (
+            <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-brand-dark"></span>
+          )}
+        </NavLink>
+      </div>
+
+      {isMobileNavOpen && (
+        <div className="fixed inset-0 z-50 md:hidden">
+          <button
+            type="button"
+            aria-label="Close navigation"
+            className="absolute inset-0 bg-black/60"
+            onClick={() => setIsMobileNavOpen(false)}
+          />
+          <div className="absolute inset-y-0 left-0 w-72 max-w-[82vw]">
+            <Sidebar className="h-full w-full" onNavigate={() => setIsMobileNavOpen(false)} />
+          </div>
+          <button
+            type="button"
+            onClick={() => setIsMobileNavOpen(false)}
+            className="absolute right-4 top-4 border border-white/20 bg-brand-dark p-2 text-brand-text-primary"
+            aria-label="Close navigation"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+      )}
+
+      <main className="relative flex-1 overflow-y-auto p-4 pt-20 md:p-8">
+        <div className="fixed top-0 left-0 right-0 h-full pointer-events-none z-0 md:left-64">
             <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(var(--color-dynamic-accent),0.15),rgba(255,255,255,0))] transition-colors duration-1000"></div>
         </div>
         
         <div className="relative z-10 max-w-7xl mx-auto">
-          <div className="flex justify-end mb-4">
+          <div className="mb-4 hidden justify-end md:flex">
             <NavLink to="/app/inbox" className="relative p-2 text-brand-text-secondary hover:text-brand-text-primary transition-colors">
               <BellIcon className="w-6 h-6" />
               {unreadCount > 0 && (

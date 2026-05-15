@@ -1,8 +1,9 @@
 // Forcing a full application rebuild to clear the preview cache.
 import React, { useState, useMemo, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import type { PodcastEpisode, SearchResult } from '../types';
 import { useAudioPlayer } from '../contexts/AudioPlayerContext';
-import { PlayIcon, PauseIcon, DownloadIcon, ChevronLeftIcon, HeartIcon, SparklesIcon, SpinnerIcon, MicrophoneIcon } from '../components/icons';
+import { PlayIcon, PauseIcon, HeartIcon, SparklesIcon, SpinnerIcon, MicrophoneIcon } from '../components/icons';
 import Card from '../components/Card';
 import { fetchRSSFeed } from '../services/rssService';
 
@@ -139,7 +140,6 @@ const PodcastPage: React.FC = () => {
                         <button onClick={() => toggleFavorite(episode.id)} className="p-2 text-brand-text-secondary hover:text-brand-text-primary rounded-full hover:bg-brand-secondary">
                            <HeartIcon className={`w-5 h-5 ${isFavorited ? 'text-red-500 fill-current' : ''}`}/>
                         </button>
-                        <button className="p-2 text-brand-text-secondary hover:text-brand-text-primary rounded-full hover:bg-brand-secondary"><DownloadIcon className="w-5 h-5"/></button>
                     </div>
                 </div>
             </Card>
@@ -161,7 +161,6 @@ const PodcastPage: React.FC = () => {
                     <button onClick={onToggleFavorite} className="p-2 text-brand-text-secondary hover:text-brand-text-primary rounded-full hover:bg-brand-secondary">
                         <HeartIcon className={`w-5 h-5 ${isFavorited ? 'text-red-500 fill-current' : ''}`}/>
                     </button>
-                    <button className="p-2 text-brand-text-secondary hover:text-brand-text-primary rounded-full hover:bg-brand-secondary"><DownloadIcon className="w-5 h-5"/></button>
                 </div>
             </div>
         </Card>
@@ -174,10 +173,13 @@ const PodcastPage: React.FC = () => {
     );
 
     return (
-        <div className="max-w-4xl mx-auto">
-            <header className="flex items-center mb-6">
-                <ChevronLeftIcon className="w-6 h-6 mr-4"/>
-                <h1 className="text-2xl font-bold text-brand-text-primary">THE CCN DAILY</h1>
+        <div className="mx-auto max-w-4xl px-4 pb-20">
+            <header className="mb-6 border-b border-brand-border pb-5">
+                <div className="mb-3 flex items-center justify-between text-sm font-semibold text-brand-text-secondary">
+                    <Link to="/" className="hover:text-brand-accent">THE CCN DAILY</Link>
+                    <Link to="/newsletter" className="hover:text-brand-accent">Newsletter</Link>
+                </div>
+                <h1 className="font-display text-3xl font-bold leading-tight text-brand-text-primary">Podcasts</h1>
             </header>
 
             <form onSubmit={handleSearch} className="relative mb-6">
@@ -258,7 +260,6 @@ const PodcastPage: React.FC = () => {
                                         <button onClick={() => toggleFavorite(featuredEpisode.id)} className="p-2 text-brand-text-secondary hover:text-brand-text-primary rounded-full hover:bg-brand-secondary">
                                            <HeartIcon className={`w-5 h-5 ${favorites.includes(featuredEpisode.id) ? 'text-red-500 fill-current' : ''}`}/>
                                         </button>
-                                        <button className="p-2 text-brand-text-secondary hover:text-brand-text-primary rounded-full hover:bg-brand-secondary"><DownloadIcon className="w-5 h-5"/></button>
                                     </div>
                                 </div>
                             </div>

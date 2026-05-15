@@ -72,7 +72,7 @@ const QuoteGeneratorPage: React.FC = () => {
     <div className="max-w-5xl mx-auto">
       <h1 className="text-4xl font-bold text-brand-text-primary mb-2">Generative Quote Suite</h1>
       <p className="text-lg text-brand-text-secondary mb-8">
-        Phase 2.3: Transform any scripture or reflection into a stunning shareable social graphic powered by Gemini AI.
+        Transform scripture, devotional lines, and journal reflections into polished shareable graphics.
       </p>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -152,7 +152,7 @@ const QuoteGeneratorPage: React.FC = () => {
                 {isLoading && (
                     <div className="text-center">
                         <SpinnerIcon className="w-12 h-12 text-brand-accent mx-auto mb-4"/>
-                        <p className="text-brand-text-secondary animate-pulse">Gemini is painting your inspiration...</p>
+                        <p className="text-brand-text-secondary animate-pulse">Preparing your visual inspiration...</p>
                     </div>
                 )}
 
@@ -181,7 +181,7 @@ const QuoteGeneratorPage: React.FC = () => {
                 )}
             </Card>
             <p className="text-xs text-brand-text-secondary text-center mt-4 italic">
-                Note: Image generation is currently disabled to prioritize cost-saving and free tier provisions.
+                Premium image generation is gated until the production AI budget and provider limits are confirmed.
             </p>
         </div>
       </div>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Card from '../components/Card';
 import { db, storage, auth } from '../firebase';
 import { collection, addDoc, serverTimestamp, getDocs, query, orderBy, deleteDoc, doc } from 'firebase/firestore';
@@ -25,6 +26,7 @@ interface ContentItem {
 
 const ContentManagerPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<ContentTab>('devotionals');
+  const navigate = useNavigate();
   const { notify } = useNotifications();
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -418,7 +420,7 @@ const ContentManagerPage: React.FC = () => {
                     <div className="flex items-center gap-2 flex-shrink-0 ml-4">
                       {(activeTab === 'challenges' || activeTab === 'courses') && (
                         <button
-                          onClick={() => window.location.href = `/studio/${activeTab}/${item.id}/modules`}
+                          onClick={() => navigate(`/studio/${activeTab}/${item.id}/modules`)}
                           className="px-3 py-1.5 text-xs font-bold bg-brand-accent/10 text-brand-accent hover:bg-brand-accent hover:text-white rounded-lg transition-colors"
                         >
                           Manage Modules

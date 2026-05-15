@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import Card from '../components/Card';
 import { fetchRSSFeed, FeedItem } from '../services/rssService';
-import { SparklesIcon, SpinnerIcon, ReaderIcon, ChevronLeftIcon } from '../components/icons';
+import { SparklesIcon, SpinnerIcon, ReaderIcon } from '../components/icons';
 
 const SUBSTACK_FEED_URL = 'https://theccndaily.substack.com/feed';
 
 const NewsletterPage: React.FC = () => {
   const [posts, setPosts] = useState<FeedItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     const loadPosts = async () => {
@@ -17,6 +19,7 @@ const NewsletterPage: React.FC = () => {
         setPosts(feed.items);
       } catch (error) {
         console.error("Failed to load newsletter posts:", error);
+        setError('The newsletter feed could not be loaded. Please try again shortly.');
       } finally {
         setLoading(false);
       }
@@ -25,18 +28,22 @@ const NewsletterPage: React.FC = () => {
     loadPosts();
   }, []);
 
-  if (loading) {
-    return (
-      <div className="flex flex-col justify-center items-center py-24">
-        <SpinnerIcon className="w-10 h-10 text-brand-accent animate-spin mb-4" />
-        <p className="text-brand-text-secondary animate-pulse">Fetching latest updates from THE CCN DAILY...</p>
+  const publicNav = (
+    <nav className="mb-8 flex items-center justify-between border-b border-brand-border pb-5">
+      <Link to="/" className="font-display text-xl font-bold text-brand-text-primary">
+        THE CCN DAILY
+      </Link>
+      <div className="flex items-center gap-5 text-sm font-semibold text-brand-text-secondary">
+        <Link to="/blog" className="hover:text-brand-accent">Blog</Link>
+        <Link to="/podcasts" className="hover:text-brand-accent">Podcasts</Link>
       </div>
-    );
-  }
+    </nav>
+  );
 
   return (
-    <div className="max-w-4xl mx-auto pb-20">
+    <div className="mx-auto max-w-4xl px-4 pb-20">
       <header className="mb-8">
+        {publicNav}
         <h1 className="text-4xl font-black text-brand-text-primary mb-2 flex items-center gap-4">
           <ReaderIcon className="w-10 h-10 text-brand-accent" />
           The CCN Daily
@@ -44,6 +51,20 @@ const NewsletterPage: React.FC = () => {
         <p className="text-brand-text-secondary">Explore the latest insight, devotionals, and community updates.</p>
       </header>
 
+      {loading && (
+        <div className="flex flex-col justify-center items-center border-y border-brand-border py-24">
+          <SpinnerIcon className="w-10 h-10 text-brand-accent animate-spin mb-4" />
+          <p className="text-brand-text-secondary animate-pulse">Fetching latest updates from THE CCN DAILY...</p>
+        </div>
+      )}
+
+      {!loading && error && (
+        <div className="border border-status-warning/40 bg-status-warning/10 p-5 text-sm text-brand-text-secondary">
+          {error}
+        </div>
+      )}
+
+      {!loading && !error && (
       <div className="space-y-6">
         {posts.map((post, index) => (
           <Card key={post.guid || index} className="overflow-hidden p-0 group">
@@ -78,6 +99,7 @@ const NewsletterPage: React.FC = () => {
           </Card>
         ))}
       </div>
+      )}
     </div>
   );
 };

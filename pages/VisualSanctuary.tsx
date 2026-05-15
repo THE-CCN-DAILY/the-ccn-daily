@@ -36,7 +36,7 @@ const VisualSanctuary: React.FC = () => {
                     <PaintBrushIcon className="w-10 h-10 text-brand-accent"/>
                     Cinematic Sanctuary
                 </h1>
-                <p className="text-brand-text-secondary">Phase 6: Paint your meditation space using Veo 3.1 Generative Video.</p>
+                <p className="text-brand-text-secondary">A guided visual prayer space for quiet reflection, ambience, and premium cinematic meditation.</p>
             </div>
 
             <div className="flex-1 grid grid-cols-1 lg:grid-cols-4 gap-6 min-h-0">
@@ -59,9 +59,9 @@ const VisualSanctuary: React.FC = () => {
                         </button>
 
                         <div className="mt-8 pt-8 border-t border-brand-border">
-                            <h3 className="text-xs font-black uppercase text-brand-text-secondary tracking-widest mb-4">Phase 6 Active</h3>
+                            <h3 className="text-xs font-black uppercase text-brand-text-secondary tracking-widest mb-4">Premium access</h3>
                             <div className="p-4 bg-brand-accent/10 rounded-xl border border-brand-accent/30">
-                                <p className="text-[10px] font-bold text-brand-accent mb-1">Veo Cinematic Video</p>
+                                <p className="text-[10px] font-bold text-brand-accent mb-1">Cinematic sanctuary video</p>
                                 <p className="text-[10px] text-brand-text-secondary leading-tight">Video generation is currently reserved for Premium members to ensure sustainable resource allocation.</p>
                             </div>
                         </div>
@@ -79,7 +79,7 @@ const VisualSanctuary: React.FC = () => {
                                     <PaintBrushIcon className="w-10 h-10 text-brand-accent opacity-20"/>
                                 </div>
                                 <h3 className="text-xl font-bold text-brand-text-primary mb-2">Awaiting Vision</h3>
-                                <p className="text-sm text-brand-text-secondary leading-relaxed">AI Cinematic Video generation is currently reserved for Premium members to prioritize sustainable growth and cost-saving.</p>
+                                <p className="text-sm text-brand-text-secondary leading-relaxed">Cinematic sanctuary generation is reserved for premium members while we keep the free plan stable and useful.</p>
                             </div>
                         )}
 

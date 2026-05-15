@@ -61,7 +61,7 @@ const EventsPage: React.FC = () => {
   };
 
   const handleShare = (id: string) => {
-    const shareUrl = `${window.location.origin}/#/events/${id}`;
+    const shareUrl = `${window.location.origin}/#/app/events?event=${encodeURIComponent(id)}`;
     navigator.clipboard.writeText(shareUrl);
     notify(`Grace Link copied to clipboard! Share this link to invite others.`, 'success');
   };
@@ -131,7 +131,7 @@ const EventsPage: React.FC = () => {
               </div>
               <div className="bg-brand-dark px-6 py-3 text-xs text-brand-text-secondary border-t border-brand-border flex justify-between">
                 <span>Streaming Engine: {event.streamingPlatform || (event.type === 'online' ? 'Mux' : 'N/A')}</span>
-                <span>Phase 8 Infrastructure</span>
+                <span>Live event desk</span>
               </div>
             </Card>
           ))
