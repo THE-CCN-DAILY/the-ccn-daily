@@ -1,11 +1,130 @@
 import { Hono } from 'hono';
 
+type D1PreparedStatement = {
+  bind: (...values: unknown[]) => D1PreparedStatement;
+  all: <T = unknown>() => Promise<{ results: T[] }>;
+  first: <T = unknown>() => Promise<T | null>;
+  run: () => Promise<unknown>;
+};
+
+type D1DatabaseBinding = {
+  prepare: (query: string) => D1PreparedStatement;
+};
+
 type Env = {
+  DB?: D1DatabaseBinding;
   FIREBASE_PROJECT_ID?: string;
   PRODUCTION_ORIGIN?: string;
+  ADMIN_EMAIL?: string;
+  ADMIN_API_TOKEN?: string;
 };
 
 const app = new Hono<{ Bindings: Env }>();
+
+type BlogPostRow = {
+  id: string;
+  slug: string;
+  title: string;
+  excerpt: string;
+  content: string;
+  category: string;
+  status: 'draft' | 'published' | 'archived';
+  author_name: string;
+  audio_url?: string | null;
+  seo_title?: string | null;
+  seo_description?: string | null;
+  published_at?: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+};
+
+const fallbackPosts: BlogPostRow[] = [
+  {
+    id: 'seed-faith-monday',
+    slug: 'faith-that-can-survive-monday-morning',
+    title: 'Faith that can survive Monday morning',
+    excerpt:
+      'The point of a devotional life is not escape from responsibility. It is to become the kind of person who can carry responsibility without losing the soul.',
+    content:
+      'The point of a devotional life is not escape from responsibility. It is to become the kind of person who can carry responsibility without losing the soul.',
+    category: 'Work and devotion',
+    status: 'published',
+    author_name: 'THE CCN DAILY',
+    published_at: '2026-05-15T00:00:00.000Z',
+  },
+  {
+    id: 'seed-quiet-strength',
+    slug: 'why-quiet-is-not-weakness',
+    title: 'Why quiet is not weakness',
+    excerpt:
+      'A quiet heart is not an inactive heart. It is a governed heart: alert, receptive, and less easily ruled by noise.',
+    content:
+      'A quiet heart is not an inactive heart. It is a governed heart: alert, receptive, and less easily ruled by noise.',
+    category: 'Spiritual formation',
+    status: 'published',
+    author_name: 'THE CCN DAILY',
+    published_at: '2026-05-14T00:00:00.000Z',
+  },
+  {
+    id: 'seed-professional-rhythm',
+    slug: 'a-better-rhythm-for-christian-professionals',
+    title: 'A better rhythm for Christian professionals',
+    excerpt:
+      'The working believer needs more than motivation. We need Scripture, prayer, reflection, and a way to return to God in the middle of pressure.',
+    content:
+      'The working believer needs more than motivation. We need Scripture, prayer, reflection, and a way to return to God in the middle of pressure.',
+    category: 'Leadership',
+    status: 'published',
+    author_name: 'THE CCN DAILY',
+    published_at: '2026-05-13T00:00:00.000Z',
+  },
+];
+
+const slugify = (value: string) =>
+  value
+    .toLowerCase()
+    .replace(/['"]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '')
+    .slice(0, 96);
+
+const mapPost = (row: BlogPostRow) => ({
+  id: row.id,
+  slug: row.slug,
+  title: row.title,
+  excerpt: row.excerpt,
+  content: row.content,
+  category: row.category,
+  status: row.status,
+  authorName: row.author_name,
+  audioUrl: row.audio_url || undefined,
+  seoTitle: row.seo_title || undefined,
+  seoDescription: row.seo_description || undefined,
+  publishedAt: row.published_at || undefined,
+  createdAt: row.created_at || undefined,
+  updatedAt: row.updated_at || undefined,
+});
+
+const isAdminRequest = (c: any) => {
+  const expected = (c.env.ADMIN_EMAIL || 'pastor.eryeza@gmail.com').toLowerCase();
+  const email = (c.req.header('x-admin-email') || '').toLowerCase();
+  const configuredToken = c.env.ADMIN_API_TOKEN || '';
+  const token = c.req.header('x-admin-token') || '';
+  const host = c.req.header('host') || '';
+  const isLocalPreview = host.startsWith('127.0.0.1') || host.startsWith('localhost');
+
+  if (configuredToken) return token === configuredToken && email === expected;
+  return isLocalPreview && email === expected;
+};
+
+const requireAdmin = (c: any) => {
+  if (isAdminRequest(c)) return null;
+  return c.json({
+    error: 'ADMIN_AUTH_REQUIRED',
+    message:
+      'Admin blog writes require a verified admin session. Local preview accepts the configured admin email; production must set ADMIN_API_TOKEN until the Cloudflare auth migration is complete.',
+  }, 401);
+};
 
 const decodeXml = (value: string) =>
   value
@@ -119,6 +238,115 @@ app.get('/api/rss', async (c) => {
   } catch {
     return c.json({ error: 'Failed to fetch or parse RSS feed' }, 500);
   }
+});
+
+app.get('/api/blog/posts', async (c) => {
+  if (!c.env.DB) {
+    return c.json({ posts: fallbackPosts.map(mapPost), source: 'fallback' });
+  }
+
+  const result = await c.env.DB.prepare(
+    `SELECT * FROM blog_posts
+     WHERE status = 'published'
+     ORDER BY COALESCE(published_at, created_at) DESC`
+  ).all<BlogPostRow>();
+
+  return c.json({ posts: result.results.map(mapPost), source: 'd1' });
+});
+
+app.get('/api/blog/posts/:slug', async (c) => {
+  const slug = c.req.param('slug');
+  const fallback = fallbackPosts.find((post) => post.slug === slug && post.status === 'published');
+
+  if (!c.env.DB) {
+    if (!fallback) return c.json({ error: 'Post not found' }, 404);
+    return c.json({ post: mapPost(fallback), source: 'fallback' });
+  }
+
+  const post = await c.env.DB.prepare(
+    `SELECT * FROM blog_posts WHERE slug = ? AND status = 'published' LIMIT 1`
+  ).bind(slug).first<BlogPostRow>();
+
+  if (!post) return c.json({ error: 'Post not found' }, 404);
+  return c.json({ post: mapPost(post), source: 'd1' });
+});
+
+app.get('/api/admin/blog/posts', async (c) => {
+  const denied = requireAdmin(c);
+  if (denied) return denied;
+
+  if (!c.env.DB) return c.json({ posts: fallbackPosts.map(mapPost), source: 'fallback' });
+
+  const result = await c.env.DB.prepare(
+    `SELECT * FROM blog_posts ORDER BY updated_at DESC, created_at DESC`
+  ).all<BlogPostRow>();
+
+  return c.json({ posts: result.results.map(mapPost), source: 'd1' });
+});
+
+app.post('/api/admin/blog/posts', async (c) => {
+  const denied = requireAdmin(c);
+  if (denied) return denied;
+  if (!c.env.DB) return c.json({ error: 'D1 database binding is not configured' }, 503);
+
+  const body = await c.req.json();
+  const title = String(body.title || '').trim();
+  if (!title) return c.json({ error: 'Title is required' }, 400);
+
+  const id = String(body.id || crypto.randomUUID());
+  const slug = slugify(String(body.slug || title));
+  const status = ['draft', 'published', 'archived'].includes(body.status) ? body.status : 'draft';
+  const publishedAt = status === 'published'
+    ? String(body.publishedAt || new Date().toISOString())
+    : body.publishedAt || null;
+
+  await c.env.DB.prepare(
+    `INSERT INTO blog_posts (
+      id, slug, title, excerpt, content, category, status, author_name,
+      audio_url, seo_title, seo_description, published_at, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+    ON CONFLICT(id) DO UPDATE SET
+      slug = excluded.slug,
+      title = excluded.title,
+      excerpt = excluded.excerpt,
+      content = excluded.content,
+      category = excluded.category,
+      status = excluded.status,
+      author_name = excluded.author_name,
+      audio_url = excluded.audio_url,
+      seo_title = excluded.seo_title,
+      seo_description = excluded.seo_description,
+      published_at = excluded.published_at,
+      updated_at = CURRENT_TIMESTAMP`
+  ).bind(
+    id,
+    slug,
+    title,
+    String(body.excerpt || '').trim(),
+    String(body.content || '').trim(),
+    String(body.category || 'Devotional life').trim(),
+    status,
+    String(body.authorName || 'THE CCN DAILY').trim(),
+    body.audioUrl || null,
+    body.seoTitle || null,
+    body.seoDescription || null,
+    publishedAt
+  ).run();
+
+  const post = await c.env.DB.prepare(`SELECT * FROM blog_posts WHERE id = ? LIMIT 1`)
+    .bind(id)
+    .first<BlogPostRow>();
+
+  return c.json({ post: post ? mapPost(post) : null });
+});
+
+app.delete('/api/admin/blog/posts/:id', async (c) => {
+  const denied = requireAdmin(c);
+  if (denied) return denied;
+  if (!c.env.DB) return c.json({ error: 'D1 database binding is not configured' }, 503);
+
+  await c.env.DB.prepare(`DELETE FROM blog_posts WHERE id = ?`).bind(c.req.param('id')).run();
+  return c.json({ ok: true });
 });
 
 app.get('/api/user/profile', (c) => {

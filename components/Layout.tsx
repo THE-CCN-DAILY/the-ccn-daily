@@ -12,6 +12,7 @@ import {
   Crown,
   Database,
   FlaskConical,
+  FilePenLine,
   FolderOpen,
   Gift,
   GraduationCap,
@@ -86,6 +87,7 @@ const sanctuaryItems = [
 
 const commandCenterItems = [
   { to: '/studio/admin', text: 'Admin Dashboard', icon: LayoutDashboard },
+  { to: '/studio/blog', text: 'Blog Studio', icon: FilePenLine },
   { to: '/studio/plan', text: 'Master Plan', icon: ClipboardList },
   { to: '/studio/roadmap-evolution', text: 'Roadmap Evolution', icon: Map },
   { to: '/studio/visionary-lab', text: 'Visionary Tech Lab', icon: FlaskConical },
@@ -255,7 +257,9 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { currentTrack, isDetailedPlayerOpen } = useAudioPlayer();
   const alerts = useSentinel();
   const { unreadCount } = useNotifications();
-  const isPublicRoute = ['/', '/blog', '/newsletter', '/podcasts', '/pricing'].includes(location.pathname);
+  const isPublicRoute =
+    ['/', '/blog', '/newsletter', '/podcasts', '/pricing'].includes(location.pathname) ||
+    location.pathname.startsWith('/blog/');
 
   if (isPublicRoute) {
     return (

@@ -4,6 +4,8 @@ import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/Layout';
 import LandingPage from './pages/LandingPage';
 import BlogPage from './pages/BlogPage';
+import BlogPostPage from './pages/BlogPostPage';
+import BlogStudioPage from './pages/BlogStudioPage';
 import MasterPlan from './pages/MasterPlan';
 import Team from './pages/Team';
 import NextSteps from './pages/NextSteps';
@@ -84,6 +86,7 @@ const App: React.FC = () => {
                           {/* Public Routes */}
                           <Route path="/" element={<LandingPage />} />
                           <Route path="/blog" element={<BlogPage />} />
+                          <Route path="/blog/:slug" element={<BlogPostPage />} />
                           <Route path="/newsletter" element={<NewsletterPage />} />
                           <Route path="/podcasts" element={<PodcastPage />} />
                           <Route path="/pricing" element={<PricingPage />} />
@@ -122,6 +125,7 @@ const App: React.FC = () => {
                           <Route path="/studio/*">
                             <Route index element={<Navigate to="admin" replace />} />
                             <Route path="admin" element={<RequireRole allowedRoles={['admin']}><AdminDashboard /></RequireRole>} />
+                            <Route path="blog" element={<RequireRole allowedRoles={['admin']}><BlogStudioPage /></RequireRole>} />
                             <Route path="plan" element={<RequireRole allowedRoles={['admin']}><MasterPlan /></RequireRole>} />
                             <Route path="roadmap-evolution" element={<RequireRole allowedRoles={['admin']}><RoadmapEvolution /></RequireRole>} />
                             <Route path="visionary-lab" element={<RequireRole allowedRoles={['admin']}><VisionaryLab /></RequireRole>} />
