@@ -65,6 +65,51 @@ CREATE TABLE IF NOT EXISTS journal_entries (
 
 CREATE INDEX IF NOT EXISTS idx_journal_entries_user_created ON journal_entries(user_id, created_at DESC);
 
+CREATE TABLE IF NOT EXISTS challenges (
+  id TEXT PRIMARY KEY,
+  title TEXT NOT NULL,
+  description TEXT NOT NULL DEFAULT '',
+  duration TEXT,
+  source_type TEXT,
+  cover_url TEXT,
+  status TEXT NOT NULL DEFAULT 'draft',
+  start_date TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  participants_count INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_challenges_status_start ON challenges(status, start_date DESC);
+
+CREATE TABLE IF NOT EXISTS challenge_modules (
+  id TEXT NOT NULL,
+  challenge_id TEXT NOT NULL,
+  title TEXT NOT NULL,
+  description TEXT NOT NULL DEFAULT '',
+  content TEXT NOT NULL DEFAULT '',
+  day_number INTEGER NOT NULL DEFAULT 1,
+  video_url TEXT,
+  audio_url TEXT,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (challenge_id, id),
+  FOREIGN KEY (challenge_id) REFERENCES challenges(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_challenge_modules_day ON challenge_modules(challenge_id, day_number ASC);
+
+CREATE TABLE IF NOT EXISTS challenge_participants (
+  challenge_id TEXT NOT NULL,
+  user_id TEXT NOT NULL,
+  completed_modules TEXT NOT NULL DEFAULT '[]',
+  joined_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (challenge_id, user_id),
+  FOREIGN KEY (challenge_id) REFERENCES challenges(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_challenge_participants_user ON challenge_participants(user_id, joined_at DESC);
+
 CREATE TABLE IF NOT EXISTS audit_logs (
   id TEXT PRIMARY KEY,
   actor_email TEXT,
@@ -133,4 +178,50 @@ INSERT OR IGNORE INTO blog_posts (
   'published',
   'THE CCN DAILY',
   '2026-05-13T00:00:00.000Z'
+);
+
+INSERT OR IGNORE INTO challenges (
+  id,
+  title,
+  description,
+  duration,
+  source_type,
+  status,
+  start_date,
+  participants_count
+) VALUES
+(
+  'seed-rhythm-at-work',
+  'Seven Days of Quiet Strength at Work',
+  'A guided challenge for Christian professionals who want to practice Scripture, prayer, and faithful attention inside ordinary work pressure.',
+  '7 Days',
+  'Seed',
+  'published',
+  '2026-05-16T00:00:00.000Z',
+  0
+);
+
+INSERT OR IGNORE INTO challenge_modules (
+  id,
+  challenge_id,
+  title,
+  description,
+  content,
+  day_number
+) VALUES
+(
+  'seed-rhythm-at-work-day-1',
+  'seed-rhythm-at-work',
+  'Begin Before the Noise',
+  'Start the day with a short act of attention before work names your mood.',
+  'Read Colossians 3:23. Write one sentence naming the work God has placed before you today, then pray for grace to do it with a quiet heart.',
+  1
+),
+(
+  'seed-rhythm-at-work-day-2',
+  'seed-rhythm-at-work',
+  'Choose the Next Faithful Step',
+  'Practice obedience in one clear action instead of carrying the whole week at once.',
+  'Read James 1:5. Name one decision that needs wisdom. Ask God for clarity, then take the next faithful step.',
+  2
 );

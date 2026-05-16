@@ -1,34 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { db } from '../firebase';
-import { doc, getDoc, collection, query, getDocs, orderBy, setDoc, serverTimestamp, updateDoc, increment } from 'firebase/firestore';
 import { useAuth } from '../contexts/AuthContext';
 import { SparklesIcon, TeamIcon, CheckIcon, ChevronLeftIcon, PlayIcon } from '../components/icons';
-import { handleFirestoreError, OperationType } from '../utils/firestoreErrorHandler';
 import Card from '../components/Card';
-
-interface Challenge {
-  id: string;
-  title: string;
-  description: string;
-  startDate: string;
-  coverUrl?: string;
-  participantsCount: number;
-  status: 'published' | 'draft';
-}
-
-interface Participant {
-  id: string;
-  joinedAt: any;
-  completedModules: string[];
-}
-
-interface ChallengeModule {
-  id: string;
-  title: string;
-  description: string;
-  dayNumber: number;
-}
+import {
+  getChallengeDetail,
+  joinChallenge,
+  type Challenge,
+  type ChallengeModule,
+} from '../services/challengeService';
 
 const ChallengeDetailPage: React.FC = () => {
   const { challengeId } = useParams<{ challengeId: string }>();
@@ -47,33 +27,13 @@ const ChallengeDetailPage: React.FC = () => {
 
     const fetchChallengeData = async () => {
       try {
-        // Fetch challenge details
-        const docRef = doc(db, 'challenges', challengeId);
-        const docSnap = await getDoc(docRef);
-        
-        if (docSnap.exists()) {
-          setChallenge({ id: docSnap.id, ...docSnap.data() } as Challenge);
-        }
-
-        // Check if user is a participant
-        const participantRef = doc(db, `challenges/${challengeId}/participants`, user.uid);
-        const participantSnap = await getDoc(participantRef);
-        if (participantSnap.exists()) {
-          setIsParticipant(true);
-          setCompletedModules(participantSnap.data().completedModules || []);
-        }
-
-        // Fetch modules
-        const q = query(collection(db, `challenges/${challengeId}/modules`), orderBy('dayNumber', 'asc'));
-        const modulesSnap = await getDocs(q);
-        const fetchedModules: ChallengeModule[] = [];
-        modulesSnap.forEach((doc) => {
-          fetchedModules.push({ id: doc.id, ...doc.data() } as ChallengeModule);
-        });
-        setModules(fetchedModules);
-
+        const data = await getChallengeDetail(challengeId, user.uid);
+        setChallenge(data.challenge);
+        setModules(data.modules);
+        setIsParticipant(Boolean(data.participant));
+        setCompletedModules(data.participant?.completedModules || []);
       } catch (error) {
-        handleFirestoreError(error, OperationType.GET, `challenges/${challengeId}`);
+        console.error('Failed to load challenge', error);
       } finally {
         setLoading(false);
       }
@@ -87,26 +47,13 @@ const ChallengeDetailPage: React.FC = () => {
     setJoining(true);
 
     try {
-      // 1. Add user to participants subcollection
-      const participantRef = doc(db, `challenges/${challengeId}/participants`, user.uid);
-      await setDoc(participantRef, { joinedAt: serverTimestamp(), completedModules: [] });
-
-      // 2. Increment participantsCount on the challenge document
-      const challengeRef = doc(db, 'challenges', challengeId);
-      await updateDoc(challengeRef, {
-        participantsCount: increment(1)
-      });
-
-      // Update local state
+      const result = await joinChallenge(challengeId, user.uid);
       setIsParticipant(true);
-      setCompletedModules([]);
-      setChallenge({
-        ...challenge,
-        participantsCount: challenge.participantsCount + 1
-      });
+      setCompletedModules(result.participant?.completedModules || []);
+      if (result.challenge) setChallenge(result.challenge);
 
     } catch (error) {
-      handleFirestoreError(error, OperationType.CREATE, `challenges/${challengeId}/participants`);
+      console.error('Failed to join challenge', error);
     } finally {
       setJoining(false);
     }

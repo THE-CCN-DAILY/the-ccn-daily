@@ -1,20 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Card from '../components/Card';
-import { db } from '../firebase';
-import { collection, query, getDocs, orderBy } from 'firebase/firestore';
-import { SparklesIcon, CheckIcon, TeamIcon } from '../components/icons';
-import { handleFirestoreError, OperationType } from '../utils/firestoreErrorHandler';
-
-interface Challenge {
-  id: string;
-  title: string;
-  description: string;
-  startDate: string;
-  coverUrl?: string;
-  participantsCount: number;
-  status: 'published' | 'draft';
-}
+import { SparklesIcon, TeamIcon } from '../components/icons';
+import { listChallenges, type Challenge } from '../services/challengeService';
 
 const ChallengesPage: React.FC = () => {
   const navigate = useNavigate();
@@ -25,15 +13,9 @@ const ChallengesPage: React.FC = () => {
   useEffect(() => {
     const fetchChallenges = async () => {
       try {
-        const q = query(collection(db, 'challenges'), orderBy('startDate', 'desc'));
-        const querySnapshot = await getDocs(q);
-        const fetchedChallenges: Challenge[] = [];
-        querySnapshot.forEach((doc) => {
-          fetchedChallenges.push({ id: doc.id, ...doc.data() } as Challenge);
-        });
-        setChallenges(fetchedChallenges);
+        setChallenges(await listChallenges());
       } catch (error) {
-        handleFirestoreError(error, OperationType.GET, 'challenges');
+        console.error('Failed to load challenges', error);
       } finally {
         setLoading(false);
       }
@@ -42,8 +24,6 @@ const ChallengesPage: React.FC = () => {
     fetchChallenges();
   }, []);
 
-  const now = new Date();
-  
   const activeChallenges = challenges.filter(c => {
     const startDate = new Date(c.startDate);
     // Consider it active if it started within the last 30 days or is in the future

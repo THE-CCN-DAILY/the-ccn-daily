@@ -1,23 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Card from '../components/Card';
-import { db, storage } from '../firebase';
-import { collection, addDoc, serverTimestamp, getDocs, query, orderBy, deleteDoc, doc, getDoc } from 'firebase/firestore';
-import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { useNotifications } from '../contexts/NotificationContext';
-import { handleFirestoreError, OperationType } from '../utils/firestoreErrorHandler';
 import { ChevronLeftIcon, CloseIcon } from '../components/icons';
-
-interface ChallengeModule {
-  id: string;
-  title: string;
-  description: string;
-  content: string;
-  dayNumber: number;
-  videoUrl?: string;
-  audioUrl?: string;
-  createdAt: any;
-}
+import {
+  deleteChallengeModule,
+  getChallengeDetail,
+  listChallengeModules,
+  saveChallengeModule,
+  type ChallengeModule,
+} from '../services/challengeService';
 
 const ChallengeModuleManagerPage: React.FC = () => {
   const { challengeId } = useParams<{ challengeId: string }>();
@@ -29,14 +21,13 @@ const ChallengeModuleManagerPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   
   // Form states
-  const [isUploading, setIsUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
+  const [isSaving, setIsSaving] = useState(false);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [content, setContent] = useState('');
   const [dayNumber, setDayNumber] = useState(1);
-  const [mediaFile, setMediaFile] = useState<File | null>(null);
   const [mediaType, setMediaType] = useState<'none' | 'video' | 'audio'>('none');
+  const [mediaUrl, setMediaUrl] = useState('');
 
   useEffect(() => {
     if (challengeId) {
@@ -47,27 +38,18 @@ const ChallengeModuleManagerPage: React.FC = () => {
 
   const fetchChallengeDetails = async () => {
     try {
-      const docRef = doc(db, 'challenges', challengeId!);
-      const docSnap = await getDoc(docRef);
-      if (docSnap.exists()) {
-        setChallengeTitle(docSnap.data().title);
-      } else {
-        setChallengeTitle('Challenge Not Found');
-      }
+      const data = await getChallengeDetail(challengeId!);
+      setChallengeTitle(data.challenge.title);
     } catch (error) {
       console.error('Error fetching challenge:', error);
+      setChallengeTitle('Challenge Not Found');
     }
   };
 
   const fetchModules = async () => {
     setLoading(true);
     try {
-      const q = query(collection(db, `challenges/${challengeId}/modules`), orderBy('dayNumber', 'asc'));
-      const querySnapshot = await getDocs(q);
-      const fetchedModules: ChallengeModule[] = [];
-      querySnapshot.forEach((doc) => {
-        fetchedModules.push({ id: doc.id, ...doc.data() } as ChallengeModule);
-      });
+      const fetchedModules = await listChallengeModules(challengeId!);
       setModules(fetchedModules);
       
       // Auto-increment day number for next module
@@ -75,67 +57,27 @@ const ChallengeModuleManagerPage: React.FC = () => {
         setDayNumber(fetchedModules[fetchedModules.length - 1].dayNumber + 1);
       }
     } catch (error) {
-      handleFirestoreError(error, OperationType.GET, `challenges/${challengeId}/modules`);
+      console.error('Failed to fetch challenge modules', error);
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setMediaFile(e.target.files[0]);
-    }
-  };
-
-  const uploadFile = async (fileToUpload: File, path: string): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const storageRef = ref(storage, `${path}/${Date.now()}_${fileToUpload.name}`);
-      const uploadTask = uploadBytesResumable(storageRef, fileToUpload);
-
-      uploadTask.on(
-        'state_changed',
-        (snapshot) => {
-          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-          setUploadProgress(progress);
-        },
-        (error) => {
-          console.error('Upload failed:', error);
-          reject(error);
-        },
-        async () => {
-          const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-          resolve(downloadURL);
-        }
-      );
-    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!challengeId) return;
     
-    setIsUploading(true);
-    setUploadProgress(0);
+    setIsSaving(true);
 
     try {
-      let uploadedMediaUrl = '';
-
-      if (mediaFile && mediaType !== 'none') {
-        uploadedMediaUrl = await uploadFile(mediaFile, `content/challenges/${challengeId}/modules`);
-      }
-
-      const moduleData: any = {
+      await saveChallengeModule(challengeId, {
         title,
         description,
         content,
         dayNumber: Number(dayNumber),
-        createdAt: serverTimestamp(),
-      };
-
-      if (mediaType === 'video') moduleData.videoUrl = uploadedMediaUrl;
-      if (mediaType === 'audio') moduleData.audioUrl = uploadedMediaUrl;
-
-      await addDoc(collection(db, `challenges/${challengeId}/modules`), moduleData);
+        videoUrl: mediaType === 'video' ? mediaUrl.trim() : undefined,
+        audioUrl: mediaType === 'audio' ? mediaUrl.trim() : undefined,
+      });
 
       notify('Module added successfully!', 'success');
       
@@ -143,18 +85,17 @@ const ChallengeModuleManagerPage: React.FC = () => {
       setTitle('');
       setDescription('');
       setContent('');
-      setMediaFile(null);
+      setMediaUrl('');
       setMediaType('none');
       
       // Refresh list
       fetchModules();
       
     } catch (error) {
-      handleFirestoreError(error, OperationType.CREATE, `challenges/${challengeId}/modules`);
+      console.error('Failed to save challenge module', error);
       notify('Failed to add module.', 'error');
     } finally {
-      setIsUploading(false);
-      setUploadProgress(0);
+      setIsSaving(false);
     }
   };
 
@@ -162,11 +103,11 @@ const ChallengeModuleManagerPage: React.FC = () => {
     if (!window.confirm(`Are you sure you want to delete "Day ${module.dayNumber}: ${module.title}"?`)) return;
 
     try {
-      await deleteDoc(doc(db, `challenges/${challengeId}/modules`, module.id));
+      await deleteChallengeModule(challengeId!, module.id);
       notify('Module deleted successfully!', 'success');
       fetchModules();
     } catch (error) {
-      handleFirestoreError(error, OperationType.DELETE, `challenges/${challengeId}/modules/${module.id}`);
+      console.error('Failed to delete challenge module', error);
       notify('Failed to delete module.', 'error');
     }
   };
@@ -264,31 +205,29 @@ const ChallengeModuleManagerPage: React.FC = () => {
 
               {mediaType !== 'none' && (
                 <div>
-                  <label className="block text-sm font-bold text-brand-text-primary mb-2">Upload {mediaType === 'video' ? 'Video' : 'Audio'}</label>
+                  <label className="block text-sm font-bold text-brand-text-primary mb-2">{mediaType === 'video' ? 'Video' : 'Audio'} URL</label>
                   <input
-                    type="file"
+                    type="url"
                     required
-                    accept={mediaType === 'video' ? 'video/*' : 'audio/*'}
-                    onChange={handleFileChange}
-                    className="w-full text-brand-text-secondary file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-bold file:bg-brand-accent/10 file:text-brand-accent hover:file:bg-brand-accent/20"
+                    value={mediaUrl}
+                    onChange={(e) => setMediaUrl(e.target.value)}
+                    className="w-full bg-brand-dark border border-brand-border rounded-lg px-4 py-3 text-brand-text-primary focus:outline-none focus:border-brand-accent"
+                    placeholder={mediaType === 'video' ? 'https://stream.example.com/module.mp4' : 'https://cdn.example.com/module.mp3'}
                   />
-                </div>
-              )}
-
-              {isUploading && (
-                <div className="w-full bg-brand-dark rounded-full h-2.5 mb-4 overflow-hidden">
-                  <div className="bg-brand-accent h-2.5 rounded-full transition-all duration-300" style={{ width: `${uploadProgress}%` }}></div>
+                  <p className="text-xs text-brand-text-secondary mt-2">
+                    Direct uploads will move to Cloudflare R2 in the media-storage slice. For now, paste a hosted media URL.
+                  </p>
                 </div>
               )}
 
               <button
                 type="submit"
-                disabled={isUploading}
+                disabled={isSaving}
                 className={`w-full py-4 rounded-xl font-bold transition-colors flex items-center justify-center gap-2 ${
-                  isUploading ? 'bg-brand-secondary text-brand-text-secondary cursor-wait' : 'bg-brand-accent text-white hover:bg-opacity-90'
+                  isSaving ? 'bg-brand-secondary text-brand-text-secondary cursor-wait' : 'bg-brand-accent text-white hover:bg-opacity-90'
                 }`}
               >
-                {isUploading ? `Uploading... ${Math.round(uploadProgress)}%` : 'Add Module'}
+                {isSaving ? 'Saving...' : 'Add Module'}
               </button>
             </form>
           </Card>

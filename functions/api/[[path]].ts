@@ -67,6 +67,41 @@ type JournalEntryRow = {
   updated_at?: string | null;
 };
 
+type ChallengeRow = {
+  id: string;
+  title: string;
+  description: string;
+  duration?: string | null;
+  source_type?: string | null;
+  cover_url?: string | null;
+  status: 'draft' | 'published' | 'archived';
+  start_date: string;
+  participants_count: number;
+  created_at?: string | null;
+  updated_at?: string | null;
+};
+
+type ChallengeModuleRow = {
+  id: string;
+  challenge_id: string;
+  title: string;
+  description: string;
+  content: string;
+  day_number: number;
+  video_url?: string | null;
+  audio_url?: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+};
+
+type ChallengeParticipantRow = {
+  challenge_id: string;
+  user_id: string;
+  completed_modules: string;
+  joined_at?: string | null;
+  updated_at?: string | null;
+};
+
 type UserRow = {
   id: string;
   email: string;
@@ -185,6 +220,41 @@ const mapJournalEntry = (row: JournalEntryRow) => ({
   color: row.color,
   prompt: row.prompt || undefined,
   createdAt: row.created_at || new Date().toISOString(),
+  updatedAt: row.updated_at || undefined,
+});
+
+const mapChallenge = (row: ChallengeRow) => ({
+  id: row.id,
+  title: row.title,
+  description: row.description,
+  duration: row.duration || undefined,
+  sourceType: row.source_type || undefined,
+  coverUrl: row.cover_url || undefined,
+  status: row.status,
+  startDate: row.start_date,
+  participantsCount: row.participants_count || 0,
+  createdAt: row.created_at || undefined,
+  updatedAt: row.updated_at || undefined,
+});
+
+const mapChallengeModule = (row: ChallengeModuleRow) => ({
+  id: row.id,
+  challengeId: row.challenge_id,
+  title: row.title,
+  description: row.description,
+  content: row.content,
+  dayNumber: row.day_number,
+  videoUrl: row.video_url || undefined,
+  audioUrl: row.audio_url || undefined,
+  createdAt: row.created_at || undefined,
+  updatedAt: row.updated_at || undefined,
+});
+
+const mapChallengeParticipant = (row: ChallengeParticipantRow) => ({
+  challengeId: row.challenge_id,
+  userId: row.user_id,
+  completedModules: parseTags(row.completed_modules) || [],
+  joinedAt: row.joined_at || undefined,
   updatedAt: row.updated_at || undefined,
 });
 
@@ -635,6 +705,307 @@ app.delete('/api/admin/blog/posts/:id', async (c) => {
   if (!c.env.DB) return c.json({ error: 'D1 database binding is not configured' }, 503);
 
   await c.env.DB.prepare(`DELETE FROM blog_posts WHERE id = ?`).bind(c.req.param('id')).run();
+  return c.json({ ok: true });
+});
+
+app.get('/api/challenges', async (c) => {
+  if (!c.env.DB) return c.json({ challenges: [], source: 'fallback' });
+
+  const includeDrafts = c.req.query('includeDrafts') === 'true';
+  const result = await c.env.DB.prepare(
+    includeDrafts
+      ? `SELECT * FROM challenges ORDER BY start_date DESC, created_at DESC`
+      : `SELECT * FROM challenges WHERE status = 'published' ORDER BY start_date DESC, created_at DESC`
+  ).all<ChallengeRow>();
+
+  return c.json({ challenges: result.results.map(mapChallenge), source: 'd1' });
+});
+
+app.get('/api/challenges/:id', async (c) => {
+  const id = c.req.param('id');
+  if (!isSafeId(id)) return c.json({ error: 'Invalid challenge id' }, 400);
+  if (!c.env.DB) return c.json({ error: 'Challenge not found' }, 404);
+
+  const challenge = await c.env.DB.prepare(
+    `SELECT * FROM challenges WHERE id = ? LIMIT 1`
+  ).bind(id).first<ChallengeRow>();
+
+  if (!challenge) return c.json({ error: 'Challenge not found' }, 404);
+
+  const modules = await c.env.DB.prepare(
+    `SELECT * FROM challenge_modules WHERE challenge_id = ? ORDER BY day_number ASC`
+  ).bind(id).all<ChallengeModuleRow>();
+
+  const userId = c.req.query('userId') || '';
+  let participant = null;
+  if (userId && isSafeId(userId)) {
+    const row = await c.env.DB.prepare(
+      `SELECT * FROM challenge_participants WHERE challenge_id = ? AND user_id = ? LIMIT 1`
+    ).bind(id, userId).first<ChallengeParticipantRow>();
+    participant = row ? mapChallengeParticipant(row) : null;
+  }
+
+  return c.json({
+    challenge: mapChallenge(challenge),
+    modules: modules.results.map(mapChallengeModule),
+    participant,
+    source: 'd1',
+  });
+});
+
+app.get('/api/challenges/:id/modules', async (c) => {
+  const id = c.req.param('id');
+  if (!isSafeId(id)) return c.json({ error: 'Invalid challenge id' }, 400);
+  if (!c.env.DB) return c.json({ modules: [], source: 'fallback' });
+
+  const result = await c.env.DB.prepare(
+    `SELECT * FROM challenge_modules WHERE challenge_id = ? ORDER BY day_number ASC`
+  ).bind(id).all<ChallengeModuleRow>();
+
+  return c.json({ modules: result.results.map(mapChallengeModule), source: 'd1' });
+});
+
+app.get('/api/challenges/:id/modules/:moduleId', async (c) => {
+  const id = c.req.param('id');
+  const moduleId = c.req.param('moduleId');
+  if (!isSafeId(id) || !isSafeId(moduleId)) return c.json({ error: 'Invalid challenge module identifier' }, 400);
+  if (!c.env.DB) return c.json({ error: 'Module not found' }, 404);
+
+  const module = await c.env.DB.prepare(
+    `SELECT * FROM challenge_modules WHERE challenge_id = ? AND id = ? LIMIT 1`
+  ).bind(id, moduleId).first<ChallengeModuleRow>();
+
+  if (!module) return c.json({ error: 'Module not found' }, 404);
+
+  const userId = c.req.query('userId') || '';
+  let completed = false;
+  if (userId && isSafeId(userId)) {
+    const participant = await c.env.DB.prepare(
+      `SELECT * FROM challenge_participants WHERE challenge_id = ? AND user_id = ? LIMIT 1`
+    ).bind(id, userId).first<ChallengeParticipantRow>();
+    const completedModules = participant ? parseTags(participant.completed_modules) || [] : [];
+    completed = completedModules.includes(moduleId);
+  }
+
+  return c.json({ module: mapChallengeModule(module), completed, source: 'd1' });
+});
+
+app.post('/api/challenges/:id/participants', async (c) => {
+  const id = c.req.param('id');
+  if (!isSafeId(id)) return c.json({ error: 'Invalid challenge id' }, 400);
+  if (!c.env.DB) return c.json({ error: 'D1 database binding is not configured' }, 503);
+
+  const body = await c.req.json();
+  const userId = String(body.userId || '').trim();
+  if (!isSafeId(userId)) return c.json({ error: 'Valid userId is required' }, 400);
+
+  const existing = await c.env.DB.prepare(
+    `SELECT * FROM challenge_participants WHERE challenge_id = ? AND user_id = ? LIMIT 1`
+  ).bind(id, userId).first<ChallengeParticipantRow>();
+
+  await c.env.DB.prepare(
+    `INSERT INTO challenge_participants (challenge_id, user_id, completed_modules, joined_at, updated_at)
+     VALUES (?, ?, '[]', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+     ON CONFLICT(challenge_id, user_id) DO UPDATE SET updated_at = CURRENT_TIMESTAMP`
+  ).bind(id, userId).run();
+
+  if (!existing) {
+    await c.env.DB.prepare(
+      `UPDATE challenges
+       SET participants_count = participants_count + 1, updated_at = CURRENT_TIMESTAMP
+       WHERE id = ?`
+    ).bind(id).run();
+  }
+
+  const participant = await c.env.DB.prepare(
+    `SELECT * FROM challenge_participants WHERE challenge_id = ? AND user_id = ? LIMIT 1`
+  ).bind(id, userId).first<ChallengeParticipantRow>();
+  const challenge = await c.env.DB.prepare(
+    `SELECT * FROM challenges WHERE id = ? LIMIT 1`
+  ).bind(id).first<ChallengeRow>();
+
+  return c.json({
+    participant: participant ? mapChallengeParticipant(participant) : null,
+    challenge: challenge ? mapChallenge(challenge) : null,
+  });
+});
+
+app.post('/api/challenges/:id/modules/:moduleId/complete', async (c) => {
+  const id = c.req.param('id');
+  const moduleId = c.req.param('moduleId');
+  if (!isSafeId(id) || !isSafeId(moduleId)) return c.json({ error: 'Invalid challenge module identifier' }, 400);
+  if (!c.env.DB) return c.json({ error: 'D1 database binding is not configured' }, 503);
+
+  const body = await c.req.json();
+  const userId = String(body.userId || '').trim();
+  if (!isSafeId(userId)) return c.json({ error: 'Valid userId is required' }, 400);
+
+  const participant = await c.env.DB.prepare(
+    `SELECT * FROM challenge_participants WHERE challenge_id = ? AND user_id = ? LIMIT 1`
+  ).bind(id, userId).first<ChallengeParticipantRow>();
+
+  const completedModules = participant ? parseTags(participant.completed_modules) || [] : [];
+  const nextCompleted = Array.from(new Set([...completedModules, moduleId]));
+
+  await c.env.DB.prepare(
+    `INSERT INTO challenge_participants (challenge_id, user_id, completed_modules, joined_at, updated_at)
+     VALUES (?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+     ON CONFLICT(challenge_id, user_id) DO UPDATE SET
+       completed_modules = excluded.completed_modules,
+       updated_at = CURRENT_TIMESTAMP`
+  ).bind(id, userId, JSON.stringify(nextCompleted)).run();
+
+  const updated = await c.env.DB.prepare(
+    `SELECT * FROM challenge_participants WHERE challenge_id = ? AND user_id = ? LIMIT 1`
+  ).bind(id, userId).first<ChallengeParticipantRow>();
+
+  return c.json({ participant: updated ? mapChallengeParticipant(updated) : null });
+});
+
+app.post('/api/admin/challenges', async (c) => {
+  const denied = requireAdmin(c);
+  if (denied) return denied;
+  if (!c.env.DB) return c.json({ error: 'D1 database binding is not configured' }, 503);
+
+  const body = await c.req.json();
+  const title = String(body.title || '').trim();
+  if (!title) return c.json({ error: 'Title is required' }, 400);
+
+  const id = String(body.id || `challenge-${slugify(title)}-${Date.now()}`);
+  if (!isSafeId(id)) return c.json({ error: 'Invalid challenge id' }, 400);
+  const status = ['draft', 'published', 'archived'].includes(body.status) ? body.status : 'published';
+
+  await c.env.DB.prepare(
+    `INSERT INTO challenges (
+      id, title, description, duration, source_type, cover_url, status, start_date,
+      participants_count, created_at, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, COALESCE(?, CURRENT_TIMESTAMP), ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+    ON CONFLICT(id) DO UPDATE SET
+      title = excluded.title,
+      description = excluded.description,
+      duration = excluded.duration,
+      source_type = excluded.source_type,
+      cover_url = excluded.cover_url,
+      status = excluded.status,
+      start_date = excluded.start_date,
+      participants_count = excluded.participants_count,
+      updated_at = CURRENT_TIMESTAMP`
+  ).bind(
+    id,
+    title,
+    String(body.description || '').trim(),
+    body.duration || null,
+    body.sourceType || null,
+    body.coverUrl || null,
+    status,
+    body.startDate || new Date().toISOString(),
+    Number(body.participantsCount || body.participants || 0)
+  ).run();
+
+  const curriculum = Array.isArray(body.curriculum) ? body.curriculum : [];
+  const tasks = Array.isArray(body.tasks) ? body.tasks : [];
+  const modules = curriculum.length
+    ? curriculum
+    : tasks.map((task: string, idx: number) => ({
+      day: idx + 1,
+      title: `Day ${idx + 1}`,
+      content: task,
+      task,
+    }));
+
+  for (const item of modules.slice(0, 80)) {
+    const dayNumber = Number(item.day || item.dayNumber || modules.indexOf(item) + 1);
+    const moduleTitle = String(item.title || `Day ${dayNumber}`).trim();
+    const moduleId = String(item.id || `${id}-day-${dayNumber}`);
+    if (!isSafeId(moduleId)) continue;
+
+    await c.env.DB.prepare(
+      `INSERT INTO challenge_modules (
+        id, challenge_id, title, description, content, day_number, video_url, audio_url, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+      ON CONFLICT(challenge_id, id) DO UPDATE SET
+        title = excluded.title,
+        description = excluded.description,
+        content = excluded.content,
+        day_number = excluded.day_number,
+        video_url = excluded.video_url,
+        audio_url = excluded.audio_url,
+        updated_at = CURRENT_TIMESTAMP`
+    ).bind(
+      moduleId,
+      id,
+      moduleTitle,
+      String(item.description || item.task || '').trim(),
+      String(item.content || item.task || '').trim(),
+      dayNumber,
+      item.videoUrl || null,
+      item.audioUrl || null
+    ).run();
+  }
+
+  const challenge = await c.env.DB.prepare(
+    `SELECT * FROM challenges WHERE id = ? LIMIT 1`
+  ).bind(id).first<ChallengeRow>();
+
+  return c.json({ challenge: challenge ? mapChallenge(challenge) : null });
+});
+
+app.post('/api/admin/challenges/:id/modules', async (c) => {
+  const denied = requireAdmin(c);
+  if (denied) return denied;
+  const challengeId = c.req.param('id');
+  if (!isSafeId(challengeId)) return c.json({ error: 'Invalid challenge id' }, 400);
+  if (!c.env.DB) return c.json({ error: 'D1 database binding is not configured' }, 503);
+
+  const body = await c.req.json();
+  const title = String(body.title || '').trim();
+  if (!title) return c.json({ error: 'Title is required' }, 400);
+  const dayNumber = Math.max(1, Number(body.dayNumber || 1));
+  const id = String(body.id || `${challengeId}-day-${dayNumber}`);
+  if (!isSafeId(id)) return c.json({ error: 'Invalid module id' }, 400);
+
+  await c.env.DB.prepare(
+    `INSERT INTO challenge_modules (
+      id, challenge_id, title, description, content, day_number, video_url, audio_url, created_at, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+    ON CONFLICT(challenge_id, id) DO UPDATE SET
+      title = excluded.title,
+      description = excluded.description,
+      content = excluded.content,
+      day_number = excluded.day_number,
+      video_url = excluded.video_url,
+      audio_url = excluded.audio_url,
+      updated_at = CURRENT_TIMESTAMP`
+  ).bind(
+    id,
+    challengeId,
+    title,
+    String(body.description || '').trim(),
+    String(body.content || '').trim(),
+    dayNumber,
+    body.videoUrl || null,
+    body.audioUrl || null
+  ).run();
+
+  const module = await c.env.DB.prepare(
+    `SELECT * FROM challenge_modules WHERE challenge_id = ? AND id = ? LIMIT 1`
+  ).bind(challengeId, id).first<ChallengeModuleRow>();
+
+  return c.json({ module: module ? mapChallengeModule(module) : null });
+});
+
+app.delete('/api/admin/challenges/:id/modules/:moduleId', async (c) => {
+  const denied = requireAdmin(c);
+  if (denied) return denied;
+  const challengeId = c.req.param('id');
+  const moduleId = c.req.param('moduleId');
+  if (!isSafeId(challengeId) || !isSafeId(moduleId)) return c.json({ error: 'Invalid module identifier' }, 400);
+  if (!c.env.DB) return c.json({ error: 'D1 database binding is not configured' }, 503);
+
+  await c.env.DB.prepare(
+    `DELETE FROM challenge_modules WHERE challenge_id = ? AND id = ?`
+  ).bind(challengeId, moduleId).run();
+
   return c.json({ ok: true });
 });
 

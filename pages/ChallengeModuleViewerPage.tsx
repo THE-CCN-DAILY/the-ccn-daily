@@ -1,22 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { db } from '../firebase';
-import { doc, getDoc, updateDoc, arrayUnion } from 'firebase/firestore';
 import { useAuth } from '../contexts/AuthContext';
-import { handleFirestoreError, OperationType } from '../utils/firestoreErrorHandler';
 import { ChevronLeftIcon, CheckIcon, PlayIcon, SpeakerWaveIcon } from '../components/icons';
 import Card from '../components/Card';
 import Markdown from 'react-markdown';
-
-interface ChallengeModule {
-  id: string;
-  title: string;
-  description: string;
-  content: string;
-  dayNumber: number;
-  videoUrl?: string;
-  audioUrl?: string;
-}
+import {
+  completeChallengeModule,
+  getChallengeModule,
+  type ChallengeModule,
+} from '../services/challengeService';
 
 const ChallengeModuleViewerPage: React.FC = () => {
   const { challengeId, moduleId } = useParams<{ challengeId: string; moduleId: string }>();
@@ -33,24 +25,11 @@ const ChallengeModuleViewerPage: React.FC = () => {
 
     const fetchModuleData = async () => {
       try {
-        // Fetch module details
-        const docRef = doc(db, `challenges/${challengeId}/modules`, moduleId);
-        const docSnap = await getDoc(docRef);
-        
-        if (docSnap.exists()) {
-          setModule({ id: docSnap.id, ...docSnap.data() } as ChallengeModule);
-        }
-
-        // Check completion status
-        const participantRef = doc(db, `challenges/${challengeId}/participants`, user.uid);
-        const participantSnap = await getDoc(participantRef);
-        if (participantSnap.exists()) {
-          const completed = participantSnap.data().completedModules || [];
-          setIsCompleted(completed.includes(moduleId));
-        }
-
+        const data = await getChallengeModule(challengeId, moduleId, user.uid);
+        setModule(data.module);
+        setIsCompleted(data.completed);
       } catch (error) {
-        handleFirestoreError(error, OperationType.GET, `challenges/${challengeId}/modules/${moduleId}`);
+        console.error('Failed to load challenge module', error);
       } finally {
         setLoading(false);
       }
@@ -64,13 +43,10 @@ const ChallengeModuleViewerPage: React.FC = () => {
     setCompleting(true);
 
     try {
-      const participantRef = doc(db, `challenges/${challengeId}/participants`, user.uid);
-      await updateDoc(participantRef, {
-        completedModules: arrayUnion(moduleId)
-      });
+      await completeChallengeModule(challengeId, moduleId, user.uid);
       setIsCompleted(true);
     } catch (error) {
-      handleFirestoreError(error, OperationType.UPDATE, `challenges/${challengeId}/participants`);
+      console.error('Failed to complete challenge module', error);
     } finally {
       setCompleting(false);
     }

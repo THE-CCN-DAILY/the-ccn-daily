@@ -1,12 +1,10 @@
 
 import React, { useState } from 'react';
 import Card from '../Card';
-import { SparklesIcon, ReaderIcon, SoundWaveIcon, CheckIcon, SpinnerIcon, AiIcon } from '../icons';
-import { db } from '../../firebase';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
-import { handleFirestoreError, OperationType } from '../../utils/firestoreErrorHandler';
+import { SparklesIcon, ReaderIcon, SoundWaveIcon, SpinnerIcon, AiIcon } from '../icons';
 import { useNotifications } from '../../contexts/NotificationContext';
 import { generateCloudflareText } from '../../services/geminiService';
+import { publishChallenge } from '../../services/challengeService';
 
 type SourceType = 'Newsletter' | 'Book' | 'Manual' | 'URL';
 
@@ -61,18 +59,19 @@ const ChallengeCreator: React.FC = () => {
         if (!generatedChallenge) return;
         setIsPublishing(true);
         try {
-            await addDoc(collection(db, 'challenges'), {
+            await publishChallenge({
                 ...generatedChallenge,
                 sourceType,
-                createdAt: serverTimestamp(),
                 status: 'published',
-                participants: 0
+                participantsCount: 0,
+                startDate: new Date().toISOString(),
             });
             notify('Challenge published successfully to the community!', 'success');
             setGeneratedChallenge(null);
             setSourceValue('');
         } catch (error) {
-            handleFirestoreError(error, OperationType.CREATE, 'challenges');
+            console.error('Challenge publish failed:', error);
+            notify('Failed to publish challenge.', 'error');
         } finally {
             setIsPublishing(false);
         }
