@@ -51,6 +51,16 @@ type HighlightRow = {
   updated_at?: string | null;
 };
 
+type JournalEntryRow = {
+  id: string;
+  user_id: string;
+  text: string;
+  color: 'blue' | 'green' | 'yellow' | 'pink';
+  prompt?: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+};
+
 type UserRow = {
   id: string;
   email: string;
@@ -149,6 +159,16 @@ const mapHighlight = (row: HighlightRow) => ({
   tags: parseTags(row.tags),
   color: row.color,
   createdAt: row.created_at || new Date().toISOString(),
+});
+
+const mapJournalEntry = (row: JournalEntryRow) => ({
+  id: row.id,
+  userId: row.user_id,
+  text: row.text,
+  color: row.color,
+  prompt: row.prompt || undefined,
+  createdAt: row.created_at || new Date().toISOString(),
+  updatedAt: row.updated_at || undefined,
 });
 
 const mapUser = (row: UserRow) => ({
@@ -513,6 +533,71 @@ app.delete('/api/users/:userId/highlights/:id', async (c) => {
   if (!c.env.DB) return c.json({ error: 'D1 database binding is not configured' }, 503);
 
   await c.env.DB.prepare(`DELETE FROM highlights WHERE user_id = ? AND id = ?`).bind(userId, id).run();
+  return c.json({ ok: true });
+});
+
+app.get('/api/users/:userId/journal', async (c) => {
+  const userId = c.req.param('userId');
+  if (!isSafeId(userId)) return c.json({ error: 'Invalid user id' }, 400);
+  if (!c.env.DB) return c.json({ entries: [], source: 'fallback' });
+
+  const result = await c.env.DB.prepare(
+    `SELECT * FROM journal_entries
+     WHERE user_id = ?
+     ORDER BY created_at DESC`
+  ).bind(userId).all<JournalEntryRow>();
+
+  return c.json({ entries: result.results.map(mapJournalEntry), source: 'd1' });
+});
+
+app.post('/api/users/:userId/journal', async (c) => {
+  const userId = c.req.param('userId');
+  if (!isSafeId(userId)) return c.json({ error: 'Invalid user id' }, 400);
+  if (!c.env.DB) return c.json({ error: 'D1 database binding is not configured' }, 503);
+
+  const body = await c.req.json();
+  const id = String(body.id || crypto.randomUUID());
+  if (!isSafeId(id)) return c.json({ error: 'Invalid journal entry id' }, 400);
+
+  const text = String(body.text || '').trim();
+  if (!text) return c.json({ error: 'text is required' }, 400);
+  if (text.length > 12000) return c.json({ error: 'text must be 12000 characters or fewer' }, 400);
+
+  const color = ['blue', 'green', 'yellow', 'pink'].includes(body.color) ? body.color : 'blue';
+  const prompt = String(body.prompt || '').trim() || null;
+
+  await c.env.DB.prepare(
+    `INSERT INTO journal_entries (
+      id, user_id, text, color, prompt, created_at, updated_at
+    ) VALUES (?, ?, ?, ?, ?, COALESCE(?, CURRENT_TIMESTAMP), CURRENT_TIMESTAMP)
+    ON CONFLICT(user_id, id) DO UPDATE SET
+      text = excluded.text,
+      color = excluded.color,
+      prompt = excluded.prompt,
+      updated_at = CURRENT_TIMESTAMP`
+  ).bind(
+    id,
+    userId,
+    text,
+    color,
+    prompt,
+    body.createdAt || null
+  ).run();
+
+  const entry = await c.env.DB.prepare(
+    `SELECT * FROM journal_entries WHERE user_id = ? AND id = ? LIMIT 1`
+  ).bind(userId, id).first<JournalEntryRow>();
+
+  return c.json({ entry: entry ? mapJournalEntry(entry) : null });
+});
+
+app.delete('/api/users/:userId/journal/:id', async (c) => {
+  const userId = c.req.param('userId');
+  const id = c.req.param('id');
+  if (!isSafeId(userId) || !isSafeId(id)) return c.json({ error: 'Invalid journal entry identifier' }, 400);
+  if (!c.env.DB) return c.json({ error: 'D1 database binding is not configured' }, 503);
+
+  await c.env.DB.prepare(`DELETE FROM journal_entries WHERE user_id = ? AND id = ?`).bind(userId, id).run();
   return c.json({ ok: true });
 });
 

@@ -1,25 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import Card from '../components/Card';
-import { db, auth } from '../firebase';
-import { collection, query, getDocs, orderBy, addDoc, serverTimestamp, where } from 'firebase/firestore';
-import { PaintBrushIcon, SparklesIcon, PlusCircleIcon } from '../components/icons';
-import { handleFirestoreError, OperationType } from '../utils/firestoreErrorHandler';
+import { PaintBrushIcon, PlusCircleIcon } from '../components/icons';
 import { useAuth } from '../contexts/AuthContext';
-
-interface JournalEntry {
-  id: string;
-  text: string;
-  color: string;
-  createdAt: any;
-}
+import {
+  listJournalEntries,
+  saveJournalEntry,
+  type JournalEntry,
+} from '../services/journalService';
 
 const JournalingPage: React.FC = () => {
   const { user } = useAuth();
   const [entries, setEntries] = useState<JournalEntry[]>([]);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
   const [isWriting, setIsWriting] = useState(false);
   const [newEntryText, setNewEntryText] = useState('');
-  const [selectedColor, setSelectedColor] = useState('blue');
+  const [selectedColor, setSelectedColor] = useState<JournalEntry['color']>('blue');
 
   const colors = [
     { id: 'blue', bg: 'bg-blue-900/30', border: 'border-blue-500/50' },
@@ -29,23 +26,19 @@ const JournalingPage: React.FC = () => {
   ];
 
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      setLoading(false);
+      return;
+    }
 
     const fetchEntries = async () => {
+      setLoading(true);
+      setError('');
       try {
-        const q = query(
-          collection(db, `users/${user.uid}/notes`),
-          where('contentId', '==', 'journal_entry'),
-          orderBy('createdAt', 'desc')
-        );
-        const querySnapshot = await getDocs(q);
-        const fetchedEntries: JournalEntry[] = [];
-        querySnapshot.forEach((doc) => {
-          fetchedEntries.push({ id: doc.id, ...doc.data() } as JournalEntry);
-        });
-        setEntries(fetchedEntries);
+        setEntries(await listJournalEntries(user.uid));
       } catch (error) {
-        handleFirestoreError(error, OperationType.GET, `users/${user.uid}/notes`);
+        console.error('Failed to load journal entries', error);
+        setError('We could not load your journal entries. Please try again.');
       } finally {
         setLoading(false);
       }
@@ -57,35 +50,36 @@ const JournalingPage: React.FC = () => {
   const handleSaveEntry = async () => {
     if (!newEntryText.trim() || !user) return;
 
+    const optimisticEntry: JournalEntry = {
+      id: `journal-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      userId: user.uid,
+      text: newEntryText.trim(),
+      color: selectedColor,
+      createdAt: new Date().toISOString(),
+    };
+
+    setSaving(true);
+    setError('');
     try {
-      const docRef = await addDoc(collection(db, `users/${user.uid}/notes`), {
-        contentId: 'journal_entry',
-        text: newEntryText,
-        color: selectedColor,
-        createdAt: serverTimestamp(),
-      });
-
-      // Optimistic update
-      setEntries([
-        {
-          id: docRef.id,
-          text: newEntryText,
-          color: selectedColor,
-          createdAt: { toDate: () => new Date() },
-        },
-        ...entries,
-      ]);
-
+      setEntries([optimisticEntry, ...entries]);
       setNewEntryText('');
       setIsWriting(false);
+      const savedEntry = await saveJournalEntry(user.uid, optimisticEntry);
+      setEntries((current) =>
+        current.map((entry) => (entry.id === optimisticEntry.id ? savedEntry : entry))
+      );
     } catch (error) {
-      handleFirestoreError(error, OperationType.CREATE, `users/${user.uid}/notes`);
+      console.error('Failed to save journal entry', error);
+      setEntries((current) => current.filter((entry) => entry.id !== optimisticEntry.id));
+      setError('We could not save that journal entry. Please try again.');
+    } finally {
+      setSaving(false);
     }
   };
 
-  const formatDate = (timestamp: any) => {
-    if (!timestamp) return '';
-    const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+  const formatDate = (timestamp: string) => {
+    const date = new Date(timestamp);
+    if (Number.isNaN(date.getTime())) return '';
     return date.toLocaleDateString('en-US', {
       weekday: 'short',
       month: 'short',
@@ -106,7 +100,7 @@ const JournalingPage: React.FC = () => {
         {!isWriting && (
           <button
             onClick={() => setIsWriting(true)}
-            className="flex items-center px-4 py-2 bg-brand-accent text-white rounded-lg font-bold hover:bg-opacity-90 transition-colors"
+            className="flex items-center px-4 py-2 bg-brand-accent text-white font-bold hover:bg-opacity-90 transition-colors"
           >
             <PlusCircleIcon className="w-5 h-5 mr-2" />
             New Entry
@@ -122,8 +116,9 @@ const JournalingPage: React.FC = () => {
               {colors.map((c) => (
                 <button
                   key={c.id}
-                  onClick={() => setSelectedColor(c.id)}
-                  className={`w-6 h-6 rounded-full border-2 ${c.bg} ${selectedColor === c.id ? c.border : 'border-transparent'}`}
+                  onClick={() => setSelectedColor(c.id as JournalEntry['color'])}
+                  className={`w-6 h-6 border-2 ${c.bg} ${selectedColor === c.id ? c.border : 'border-transparent'}`}
+                  aria-label={`Use ${c.id} journal color`}
                 />
               ))}
             </div>
@@ -132,7 +127,7 @@ const JournalingPage: React.FC = () => {
             value={newEntryText}
             onChange={(e) => setNewEntryText(e.target.value)}
             placeholder="What is on your heart today?"
-            className="w-full h-40 bg-brand-dark border border-brand-border rounded-lg p-4 text-brand-text-primary focus:outline-none focus:border-brand-accent resize-none mb-4"
+            className="w-full h-40 bg-brand-dark border border-brand-border p-4 text-brand-text-primary focus:outline-none focus:border-brand-accent resize-none mb-4"
           />
           <div className="flex justify-end space-x-4">
             <button
@@ -143,12 +138,18 @@ const JournalingPage: React.FC = () => {
             </button>
             <button
               onClick={handleSaveEntry}
-              disabled={!newEntryText.trim()}
-              className="px-6 py-2 bg-brand-accent text-white rounded-lg font-bold disabled:opacity-50 hover:bg-opacity-90 transition-colors"
+              disabled={!newEntryText.trim() || saving}
+              className="px-6 py-2 bg-brand-accent text-white font-bold disabled:opacity-50 hover:bg-opacity-90 transition-colors"
             >
-              Save Entry
+              {saving ? 'Saving...' : 'Save Entry'}
             </button>
           </div>
+        </Card>
+      )}
+
+      {error && (
+        <Card className="mb-6 border-status-error/40 bg-status-error/10 p-4">
+          <p className="text-sm font-semibold text-status-error">{error}</p>
         </Card>
       )}
 
@@ -185,7 +186,7 @@ const JournalingPage: React.FC = () => {
             </p>
             <button
               onClick={() => setIsWriting(true)}
-              className="px-6 py-2 bg-brand-secondary text-brand-text-primary rounded-lg font-bold border border-brand-border hover:bg-brand-dark transition-colors"
+              className="px-6 py-2 bg-brand-secondary text-brand-text-primary font-bold border border-brand-border hover:bg-brand-dark transition-colors"
             >
               Write First Entry
             </button>
