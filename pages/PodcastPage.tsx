@@ -1,4 +1,3 @@
-// Forcing a full application rebuild to clear the preview cache.
 import React, { useState, useMemo, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import type { PodcastEpisode, SearchResult } from '../types';
@@ -17,13 +16,26 @@ const parseDuration = (value?: string) => {
     return parts.reduce((total, part) => total * 60 + part, 0);
 };
 
+const cleanEpisodeText = (value?: string) =>
+    (value || '')
+        .replace(/<[^>]+>/g, ' ')
+        .replace(/&nbsp;/g, ' ')
+        .replace(/&amp;/g, '&')
+        .replace(/\s+/g, ' ')
+        .replace(/^[^A-Za-z0-9"'“‘]+/, '')
+        .trim();
+
+const excerpt = (value: string, max = 240) => {
+    const clean = cleanEpisodeText(value);
+    return clean.length > max ? `${clean.slice(0, max).trim()}...` : clean;
+};
+
 const PodcastPage: React.FC = () => {
     const { playTrack, currentTrack, isPlaying, togglePlayPause } = useAudioPlayer();
     const [episodes, setEpisodes] = useState<PodcastEpisode[]>([]);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('Recent');
     const [favorites, setFavorites] = useState<(string | number)[]>([]);
-    const [downloads] = useState<(string | number)[]>([]);
     
     // State for Thematic Search
     const [searchQuery, setSearchQuery] = useState('');
@@ -40,7 +52,7 @@ const PodcastPage: React.FC = () => {
                     .map((item, index) => ({
                         id: item.guid || String(index),
                         title: item.title || 'Untitled Episode',
-                        description: item.contentSnippet || item.content || '',
+                        description: cleanEpisodeText(item.itunes?.summary || item.contentSnippet || item.content || ''),
                         author: 'THE CCN DAILY',
                         duration: parseDuration(item.itunes?.duration),
                         coverArt: item.itunes?.image || 'https://picsum.photos/seed/podcast/800/800',
@@ -105,13 +117,11 @@ const PodcastPage: React.FC = () => {
         switch (activeTab) {
             case 'Favorites':
                 return episodes.filter(e => favorites.includes(e.id));
-            case 'Downloaded':
-                return episodes.filter(e => downloads.includes(e.id));
             case 'Recent':
             default:
                 return episodes;
         }
-    }, [activeTab, favorites, downloads, searchResults, episodes]);
+    }, [activeTab, favorites, searchResults, episodes]);
 
 
     const EpisodeListItem: React.FC<{ episode: PodcastEpisode }> = ({ episode }) => {
@@ -131,7 +141,7 @@ const PodcastPage: React.FC = () => {
                 {isCurrentlyPlaying && <span className="text-xs font-bold text-brand-gold uppercase tracking-wider mb-2">Now Playing</span>}
                 <h3 className="text-lg font-bold text-brand-text-primary">{episode.title}</h3>
                 <p className="text-xs text-brand-text-secondary mb-2">{episode.releaseDate} &middot; {Math.floor(episode.duration / 60)} min</p>
-                <p className="text-sm text-brand-text-secondary flex-grow mb-4">{episode.description}</p>
+                <p className="text-sm text-brand-text-secondary flex-grow mb-4">{excerpt(episode.description)}</p>
                 <div className="flex items-center justify-between mt-auto">
                     <button onClick={handlePlayClick} className="flex items-center gap-2 px-4 py-2 text-sm rounded-full bg-brand-gold text-brand-dark font-semibold">
                         {isCurrentlyPlaying ? <><PauseIcon className="w-4 h-4" /> Pause</> : <><PlayIcon className="w-4 h-4" /> Play</>}
@@ -232,7 +242,7 @@ const PodcastPage: React.FC = () => {
             {!loading && searchResults === null && !isSearching && (
             <>
                 <div className="flex items-center space-x-4 border-b border-brand-border mb-6">
-                    {['Recent', 'Favorites', 'Downloaded'].map(tab => (
+                    {['Recent', 'Favorites'].map(tab => (
                         <button 
                             key={tab} 
                             onClick={() => setActiveTab(tab)}
@@ -250,7 +260,7 @@ const PodcastPage: React.FC = () => {
                             <div className="p-6 flex flex-col justify-center">
                                 <h2 className="text-2xl font-bold text-brand-gold mb-1">{featuredEpisode.title}</h2>
                                 <p className="text-sm text-brand-text-secondary mb-2">{featuredEpisode.author} &middot; {featuredEpisode.releaseDate}</p>
-                                <p className="text-brand-text-secondary mb-4">{featuredEpisode.description}</p>
+                                <p className="text-brand-text-secondary mb-4">{excerpt(featuredEpisode.description, 320)}</p>
                                 <div className="flex items-center gap-4">
                                     <button onClick={() => playTrack(featuredEpisode)} className="flex items-center justify-center gap-2 self-start px-6 py-2 rounded-full bg-brand-gold text-brand-dark font-semibold">
                                        <PlayIcon className="w-5 h-5"/>
@@ -274,9 +284,7 @@ const PodcastPage: React.FC = () => {
                     </div>
                 ) : (
                      <EmptyState message={
-                         activeTab === 'Favorites' 
-                         ? "You haven't favorited any episodes yet. Tap the heart icon to add one."
-                         : "You have no downloaded episodes."
+                         "You haven't favorited any episodes yet. Tap the heart icon to add one."
                      } />
                 )}
             </>
