@@ -110,6 +110,50 @@ CREATE TABLE IF NOT EXISTS challenge_participants (
 
 CREATE INDEX IF NOT EXISTS idx_challenge_participants_user ON challenge_participants(user_id, joined_at DESC);
 
+CREATE TABLE IF NOT EXISTS courses (
+  id TEXT PRIMARY KEY,
+  title TEXT NOT NULL,
+  description TEXT NOT NULL DEFAULT '',
+  instructor TEXT NOT NULL DEFAULT 'THE CCN DAILY',
+  cover_url TEXT,
+  status TEXT NOT NULL DEFAULT 'published',
+  is_premium INTEGER NOT NULL DEFAULT 0,
+  module_count INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_courses_status_created ON courses(status, created_at DESC);
+
+CREATE TABLE IF NOT EXISTS course_modules (
+  id TEXT NOT NULL,
+  course_id TEXT NOT NULL,
+  title TEXT NOT NULL,
+  description TEXT NOT NULL DEFAULT '',
+  content TEXT NOT NULL DEFAULT '',
+  module_order INTEGER NOT NULL DEFAULT 1,
+  video_url TEXT,
+  audio_url TEXT,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (course_id, id),
+  FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_course_modules_order ON course_modules(course_id, module_order ASC);
+
+CREATE TABLE IF NOT EXISTS course_progress (
+  course_id TEXT NOT NULL,
+  user_id TEXT NOT NULL,
+  completed_modules TEXT NOT NULL DEFAULT '[]',
+  last_accessed TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (course_id, user_id),
+  FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_course_progress_user ON course_progress(user_id, last_accessed DESC);
+
 CREATE TABLE IF NOT EXISTS audit_logs (
   id TEXT PRIMARY KEY,
   actor_email TEXT,
@@ -223,5 +267,51 @@ INSERT OR IGNORE INTO challenge_modules (
   'Choose the Next Faithful Step',
   'Practice obedience in one clear action instead of carrying the whole week at once.',
   'Read James 1:5. Name one decision that needs wisdom. Ask God for clarity, then take the next faithful step.',
+  2
+);
+
+INSERT OR IGNORE INTO courses (
+  id,
+  title,
+  description,
+  instructor,
+  status,
+  is_premium,
+  module_count,
+  created_at
+) VALUES
+(
+  'seed-formed-for-work',
+  'Formed for Work and Witness',
+  'A practical formation course for believers who want Scripture, prayer, and wisdom to shape the way they work, lead, and serve.',
+  'THE CCN DAILY',
+  'published',
+  0,
+  2,
+  '2026-05-16T00:00:00.000Z'
+);
+
+INSERT OR IGNORE INTO course_modules (
+  id,
+  course_id,
+  title,
+  description,
+  content,
+  module_order
+) VALUES
+(
+  'seed-formed-for-work-1',
+  'seed-formed-for-work',
+  'Work as Worship',
+  'Recover a biblical view of daily work without turning productivity into an idol.',
+  'Read Colossians 3:23 and Psalm 90:17. Write down one area where your work needs the peace and excellence of God.',
+  1
+),
+(
+  'seed-formed-for-work-2',
+  'seed-formed-for-work',
+  'Wisdom Under Pressure',
+  'Practice prayerful judgment when decisions arrive quickly.',
+  'Read James 1:5. Identify one pressure point at work and write a short prayer for wisdom before acting.',
   2
 );

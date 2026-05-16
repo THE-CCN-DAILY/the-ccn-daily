@@ -1,21 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Card from '../components/Card';
-import { db } from '../firebase';
-import { collection, query, getDocs, orderBy } from 'firebase/firestore';
 import { SparklesIcon, PlayIcon, CheckIcon } from '../components/icons';
-import { handleFirestoreError, OperationType } from '../utils/firestoreErrorHandler';
-
-interface Course {
-  id: string;
-  title: string;
-  description: string;
-  instructor: string;
-  coverUrl?: string;
-  moduleCount: number;
-  isPremium?: boolean;
-  createdAt: any;
-}
+import { listCourses, type Course } from '../services/courseService';
 
 const CoursesPage: React.FC = () => {
   const [courses, setCourses] = useState<Course[]>([]);
@@ -25,15 +12,10 @@ const CoursesPage: React.FC = () => {
   useEffect(() => {
     const fetchCourses = async () => {
       try {
-        const q = query(collection(db, 'courses'), orderBy('createdAt', 'desc'));
-        const querySnapshot = await getDocs(q);
-        const fetchedCourses: Course[] = [];
-        querySnapshot.forEach((doc) => {
-          fetchedCourses.push({ id: doc.id, ...doc.data() } as Course);
-        });
+        const fetchedCourses = await listCourses();
         setCourses(fetchedCourses);
       } catch (error) {
-        handleFirestoreError(error, OperationType.GET, 'courses');
+        console.error('Failed to fetch courses', error);
       } finally {
         setLoading(false);
       }

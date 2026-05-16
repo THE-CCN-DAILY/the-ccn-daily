@@ -102,6 +102,40 @@ type ChallengeParticipantRow = {
   updated_at?: string | null;
 };
 
+type CourseRow = {
+  id: string;
+  title: string;
+  description: string;
+  instructor: string;
+  cover_url?: string | null;
+  status: 'draft' | 'published' | 'archived';
+  is_premium: number;
+  module_count: number;
+  created_at?: string | null;
+  updated_at?: string | null;
+};
+
+type CourseModuleRow = {
+  id: string;
+  course_id: string;
+  title: string;
+  description: string;
+  content: string;
+  module_order: number;
+  video_url?: string | null;
+  audio_url?: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+};
+
+type CourseProgressRow = {
+  course_id: string;
+  user_id: string;
+  completed_modules: string;
+  last_accessed?: string | null;
+  updated_at?: string | null;
+};
+
 type UserRow = {
   id: string;
   email: string;
@@ -255,6 +289,40 @@ const mapChallengeParticipant = (row: ChallengeParticipantRow) => ({
   userId: row.user_id,
   completedModules: parseTags(row.completed_modules) || [],
   joinedAt: row.joined_at || undefined,
+  updatedAt: row.updated_at || undefined,
+});
+
+const mapCourse = (row: CourseRow) => ({
+  id: row.id,
+  title: row.title,
+  description: row.description,
+  instructor: row.instructor,
+  coverUrl: row.cover_url || undefined,
+  status: row.status,
+  isPremium: Boolean(row.is_premium),
+  moduleCount: row.module_count || 0,
+  createdAt: row.created_at || undefined,
+  updatedAt: row.updated_at || undefined,
+});
+
+const mapCourseModule = (row: CourseModuleRow) => ({
+  id: row.id,
+  courseId: row.course_id,
+  title: row.title,
+  description: row.description,
+  content: row.content,
+  order: row.module_order,
+  videoUrl: row.video_url || undefined,
+  audioUrl: row.audio_url || undefined,
+  createdAt: row.created_at || undefined,
+  updatedAt: row.updated_at || undefined,
+});
+
+const mapCourseProgress = (row: CourseProgressRow) => ({
+  courseId: row.course_id,
+  userId: row.user_id,
+  completedModules: parseTags(row.completed_modules) || [],
+  lastAccessed: row.last_accessed || undefined,
   updatedAt: row.updated_at || undefined,
 });
 
@@ -1005,6 +1073,213 @@ app.delete('/api/admin/challenges/:id/modules/:moduleId', async (c) => {
   await c.env.DB.prepare(
     `DELETE FROM challenge_modules WHERE challenge_id = ? AND id = ?`
   ).bind(challengeId, moduleId).run();
+
+  return c.json({ ok: true });
+});
+
+app.get('/api/courses', async (c) => {
+  if (!c.env.DB) return c.json({ courses: [], source: 'fallback' });
+
+  const includeDrafts = c.req.query('includeDrafts') === 'true';
+  const result = await c.env.DB.prepare(
+    includeDrafts
+      ? `SELECT * FROM courses ORDER BY created_at DESC`
+      : `SELECT * FROM courses WHERE status = 'published' ORDER BY created_at DESC`
+  ).all<CourseRow>();
+
+  return c.json({ courses: result.results.map(mapCourse), source: 'd1' });
+});
+
+app.get('/api/courses/:id', async (c) => {
+  const id = c.req.param('id');
+  if (!isSafeId(id)) return c.json({ error: 'Invalid course id' }, 400);
+  if (!c.env.DB) return c.json({ error: 'Course not found' }, 404);
+
+  const course = await c.env.DB.prepare(
+    `SELECT * FROM courses WHERE id = ? LIMIT 1`
+  ).bind(id).first<CourseRow>();
+
+  if (!course) return c.json({ error: 'Course not found' }, 404);
+
+  const modules = await c.env.DB.prepare(
+    `SELECT * FROM course_modules WHERE course_id = ? ORDER BY module_order ASC`
+  ).bind(id).all<CourseModuleRow>();
+
+  const userId = c.req.query('userId') || '';
+  let progress = null;
+  if (userId && isSafeId(userId)) {
+    const row = await c.env.DB.prepare(
+      `SELECT * FROM course_progress WHERE course_id = ? AND user_id = ? LIMIT 1`
+    ).bind(id, userId).first<CourseProgressRow>();
+    progress = row ? mapCourseProgress(row) : null;
+  }
+
+  return c.json({
+    course: mapCourse(course),
+    modules: modules.results.map(mapCourseModule),
+    progress,
+    source: 'd1',
+  });
+});
+
+app.get('/api/courses/:id/modules', async (c) => {
+  const id = c.req.param('id');
+  if (!isSafeId(id)) return c.json({ error: 'Invalid course id' }, 400);
+  if (!c.env.DB) return c.json({ modules: [], source: 'fallback' });
+
+  const result = await c.env.DB.prepare(
+    `SELECT * FROM course_modules WHERE course_id = ? ORDER BY module_order ASC`
+  ).bind(id).all<CourseModuleRow>();
+
+  return c.json({ modules: result.results.map(mapCourseModule), source: 'd1' });
+});
+
+app.post('/api/courses/:id/modules/:moduleId/complete', async (c) => {
+  const courseId = c.req.param('id');
+  const moduleId = c.req.param('moduleId');
+  if (!isSafeId(courseId) || !isSafeId(moduleId)) return c.json({ error: 'Invalid course module identifier' }, 400);
+  if (!c.env.DB) return c.json({ error: 'D1 database binding is not configured' }, 503);
+
+  const body = await c.req.json();
+  const userId = String(body.userId || '').trim();
+  if (!isSafeId(userId)) return c.json({ error: 'Valid userId is required' }, 400);
+
+  const existing = await c.env.DB.prepare(
+    `SELECT * FROM course_progress WHERE course_id = ? AND user_id = ? LIMIT 1`
+  ).bind(courseId, userId).first<CourseProgressRow>();
+
+  const completedModules = existing ? parseTags(existing.completed_modules) || [] : [];
+  const nextCompleted = Array.from(new Set([...completedModules, moduleId]));
+
+  await c.env.DB.prepare(
+    `INSERT INTO course_progress (course_id, user_id, completed_modules, last_accessed, updated_at)
+     VALUES (?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+     ON CONFLICT(course_id, user_id) DO UPDATE SET
+       completed_modules = excluded.completed_modules,
+       last_accessed = CURRENT_TIMESTAMP,
+       updated_at = CURRENT_TIMESTAMP`
+  ).bind(courseId, userId, JSON.stringify(nextCompleted)).run();
+
+  const updated = await c.env.DB.prepare(
+    `SELECT * FROM course_progress WHERE course_id = ? AND user_id = ? LIMIT 1`
+  ).bind(courseId, userId).first<CourseProgressRow>();
+
+  return c.json({ progress: updated ? mapCourseProgress(updated) : null });
+});
+
+app.post('/api/admin/courses', async (c) => {
+  const denied = requireAdmin(c);
+  if (denied) return denied;
+  if (!c.env.DB) return c.json({ error: 'D1 database binding is not configured' }, 503);
+
+  const body = await c.req.json();
+  const title = String(body.title || '').trim();
+  if (!title) return c.json({ error: 'Title is required' }, 400);
+
+  const id = String(body.id || `course-${slugify(title)}-${Date.now()}`);
+  if (!isSafeId(id)) return c.json({ error: 'Invalid course id' }, 400);
+  const status = ['draft', 'published', 'archived'].includes(body.status) ? body.status : 'published';
+
+  await c.env.DB.prepare(
+    `INSERT INTO courses (
+      id, title, description, instructor, cover_url, status, is_premium, module_count, created_at, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, COALESCE(?, CURRENT_TIMESTAMP), CURRENT_TIMESTAMP)
+    ON CONFLICT(id) DO UPDATE SET
+      title = excluded.title,
+      description = excluded.description,
+      instructor = excluded.instructor,
+      cover_url = excluded.cover_url,
+      status = excluded.status,
+      is_premium = excluded.is_premium,
+      updated_at = CURRENT_TIMESTAMP`
+  ).bind(
+    id,
+    title,
+    String(body.description || '').trim(),
+    String(body.instructor || 'THE CCN DAILY').trim(),
+    body.coverUrl || null,
+    status,
+    body.isPremium ? 1 : 0,
+    Math.max(0, Number(body.moduleCount || 0)),
+    body.createdAt || null
+  ).run();
+
+  const course = await c.env.DB.prepare(
+    `SELECT * FROM courses WHERE id = ? LIMIT 1`
+  ).bind(id).first<CourseRow>();
+
+  return c.json({ course: course ? mapCourse(course) : null });
+});
+
+app.post('/api/admin/courses/:id/modules', async (c) => {
+  const denied = requireAdmin(c);
+  if (denied) return denied;
+  const courseId = c.req.param('id');
+  if (!isSafeId(courseId)) return c.json({ error: 'Invalid course id' }, 400);
+  if (!c.env.DB) return c.json({ error: 'D1 database binding is not configured' }, 503);
+
+  const body = await c.req.json();
+  const title = String(body.title || '').trim();
+  if (!title) return c.json({ error: 'Title is required' }, 400);
+  const order = Math.max(1, Number(body.order || 1));
+  const id = String(body.id || `${courseId}-module-${order}`);
+  if (!isSafeId(id)) return c.json({ error: 'Invalid module id' }, 400);
+
+  await c.env.DB.prepare(
+    `INSERT INTO course_modules (
+      id, course_id, title, description, content, module_order, video_url, audio_url, created_at, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+    ON CONFLICT(course_id, id) DO UPDATE SET
+      title = excluded.title,
+      description = excluded.description,
+      content = excluded.content,
+      module_order = excluded.module_order,
+      video_url = excluded.video_url,
+      audio_url = excluded.audio_url,
+      updated_at = CURRENT_TIMESTAMP`
+  ).bind(
+    id,
+    courseId,
+    title,
+    String(body.description || '').trim(),
+    String(body.content || '').trim(),
+    order,
+    body.videoUrl || null,
+    body.audioUrl || null
+  ).run();
+
+  await c.env.DB.prepare(
+    `UPDATE courses
+     SET module_count = (SELECT COUNT(*) FROM course_modules WHERE course_id = ?),
+         updated_at = CURRENT_TIMESTAMP
+     WHERE id = ?`
+  ).bind(courseId, courseId).run();
+
+  const module = await c.env.DB.prepare(
+    `SELECT * FROM course_modules WHERE course_id = ? AND id = ? LIMIT 1`
+  ).bind(courseId, id).first<CourseModuleRow>();
+
+  return c.json({ module: module ? mapCourseModule(module) : null });
+});
+
+app.delete('/api/admin/courses/:id/modules/:moduleId', async (c) => {
+  const denied = requireAdmin(c);
+  if (denied) return denied;
+  const courseId = c.req.param('id');
+  const moduleId = c.req.param('moduleId');
+  if (!isSafeId(courseId) || !isSafeId(moduleId)) return c.json({ error: 'Invalid module identifier' }, 400);
+  if (!c.env.DB) return c.json({ error: 'D1 database binding is not configured' }, 503);
+
+  await c.env.DB.prepare(
+    `DELETE FROM course_modules WHERE course_id = ? AND id = ?`
+  ).bind(courseId, moduleId).run();
+
+  await c.env.DB.prepare(
+    `UPDATE courses
+     SET module_count = (SELECT COUNT(*) FROM course_modules WHERE course_id = ?),
+         updated_at = CURRENT_TIMESTAMP
+     WHERE id = ?`
+  ).bind(courseId, courseId).run();
 
   return c.json({ ok: true });
 });

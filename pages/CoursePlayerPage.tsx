@@ -1,30 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { db } from '../firebase';
-import { doc, getDoc, collection, query, getDocs, orderBy, updateDoc, arrayUnion, setDoc } from 'firebase/firestore';
 import { useAuth } from '../contexts/AuthContext';
 import { ChevronLeftIcon, CheckIcon, PlayIcon, SpeakerWaveIcon } from '../components/icons';
 import Card from '../components/Card';
 import Markdown from 'react-markdown';
-
-interface Course {
-  id: string;
-  title: string;
-  description: string;
-  instructor: string;
-  coverUrl?: string;
-  isPremium?: boolean;
-}
-
-interface CourseModule {
-  id: string;
-  title: string;
-  description: string;
-  content: string;
-  videoUrl?: string;
-  audioUrl?: string;
-  order: number;
-}
+import {
+  completeCourseModule,
+  getCourseDetail,
+  type Course,
+  type CourseModule,
+} from '../services/courseService';
 
 const CoursePlayerPage: React.FC = () => {
   const { courseId } = useParams<{ courseId: string }>();
@@ -43,33 +28,15 @@ const CoursePlayerPage: React.FC = () => {
 
     const fetchCourseData = async () => {
       try {
-        // Fetch course details
-        const courseRef = doc(db, 'courses', courseId);
-        const courseSnap = await getDoc(courseRef);
-        
-        if (courseSnap.exists()) {
-          setCourse({ id: courseSnap.id, ...courseSnap.data() } as Course);
-        }
+        const data = await getCourseDetail(courseId, user.uid);
+        const fetchedModules = data.modules;
+        const progressModules = data.progress?.completedModules || [];
 
-        // Fetch user progress
-        const progressRef = doc(db, `users/${user.uid}/courseProgress`, courseId);
-        const progressSnap = await getDoc(progressRef);
-        if (progressSnap.exists()) {
-          setCompletedModules(progressSnap.data().completedModules || []);
-        }
-
-        // Fetch modules
-        const modulesQuery = query(collection(db, `courses/${courseId}/modules`), orderBy('order', 'asc'));
-        const modulesSnap = await getDocs(modulesQuery);
-        const fetchedModules: CourseModule[] = [];
-        modulesSnap.forEach((doc) => {
-          fetchedModules.push({ id: doc.id, ...doc.data() } as CourseModule);
-        });
+        setCourse(data.course);
+        setCompletedModules(progressModules);
         setModules(fetchedModules);
-
         if (fetchedModules.length > 0) {
-          // Find first uncompleted module, or just the first module
-          const firstUncompleted = fetchedModules.find(m => !progressSnap.exists() || !(progressSnap.data().completedModules || []).includes(m.id));
+          const firstUncompleted = fetchedModules.find(m => !progressModules.includes(m.id));
           setActiveModuleId(firstUncompleted ? firstUncompleted.id : fetchedModules[0].id);
         }
 
@@ -88,22 +55,8 @@ const CoursePlayerPage: React.FC = () => {
     setCompleting(true);
 
     try {
-      const progressRef = doc(db, `users/${user.uid}/courseProgress`, courseId);
-      const progressSnap = await getDoc(progressRef);
-      
-      if (!progressSnap.exists()) {
-        await setDoc(progressRef, {
-          completedModules: [moduleId],
-          lastAccessed: new Date()
-        });
-      } else {
-        await updateDoc(progressRef, {
-          completedModules: arrayUnion(moduleId),
-          lastAccessed: new Date()
-        });
-      }
-      
-      setCompletedModules(prev => [...prev, moduleId]);
+      const data = await completeCourseModule(courseId, moduleId, user.uid);
+      setCompletedModules(data.progress?.completedModules || Array.from(new Set([...completedModules, moduleId])));
       
       // Auto-advance to next module if available
       const currentIndex = modules.findIndex(m => m.id === moduleId);

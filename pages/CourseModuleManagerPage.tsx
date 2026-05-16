@@ -1,42 +1,32 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Card from '../components/Card';
-import { db, storage } from '../firebase';
-import { collection, addDoc, serverTimestamp, getDocs, query, orderBy, deleteDoc, doc, getDoc, updateDoc, increment } from 'firebase/firestore';
-import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { useNotifications } from '../contexts/NotificationContext';
-import { handleFirestoreError, OperationType } from '../utils/firestoreErrorHandler';
 import { ChevronLeftIcon, CloseIcon } from '../components/icons';
-
-interface CourseModule {
-  id: string;
-  title: string;
-  description: string;
-  content: string;
-  order: number;
-  videoUrl?: string;
-  audioUrl?: string;
-  createdAt: any;
-}
+import {
+  deleteCourseModule,
+  getCourseDetail,
+  listCourseModules,
+  saveCourseModule,
+  type CourseModule,
+} from '../services/courseService';
 
 const CourseModuleManagerPage: React.FC = () => {
   const { courseId } = useParams<{ courseId: string }>();
   const navigate = useNavigate();
   const { notify } = useNotifications();
-  
+
   const [courseTitle, setCourseTitle] = useState('Loading...');
   const [modules, setModules] = useState<CourseModule[]>([]);
   const [loading, setLoading] = useState(true);
-  
-  // Form states
-  const [isUploading, setIsUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
+
+  const [isSaving, setIsSaving] = useState(false);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [content, setContent] = useState('');
   const [order, setOrder] = useState(1);
-  const [mediaFile, setMediaFile] = useState<File | null>(null);
   const [mediaType, setMediaType] = useState<'none' | 'video' | 'audio'>('none');
+  const [mediaUrl, setMediaUrl] = useState('');
 
   useEffect(() => {
     if (courseId) {
@@ -47,119 +37,60 @@ const CourseModuleManagerPage: React.FC = () => {
 
   const fetchCourseDetails = async () => {
     try {
-      const docRef = doc(db, 'courses', courseId!);
-      const docSnap = await getDoc(docRef);
-      if (docSnap.exists()) {
-        setCourseTitle(docSnap.data().title);
-      } else {
-        setCourseTitle('Course Not Found');
-      }
+      const data = await getCourseDetail(courseId!);
+      setCourseTitle(data.course.title);
     } catch (error) {
       console.error('Error fetching course:', error);
+      setCourseTitle('Course Not Found');
     }
   };
 
   const fetchModules = async () => {
     setLoading(true);
     try {
-      const q = query(collection(db, `courses/${courseId}/modules`), orderBy('order', 'asc'));
-      const querySnapshot = await getDocs(q);
-      const fetchedModules: CourseModule[] = [];
-      querySnapshot.forEach((doc) => {
-        fetchedModules.push({ id: doc.id, ...doc.data() } as CourseModule);
-      });
+      const fetchedModules = await listCourseModules(courseId!);
       setModules(fetchedModules);
-      
-      // Auto-increment order for next module
+
       if (fetchedModules.length > 0) {
         setOrder(fetchedModules[fetchedModules.length - 1].order + 1);
       }
     } catch (error) {
-      handleFirestoreError(error, OperationType.GET, `courses/${courseId}/modules`);
+      console.error('Failed to fetch course modules', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setMediaFile(e.target.files[0]);
-    }
-  };
-
-  const uploadFile = async (fileToUpload: File, path: string): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const storageRef = ref(storage, `${path}/${Date.now()}_${fileToUpload.name}`);
-      const uploadTask = uploadBytesResumable(storageRef, fileToUpload);
-
-      uploadTask.on(
-        'state_changed',
-        (snapshot) => {
-          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-          setUploadProgress(progress);
-        },
-        (error) => {
-          console.error('Upload failed:', error);
-          reject(error);
-        },
-        async () => {
-          const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-          resolve(downloadURL);
-        }
-      );
-    });
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!courseId) return;
-    
-    setIsUploading(true);
-    setUploadProgress(0);
+
+    setIsSaving(true);
 
     try {
-      let uploadedMediaUrl = '';
-
-      if (mediaFile && mediaType !== 'none') {
-        uploadedMediaUrl = await uploadFile(mediaFile, `content/courses/${courseId}/modules`);
-      }
-
-      const moduleData: any = {
+      await saveCourseModule(courseId, {
         title,
         description,
         content,
         order: Number(order),
-        createdAt: serverTimestamp(),
-      };
-
-      if (mediaType === 'video') moduleData.videoUrl = uploadedMediaUrl;
-      if (mediaType === 'audio') moduleData.audioUrl = uploadedMediaUrl;
-
-      await addDoc(collection(db, `courses/${courseId}/modules`), moduleData);
-
-      // Update module count on course
-      await updateDoc(doc(db, 'courses', courseId), {
-        moduleCount: increment(1)
+        videoUrl: mediaType === 'video' ? mediaUrl.trim() : undefined,
+        audioUrl: mediaType === 'audio' ? mediaUrl.trim() : undefined,
       });
 
       notify('Module added successfully!', 'success');
-      
-      // Reset form
+
       setTitle('');
       setDescription('');
       setContent('');
-      setMediaFile(null);
+      setMediaUrl('');
       setMediaType('none');
-      
-      // Refresh list
+
       fetchModules();
-      
     } catch (error) {
-      handleFirestoreError(error, OperationType.CREATE, `courses/${courseId}/modules`);
+      console.error('Failed to save course module', error);
       notify('Failed to add module.', 'error');
     } finally {
-      setIsUploading(false);
-      setUploadProgress(0);
+      setIsSaving(false);
     }
   };
 
@@ -167,17 +98,11 @@ const CourseModuleManagerPage: React.FC = () => {
     if (!window.confirm(`Are you sure you want to delete "Module ${module.order}: ${module.title}"?`)) return;
 
     try {
-      await deleteDoc(doc(db, `courses/${courseId}/modules`, module.id));
-      
-      // Update module count on course
-      await updateDoc(doc(db, 'courses', courseId!), {
-        moduleCount: increment(-1)
-      });
-
+      await deleteCourseModule(courseId!, module.id);
       notify('Module deleted successfully!', 'success');
       fetchModules();
     } catch (error) {
-      handleFirestoreError(error, OperationType.DELETE, `courses/${courseId}/modules/${module.id}`);
+      console.error('Failed to delete course module', error);
       notify('Failed to delete module.', 'error');
     }
   };
@@ -185,7 +110,7 @@ const CourseModuleManagerPage: React.FC = () => {
   return (
     <div className="max-w-5xl mx-auto pb-20 px-4">
       <div className="mb-8 flex items-center gap-4">
-        <button 
+        <button
           onClick={() => navigate('/studio/content-manager')}
           className="p-2 bg-brand-dark border border-brand-border rounded-full text-brand-text-secondary hover:text-brand-text-primary transition-colors"
         >
@@ -198,7 +123,6 @@ const CourseModuleManagerPage: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Upload Form */}
         <div className="lg:col-span-1">
           <Card className="border-brand-border bg-brand-dark/30 sticky top-24">
             <h2 className="text-xl font-bold text-brand-text-primary mb-6 border-b border-brand-border pb-4">
@@ -225,7 +149,7 @@ const CourseModuleManagerPage: React.FC = () => {
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
                     className="w-full bg-brand-dark border border-brand-border rounded-lg px-4 py-3 text-brand-text-primary focus:outline-none focus:border-brand-accent"
-                    placeholder="e.g. Introduction"
+                    placeholder="e.g. Work as Worship"
                   />
                 </div>
               </div>
@@ -264,7 +188,7 @@ const CourseModuleManagerPage: React.FC = () => {
                         name="mediaType"
                         value={type}
                         checked={mediaType === type}
-                        onChange={(e) => setMediaType(e.target.value as any)}
+                        onChange={(e) => setMediaType(e.target.value as 'none' | 'video' | 'audio')}
                         className="text-brand-accent focus:ring-brand-accent"
                       />
                       <span className="text-brand-text-secondary capitalize">{type}</span>
@@ -275,37 +199,34 @@ const CourseModuleManagerPage: React.FC = () => {
 
               {mediaType !== 'none' && (
                 <div>
-                  <label className="block text-sm font-bold text-brand-text-primary mb-2">Upload {mediaType === 'video' ? 'Video' : 'Audio'}</label>
+                  <label className="block text-sm font-bold text-brand-text-primary mb-2">{mediaType === 'video' ? 'Video' : 'Audio'} URL</label>
                   <input
-                    type="file"
+                    type="url"
                     required
-                    accept={mediaType === 'video' ? 'video/*' : 'audio/*'}
-                    onChange={handleFileChange}
-                    className="w-full text-brand-text-secondary file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-bold file:bg-brand-accent/10 file:text-brand-accent hover:file:bg-brand-accent/20"
+                    value={mediaUrl}
+                    onChange={(e) => setMediaUrl(e.target.value)}
+                    className="w-full bg-brand-dark border border-brand-border rounded-lg px-4 py-3 text-brand-text-primary focus:outline-none focus:border-brand-accent"
+                    placeholder={mediaType === 'video' ? 'https://stream.example.com/module.mp4' : 'https://cdn.example.com/module.mp3'}
                   />
-                </div>
-              )}
-
-              {isUploading && (
-                <div className="w-full bg-brand-dark rounded-full h-2.5 mb-4 overflow-hidden">
-                  <div className="bg-brand-accent h-2.5 rounded-full transition-all duration-300" style={{ width: `${uploadProgress}%` }}></div>
+                  <p className="text-xs text-brand-text-secondary mt-2">
+                    Direct uploads will move to Cloudflare R2 in the media-storage slice. For now, paste a hosted media URL.
+                  </p>
                 </div>
               )}
 
               <button
                 type="submit"
-                disabled={isUploading}
+                disabled={isSaving}
                 className={`w-full py-4 rounded-xl font-bold transition-colors flex items-center justify-center gap-2 ${
-                  isUploading ? 'bg-brand-secondary text-brand-text-secondary cursor-wait' : 'bg-brand-accent text-white hover:bg-opacity-90'
+                  isSaving ? 'bg-brand-secondary text-brand-text-secondary cursor-wait' : 'bg-brand-accent text-white hover:bg-opacity-90'
                 }`}
               >
-                {isUploading ? `Uploading... ${Math.round(uploadProgress)}%` : 'Add Module'}
+                {isSaving ? 'Saving...' : 'Add Module'}
               </button>
             </form>
           </Card>
         </div>
 
-        {/* List View */}
         <div className="lg:col-span-2">
           <Card className="border-brand-border bg-brand-dark/30 h-full min-h-[600px]">
             <h2 className="text-xl font-bold text-brand-text-primary mb-6 border-b border-brand-border pb-4 flex justify-between items-center">
@@ -314,7 +235,7 @@ const CourseModuleManagerPage: React.FC = () => {
                 {modules.length} modules
               </span>
             </h2>
-            
+
             {loading ? (
               <div className="flex justify-center py-20">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-accent"></div>
@@ -339,7 +260,7 @@ const CourseModuleManagerPage: React.FC = () => {
                       </div>
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0 ml-4">
-                      <button 
+                      <button
                         onClick={() => handleDelete(module)}
                         className="p-2 text-brand-text-secondary hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
                         title="Delete"
