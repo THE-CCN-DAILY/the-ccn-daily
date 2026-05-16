@@ -1,33 +1,14 @@
 
-import { GoogleGenAI, Type } from "@google/genai";
 import type { DevotionalOutput, Message } from '../types';
-import { db } from '../firebase';
-import { collection, query, where, orderBy, limit, getDocs } from 'firebase/firestore';
+import { listJournalEntries } from './journalService';
 
-import { trackAiUsage } from './budgetService';
-
-// The "Direct Link" (Dashboard) for snappy client interactions
-// Using the most cost-effective Flash models to stay within free tier quotas.
-const platformKey = process.env.GEMINI_API_KEY;
-const userKey = process.env.API_KEY;
-
-// Robust key selection: Use platform key if it looks valid (starts with AIza), otherwise use user key.
-const isPlatformKeyValid = !!(platformKey && platformKey.startsWith('AIza') && platformKey !== 'undefined');
-const apiKey = isPlatformKeyValid ? platformKey : userKey;
-
-if (!apiKey || apiKey === 'undefined') {
-    console.warn("Gemini API Key is missing. AI features will be disabled.");
-}
-
-const ai = new GoogleGenAI({ apiKey: apiKey || "MISSING_KEY" });
-
-// 3-Lane AI Policy for Cost Governance
-// LITE: Ultra-low cost, high speed. Used for 90% of basic interactions.
-// FLASH: Balanced cost/reasoning. Used for complex features that need grounding.
-// PRO: High cost, high reasoning. Reserved for Max users and deep study.
-export const LITE_MODEL = 'gemini-3.1-flash-lite-preview'; 
-export const FLASH_MODEL = 'gemini-3-flash-preview';      
-export const PRO_MODEL = 'gemini-3-flash-preview';        
+// 3-Lane AI Policy for Cost Governance, now routed through Cloudflare Pages.
+// LITE: default free-plan text generation.
+// FLASH: richer text reasoning while staying in Workers AI.
+// PRO: reserved for max/admin flows and mapped server-side when a stronger model is configured.
+export const LITE_MODEL = '@cf/meta/llama-3.1-8b-instruct';
+export const FLASH_MODEL = '@cf/meta/llama-3.1-8b-instruct';
+export const PRO_MODEL = '@cf/meta/llama-3.1-8b-instruct';
 
 export type UserTier = 'guest' | 'free' | 'pro' | 'max' | 'partner' | 'admin';
 
@@ -44,6 +25,32 @@ export const CAPABILITIES: Record<string, Capability> = {
     groundedPrayer: { feature: 'Grounded Prayer Topics', minTier: 'pro', model: FLASH_MODEL },
     quoteImage: { feature: 'AI Quote Image', minTier: 'pro', model: FLASH_MODEL },
     sanctuaryVideo: { feature: 'AI Cinematic Video', minTier: 'max', model: PRO_MODEL },
+};
+
+type CloudflareAiPayload = {
+    feature: string;
+    prompt: string;
+    systemInstruction?: string;
+    history?: Array<{ role: 'user' | 'assistant' | 'model'; text?: string; content?: string }>;
+    model?: string;
+    userId?: string;
+    units?: number;
+};
+
+const requestCloudflareAi = async (payload: CloudflareAiPayload): Promise<string> => {
+    const response = await fetch('/api/ai/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+        const body = await response.json().catch(() => ({}));
+        throw new Error(body.message || body.error || `AI request failed (${response.status})`);
+    }
+
+    const data = await response.json() as { text?: string };
+    return data.text || '';
 };
 
 export const checkCapability = (feature: string, userTier: UserTier = 'free'): { allowed: boolean; message?: string } => {
@@ -67,27 +74,22 @@ export const checkCapability = (feature: string, userTier: UserTier = 'free'): {
 };
 
 export const getAiCoachResponse = async (newMessage: string, history: Message[], userTier: UserTier = 'free', userId: string = 'anonymous'): Promise<string> => {
-    if (!apiKey || apiKey === 'undefined' || apiKey === 'MISSING_KEY') {
-        throw new Error("AI_KEY_MISSING: Please configure your Gemini API Key in the settings.");
-    }
     try {
         const capability = CAPABILITIES.coach;
-        const contents = history.map(msg => ({
-            role: msg.sender === 'user' ? 'user' : 'model',
-            parts: [{ text: msg.text }]
+        const aiHistory = history.map(msg => ({
+            role: msg.sender === 'user' ? 'user' as const : 'assistant' as const,
+            text: msg.text,
         }));
-        contents.push({ role: 'user', parts: [{ text: newMessage }] });
 
-        const response = await ai.models.generateContent({
+        return await requestCloudflareAi({
+            feature: 'coach',
+            prompt: newMessage,
+            history: aiHistory,
             model: capability.model,
-            contents: contents,
-            config: { systemInstruction: "You are Kai, an empathetic AI Spiritual Coach." }
+            userId,
+            units: 500,
+            systemInstruction: "You are Kai, an empathetic AI Spiritual Coach.",
         });
-
-        // Track usage (lite model is very cheap, but we track it for visibility)
-        await trackAiUsage(userId, 'coach', capability.model, 500); // Approximate tokens
-
-        return response.text || "";
     } catch (error) {
         console.error("Coach Error:", error);
         throw new Error("Coach failed.");
@@ -95,34 +97,25 @@ export const getAiCoachResponse = async (newMessage: string, history: Message[],
 };
 
 /**
- * Uses Search Grounding to find real-world events for prayer.
+ * Uses the Cloudflare AI proxy for prayer prompts. Live web grounding is not
+ * available in the free local preview, so the server returns responsible
+ * fallback topics when Workers AI is not bound.
  */
 export const getGroundedPrayerTopics = async (userTier: UserTier = 'free', userId: string = 'anonymous'): Promise<any[]> => {
-    if (!apiKey || apiKey === 'undefined' || apiKey === 'MISSING_KEY') {
-        return [];
-    }
     const { allowed, message } = checkCapability('groundedPrayer', userTier);
     if (!allowed) throw new Error(message);
 
     try {
-        const response = await ai.models.generateContent({
+        const text = await requestCloudflareAi({
+            feature: 'groundedPrayer',
             model: CAPABILITIES.groundedPrayer.model,
-            contents: "List 3 significant global or humanitarian events happening today that need prayer and empathy.",
-            config: {
-                tools: [{ googleSearch: {} }]
-            }
+            userId,
+            units: 1000,
+            prompt: "List 3 significant prayer concerns for Christian professionals today. Return JSON array with title, uri, and snippet.",
+            systemInstruction: "Return only a JSON array. Keep each item pastoral, specific, and responsible.",
         });
-        
-        await trackAiUsage(userId, 'groundedPrayer', CAPABILITIES.groundedPrayer.model, 1000); // Grounding uses more tokens
-
-        const text = response.text || "";
-        const chunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks || [];
-        
-        return chunks.map((chunk: any) => ({
-            title: chunk.web?.title || "Current Event",
-            uri: chunk.web?.uri,
-            snippet: text.substring(0, 150) + "..."
-        }));
+        const parsed = JSON.parse(text);
+        return Array.isArray(parsed) ? parsed : [];
     } catch (e) {
         console.error("Grounding Error:", e);
         return [];
@@ -130,24 +123,18 @@ export const getGroundedPrayerTopics = async (userTier: UserTier = 'free', userI
 };
 
 export const getDeepTheologicalInsight = async (question: string, userTier: UserTier = 'free', userId: string = 'anonymous'): Promise<string> => {
-    if (!apiKey || apiKey === 'undefined' || apiKey === 'MISSING_KEY') {
-        throw new Error("AI_KEY_MISSING: Please configure your Gemini API Key in the settings.");
-    }
     const { allowed, message } = checkCapability('deepStudy', userTier);
     if (!allowed) throw new Error(message);
 
     try {
-        const response = await ai.models.generateContent({
+        return await requestCloudflareAi({
+            feature: 'deepStudy',
             model: CAPABILITIES.deepStudy.model,
-            contents: question,
-            config: {
-                systemInstruction: "You are a scholarly theologian providing balanced, deep insights into spiritual questions. Be compassionate yet rigorous."
-            }
+            userId,
+            units: 2000,
+            prompt: question,
+            systemInstruction: "You are a scholarly theologian providing balanced, deep insights into spiritual questions. Be compassionate yet rigorous."
         });
-
-        await trackAiUsage(userId, 'deepStudy', CAPABILITIES.deepStudy.model, 2000); // Deep study is expensive
-
-        return response.text || "";
     } catch (e) {
         console.error("Reasoning Error:", e);
         throw new Error("Deep thinking failed.");
@@ -163,25 +150,16 @@ export const generateQuoteImage = async (prompt: string, userTier: UserTier = 'f
 };
 
 export const generateTagsForNote = async (noteText: string): Promise<string[]> => {
-    if (!apiKey || apiKey === 'undefined' || apiKey === 'MISSING_KEY') {
-        return ["Reflection"];
-    }
     try {
-        const response = await ai.models.generateContent({
+        const text = await requestCloudflareAi({
+            feature: 'tags',
             model: LITE_MODEL,
-            contents: `Analyze the following spiritual note and generate 3-5 short, one-word tags: "${noteText}"`,
-            config: {
-                responseMimeType: "application/json",
-                responseSchema: {
-                    type: Type.ARRAY,
-                    items: {
-                        type: Type.STRING
-                    }
-                }
-            }
+            prompt: `Analyze this spiritual note and generate 3-5 short one-word tags. Return only a JSON array: "${noteText}"`,
+            systemInstruction: "Return only a JSON array of strings.",
+            units: 300,
         });
-        const jsonStr = response.text.trim();
-        return JSON.parse(jsonStr);
+        const parsed = JSON.parse(text.trim());
+        return Array.isArray(parsed) ? parsed.slice(0, 5).map(String) : ["Reflection"];
     } catch (e) {
         console.error("Tagging Error:", e);
         return ["Reflection"];
@@ -231,25 +209,18 @@ You are strictly forbidden from using the following in your writing. Adherence i
 `;
 
 /**
- * The "Refinery" (Genkit Orchestrator) for complex backend logic.
- * This calls our custom Genkit flow on the server, which now uses RAG
- * to fetch user notes directly from Firestore.
+ * The "Refinery" for complex backend logic.
+ * This now uses the Cloudflare/D1 journal service for user context and
+ * sends generation through the Cloudflare Pages AI proxy.
  */
 export const generatePersonalizedDevotional = async (userId: string, name: string, userTier: UserTier = 'free'): Promise<DevotionalOutput> => {
-    if (!apiKey || apiKey === 'undefined' || apiKey === 'MISSING_KEY') {
-        throw new Error("AI_KEY_MISSING: Please configure your Gemini API Key in the settings.");
-    }
     const { allowed, message } = checkCapability('devotional', userTier);
     if (!allowed) throw new Error(message);
 
     try {
-        // Step 1: Fetch user context directly from Firestore (Frontend RAG)
-        const notesRef = collection(db, 'users', userId, 'notes');
-        const q = query(notesRef, orderBy('createdAt', 'desc'), limit(5));
-        const notesSnapshot = await getDocs(q);
-        
-        const notesContext = notesSnapshot.docs
-            .map(doc => doc.data().text)
+        const notesContext = (await listJournalEntries(userId))
+            .slice(0, 5)
+            .map(entry => entry.text)
             .join('\n');
 
         const prompt = `
@@ -261,33 +232,17 @@ export const generatePersonalizedDevotional = async (userId: string, name: strin
         userContext: ${notesContext || 'The user is seeking daily spiritual guidance and growth.'}
         `;
 
-        const response = await ai.models.generateContent({
+        const text = await requestCloudflareAi({
+            feature: 'devotional',
             model: CAPABILITIES.devotional.model,
-            contents: prompt,
-            config: {
-                systemInstruction: DEVOTIONAL_SYSTEM_INSTRUCTION,
-                tools: [{ urlContext: {} }],
-                responseMimeType: "application/json",
-                responseSchema: {
-                    type: Type.OBJECT,
-                    properties: {
-                        title: { type: Type.STRING },
-                        openingVerse: { type: Type.STRING },
-                        body: { type: Type.STRING },
-                        prayer: { type: Type.STRING },
-                        declaration: { type: Type.STRING },
-                        furtherStudy: { type: Type.ARRAY, items: { type: Type.STRING } },
-                    },
-                    required: ["title", "openingVerse", "body", "prayer", "declaration", "furtherStudy"]
-                }
-            }
+            userId,
+            units: 1500,
+            prompt,
+            systemInstruction: DEVOTIONAL_SYSTEM_INSTRUCTION,
         });
 
-        await trackAiUsage(userId, 'devotional', CAPABILITIES.devotional.model, 1500);
-
-        if (!response.text) throw new Error("No response from AI");
-        
-        return JSON.parse(response.text);
+        if (!text) throw new Error("No response from AI");
+        return JSON.parse(text) as DevotionalOutput;
     } catch (e) {
         console.error("Devotional Error:", e);
         throw new Error("Failed to generate personalized devotional.");
@@ -295,8 +250,8 @@ export const generatePersonalizedDevotional = async (userId: string, name: strin
 };
 
 /**
- * For long-running video generation, we still use the direct API for now
- * but wrapped in our enterprise mindset.
+ * Long-running AI video remains gated until the production provider and budget
+ * are explicitly approved.
  */
 export const generateSanctuaryVideo = async (prompt: string, onProgress: (msg: string) => void, userTier: UserTier = 'free'): Promise<string> => {
     const { allowed, message } = checkCapability('sanctuaryVideo', userTier);

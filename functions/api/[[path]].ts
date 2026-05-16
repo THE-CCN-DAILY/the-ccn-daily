@@ -11,12 +11,18 @@ type D1DatabaseBinding = {
   prepare: (query: string) => D1PreparedStatement;
 };
 
+type WorkersAiBinding = {
+  run: (model: string, input: unknown) => Promise<unknown>;
+};
+
 type Env = {
   DB?: D1DatabaseBinding;
+  AI?: WorkersAiBinding;
   FIREBASE_PROJECT_ID?: string;
   PRODUCTION_ORIGIN?: string;
   ADMIN_EMAIL?: string;
   ADMIN_API_TOKEN?: string;
+  WORKERS_AI_TEXT_MODEL?: string;
 };
 
 const app = new Hono<{ Bindings: Env }>();
@@ -71,6 +77,17 @@ type UserRow = {
   created_at?: string | null;
   updated_at?: string | null;
   last_active_at?: string | null;
+};
+
+type AiUsageRow = {
+  id: string;
+  user_id?: string | null;
+  feature: string;
+  provider: string;
+  model?: string | null;
+  units: number;
+  metadata?: string | null;
+  created_at?: string | null;
 };
 
 const fallbackPosts: BlogPostRow[] = [
@@ -184,6 +201,25 @@ const mapUser = (row: UserRow) => ({
   lastActiveAt: row.last_active_at || undefined,
 });
 
+const estimateAiCost = (model = '', units = 0) => {
+  const normalized = model.toLowerCase();
+  if (normalized.includes('70b')) return (units / 1000) * 0.002;
+  if (normalized.includes('8b')) return (units / 1000) * 0.0005;
+  return (units / 1000) * 0.001;
+};
+
+const mapAiUsage = (row: AiUsageRow) => {
+  const model = row.model || '';
+  return {
+    userId: row.user_id || 'anonymous',
+    feature: row.feature,
+    model,
+    tokens: row.units,
+    costEstimate: estimateAiCost(model, row.units),
+    timestamp: row.created_at || new Date().toISOString(),
+  };
+};
+
 const isSafeId = (value: string) => /^[a-zA-Z0-9._:@-]{1,160}$/.test(value);
 
 const isAdminRequest = (c: any) => {
@@ -233,6 +269,57 @@ const isoDate = (value: string) => {
   if (!value) return '';
   const time = Date.parse(value);
   return Number.isNaN(time) ? '' : new Date(time).toISOString();
+};
+
+const extractAiText = (result: any) => {
+  if (!result) return '';
+  if (typeof result === 'string') return result;
+  if (typeof result.response === 'string') return result.response;
+  if (typeof result.text === 'string') return result.text;
+  if (typeof result.result?.response === 'string') return result.result.response;
+  if (Array.isArray(result.choices) && typeof result.choices[0]?.message?.content === 'string') {
+    return result.choices[0].message.content;
+  }
+  return '';
+};
+
+const fallbackAiText = (feature: string, prompt: string) => {
+  if (feature === 'tags') return JSON.stringify(['Reflection', 'Prayer', 'Growth']);
+  if (feature === 'groundedPrayer') {
+    return JSON.stringify([
+      {
+        title: 'Pray for leaders under pressure',
+        uri: 'https://theccndaily.com',
+        snippet: 'Ask God for wisdom, restraint, and courage for people carrying public responsibility.',
+      },
+      {
+        title: 'Pray for families carrying hidden burdens',
+        uri: 'https://theccndaily.com',
+        snippet: 'Remember households navigating grief, financial strain, loneliness, and uncertainty.',
+      },
+      {
+        title: 'Pray for workers seeking integrity',
+        uri: 'https://theccndaily.com',
+        snippet: 'Pray for Christians to serve with excellence without losing the life of God within them.',
+      },
+    ]);
+  }
+  if (feature === 'devotional') {
+    return JSON.stringify({
+      title: 'Grace for the Work in Front of You',
+      openingVerse: 'Colossians 3:23, NKJV',
+      body:
+        'God meets you in the ordinary work of the day. Bring him your tasks, your limits, and your decisions. Let prayer steady your attention before pressure names your worth.',
+      prayer:
+        'Father, I receive grace for the work in front of me. Teach me to serve with a quiet heart, clear judgment, and faithful love. Amen.',
+      declaration: 'I will walk with God in the middle of my responsibilities.',
+      furtherStudy: ['Colossians 3:23', 'Psalm 90:17', 'James 1:5'],
+    });
+  }
+  if (feature === 'deepStudy') {
+    return 'Cloudflare Workers AI is not configured in this preview. The question has been received, but production theological generation requires the AI binding.';
+  }
+  return `Cloudflare Workers AI is not configured in this preview. Your prompt was received: ${prompt.slice(0, 180)}`;
 };
 
 const parseRss = (xml: string) => {
@@ -290,6 +377,115 @@ app.get('/api/health', (c) =>
     firebaseProjectConfigured: Boolean(c.env.FIREBASE_PROJECT_ID),
   })
 );
+
+app.post('/api/ai/generate', async (c) => {
+  const body = await c.req.json();
+  const feature = String(body.feature || 'general').trim();
+  const prompt = String(body.prompt || '').trim();
+  const systemInstruction = String(body.systemInstruction || '').trim();
+  const history = Array.isArray(body.history) ? body.history.slice(-12) : [];
+  const userId = String(body.userId || 'anonymous');
+  const model = String(
+    body.model ||
+    c.env.WORKERS_AI_TEXT_MODEL ||
+    '@cf/meta/llama-3.1-8b-instruct'
+  );
+
+  if (!prompt && history.length === 0) return c.json({ error: 'prompt is required' }, 400);
+
+  let text = '';
+  let provider = 'cloudflare-workers-ai';
+  let fallback = false;
+
+  if (c.env.AI?.run) {
+    const messages = [
+      ...(systemInstruction ? [{ role: 'system', content: systemInstruction }] : []),
+      ...history.map((message: any) => ({
+        role: message.role === 'assistant' || message.role === 'model' ? 'assistant' : 'user',
+        content: String(message.content || message.text || ''),
+      })).filter((message: any) => message.content),
+      ...(prompt ? [{ role: 'user', content: prompt }] : []),
+    ];
+
+    try {
+      const result = await c.env.AI.run(model, { messages });
+      text = extractAiText(result);
+    } catch (error) {
+      console.error('Workers AI generation failed', error);
+      text = fallbackAiText(feature, prompt);
+      fallback = true;
+      provider = 'cloudflare-workers-ai-fallback';
+    }
+  } else {
+    text = fallbackAiText(feature, prompt);
+    fallback = true;
+    provider = 'cloudflare-workers-ai-fallback';
+  }
+
+  const units = Number(body.units || Math.ceil((prompt.length + text.length) / 4) || 0);
+  if (c.env.DB) {
+    await c.env.DB.prepare(
+      `INSERT INTO ai_usage_events (id, user_id, feature, provider, model, units, metadata, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`
+    ).bind(
+      crypto.randomUUID(),
+      userId,
+      feature,
+      provider,
+      model,
+      units,
+      JSON.stringify({ fallback })
+    ).run();
+  }
+
+  return c.json({ text, model, provider, fallback });
+});
+
+app.post('/api/ai/usage', async (c) => {
+  if (!c.env.DB) return c.json({ ok: true, source: 'fallback' });
+
+  const body = await c.req.json();
+  const userId = String(body.userId || 'anonymous').trim();
+  const feature = String(body.feature || 'general').trim();
+  const model = String(body.model || 'unknown').trim();
+  const units = Math.max(0, Number(body.tokens || body.units || 0));
+
+  await c.env.DB.prepare(
+    `INSERT INTO ai_usage_events (id, user_id, feature, provider, model, units, metadata, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`
+  ).bind(
+    crypto.randomUUID(),
+    userId,
+    feature,
+    'cloudflare-workers-ai',
+    model,
+    units,
+    JSON.stringify({ source: 'client-usage-log' })
+  ).run();
+
+  return c.json({ ok: true, source: 'd1' });
+});
+
+app.get('/api/ai/usage', async (c) => {
+  if (!c.env.DB) return c.json({ totalCost: 0, featureBreakdown: {}, recentLogs: [], source: 'fallback' });
+
+  const days = Math.max(1, Math.min(365, Number(c.req.query('days') || 30)));
+  const result = await c.env.DB.prepare(
+    `SELECT * FROM ai_usage_events
+     WHERE datetime(created_at) >= datetime('now', ?)
+     ORDER BY created_at DESC
+     LIMIT 1000`
+  ).bind(`-${days} days`).all<AiUsageRow>();
+
+  const recentLogs = result.results.map(mapAiUsage);
+  const totalCost = recentLogs.reduce((sum, log) => sum + (log.costEstimate || 0), 0);
+  const featureBreakdown = recentLogs.reduce<Record<string, number>>((acc, log) => {
+    acc[log.feature] = (acc[log.feature] || 0) + (log.costEstimate || 0);
+    return acc;
+  }, {});
+
+  return c.json({ totalCost, featureBreakdown, recentLogs, source: 'd1' });
+});
 
 app.get('/api/rss', async (c) => {
   const rawUrl = c.req.query('url');
