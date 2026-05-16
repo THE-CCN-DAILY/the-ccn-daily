@@ -1,8 +1,7 @@
 import React, { createContext, useState, useContext, useEffect, useMemo, useCallback } from 'react';
-import { auth, googleProvider, signInWithPopup, firebaseSignOut, onAuthStateChanged, db, testFirestoreConnection } from '../firebase';
-import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { auth, googleProvider, signInWithPopup, firebaseSignOut, onAuthStateChanged } from '../firebase';
 import type { AppUser } from '../types';
-import { handleFirestoreError, OperationType } from '../utils/firestoreErrorHandler';
+import { syncCloudflareUserProfile } from '../services/userProfileService';
 
 interface AuthContextType {
   user: AppUser | null;
@@ -20,38 +19,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
 
   const fetchUserRole = useCallback(async (firebaseUser: any): Promise<AppUser> => {
-    const userRef = doc(db, 'users', firebaseUser.uid);
     try {
-      const userSnap = await getDoc(userRef);
-      
-      if (userSnap.exists()) {
-        const userData = userSnap.data();
-        return { 
-          ...firebaseUser, 
-          role: userData.role || 'user',
-          tier: userData.tier || 'free'
-        } as AppUser;
-      } else {
-        // Create new user document
-        const isDefaultAdmin = firebaseUser.email === "pastor.eryeza@gmail.com";
-        const role = isDefaultAdmin ? 'admin' : 'user';
-        const tier = isDefaultAdmin ? 'max' : 'free';
-        const newUser = {
-          uid: firebaseUser.uid,
-          displayName: firebaseUser.displayName,
-          email: firebaseUser.email,
-          photoURL: firebaseUser.photoURL,
-          role: role,
-          tier: tier,
-          createdAt: serverTimestamp(),
-          lastActive: serverTimestamp()
-        };
-        await setDoc(userRef, newUser);
-        return { ...firebaseUser, role, tier } as AppUser;
-      }
+      return await syncCloudflareUserProfile(firebaseUser);
     } catch (error) {
-      handleFirestoreError(error, OperationType.GET, `users/${firebaseUser.uid}`);
-      return { ...firebaseUser, role: 'user', tier: 'free' } as AppUser;
+      console.error("Cloudflare profile sync failed:", error);
+      const isDefaultAdmin = firebaseUser.email === "pastor.eryeza@gmail.com";
+      return {
+        ...firebaseUser,
+        role: isDefaultAdmin ? 'admin' : 'user',
+        tier: isDefaultAdmin ? 'max' : 'free',
+      } as AppUser;
     }
   }, []);
 

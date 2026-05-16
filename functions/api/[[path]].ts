@@ -51,6 +51,18 @@ type HighlightRow = {
   updated_at?: string | null;
 };
 
+type UserRow = {
+  id: string;
+  email: string;
+  display_name?: string | null;
+  photo_url?: string | null;
+  role: 'admin' | 'lead_developer' | 'group_lead' | 'family_lead' | 'user';
+  tier: string;
+  created_at?: string | null;
+  updated_at?: string | null;
+  last_active_at?: string | null;
+};
+
 const fallbackPosts: BlogPostRow[] = [
   {
     id: 'seed-faith-monday',
@@ -137,6 +149,19 @@ const mapHighlight = (row: HighlightRow) => ({
   tags: parseTags(row.tags),
   color: row.color,
   createdAt: row.created_at || new Date().toISOString(),
+});
+
+const mapUser = (row: UserRow) => ({
+  id: row.id,
+  uid: row.id,
+  email: row.email,
+  displayName: row.display_name || undefined,
+  photoURL: row.photo_url || undefined,
+  role: row.role,
+  tier: row.tier,
+  createdAt: row.created_at || undefined,
+  updatedAt: row.updated_at || undefined,
+  lastActiveAt: row.last_active_at || undefined,
 });
 
 const isSafeId = (value: string) => /^[a-zA-Z0-9._:@-]{1,160}$/.test(value);
@@ -489,6 +514,53 @@ app.delete('/api/users/:userId/highlights/:id', async (c) => {
 
   await c.env.DB.prepare(`DELETE FROM highlights WHERE user_id = ? AND id = ?`).bind(userId, id).run();
   return c.json({ ok: true });
+});
+
+app.post('/api/auth/profile', async (c) => {
+  const body = await c.req.json();
+  const id = String(body.uid || body.id || '').trim();
+  const email = String(body.email || '').trim().toLowerCase();
+  if (!id || !isSafeId(id)) return c.json({ error: 'Valid uid is required' }, 400);
+  if (!email || !email.includes('@')) return c.json({ error: 'Valid email is required' }, 400);
+
+  const displayName = String(body.displayName || '').trim() || null;
+  const photoUrl = String(body.photoURL || body.photoUrl || '').trim() || null;
+  const adminEmail = (c.env.ADMIN_EMAIL || 'pastor.eryeza@gmail.com').toLowerCase();
+  const defaultRole = email === adminEmail ? 'admin' : 'user';
+  const defaultTier = email === adminEmail ? 'max' : 'free';
+
+  if (!c.env.DB) {
+    return c.json({
+      user: {
+        uid: id,
+        id,
+        email,
+        displayName: displayName || undefined,
+        photoURL: photoUrl || undefined,
+        role: defaultRole,
+        tier: defaultTier,
+      },
+      source: 'fallback',
+    });
+  }
+
+  await c.env.DB.prepare(
+    `INSERT INTO users (
+      id, email, display_name, photo_url, role, tier, created_at, updated_at, last_active_at
+    ) VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+    ON CONFLICT(email) DO UPDATE SET
+      display_name = excluded.display_name,
+      photo_url = excluded.photo_url,
+      last_active_at = CURRENT_TIMESTAMP,
+      updated_at = CURRENT_TIMESTAMP`
+  ).bind(id, email, displayName, photoUrl, defaultRole, defaultTier).run();
+
+  const user = await c.env.DB.prepare(
+    `SELECT * FROM users WHERE email = ? LIMIT 1`
+  ).bind(email).first<UserRow>();
+
+  if (!user) return c.json({ error: 'Profile could not be loaded' }, 500);
+  return c.json({ user: mapUser(user), source: 'd1' });
 });
 
 app.get('/api/user/profile', (c) => {
