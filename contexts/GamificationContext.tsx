@@ -1,10 +1,12 @@
 import React, { createContext, useState, useContext, useMemo, useCallback, useEffect } from 'react';
 import type { UserStats, PointEarningAction } from '../types';
-import { mockInitialStats, mockAchievements, mockEarningActions } from '../data/gamificationData';
+import { mockInitialStats } from '../data/gamificationData';
 import { useAuth } from './AuthContext';
-import { db } from '../firebase';
-import { doc, onSnapshot, updateDoc, arrayUnion, increment } from 'firebase/firestore';
-import { handleFirestoreError, OperationType } from '../utils/firestoreErrorHandler';
+import {
+  dispatchGamificationAction,
+  getGamification,
+  redeemGamificationReward,
+} from '../services/gamificationService';
 
 interface GamificationContextType {
   stats: UserStats;
@@ -27,76 +29,55 @@ export const GamificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       return;
     }
 
-    const userRef = doc(db, 'users', user.uid);
-    const unsubscribe = onSnapshot(userRef, (snapshot) => {
-      if (snapshot.exists()) {
-        const data = snapshot.data();
-        if (data.stats) {
-          setStats(data.stats);
-        } else {
-          // Initialize stats if they don't exist
-          updateDoc(userRef, { stats: mockInitialStats }).catch(err => 
-            handleFirestoreError(err, OperationType.UPDATE, userRef.path)
-          );
-        }
-        if (data.unlockedAchievements) {
-          setUnlockedAchievements(data.unlockedAchievements);
-        }
-      }
-    }, (error) => {
-      handleFirestoreError(error, OperationType.GET, userRef.path);
-    });
+    let cancelled = false;
 
-    return () => unsubscribe();
+    getGamification(user.uid)
+      .then((data) => {
+        if (cancelled) return;
+        setStats(data?.stats || mockInitialStats);
+        setUnlockedAchievements(data?.unlockedAchievements || ['a1', 'a2', 'a3', 'a4']);
+      })
+      .catch((error) => {
+        console.error('Failed to fetch gamification state', error);
+        if (!cancelled) {
+          setStats(mockInitialStats);
+          setUnlockedAchievements(['a1', 'a2', 'a3', 'a4']);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, [user]);
 
 
   const dispatchGamificationEvent = useCallback(async (actionId: PointEarningAction['id']) => {
     if (!user) return;
-    
-    const action = mockEarningActions.find(a => a.id === actionId);
-    if (!action) return;
 
-    const userRef = doc(db, 'users', user.uid);
     try {
-        // Award points
-        await updateDoc(userRef, {
-            'stats.points': increment(action.points)
-        });
-        
-        // Simple achievement check for prototype
-        let newAchievementId: string | null = null;
-        if (actionId === 'e4' && !unlockedAchievements.includes('a5')) newAchievementId = 'a5'; // Note Taker
-        if (actionId === 'e5' && !unlockedAchievements.includes('a6')) newAchievementId = 'a6'; // Community Builder
-        
-        if (newAchievementId && !unlockedAchievements.includes(newAchievementId)) {
-            const achievement = mockAchievements.find(a => a.id === newAchievementId);
-            if(achievement) {
-                await updateDoc(userRef, {
-                    unlockedAchievements: arrayUnion(newAchievementId),
-                    'stats.points': increment(achievement.points)
-                });
-            }
-        }
+      const data = await dispatchGamificationAction(user.uid, actionId);
+      if (data) {
+        setStats(data.stats);
+        setUnlockedAchievements(data.unlockedAchievements);
+      }
     } catch (error) {
-        handleFirestoreError(error, OperationType.UPDATE, userRef.path);
+      console.error('Failed to dispatch gamification event', error);
     }
 
-  }, [unlockedAchievements, user]);
+  }, [user]);
 
   const redeemReward = useCallback(async (cost: number) => {
     if (!user) return;
-    const userRef = doc(db, 'users', user.uid);
     try {
-        if (stats.points >= cost) {
-            await updateDoc(userRef, {
-                'stats.points': increment(-cost)
-            });
-        }
+      const data = await redeemGamificationReward(user.uid, cost);
+      if (data) {
+        setStats(data.stats);
+        setUnlockedAchievements(data.unlockedAchievements);
+      }
     } catch (error) {
-        handleFirestoreError(error, OperationType.UPDATE, userRef.path);
+      console.error('Failed to redeem gamification reward', error);
     }
-  }, [user, stats.points]);
+  }, [user]);
 
   const value = useMemo(() => ({
     stats,

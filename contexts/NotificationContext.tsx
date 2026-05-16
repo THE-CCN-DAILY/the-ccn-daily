@@ -1,8 +1,11 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
-import { db, auth } from '../firebase';
-import { collection, query, orderBy, onSnapshot, addDoc, serverTimestamp, doc, updateDoc, writeBatch } from 'firebase/firestore';
-import { handleFirestoreError, OperationType } from '../utils/firestoreErrorHandler';
 import { useAuth } from './AuthContext';
+import {
+  createNotification,
+  listNotifications,
+  markNotificationRead,
+  markNotificationsRead,
+} from '../services/notificationService';
 
 import { Toaster, toast } from 'sonner';
 
@@ -36,31 +39,34 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
       return;
     }
 
-    const q = query(collection(db, 'notifications'), orderBy('date', 'desc'));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const fetchedNotifications = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        date: doc.data().date?.toDate()?.toISOString() || new Date().toISOString(),
-        read: localStorage.getItem(`read_${doc.id}`) === 'true'
-      })) as AppNotification[];
-      setNotifications(fetchedNotifications);
-    }, (error) => {
-      handleFirestoreError(error, OperationType.LIST, 'notifications');
-    });
+    let cancelled = false;
 
-    return () => unsubscribe();
+    listNotifications(user.uid)
+      .then((fetchedNotifications) => {
+        if (!cancelled) setNotifications(fetchedNotifications);
+      })
+      .catch((error) => {
+        console.error('Failed to fetch notifications', error);
+        if (!cancelled) setNotifications([]);
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, [user]);
 
   const addNotification = async (notification: Omit<AppNotification, 'id' | 'read'>) => {
+    if (!user) {
+      toast.success(notification.title);
+      return;
+    }
+
     try {
-      await addDoc(collection(db, 'notifications'), {
-        ...notification,
-        date: serverTimestamp()
-      });
+      const saved = await createNotification(user.uid, notification);
+      if (saved) setNotifications(prev => [saved, ...prev]);
       toast.success(notification.title);
     } catch (error) {
-      handleFirestoreError(error, OperationType.CREATE, 'notifications');
+      console.error('Failed to create notification', error);
     }
   };
 
@@ -73,13 +79,23 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
   };
 
   const markAsRead = async (id: string) => {
-    localStorage.setItem(`read_${id}`, 'true');
     setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+    if (!user) return;
+    try {
+      await markNotificationRead(user.uid, id);
+    } catch (error) {
+      console.error('Failed to mark notification as read', error);
+    }
   };
 
   const markAllAsRead = async () => {
-    notifications.forEach(n => localStorage.setItem(`read_${n.id}`, 'true'));
     setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+    if (!user) return;
+    try {
+      await markNotificationsRead(user.uid);
+    } catch (error) {
+      console.error('Failed to mark all notifications as read', error);
+    }
   };
 
   const unreadCount = notifications.filter(n => !n.read).length;

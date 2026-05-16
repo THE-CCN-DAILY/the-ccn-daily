@@ -136,6 +136,27 @@ type CourseProgressRow = {
   updated_at?: string | null;
 };
 
+type NotificationRow = {
+  id: string;
+  user_id: string;
+  title: string;
+  message: string;
+  type: 'in-app' | 'email' | 'both';
+  read: number;
+  date?: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+};
+
+type GamificationRow = {
+  user_id: string;
+  current_streak: number;
+  longest_streak: number;
+  points: number;
+  unlocked_achievements: string;
+  updated_at?: string | null;
+};
+
 type UserRow = {
   id: string;
   email: string;
@@ -323,6 +344,29 @@ const mapCourseProgress = (row: CourseProgressRow) => ({
   userId: row.user_id,
   completedModules: parseTags(row.completed_modules) || [],
   lastAccessed: row.last_accessed || undefined,
+  updatedAt: row.updated_at || undefined,
+});
+
+const mapNotification = (row: NotificationRow) => ({
+  id: row.id,
+  userId: row.user_id,
+  title: row.title,
+  message: row.message,
+  type: row.type,
+  read: Boolean(row.read),
+  date: row.date || row.created_at || new Date().toISOString(),
+  createdAt: row.created_at || undefined,
+  updatedAt: row.updated_at || undefined,
+});
+
+const mapGamification = (row: GamificationRow) => ({
+  userId: row.user_id,
+  stats: {
+    currentStreak: row.current_streak,
+    longestStreak: row.longest_streak,
+    points: row.points,
+  },
+  unlockedAchievements: parseTags(row.unlocked_achievements) || ['a1', 'a2', 'a3', 'a4'],
   updatedAt: row.updated_at || undefined,
 });
 
@@ -1282,6 +1326,179 @@ app.delete('/api/admin/courses/:id/modules/:moduleId', async (c) => {
   ).bind(courseId, courseId).run();
 
   return c.json({ ok: true });
+});
+
+app.get('/api/users/:userId/notifications', async (c) => {
+  const userId = c.req.param('userId');
+  if (!isSafeId(userId)) return c.json({ error: 'Invalid user id' }, 400);
+  if (!c.env.DB) return c.json({ notifications: [], source: 'fallback' });
+
+  const result = await c.env.DB.prepare(
+    `SELECT * FROM notifications
+     WHERE user_id IN (?, 'broadcast')
+     ORDER BY date DESC, created_at DESC
+     LIMIT 100`
+  ).bind(userId).all<NotificationRow>();
+
+  return c.json({ notifications: result.results.map(mapNotification), source: 'd1' });
+});
+
+app.post('/api/users/:userId/notifications', async (c) => {
+  const userId = c.req.param('userId');
+  if (!isSafeId(userId)) return c.json({ error: 'Invalid user id' }, 400);
+  if (!c.env.DB) return c.json({ error: 'D1 database binding is not configured' }, 503);
+
+  const body = await c.req.json();
+  const title = String(body.title || '').trim();
+  const message = String(body.message || '').trim();
+  if (!title) return c.json({ error: 'title is required' }, 400);
+  if (!message) return c.json({ error: 'message is required' }, 400);
+
+  const id = String(body.id || crypto.randomUUID());
+  if (!isSafeId(id)) return c.json({ error: 'Invalid notification id' }, 400);
+  const type = ['in-app', 'email', 'both'].includes(body.type) ? body.type : 'in-app';
+
+  await c.env.DB.prepare(
+    `INSERT INTO notifications (id, user_id, title, message, type, read, date, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, 0, COALESCE(?, CURRENT_TIMESTAMP), CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+     ON CONFLICT(id) DO UPDATE SET
+       title = excluded.title,
+       message = excluded.message,
+       type = excluded.type,
+       updated_at = CURRENT_TIMESTAMP`
+  ).bind(id, userId, title, message, type, body.date || null).run();
+
+  const notification = await c.env.DB.prepare(
+    `SELECT * FROM notifications WHERE id = ? LIMIT 1`
+  ).bind(id).first<NotificationRow>();
+
+  return c.json({ notification: notification ? mapNotification(notification) : null });
+});
+
+app.patch('/api/users/:userId/notifications/:id', async (c) => {
+  const userId = c.req.param('userId');
+  const id = c.req.param('id');
+  if (!isSafeId(userId) || !isSafeId(id)) return c.json({ error: 'Invalid notification identifier' }, 400);
+  if (!c.env.DB) return c.json({ error: 'D1 database binding is not configured' }, 503);
+
+  await c.env.DB.prepare(
+    `UPDATE notifications
+     SET read = 1, updated_at = CURRENT_TIMESTAMP
+     WHERE id = ? AND user_id IN (?, 'broadcast')`
+  ).bind(id, userId).run();
+
+  return c.json({ ok: true });
+});
+
+app.post('/api/users/:userId/notifications/mark-all-read', async (c) => {
+  const userId = c.req.param('userId');
+  if (!isSafeId(userId)) return c.json({ error: 'Invalid user id' }, 400);
+  if (!c.env.DB) return c.json({ error: 'D1 database binding is not configured' }, 503);
+
+  await c.env.DB.prepare(
+    `UPDATE notifications
+     SET read = 1, updated_at = CURRENT_TIMESTAMP
+     WHERE user_id IN (?, 'broadcast')`
+  ).bind(userId).run();
+
+  return c.json({ ok: true });
+});
+
+const earningPoints: Record<string, number> = {
+  e1: 5,
+  e2: 10,
+  e3: 20,
+  e4: 5,
+  e5: 15,
+  e6: 10,
+};
+
+const ensureGamificationRow = async (db: D1DatabaseBinding, userId: string) => {
+  await db.prepare(
+    `INSERT INTO user_gamification (user_id, current_streak, longest_streak, points, unlocked_achievements, updated_at)
+     VALUES (?, 7, 21, 1250, '["a1","a2","a3","a4"]', CURRENT_TIMESTAMP)
+     ON CONFLICT(user_id) DO NOTHING`
+  ).bind(userId).run();
+
+  return db.prepare(
+    `SELECT * FROM user_gamification WHERE user_id = ? LIMIT 1`
+  ).bind(userId).first<GamificationRow>();
+};
+
+app.get('/api/users/:userId/gamification', async (c) => {
+  const userId = c.req.param('userId');
+  if (!isSafeId(userId)) return c.json({ error: 'Invalid user id' }, 400);
+  if (!c.env.DB) {
+    return c.json({
+      gamification: {
+        userId,
+        stats: { currentStreak: 7, longestStreak: 21, points: 1250 },
+        unlockedAchievements: ['a1', 'a2', 'a3', 'a4'],
+      },
+      source: 'fallback',
+    });
+  }
+
+  const row = await ensureGamificationRow(c.env.DB, userId);
+  return c.json({ gamification: row ? mapGamification(row) : null, source: 'd1' });
+});
+
+app.post('/api/users/:userId/gamification/events', async (c) => {
+  const userId = c.req.param('userId');
+  if (!isSafeId(userId)) return c.json({ error: 'Invalid user id' }, 400);
+  if (!c.env.DB) return c.json({ error: 'D1 database binding is not configured' }, 503);
+
+  const body = await c.req.json();
+  const actionId = String(body.actionId || '').trim();
+  const points = earningPoints[actionId] || 0;
+  if (!points) return c.json({ error: 'Unknown earning action' }, 400);
+
+  const existing = await ensureGamificationRow(c.env.DB, userId);
+  const unlocked = existing ? parseTags(existing.unlocked_achievements) || [] : ['a1', 'a2', 'a3', 'a4'];
+  const nextUnlocked = new Set(unlocked);
+  let bonusPoints = 0;
+
+  if (actionId === 'e4' && !nextUnlocked.has('a5')) {
+    nextUnlocked.add('a5');
+    bonusPoints += 15;
+  }
+
+  if (actionId === 'e5' && !nextUnlocked.has('a6')) {
+    nextUnlocked.add('a6');
+    bonusPoints += 25;
+  }
+
+  await c.env.DB.prepare(
+    `UPDATE user_gamification
+     SET points = points + ?,
+         unlocked_achievements = ?,
+         updated_at = CURRENT_TIMESTAMP
+     WHERE user_id = ?`
+  ).bind(points + bonusPoints, JSON.stringify(Array.from(nextUnlocked)), userId).run();
+
+  const updated = await ensureGamificationRow(c.env.DB, userId);
+  return c.json({ gamification: updated ? mapGamification(updated) : null });
+});
+
+app.post('/api/users/:userId/gamification/redeem', async (c) => {
+  const userId = c.req.param('userId');
+  if (!isSafeId(userId)) return c.json({ error: 'Invalid user id' }, 400);
+  if (!c.env.DB) return c.json({ error: 'D1 database binding is not configured' }, 503);
+
+  const body = await c.req.json();
+  const cost = Math.max(0, Number(body.cost || 0));
+  if (!cost) return c.json({ error: 'cost is required' }, 400);
+
+  await ensureGamificationRow(c.env.DB, userId);
+  await c.env.DB.prepare(
+    `UPDATE user_gamification
+     SET points = CASE WHEN points >= ? THEN points - ? ELSE points END,
+         updated_at = CURRENT_TIMESTAMP
+     WHERE user_id = ?`
+  ).bind(cost, cost, userId).run();
+
+  const updated = await ensureGamificationRow(c.env.DB, userId);
+  return c.json({ gamification: updated ? mapGamification(updated) : null });
 });
 
 app.get('/api/users/:userId/highlights', async (c) => {

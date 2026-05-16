@@ -125,6 +125,29 @@ CREATE TABLE IF NOT EXISTS courses (
 
 CREATE INDEX IF NOT EXISTS idx_courses_status_created ON courses(status, created_at DESC);
 
+CREATE TABLE IF NOT EXISTS notifications (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL DEFAULT 'broadcast',
+  title TEXT NOT NULL,
+  message TEXT NOT NULL,
+  type TEXT NOT NULL DEFAULT 'in-app',
+  read INTEGER NOT NULL DEFAULT 0,
+  date TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_notifications_user_date ON notifications(user_id, date DESC);
+
+CREATE TABLE IF NOT EXISTS user_gamification (
+  user_id TEXT PRIMARY KEY,
+  current_streak INTEGER NOT NULL DEFAULT 7,
+  longest_streak INTEGER NOT NULL DEFAULT 21,
+  points INTEGER NOT NULL DEFAULT 1250,
+  unlocked_achievements TEXT NOT NULL DEFAULT '["a1","a2","a3","a4"]',
+  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE TABLE IF NOT EXISTS course_modules (
   id TEXT NOT NULL,
   course_id TEXT NOT NULL,
