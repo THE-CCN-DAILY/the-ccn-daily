@@ -15,7 +15,6 @@
     "db:apply": "wrangler d1 execute project_phoenix_ccn_daily --remote --file=schema/d1-schema.sql"
   },
   "dependencies": {
-    "@google/genai": "^1.23.0",
     "@mux/mux-node": "^12.8.1",
     "@mux/mux-player-react": "^3.11.6",
     "@sendgrid/mail": "^8.1.6",

@@ -2,11 +2,11 @@
 import React, { useState } from 'react';
 import Card from '../Card';
 import { SparklesIcon, ReaderIcon, SoundWaveIcon, CheckIcon, SpinnerIcon, AiIcon } from '../icons';
-import { GoogleGenAI } from "@google/genai";
 import { db } from '../../firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { handleFirestoreError, OperationType } from '../../utils/firestoreErrorHandler';
 import { useNotifications } from '../../contexts/NotificationContext';
+import { generateCloudflareText } from '../../services/geminiService';
 
 type SourceType = 'Newsletter' | 'Book' | 'Manual' | 'URL';
 
@@ -22,14 +22,6 @@ const ChallengeCreator: React.FC = () => {
         if (!sourceValue.trim()) return;
         setIsGenerating(true);
         try {
-            const platformKey = process.env.GEMINI_API_KEY;
-            const userKey = process.env.API_KEY;
-            const isPlatformKeyValid = !!(platformKey && platformKey.startsWith('AIza') && platformKey !== 'undefined');
-            const apiKey = isPlatformKeyValid ? platformKey : userKey;
-
-            const ai = new GoogleGenAI({ apiKey: apiKey || "" });
-            const model = "gemini-3-flash-preview";
-            
             const prompt = `You are an expert curriculum designer for a spiritual community. 
             Transform the following ${sourceType} content into a structured 40-day interactive challenge or course.
             
@@ -47,13 +39,15 @@ const ChallengeCreator: React.FC = () => {
             }
             Only return the JSON object.`;
 
-            const response = await ai.models.generateContent({
-                model,
-                contents: prompt,
-                config: { responseMimeType: "application/json" }
+            const responseText = await generateCloudflareText({
+                feature: 'challengeCreator',
+                model: '@cf/meta/llama-3.1-8b-instruct',
+                prompt,
+                systemInstruction: 'Return only a valid JSON object for a spiritual formation challenge.',
             });
 
-            const result = JSON.parse(response.text || '{}');
+            const cleanText = responseText.replace(/```json/g, '').replace(/```/g, '').trim();
+            const result = JSON.parse(cleanText || '{}');
             setGeneratedChallenge(result);
         } catch (error) {
             console.error('AI Generation Error:', error);
@@ -93,7 +87,7 @@ const ChallengeCreator: React.FC = () => {
                     </div>
                     <div>
                         <h2 className="text-xl font-bold text-brand-text-primary">AI Course & Challenge Studio</h2>
-                        <p className="text-sm text-brand-text-secondary">Transform newsletters or books into interactive courses and guided challenges using Gemini.</p>
+                        <p className="text-sm text-brand-text-secondary">Transform newsletters or books into interactive courses and guided challenges through the Cloudflare AI pipeline.</p>
                     </div>
                 </div>
 

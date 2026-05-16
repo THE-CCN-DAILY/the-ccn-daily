@@ -109,7 +109,7 @@ const RoadmapEvolution: React.FC = () => {
         </h2>
         <p className="text-sm text-brand-text-secondary">
           The Sentinel is hard-coded to favor models that balance <strong>Reasoning Depth</strong> with <strong>Token Efficiency</strong>. 
-          When Gemini 3 Flash-Lite released, the Sentinel automatically suggested migrating "Tag Generation" tasks to reduce infrastructure costs by 40% while maintaining speed.
+          As Cloudflare-native options mature, it should keep moving lightweight tasks like tag generation to the lowest-cost reliable model while preserving pastoral quality.
         </p>
       </Card>
     </div>

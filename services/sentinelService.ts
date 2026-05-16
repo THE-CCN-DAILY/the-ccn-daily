@@ -1,5 +1,5 @@
 
-import { GoogleGenAI, Type } from "@google/genai";
+import { generateCloudflareText } from './geminiService';
 
 export interface TechAudit {
   featureId: string;
@@ -16,25 +16,13 @@ export interface TechAudit {
  */
 export const runTechSentinelAudit = async (currentRoadmap: any): Promise<TechAudit[]> => {
   try {
-    const platformKey = process.env.GEMINI_API_KEY;
-    const userKey = process.env.API_KEY;
-    const apiKey = (platformKey && platformKey !== 'undefined') ? platformKey : userKey;
-
-    if (!apiKey || apiKey === 'undefined') {
-      console.warn("Sentinel: Gemini API Key is missing.");
-      return [];
-    }
-
-    const ai = new GoogleGenAI({ apiKey });
-    const model = 'gemini-3-flash-preview';
-
     const prompt = `You are the Project Phoenix Strategic Sentinel. 
     Analyze the current roadmap: ${JSON.stringify(currentRoadmap)}.
     
     Look for:
-    1. New Gemini 3 capabilities (Thinking, Live, Search).
-    2. Cost optimization (e.g. moving tasks from Pro to Flash-Lite).
-    3. Multimodal opportunities (Veo for visuals, Lyria for music).
+    1. Cloudflare-native capabilities that can replace older vendor-specific assumptions.
+    2. Cost optimization that keeps the app viable on free or low-cost tiers.
+    3. Practical multimodal opportunities that should be gated until provider and budget are approved.
     
     Return a JSON array of specific, actionable tech updates to make the app better and more affordable.
     Each update must be an object with these fields:
@@ -47,26 +35,25 @@ export const runTechSentinelAudit = async (currentRoadmap: any): Promise<TechAud
 
     Return ONLY the JSON array.`;
 
-    const response = await ai.models.generateContent({
-      model: model,
-      contents: prompt,
-      config: {
-        responseMimeType: "application/json",
-      }
+    const responseText = await generateCloudflareText({
+      feature: 'techSentinel',
+      model: '@cf/meta/llama-3.1-8b-instruct',
+      prompt,
+      systemInstruction: 'Return only a JSON array of technical audit objects.',
     });
 
-    if (!response.text) {
+    if (!responseText) {
       console.warn("Sentinel: AI response text is empty.");
       return [];
     }
     
     try {
       // Clean up the response text in case there's markdown
-      const cleanText = response.text.replace(/```json/g, '').replace(/```/g, '').trim();
+      const cleanText = responseText.replace(/```json/g, '').replace(/```/g, '').trim();
       const parsed = JSON.parse(cleanText);
       return Array.isArray(parsed) ? parsed : [];
     } catch (parseError) {
-      console.error("Sentinel: Failed to parse AI response:", response.text);
+      console.error("Sentinel: Failed to parse AI response:", responseText);
       return [];
     }
   } catch (error) {

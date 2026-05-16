@@ -16,11 +16,11 @@ const VoiceCompanion: React.FC = () => {
   const { openUpgradeModal } = useUpgradeModal();
 
   const userTier = user?.tier || 'free';
-  const canUseLiveVoice = getTierFeatures(userTier).canUseGeminiLiveVoice;
+  const canUseLiveVoice = getTierFeatures(userTier).canUseLiveVoiceCompanion;
 
   const startSession = async () => {
     if (!canUseLiveVoice) {
-      openUpgradeModal('Gemini Live Voice Companion', 'max');
+      openUpgradeModal('Live Voice Companion', 'max');
       return;
     }
 

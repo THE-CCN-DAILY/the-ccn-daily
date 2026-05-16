@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Card from '../components/Card';
 import { CommunityIcon, SparklesIcon, ChatIcon } from '../components/icons';
-import { GoogleGenAI } from "@google/genai";
+import { generateCloudflareText } from '../services/geminiService';
 
 interface Message {
   id: string;
@@ -48,30 +48,24 @@ const ExpertCouncilPage: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const apiKey = process.env.GEMINI_API_KEY;
-      if (!apiKey) throw new Error("API Key not found");
-
-      const ai = new GoogleGenAI({ apiKey });
-      
       const history = messages[selectedExpert] || [];
-      const contents = history.map(msg => ({
-        role: msg.sender === 'user' ? 'user' : 'model',
-        parts: [{ text: msg.text }]
+      const aiHistory = history.map(msg => ({
+        role: msg.sender === 'user' ? 'user' as const : 'assistant' as const,
+        text: msg.text,
       }));
-      contents.push({ role: 'user', parts: [{ text: newMessage.text }] });
 
-      const response = await ai.models.generateContent({
-        model: 'gemini-3-flash-preview',
-        contents: contents as any,
-        config: {
-          systemInstruction: expert.prompt
-        }
+      const responseText = await generateCloudflareText({
+        feature: 'expertCouncil',
+        model: '@cf/meta/llama-3.1-8b-instruct',
+        prompt: newMessage.text,
+        history: aiHistory,
+        systemInstruction: expert.prompt,
       });
 
       const expertReply: Message = {
         id: (Date.now() + 1).toString(),
         sender: 'expert',
-        text: response.text || "I'm sorry, I couldn't process that right now."
+        text: responseText || "I'm sorry, I couldn't process that right now."
       };
 
       setMessages(prev => ({

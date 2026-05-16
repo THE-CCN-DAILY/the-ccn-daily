@@ -50,7 +50,7 @@ export interface TierFeatures {
   canGenerateQuoteImages: boolean;
   canUsePremiumAudioNarration: boolean;
   canUseAdaptiveMusic: boolean;
-  canUseGeminiLiveVoice: boolean;
+  canUseLiveVoiceCompanion: boolean;
   canUseVeoCinematicBackgrounds: boolean;
   canUseGroundedIntercession: boolean;
 
@@ -108,7 +108,7 @@ export const TIER_CONFIGS: Record<SubscriptionTier, TierConfig> = {
       canGenerateQuoteImages: false,
       canUsePremiumAudioNarration: false,
       canUseAdaptiveMusic: false,
-      canUseGeminiLiveVoice: false,
+      canUseLiveVoiceCompanion: false,
       canUseVeoCinematicBackgrounds: false,
       canUseGroundedIntercession: false,
       quotas: {
@@ -153,7 +153,7 @@ export const TIER_CONFIGS: Record<SubscriptionTier, TierConfig> = {
       canGenerateQuoteImages: false,
       canUsePremiumAudioNarration: false,
       canUseAdaptiveMusic: false,
-      canUseGeminiLiveVoice: false,
+      canUseLiveVoiceCompanion: false,
       canUseVeoCinematicBackgrounds: false,
       canUseGroundedIntercession: false,
       quotas: {
@@ -198,7 +198,7 @@ export const TIER_CONFIGS: Record<SubscriptionTier, TierConfig> = {
       canGenerateQuoteImages: true,
       canUsePremiumAudioNarration: true,
       canUseAdaptiveMusic: true,
-      canUseGeminiLiveVoice: false,
+      canUseLiveVoiceCompanion: false,
       canUseVeoCinematicBackgrounds: false,
       canUseGroundedIntercession: false,
       quotas: {
@@ -243,7 +243,7 @@ export const TIER_CONFIGS: Record<SubscriptionTier, TierConfig> = {
       canGenerateQuoteImages: true,
       canUsePremiumAudioNarration: true,
       canUseAdaptiveMusic: true,
-      canUseGeminiLiveVoice: true,
+      canUseLiveVoiceCompanion: true,
       canUseVeoCinematicBackgrounds: true,
       canUseGroundedIntercession: true,
       quotas: {
@@ -288,7 +288,7 @@ export const TIER_CONFIGS: Record<SubscriptionTier, TierConfig> = {
       canGenerateQuoteImages: true,
       canUsePremiumAudioNarration: true,
       canUseAdaptiveMusic: true,
-      canUseGeminiLiveVoice: true,
+      canUseLiveVoiceCompanion: true,
       canUseVeoCinematicBackgrounds: true,
       canUseGroundedIntercession: true,
       quotas: {

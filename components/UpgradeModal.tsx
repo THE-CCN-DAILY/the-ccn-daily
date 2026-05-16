@@ -131,7 +131,7 @@ const UpgradeModal: React.FC<UpgradeModalProps> = ({ isOpen, onClose, featureNam
                                         </li>
                                         <li className="flex items-start gap-3 text-sm text-brand-text-secondary">
                                             <CheckIcon className="w-5 h-5 text-secondary-purple flex-shrink-0" />
-                                            <span>Gemini Live Voice Companion</span>
+                                            <span>Live Voice Companion</span>
                                         </li>
                                         <li className="flex items-start gap-3 text-sm text-brand-text-secondary">
                                             <CheckIcon className="w-5 h-5 text-secondary-purple flex-shrink-0" />

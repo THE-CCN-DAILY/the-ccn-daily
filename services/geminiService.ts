@@ -37,7 +37,7 @@ type CloudflareAiPayload = {
     units?: number;
 };
 
-const requestCloudflareAi = async (payload: CloudflareAiPayload): Promise<string> => {
+export const generateCloudflareText = async (payload: CloudflareAiPayload): Promise<string> => {
     const response = await fetch('/api/ai/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -81,7 +81,7 @@ export const getAiCoachResponse = async (newMessage: string, history: Message[],
             text: msg.text,
         }));
 
-        return await requestCloudflareAi({
+        return await generateCloudflareText({
             feature: 'coach',
             prompt: newMessage,
             history: aiHistory,
@@ -106,7 +106,7 @@ export const getGroundedPrayerTopics = async (userTier: UserTier = 'free', userI
     if (!allowed) throw new Error(message);
 
     try {
-        const text = await requestCloudflareAi({
+        const text = await generateCloudflareText({
             feature: 'groundedPrayer',
             model: CAPABILITIES.groundedPrayer.model,
             userId,
@@ -127,7 +127,7 @@ export const getDeepTheologicalInsight = async (question: string, userTier: User
     if (!allowed) throw new Error(message);
 
     try {
-        return await requestCloudflareAi({
+        return await generateCloudflareText({
             feature: 'deepStudy',
             model: CAPABILITIES.deepStudy.model,
             userId,
@@ -151,7 +151,7 @@ export const generateQuoteImage = async (prompt: string, userTier: UserTier = 'f
 
 export const generateTagsForNote = async (noteText: string): Promise<string[]> => {
     try {
-        const text = await requestCloudflareAi({
+        const text = await generateCloudflareText({
             feature: 'tags',
             model: LITE_MODEL,
             prompt: `Analyze this spiritual note and generate 3-5 short one-word tags. Return only a JSON array: "${noteText}"`,
@@ -232,7 +232,7 @@ export const generatePersonalizedDevotional = async (userId: string, name: strin
         userContext: ${notesContext || 'The user is seeking daily spiritual guidance and growth.'}
         `;
 
-        const text = await requestCloudflareAi({
+        const text = await generateCloudflareText({
             feature: 'devotional',
             model: CAPABILITIES.devotional.model,
             userId,

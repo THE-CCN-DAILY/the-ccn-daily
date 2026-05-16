@@ -18,16 +18,16 @@ const teamData: TeamMember[] = [
     focus: 'Crafting multimodal immersive interfaces.'
   },
   {
-    name: 'Senior Firebase Engineer',
+    name: 'Cloudflare Systems Engineer',
     role: 'Infra Lead',
     avatarUrl: 'https://picsum.photos/seed/firebase/200',
-    focus: 'Scaling real-time community grounding features.'
+    focus: 'Moving data, edge APIs, and operational dashboards onto Cloudflare services.'
   },
   {
     name: 'AI Integration Expert',
     role: 'AI Lead',
     avatarUrl: 'https://picsum.photos/seed/ai/200',
-    focus: 'Implementing Gemini 3 Reasoning and Multimodal flows.'
+    focus: 'Implementing Cloudflare-routed reasoning and carefully gated multimodal flows.'
   }
 ];
 

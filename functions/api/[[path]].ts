@@ -378,6 +378,18 @@ app.get('/api/health', (c) =>
   })
 );
 
+app.get('/api/ai/diagnostics', (c) =>
+  c.json({
+    cloudflarePages: 'connected',
+    database: c.env.DB ? 'connected' : 'missing',
+    workersAi: c.env.AI ? 'connected' : 'fallback',
+    provider: c.env.AI ? 'cloudflare-workers-ai' : 'cloudflare-workers-ai-fallback',
+    apiKeySource: 'cloudflare-binding',
+    model: c.env.WORKERS_AI_TEXT_MODEL || '@cf/meta/llama-3.1-8b-instruct',
+    productionOrigin: c.env.PRODUCTION_ORIGIN || '',
+  })
+);
+
 app.post('/api/ai/generate', async (c) => {
   const body = await c.req.json();
   const feature = String(body.feature || 'general').trim();

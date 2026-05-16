@@ -33,8 +33,8 @@ const planData: FeatureCategory[] = [
   },
     {
     id: 'cat-3',
-    title: 'AI-Powered Discovery (Gemini)',
-    description: 'Leveraging Gemini to add intelligent features that make content more accessible and personalized.',
+    title: 'AI-Powered Discovery',
+    description: 'Using Cloudflare-routed AI services to make content more accessible and personalized.',
     features: [
       { id: 'f31', title: 'AI-Generated Summaries', description: 'Provide a concise, AI-generated summary and list of key takeaways for each episode, available before listening.', icon: SparklesIcon },
       { id: 'f32', title: 'Thematic Search', description: 'Allow users to search for a topic (e.g., "forgiveness") and find all podcast episodes that discuss it, with timestamps.', icon: SparklesIcon },
