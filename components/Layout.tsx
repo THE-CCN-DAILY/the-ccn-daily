@@ -5,13 +5,8 @@ import {
   Activity,
   BookOpen,
   BookPlus,
-  Building2,
   CalendarDays,
-  ClipboardList,
-  Component,
   Crown,
-  Database,
-  FlaskConical,
   FilePenLine,
   FolderOpen,
   Gift,
@@ -22,20 +17,15 @@ import {
   ImagePlus,
   Inbox,
   LayoutDashboard,
-  ListTodo,
-  Map,
   Menu,
   MessagesSquare,
   Mic,
-  Music,
   Newspaper,
   NotebookPen,
-  Palette,
   Radio,
   Rocket,
   Route,
   ShieldCheck,
-  SlidersHorizontal,
   TrendingUp,
   Trophy,
   UserRoundCheck,
@@ -88,28 +78,19 @@ const sanctuaryItems = [
 ];
 
 const commandCenterItems = [
-  { to: '/studio/admin', text: 'Admin Dashboard', icon: LayoutDashboard },
-  { to: '/studio/blog', text: 'Blog Studio', icon: FilePenLine },
-  { to: '/studio/plan', text: 'Master Plan', icon: ClipboardList },
-  { to: '/studio/roadmap-evolution', text: 'Roadmap Evolution', icon: Map },
-  { to: '/studio/visionary-lab', text: 'Visionary Tech Lab', icon: FlaskConical },
-  { to: '/studio/content-manager', text: 'Content Manager', icon: FolderOpen },
-  { to: '/studio/data', text: 'Data Architecture', icon: Database },
-  { to: '/studio/roles', text: 'Roles & Permissions', icon: ShieldCheck },
-  { to: '/studio/multi-tenancy', text: 'Multi-Tenancy', icon: Building2 },
-  { to: '/studio/devotional-generator', text: 'Devotional Generator', icon: BookPlus },
-  { to: '/studio/quote-generator', text: 'Quote Graphics', icon: ImagePlus },
-  { to: '/studio/dynamic-theming', text: 'Dynamic Theming', icon: Palette },
-  { to: '/studio/atmospheric-music', text: 'Atmospheric Music', icon: Music },
-  { to: '/studio/media-plan', text: 'Media Player Plan', icon: SlidersHorizontal },
-  { to: '/studio/design-system', text: 'Design System', icon: Component },
-  { to: '/studio/growth', text: 'Growth Console', icon: TrendingUp },
-  { to: '/studio/release-ops', text: 'Release Ops', icon: Rocket },
-  { to: '/studio/diagnostics', text: 'System Diagnostics', icon: Activity },
-  { to: '/studio/team', text: 'Virtual Team', icon: Users },
-  { to: '/studio/next-steps', text: 'Founder Actions', icon: ListTodo },
-  { to: '/studio/chat', text: 'Chat with Team', icon: ChatIcon },
+  { to: '/studio/admin', text: 'Admin Dashboard', icon: LayoutDashboard, group: 'Operate' },
+  { to: '/studio/content-manager', text: 'Content Manager', icon: FolderOpen, group: 'Operate' },
+  { to: '/studio/blog', text: 'Blog Studio', icon: FilePenLine, group: 'Publish' },
+  { to: '/studio/devotional-generator', text: 'Devotional Generator', icon: BookPlus, group: 'Publish' },
+  { to: '/studio/quote-generator', text: 'Quote Graphics', icon: ImagePlus, group: 'Publish' },
+  { to: '/studio/growth', text: 'Growth Console', icon: TrendingUp, group: 'Growth' },
+  { to: '/studio/roles', text: 'Roles & Permissions', icon: ShieldCheck, group: 'Systems' },
+  { to: '/studio/release-ops', text: 'Release Ops', icon: Rocket, group: 'Systems' },
+  { to: '/studio/diagnostics', text: 'System Diagnostics', icon: Activity, group: 'Systems' },
+  { to: '/studio/chat', text: 'Team Chat', icon: ChatIcon, group: 'Systems' },
 ];
+
+const commandCenterGroups = ['Operate', 'Publish', 'Growth', 'Systems'];
 
 interface SidebarProps {
   className?: string;
@@ -188,25 +169,34 @@ const Sidebar: React.FC<SidebarProps> = ({ className = '', onNavigate }) => {
       <nav className="flex-grow overflow-y-auto custom-scrollbar pr-2">
         {isStrategyMode ? (
           <>
-            <div className="mb-2 px-3">
-              <p className="text-[10px] font-bold text-brand-text-secondary uppercase tracking-widest">
-                Management
-              </p>
-            </div>
-            <ul>
-              {filteredCommandCenterItems.map(item => (
-                <li key={item.to}>
-                  <NavLink
-                    to={item.to}
-                    onClick={onNavigate}
-                    className={({ isActive }) => `${baseLinkClasses} ${isActive ? activeLinkClasses : inactiveLinkClasses}`}
-                  >
-                    <item.icon className="h-5 w-5 mr-3 flex-shrink-0" />
-                    <span className="min-w-0 truncate text-sm font-medium" title={item.text}>{item.text}</span>
-                  </NavLink>
-                </li>
-              ))}
-            </ul>
+            {commandCenterGroups.map(group => {
+              const groupItems = filteredCommandCenterItems.filter(item => item.group === group);
+              if (groupItems.length === 0) return null;
+
+              return (
+                <div key={group} className="mb-4">
+                  <div className="mb-2 px-3">
+                    <p className="text-[10px] font-bold text-brand-text-secondary uppercase tracking-widest">
+                      {group}
+                    </p>
+                  </div>
+                  <ul>
+                    {groupItems.map(item => (
+                      <li key={item.to}>
+                        <NavLink
+                          to={item.to}
+                          onClick={onNavigate}
+                          className={({ isActive }) => `${baseLinkClasses} ${isActive ? activeLinkClasses : inactiveLinkClasses}`}
+                        >
+                          <item.icon className="h-5 w-5 mr-3 flex-shrink-0" />
+                          <span className="min-w-0 truncate text-sm font-medium" title={item.text}>{item.text}</span>
+                        </NavLink>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              );
+            })}
           </>
         ) : (
           ['Read', 'Pray', 'Community', 'Live', 'Account'].map(group => (
@@ -340,9 +330,9 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
           {alerts.length > 0 && (
               <div className="mb-6 p-3 bg-brand-accent/10 border border-brand-accent/30 rounded-lg animate-pulse flex items-center justify-between">
                   <p className="text-xs font-bold text-brand-accent flex items-center">
-                    <Activity className="w-4 h-4 mr-2"/> Sentinel Alert: New tech/cost optimizations available for review in Roadmap Evolution.
+                    <Activity className="w-4 h-4 mr-2"/> Sentinel Alert: System recommendations are ready for operational review.
                   </p>
-                  <NavLink to="/studio/roadmap-evolution" className="text-[10px] underline text-brand-accent font-bold">VIEW</NavLink>
+                  <NavLink to="/studio/diagnostics" className="text-[10px] underline text-brand-accent font-bold">VIEW</NavLink>
               </div>
           )}
           {children}
