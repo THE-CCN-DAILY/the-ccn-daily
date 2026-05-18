@@ -9,6 +9,7 @@ import { collection, addDoc, serverTimestamp, query, orderBy, onSnapshot } from 
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { handleFirestoreError, OperationType } from '../utils/firestoreErrorHandler';
 import { useAuth } from '../contexts/AuthContext';
+import { AdminUserStats, listAdminUsers } from '../services/adminService';
 
 interface AppUser {
   id: string;
@@ -54,6 +55,7 @@ const AdminDashboard: React.FC = () => {
     // Real users state
     const [users, setUsers] = useState<AppUser[]>([]);
     const [loadingUsers, setLoadingUsers] = useState(true);
+    const [userStats, setUserStats] = useState<AdminUserStats>({ total: 0, admins: 0, active30d: 0 });
 
     // Inbox state
     const [inboxMessages, setInboxMessages] = useState<any[]>([]);
@@ -267,79 +269,112 @@ const AdminDashboard: React.FC = () => {
     useEffect(() => {
         if (!user || user.role !== 'admin') {
             setUsers([]);
+            setUserStats({ total: 0, admins: 0, active30d: 0 });
             setLoadingUsers(false);
-            setInboxMessages([]);
-            setLoadingInbox(false);
             return;
         }
-        const q = query(collection(db, 'users'), orderBy('createdAt', 'desc'));
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-            const fetchedUsers = snapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data(),
-                createdAt: doc.data().createdAt?.toDate()?.toLocaleDateString() || 'N/A'
-            })) as AppUser[];
-            setUsers(fetchedUsers);
-            setLoadingUsers(false);
-        }, (error) => {
-            handleFirestoreError(error, OperationType.LIST, 'users');
-        });
 
-        const inboxQ = query(collection(db, 'inbox'), orderBy('receivedAt', 'desc'));
-        const unsubscribeInbox = onSnapshot(inboxQ, (snapshot) => {
-            const messages = snapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data(),
-                receivedAt: doc.data().receivedAt?.toDate()?.toLocaleString() || 'N/A'
-            }));
-            setInboxMessages(messages);
-            setLoadingInbox(false);
-        }, (error) => {
-            handleFirestoreError(error, OperationType.LIST, 'inbox');
-        });
+        let cancelled = false;
+        setLoadingUsers(true);
 
-        const discountsQ = query(collection(db, 'settings'), orderBy('createdAt', 'desc'));
-        const unsubscribeDiscounts = onSnapshot(discountsQ, (snapshot) => {
-            const fetchedDiscounts = snapshot.docs
-                .filter(doc => doc.data().category === 'discount' || doc.data().percentage !== undefined)
-                .map(doc => ({
-                    id: doc.id,
-                    ...doc.data(),
-                    startDate: doc.data().startDate?.toDate()?.toLocaleDateString() || 'N/A',
-                    endDate: doc.data().endDate?.toDate()?.toLocaleDateString() || 'N/A'
-                }));
-            setDiscounts(fetchedDiscounts);
-            setLoadingDiscounts(false);
-            
-            // Also check for payment settings in the same collection
-            const paymentDoc = snapshot.docs.find(doc => doc.id === 'payment_settings');
-            if (paymentDoc) {
-                setFlutterwaveKey(paymentDoc.data().flutterwavePublicKey || '');
-            }
-        }, (error) => {
-            handleFirestoreError(error, OperationType.LIST, 'settings');
-        });
-
-        const resourcesQ = query(collection(db, 'resources'), orderBy('createdAt', 'desc'));
-        const unsubscribeResources = onSnapshot(resourcesQ, (snapshot) => {
-            const fetchedResources = snapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data(),
-                createdAt: doc.data().createdAt?.toDate()?.toLocaleDateString() || 'N/A'
-            }));
-            setResources(fetchedResources);
-            setLoadingResources(false);
-        }, (error) => {
-            handleFirestoreError(error, OperationType.LIST, 'resources');
-        });
+        listAdminUsers()
+            .then(({ users, stats }) => {
+                if (cancelled) return;
+                setUsers(users as AppUser[]);
+                setUserStats(stats);
+            })
+            .catch((error) => {
+                if (cancelled) return;
+                console.error('Failed to load D1 admin users:', error);
+                notify(error instanceof Error ? error.message : 'Failed to load users.', 'error');
+                setUsers([]);
+                setUserStats({ total: 0, admins: 0, active30d: 0 });
+            })
+            .finally(() => {
+                if (!cancelled) setLoadingUsers(false);
+            });
 
         return () => {
-            unsubscribe();
-            unsubscribeInbox();
-            unsubscribeDiscounts();
-            unsubscribeResources();
+            cancelled = true;
         };
-    }, [user]);
+    }, [user, notify]);
+
+    useEffect(() => {
+        if (!user || user.role !== 'admin') {
+            setInboxMessages([]);
+            setLoadingInbox(false);
+            setDiscounts([]);
+            setLoadingDiscounts(false);
+            setResources([]);
+            setLoadingResources(false);
+            return;
+        }
+
+        const unsubscribers: Array<() => void> = [];
+
+        if (activeTab === 'inbox') {
+            setLoadingInbox(true);
+            const inboxQ = query(collection(db, 'inbox'), orderBy('receivedAt', 'desc'));
+            unsubscribers.push(onSnapshot(inboxQ, (snapshot) => {
+                const messages = snapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data(),
+                    receivedAt: doc.data().receivedAt?.toDate()?.toLocaleString() || 'N/A'
+                }));
+                setInboxMessages(messages);
+                setLoadingInbox(false);
+            }, (error) => {
+                handleFirestoreError(error, OperationType.LIST, 'inbox');
+                setLoadingInbox(false);
+            }));
+        }
+
+        if (activeTab === 'discounts' || activeTab === 'payments') {
+            setLoadingDiscounts(true);
+            const discountsQ = query(collection(db, 'settings'), orderBy('createdAt', 'desc'));
+            unsubscribers.push(onSnapshot(discountsQ, (snapshot) => {
+                const fetchedDiscounts = snapshot.docs
+                    .filter(doc => doc.data().category === 'discount' || doc.data().percentage !== undefined)
+                    .map(doc => ({
+                        id: doc.id,
+                        ...doc.data(),
+                        startDate: doc.data().startDate?.toDate()?.toLocaleDateString() || 'N/A',
+                        endDate: doc.data().endDate?.toDate()?.toLocaleDateString() || 'N/A'
+                    }));
+                setDiscounts(fetchedDiscounts);
+                setLoadingDiscounts(false);
+
+                const paymentDoc = snapshot.docs.find(doc => doc.id === 'payment_settings');
+                if (paymentDoc) {
+                    setFlutterwaveKey(paymentDoc.data().flutterwavePublicKey || '');
+                }
+            }, (error) => {
+                handleFirestoreError(error, OperationType.LIST, 'settings');
+                setLoadingDiscounts(false);
+            }));
+        }
+
+        if (activeTab === 'resources') {
+            setLoadingResources(true);
+            const resourcesQ = query(collection(db, 'resources'), orderBy('createdAt', 'desc'));
+            unsubscribers.push(onSnapshot(resourcesQ, (snapshot) => {
+                const fetchedResources = snapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data(),
+                    createdAt: doc.data().createdAt?.toDate()?.toLocaleDateString() || 'N/A'
+                }));
+                setResources(fetchedResources);
+                setLoadingResources(false);
+            }, (error) => {
+                handleFirestoreError(error, OperationType.LIST, 'resources');
+                setLoadingResources(false);
+            }));
+        }
+
+        return () => {
+            unsubscribers.forEach(unsubscribe => unsubscribe());
+        };
+    }, [activeTab, user]);
 
     const handleDeleteResource = async (id: string) => {
         if (!window.confirm('Are you sure you want to delete this resource?')) return;
@@ -519,9 +554,9 @@ const AdminDashboard: React.FC = () => {
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-                <StatCard title="Total Members" value={users.length} change="+5.2% from yesterday" icon={UserIcon} />
-                <StatCard title="Global Communities" value="14" change="+2 this month" icon={CommunityIcon} />
-                <StatCard title="Storage Utilization" value="84%" change="Phase 7 Expansion Needed" icon={DbIcon} />
+                <StatCard title="Total Members" value={userStats.total} change={`${userStats.active30d} active in 30 days`} icon={UserIcon} />
+                <StatCard title="Admin Operators" value={userStats.admins} change="D1 role source" icon={CommunityIcon} />
+                <StatCard title="Media Storage" value="R2 pending" change="Binding required for uploads" icon={DbIcon} />
             </div>
 
             <div className="flex flex-wrap gap-4 mb-6">

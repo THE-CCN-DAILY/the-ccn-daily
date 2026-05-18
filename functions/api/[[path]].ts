@@ -2125,6 +2125,34 @@ app.delete('/api/users/:userId/journal/:id', async (c) => {
   return c.json({ ok: true });
 });
 
+app.get('/api/admin/users', async (c) => {
+  const denied = requireAdmin(c);
+  if (denied) return denied;
+  if (!c.env.DB) return c.json({ users: [], stats: { total: 0, admins: 0, active30d: 0 }, source: 'fallback' });
+
+  const users = await c.env.DB.prepare(
+    `SELECT * FROM users ORDER BY COALESCE(last_active_at, created_at) DESC`
+  ).all<UserRow>();
+
+  const stats = await c.env.DB.prepare(
+    `SELECT
+      COUNT(*) as total,
+      SUM(CASE WHEN role = 'admin' THEN 1 ELSE 0 END) as admins,
+      SUM(CASE WHEN last_active_at >= datetime('now', '-30 days') THEN 1 ELSE 0 END) as active30d
+     FROM users`
+  ).first<{ total: number; admins: number; active30d: number }>();
+
+  return c.json({
+    users: users.results.map(mapUser),
+    stats: {
+      total: Number(stats?.total || 0),
+      admins: Number(stats?.admins || 0),
+      active30d: Number(stats?.active30d || 0),
+    },
+    source: 'd1',
+  });
+});
+
 app.post('/api/auth/profile', async (c) => {
   const body = await c.req.json();
   const id = String(body.uid || body.id || '').trim();
