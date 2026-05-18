@@ -1,10 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Card from '../components/Card';
-import { fetchRSSFeed, FeedItem } from '../services/rssService';
-import { SparklesIcon, SpinnerIcon, ReaderIcon } from '../components/icons';
+import { FeedItem, fetchRSSFeed } from '../services/rssService';
+import { ReaderIcon, SparklesIcon, SpinnerIcon } from '../components/icons';
+import { cleanFeedText, excerptFeedText } from '../utils/feedText';
 
 const SUBSTACK_FEED_URL = 'https://theccndaily.substack.com/feed';
+
+const getPostText = (post: FeedItem) =>
+  post.contentSnippet || post.content || post.itunes?.summary || '';
 
 const NewsletterPage: React.FC = () => {
   const [posts, setPosts] = useState<FeedItem[]>([]);
@@ -13,12 +17,14 @@ const NewsletterPage: React.FC = () => {
 
   useEffect(() => {
     const loadPosts = async () => {
+      setLoading(true);
+      setError('');
+
       try {
         const feed = await fetchRSSFeed(SUBSTACK_FEED_URL);
-        // Substack feed items without enclosures are usually regular posts
         setPosts(feed.items);
       } catch (error) {
-        console.error("Failed to load newsletter posts:", error);
+        console.error('Failed to load newsletter posts:', error);
         setError('The newsletter feed could not be loaded. Please try again shortly.');
       } finally {
         setLoading(false);
@@ -27,6 +33,9 @@ const NewsletterPage: React.FC = () => {
 
     loadPosts();
   }, []);
+
+  const featuredPost = useMemo(() => posts[0], [posts]);
+  const remainingPosts = useMemo(() => posts.slice(1), [posts]);
 
   const publicNav = (
     <nav className="mb-8 flex items-center justify-between border-b border-brand-border pb-5">
@@ -40,21 +49,55 @@ const NewsletterPage: React.FC = () => {
     </nav>
   );
 
+  const PostCard: React.FC<{ post: FeedItem; featured?: boolean }> = ({ post, featured = false }) => (
+    <Card className="overflow-hidden p-0 group">
+      <div className="p-6">
+        <div className="mb-3 flex items-start justify-between gap-4">
+          <span className="rounded bg-brand-accent/10 px-2 py-0.5 text-[10px] font-black uppercase tracking-widest text-brand-accent">
+            Newsletter
+          </span>
+          <span className="shrink-0 text-xs text-brand-text-secondary">
+            {post.pubDate ? new Date(post.pubDate).toLocaleDateString() : ''}
+          </span>
+        </div>
+        <h2 className={`${featured ? 'text-3xl' : 'text-2xl'} mb-3 font-bold leading-tight text-brand-text-primary transition-colors group-hover:text-brand-accent`}>
+          {post.title || 'Untitled newsletter'}
+        </h2>
+        <p className="mb-5 text-sm leading-6 text-brand-text-secondary">
+          {excerptFeedText(getPostText(post), featured ? 360 : 220)}
+        </p>
+        {post.link && (
+          <a
+            href={post.link}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 text-sm font-bold text-brand-accent hover:underline"
+          >
+            Read Full Story on Substack
+            <SparklesIcon className="h-4 w-4" />
+          </a>
+        )}
+      </div>
+    </Card>
+  );
+
   return (
     <div className="mx-auto max-w-4xl px-4 pb-20">
       <header className="mb-8">
         {publicNav}
-        <h1 className="text-4xl font-black text-brand-text-primary mb-2 flex items-center gap-4">
-          <ReaderIcon className="w-10 h-10 text-brand-accent" />
+        <h1 className="mb-2 flex items-center gap-4 text-4xl font-black text-brand-text-primary">
+          <ReaderIcon className="h-10 w-10 text-brand-accent" />
           The CCN Daily
         </h1>
-        <p className="text-brand-text-secondary">Explore the latest insight, devotionals, and community updates.</p>
+        <p className="text-brand-text-secondary">
+          Explore the latest insight, devotionals, and community updates.
+        </p>
       </header>
 
       {loading && (
-        <div className="flex flex-col justify-center items-center border-y border-brand-border py-24">
-          <SpinnerIcon className="w-10 h-10 text-brand-accent animate-spin mb-4" />
-          <p className="text-brand-text-secondary animate-pulse">Fetching latest updates from THE CCN DAILY...</p>
+        <div className="flex flex-col items-center justify-center border-y border-brand-border py-24">
+          <SpinnerIcon className="mb-4 h-10 w-10 animate-spin text-brand-accent" />
+          <p className="animate-pulse text-brand-text-secondary">Fetching latest updates from THE CCN DAILY...</p>
         </div>
       )}
 
@@ -64,41 +107,19 @@ const NewsletterPage: React.FC = () => {
         </div>
       )}
 
-      {!loading && !error && (
-      <div className="space-y-6">
-        {posts.map((post, index) => (
-          <Card key={post.guid || index} className="overflow-hidden p-0 group">
-            <div className="md:flex">
-              <div className="p-6 flex-1">
-                <div className="flex justify-between items-start mb-2">
-                  <span className="text-[10px] font-black text-brand-accent uppercase tracking-widest bg-brand-accent/10 px-2 py-0.5 rounded">
-                    Newsletter
-                  </span>
-                  <span className="text-xs text-brand-text-secondary">
-                    {post.pubDate ? new Date(post.pubDate).toLocaleDateString() : ''}
-                  </span>
-                </div>
-                <h2 className="text-2xl font-bold text-brand-text-primary mb-3 group-hover:text-brand-accent transition-colors">
-                  {post.title}
-                </h2>
-                <div 
-                  className="text-brand-text-secondary text-sm line-clamp-3 mb-4"
-                  dangerouslySetInnerHTML={{ __html: post.contentSnippet || post.content || '' }}
-                />
-                <a 
-                  href={post.link} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 text-sm font-bold text-brand-accent hover:underline"
-                >
-                  Read Full Story on Substack
-                  <SparklesIcon className="w-4 h-4" />
-                </a>
-              </div>
-            </div>
-          </Card>
-        ))}
-      </div>
+      {!loading && !error && posts.length === 0 && (
+        <div className="border-y border-brand-border py-12 text-center">
+          <p className="text-brand-text-secondary">No newsletter posts are available from the feed yet.</p>
+        </div>
+      )}
+
+      {!loading && !error && posts.length > 0 && (
+        <div className="space-y-6">
+          {featuredPost && <PostCard post={{ ...featuredPost, contentSnippet: cleanFeedText(getPostText(featuredPost)) }} featured />}
+          {remainingPosts.map((post, index) => (
+            <PostCard key={post.guid || post.link || index} post={{ ...post, contentSnippet: cleanFeedText(getPostText(post)) }} />
+          ))}
+        </div>
       )}
     </div>
   );
