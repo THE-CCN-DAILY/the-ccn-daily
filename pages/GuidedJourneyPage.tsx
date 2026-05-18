@@ -7,8 +7,7 @@ import { CheckIcon, FlagIcon, PencilIcon, PrayingHandsIcon, ReaderIcon, Sparkles
 import RichTextJournal from '../components/RichTextJournal';
 import PrayerTimer from '../components/PrayerTimer';
 import { getScriptureSnippet } from '../services/bibleService';
-import { db } from '../firebase';
-import { collection, query, where, getDocs, limit } from 'firebase/firestore';
+import { getTodayDevotional } from '../services/contentService';
 import ReactMarkdown from 'react-markdown';
 
 interface Devotional {
@@ -235,16 +234,8 @@ const GuidedJourneyPage: React.FC = () => {
                 const day = String(today.getDate()).padStart(2, '0');
                 const todayString = `${year}-${month}-${day}`;
 
-                const q = query(
-                    collection(db, 'devotionals'),
-                    where('date', '==', todayString),
-                    limit(1)
-                );
-                const snapshot = await getDocs(q);
-                if (!snapshot.empty) {
-                    const doc = snapshot.docs[0];
-                    setDevotional({ id: doc.id, ...doc.data() } as Devotional);
-                }
+                const item = await getTodayDevotional(todayString);
+                if (item) setDevotional(item as Devotional);
             } catch (error) {
                 console.error("Error fetching today's devotional:", error);
             }

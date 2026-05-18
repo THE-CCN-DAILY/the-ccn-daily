@@ -125,6 +125,69 @@ CREATE TABLE IF NOT EXISTS courses (
 
 CREATE INDEX IF NOT EXISTS idx_courses_status_created ON courses(status, created_at DESC);
 
+CREATE TABLE IF NOT EXISTS devotionals (
+  id TEXT PRIMARY KEY,
+  title TEXT NOT NULL,
+  content TEXT NOT NULL DEFAULT '',
+  description TEXT NOT NULL DEFAULT '',
+  devotional_date TEXT NOT NULL,
+  audio_url TEXT,
+  status TEXT NOT NULL DEFAULT 'published',
+  author_id TEXT,
+  is_premium INTEGER NOT NULL DEFAULT 0,
+  price REAL NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_devotionals_status_date ON devotionals(status, devotional_date DESC);
+
+CREATE TABLE IF NOT EXISTS audiobooks (
+  id TEXT PRIMARY KEY,
+  title TEXT NOT NULL,
+  description TEXT NOT NULL DEFAULT '',
+  author TEXT NOT NULL DEFAULT 'THE CCN DAILY',
+  audio_url TEXT NOT NULL DEFAULT '',
+  cover_url TEXT,
+  status TEXT NOT NULL DEFAULT 'published',
+  is_premium INTEGER NOT NULL DEFAULT 0,
+  price REAL NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_audiobooks_status_created ON audiobooks(status, created_at DESC);
+
+CREATE TABLE IF NOT EXISTS books (
+  id TEXT PRIMARY KEY,
+  title TEXT NOT NULL,
+  description TEXT NOT NULL DEFAULT '',
+  author TEXT NOT NULL DEFAULT 'THE CCN DAILY',
+  file_url TEXT NOT NULL DEFAULT '',
+  cover_url TEXT,
+  status TEXT NOT NULL DEFAULT 'published',
+  is_premium INTEGER NOT NULL DEFAULT 0,
+  price REAL NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_books_status_created ON books(status, created_at DESC);
+
+CREATE TABLE IF NOT EXISTS media_assets (
+  id TEXT PRIMARY KEY,
+  content_type TEXT NOT NULL,
+  role TEXT NOT NULL,
+  file_name TEXT NOT NULL,
+  object_key TEXT NOT NULL,
+  public_url TEXT NOT NULL,
+  content_type_header TEXT,
+  size_bytes INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_media_assets_content_type ON media_assets(content_type, created_at DESC);
+
 CREATE TABLE IF NOT EXISTS notifications (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL DEFAULT 'broadcast',

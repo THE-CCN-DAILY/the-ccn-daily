@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import Card from '../components/Card';
-import { db } from '../firebase';
-import { collection, query, getDocs, orderBy } from 'firebase/firestore';
 import { SpeakerWaveIcon, SparklesIcon, PlayIcon } from '../components/icons';
-import { handleFirestoreError, OperationType } from '../utils/firestoreErrorHandler';
 import { useAudioPlayer } from '../contexts/AudioPlayerContext';
+import { listAudiobooks } from '../services/contentService';
 
 interface Audiobook {
   id: string;
@@ -23,15 +21,10 @@ const AudiobookLibraryPage: React.FC = () => {
   useEffect(() => {
     const fetchAudiobooks = async () => {
       try {
-        const q = query(collection(db, 'audiobooks'), orderBy('createdAt', 'desc'));
-        const querySnapshot = await getDocs(q);
-        const fetchedBooks: Audiobook[] = [];
-        querySnapshot.forEach((doc) => {
-          fetchedBooks.push({ id: doc.id, ...doc.data() } as Audiobook);
-        });
-        setAudiobooks(fetchedBooks);
+        const fetchedBooks = await listAudiobooks();
+        setAudiobooks(fetchedBooks as Audiobook[]);
       } catch (error) {
-        handleFirestoreError(error, OperationType.GET, 'audiobooks');
+        console.error('Error fetching audiobooks:', error);
       } finally {
         setLoading(false);
       }

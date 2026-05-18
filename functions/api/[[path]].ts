@@ -15,13 +15,30 @@ type WorkersAiBinding = {
   run: (model: string, input: unknown) => Promise<unknown>;
 };
 
+type R2ObjectBodyLike = {
+  body: ReadableStream;
+  httpEtag: string;
+  writeHttpMetadata: (headers: Headers) => void;
+};
+
+type R2BucketBinding = {
+  put: (
+    key: string,
+    value: ReadableStream | ArrayBuffer | string | Blob,
+    options?: { httpMetadata?: { contentType?: string } }
+  ) => Promise<unknown>;
+  get: (key: string) => Promise<R2ObjectBodyLike | null>;
+};
+
 type Env = {
   DB?: D1DatabaseBinding;
   AI?: WorkersAiBinding;
+  MEDIA_BUCKET?: R2BucketBinding;
   FIREBASE_PROJECT_ID?: string;
   PRODUCTION_ORIGIN?: string;
   ADMIN_EMAIL?: string;
   ADMIN_API_TOKEN?: string;
+  MEDIA_PUBLIC_BASE_URL?: string;
   WORKERS_AI_TEXT_MODEL?: string;
 };
 
@@ -133,6 +150,49 @@ type CourseProgressRow = {
   user_id: string;
   completed_modules: string;
   last_accessed?: string | null;
+  updated_at?: string | null;
+};
+
+type DevotionalRow = {
+  id: string;
+  title: string;
+  content: string;
+  description: string;
+  devotional_date: string;
+  audio_url?: string | null;
+  status: 'draft' | 'published' | 'archived';
+  author_id?: string | null;
+  is_premium: number;
+  price: number;
+  created_at?: string | null;
+  updated_at?: string | null;
+};
+
+type AudiobookRow = {
+  id: string;
+  title: string;
+  description: string;
+  author: string;
+  audio_url: string;
+  cover_url?: string | null;
+  status: 'draft' | 'published' | 'archived';
+  is_premium: number;
+  price: number;
+  created_at?: string | null;
+  updated_at?: string | null;
+};
+
+type BookRow = {
+  id: string;
+  title: string;
+  description: string;
+  author: string;
+  file_url: string;
+  cover_url?: string | null;
+  status: 'draft' | 'published' | 'archived';
+  is_premium: number;
+  price: number;
+  created_at?: string | null;
   updated_at?: string | null;
 };
 
@@ -344,6 +404,48 @@ const mapCourseProgress = (row: CourseProgressRow) => ({
   userId: row.user_id,
   completedModules: parseTags(row.completed_modules) || [],
   lastAccessed: row.last_accessed || undefined,
+  updatedAt: row.updated_at || undefined,
+});
+
+const mapDevotional = (row: DevotionalRow) => ({
+  id: row.id,
+  title: row.title,
+  description: row.description || row.content,
+  content: row.content,
+  date: row.devotional_date,
+  audioUrl: row.audio_url || undefined,
+  status: row.status,
+  isPremium: Boolean(row.is_premium),
+  price: Number(row.price || 0),
+  createdAt: row.created_at || undefined,
+  updatedAt: row.updated_at || undefined,
+});
+
+const mapAudiobook = (row: AudiobookRow) => ({
+  id: row.id,
+  title: row.title,
+  description: row.description,
+  author: row.author,
+  audioUrl: row.audio_url,
+  coverUrl: row.cover_url || undefined,
+  status: row.status,
+  isPremium: Boolean(row.is_premium),
+  price: Number(row.price || 0),
+  createdAt: row.created_at || undefined,
+  updatedAt: row.updated_at || undefined,
+});
+
+const mapBook = (row: BookRow) => ({
+  id: row.id,
+  title: row.title,
+  description: row.description,
+  author: row.author,
+  fileUrl: row.file_url,
+  coverUrl: row.cover_url || undefined,
+  status: row.status,
+  isPremium: Boolean(row.is_premium),
+  price: Number(row.price || 0),
+  createdAt: row.created_at || undefined,
   updatedAt: row.updated_at || undefined,
 });
 
@@ -1326,6 +1428,357 @@ app.delete('/api/admin/courses/:id/modules/:moduleId', async (c) => {
   ).bind(courseId, courseId).run();
 
   return c.json({ ok: true });
+});
+
+const contentTypes = ['devotionals', 'audiobooks', 'books', 'challenges', 'courses'] as const;
+type ContentType = typeof contentTypes[number];
+
+const isContentType = (value: string): value is ContentType =>
+  (contentTypes as readonly string[]).includes(value);
+
+const contentStatus = (value: unknown) =>
+  ['draft', 'published', 'archived'].includes(String(value)) ? String(value) : 'published';
+
+const contentTypeFromParam = (c: any) => {
+  const type = c.req.param('type');
+  return isContentType(type) ? type : null;
+};
+
+const listContentByType = async (c: any, type: ContentType, includeDrafts: boolean) => {
+  if (!c.env.DB) return c.json({ items: [], source: 'fallback' });
+
+  if (type === 'devotionals') {
+    const result = await c.env.DB.prepare(
+      includeDrafts
+        ? `SELECT * FROM devotionals ORDER BY devotional_date DESC, created_at DESC`
+        : `SELECT * FROM devotionals WHERE status = 'published' ORDER BY devotional_date DESC, created_at DESC`
+    ).all() as { results: DevotionalRow[] };
+    return c.json({ items: result.results.map(mapDevotional), source: 'd1' });
+  }
+
+  if (type === 'audiobooks') {
+    const result = await c.env.DB.prepare(
+      includeDrafts
+        ? `SELECT * FROM audiobooks ORDER BY created_at DESC`
+        : `SELECT * FROM audiobooks WHERE status = 'published' ORDER BY created_at DESC`
+    ).all() as { results: AudiobookRow[] };
+    return c.json({ items: result.results.map(mapAudiobook), source: 'd1' });
+  }
+
+  if (type === 'books') {
+    const result = await c.env.DB.prepare(
+      includeDrafts
+        ? `SELECT * FROM books ORDER BY created_at DESC`
+        : `SELECT * FROM books WHERE status = 'published' ORDER BY created_at DESC`
+    ).all() as { results: BookRow[] };
+    return c.json({ items: result.results.map(mapBook), source: 'd1' });
+  }
+
+  if (type === 'challenges') {
+    const result = await c.env.DB.prepare(
+      includeDrafts
+        ? `SELECT * FROM challenges ORDER BY start_date DESC, created_at DESC`
+        : `SELECT * FROM challenges WHERE status = 'published' ORDER BY start_date DESC, created_at DESC`
+    ).all() as { results: ChallengeRow[] };
+    return c.json({ items: result.results.map(mapChallenge), source: 'd1' });
+  }
+
+  const result = await c.env.DB.prepare(
+    includeDrafts
+      ? `SELECT * FROM courses ORDER BY created_at DESC`
+      : `SELECT * FROM courses WHERE status = 'published' ORDER BY created_at DESC`
+  ).all() as { results: CourseRow[] };
+  return c.json({ items: result.results.map(mapCourse), source: 'd1' });
+};
+
+app.get('/api/devotionals/today', async (c) => {
+  if (!c.env.DB) return c.json({ devotional: null, source: 'fallback' });
+  const date = String(c.req.query('date') || new Date().toISOString().slice(0, 10));
+  const devotional = await c.env.DB.prepare(
+    `SELECT * FROM devotionals
+     WHERE status = 'published' AND devotional_date <= ?
+     ORDER BY devotional_date DESC, created_at DESC
+     LIMIT 1`
+  ).bind(date).first<DevotionalRow>();
+
+  return c.json({ devotional: devotional ? mapDevotional(devotional) : null, source: 'd1' });
+});
+
+app.get('/api/audiobooks', async (c) => {
+  if (!c.env.DB) return c.json({ audiobooks: [], source: 'fallback' });
+  const result = await c.env.DB.prepare(
+    `SELECT * FROM audiobooks WHERE status = 'published' ORDER BY created_at DESC`
+  ).all<AudiobookRow>();
+  return c.json({ audiobooks: result.results.map(mapAudiobook), source: 'd1' });
+});
+
+app.get('/api/books', async (c) => {
+  if (!c.env.DB) return c.json({ books: [], source: 'fallback' });
+  const result = await c.env.DB.prepare(
+    `SELECT * FROM books WHERE status = 'published' ORDER BY created_at DESC`
+  ).all<BookRow>();
+  return c.json({ books: result.results.map(mapBook), source: 'd1' });
+});
+
+app.post('/api/admin/content/media', async (c) => {
+  const denied = requireAdmin(c);
+  if (denied) return denied;
+  if (!c.env.MEDIA_BUCKET) {
+    return c.json({
+      error: 'MEDIA_BUCKET_NOT_CONFIGURED',
+      message: 'Cloudflare R2 is not bound yet. Paste a hosted media URL or configure the MEDIA_BUCKET R2 binding.',
+    }, 503);
+  }
+
+  const form = await c.req.formData();
+  const file = form.get('file');
+  const type = String(form.get('type') || '').trim();
+  const role = String(form.get('role') || 'file').trim();
+  if (!isContentType(type)) return c.json({ error: 'Unsupported content type' }, 400);
+  if (!(file instanceof File)) return c.json({ error: 'File is required' }, 400);
+
+  const safeName = file.name.replace(/[^a-zA-Z0-9._-]+/g, '-').slice(0, 120) || 'upload.bin';
+  const key = `${type}/${role}/${Date.now()}-${crypto.randomUUID()}-${safeName}`;
+  await c.env.MEDIA_BUCKET.put(key, file.stream(), {
+    httpMetadata: { contentType: file.type || 'application/octet-stream' },
+  });
+
+  const publicBase = (c.env.MEDIA_PUBLIC_BASE_URL || '').replace(/\/$/, '');
+  const url = publicBase ? `${publicBase}/${key}` : `/api/media/${key}`;
+
+  if (c.env.DB) {
+    await c.env.DB.prepare(
+      `INSERT INTO media_assets (
+        id, content_type, role, file_name, object_key, public_url, content_type_header, size_bytes, created_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`
+    ).bind(
+      crypto.randomUUID(),
+      type,
+      role,
+      file.name,
+      key,
+      url,
+      file.type || null,
+      file.size || 0
+    ).run();
+  }
+
+  return c.json({ url, key, source: 'r2' });
+});
+
+app.get('/api/admin/content/:type', async (c) => {
+  const denied = requireAdmin(c);
+  if (denied) return denied;
+  const type = contentTypeFromParam(c);
+  if (!type) return c.json({ error: 'Unsupported content type' }, 400);
+  return listContentByType(c, type, c.req.query('includeDrafts') === 'true');
+});
+
+app.post('/api/admin/content/:type', async (c) => {
+  const denied = requireAdmin(c);
+  if (denied) return denied;
+  const type = contentTypeFromParam(c);
+  if (!type) return c.json({ error: 'Unsupported content type' }, 400);
+  if (!c.env.DB) return c.json({ error: 'D1 database binding is not configured' }, 503);
+
+  const body = await c.req.json();
+  const title = String(body.title || '').trim();
+  if (!title) return c.json({ error: 'Title is required' }, 400);
+  const status = contentStatus(body.status);
+  const idPrefix = type.slice(0, -1) || type;
+  const id = String(body.id || `${idPrefix}-${slugify(title)}-${Date.now()}`);
+  if (!isSafeId(id)) return c.json({ error: 'Invalid content id' }, 400);
+
+  if (type === 'devotionals') {
+    await c.env.DB.prepare(
+      `INSERT INTO devotionals (
+        id, title, content, description, devotional_date, audio_url, status, author_id,
+        is_premium, price, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+      ON CONFLICT(id) DO UPDATE SET
+        title = excluded.title,
+        content = excluded.content,
+        description = excluded.description,
+        devotional_date = excluded.devotional_date,
+        audio_url = excluded.audio_url,
+        status = excluded.status,
+        author_id = excluded.author_id,
+        is_premium = excluded.is_premium,
+        price = excluded.price,
+        updated_at = CURRENT_TIMESTAMP`
+    ).bind(
+      id,
+      title,
+      String(body.content || body.description || '').trim(),
+      String(body.description || '').trim(),
+      String(body.date || body.devotionalDate || new Date().toISOString().slice(0, 10)),
+      body.audioUrl || null,
+      status,
+      body.authorId || null,
+      body.isPremium ? 1 : 0,
+      Number(body.price || 0)
+    ).run();
+
+    const item = await c.env.DB.prepare(`SELECT * FROM devotionals WHERE id = ? LIMIT 1`)
+      .bind(id).first<DevotionalRow>();
+    return c.json({ item: item ? mapDevotional(item) : null, source: 'd1' });
+  }
+
+  if (type === 'audiobooks') {
+    await c.env.DB.prepare(
+      `INSERT INTO audiobooks (
+        id, title, description, author, audio_url, cover_url, status, is_premium, price,
+        created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+      ON CONFLICT(id) DO UPDATE SET
+        title = excluded.title,
+        description = excluded.description,
+        author = excluded.author,
+        audio_url = excluded.audio_url,
+        cover_url = excluded.cover_url,
+        status = excluded.status,
+        is_premium = excluded.is_premium,
+        price = excluded.price,
+        updated_at = CURRENT_TIMESTAMP`
+    ).bind(
+      id,
+      title,
+      String(body.description || '').trim(),
+      String(body.author || 'THE CCN DAILY').trim(),
+      String(body.audioUrl || '').trim(),
+      body.coverUrl || null,
+      status,
+      body.isPremium ? 1 : 0,
+      Number(body.price || 0)
+    ).run();
+
+    const item = await c.env.DB.prepare(`SELECT * FROM audiobooks WHERE id = ? LIMIT 1`)
+      .bind(id).first<AudiobookRow>();
+    return c.json({ item: item ? mapAudiobook(item) : null, source: 'd1' });
+  }
+
+  if (type === 'books') {
+    await c.env.DB.prepare(
+      `INSERT INTO books (
+        id, title, description, author, file_url, cover_url, status, is_premium, price,
+        created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+      ON CONFLICT(id) DO UPDATE SET
+        title = excluded.title,
+        description = excluded.description,
+        author = excluded.author,
+        file_url = excluded.file_url,
+        cover_url = excluded.cover_url,
+        status = excluded.status,
+        is_premium = excluded.is_premium,
+        price = excluded.price,
+        updated_at = CURRENT_TIMESTAMP`
+    ).bind(
+      id,
+      title,
+      String(body.description || '').trim(),
+      String(body.author || 'THE CCN DAILY').trim(),
+      String(body.fileUrl || '').trim(),
+      body.coverUrl || null,
+      status,
+      body.isPremium ? 1 : 0,
+      Number(body.price || 0)
+    ).run();
+
+    const item = await c.env.DB.prepare(`SELECT * FROM books WHERE id = ? LIMIT 1`)
+      .bind(id).first<BookRow>();
+    return c.json({ item: item ? mapBook(item) : null, source: 'd1' });
+  }
+
+  if (type === 'challenges') {
+    await c.env.DB.prepare(
+      `INSERT INTO challenges (
+        id, title, description, duration, source_type, cover_url, status, start_date,
+        participants_count, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, COALESCE(?, CURRENT_TIMESTAMP), ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+      ON CONFLICT(id) DO UPDATE SET
+        title = excluded.title,
+        description = excluded.description,
+        duration = excluded.duration,
+        source_type = excluded.source_type,
+        cover_url = excluded.cover_url,
+        status = excluded.status,
+        start_date = excluded.start_date,
+        updated_at = CURRENT_TIMESTAMP`
+    ).bind(
+      id,
+      title,
+      String(body.description || '').trim(),
+      body.duration || null,
+      body.sourceType || 'content-manager',
+      body.coverUrl || null,
+      status,
+      body.startDate || body.date || new Date().toISOString(),
+      Number(body.participantsCount || 0)
+    ).run();
+
+    const item = await c.env.DB.prepare(`SELECT * FROM challenges WHERE id = ? LIMIT 1`)
+      .bind(id).first<ChallengeRow>();
+    return c.json({ item: item ? mapChallenge(item) : null, source: 'd1' });
+  }
+
+  await c.env.DB.prepare(
+    `INSERT INTO courses (
+      id, title, description, instructor, cover_url, status, is_premium, module_count, created_at, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+    ON CONFLICT(id) DO UPDATE SET
+      title = excluded.title,
+      description = excluded.description,
+      instructor = excluded.instructor,
+      cover_url = excluded.cover_url,
+      status = excluded.status,
+      is_premium = excluded.is_premium,
+      updated_at = CURRENT_TIMESTAMP`
+  ).bind(
+    id,
+    title,
+    String(body.description || '').trim(),
+    String(body.instructor || body.author || 'THE CCN DAILY').trim(),
+    body.coverUrl || null,
+    status,
+    body.isPremium ? 1 : 0,
+    Math.max(0, Number(body.moduleCount || 0))
+  ).run();
+
+  const item = await c.env.DB.prepare(`SELECT * FROM courses WHERE id = ? LIMIT 1`)
+    .bind(id).first<CourseRow>();
+  return c.json({ item: item ? mapCourse(item) : null, source: 'd1' });
+});
+
+app.delete('/api/admin/content/:type/:id', async (c) => {
+  const denied = requireAdmin(c);
+  if (denied) return denied;
+  const type = contentTypeFromParam(c);
+  const id = c.req.param('id');
+  if (!type) return c.json({ error: 'Unsupported content type' }, 400);
+  if (!isSafeId(id)) return c.json({ error: 'Invalid content id' }, 400);
+  if (!c.env.DB) return c.json({ error: 'D1 database binding is not configured' }, 503);
+
+  const table = type === 'devotionals' ? 'devotionals'
+    : type === 'audiobooks' ? 'audiobooks'
+      : type === 'books' ? 'books'
+        : type === 'challenges' ? 'challenges'
+          : 'courses';
+
+  await c.env.DB.prepare(`DELETE FROM ${table} WHERE id = ?`).bind(id).run();
+  return c.json({ ok: true });
+});
+
+app.get('/api/media/*', async (c) => {
+  const key = c.req.path.replace(/^\/api\/media\//, '');
+  if (!key || !c.env.MEDIA_BUCKET) return c.json({ error: 'Media not found' }, 404);
+  const object = await c.env.MEDIA_BUCKET.get(key);
+  if (!object) return c.json({ error: 'Media not found' }, 404);
+
+  const headers = new Headers();
+  object.writeHttpMetadata(headers);
+  headers.set('etag', object.httpEtag);
+  return new Response(object.body, { headers });
 });
 
 app.get('/api/users/:userId/notifications', async (c) => {
