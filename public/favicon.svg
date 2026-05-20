@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1C1510"/>
+      <stop offset="100%" stop-color="#0D0B09"/>
+    </linearGradient>
+    <radialGradient id="bgWarm" cx="50%" cy="70%" r="55%">
+      <stop offset="0%" stop-color="#3B1E06" stop-opacity="0.7"/>
+      <stop offset="100%" stop-color="#0D0B09" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="mark" x1="0.5" y1="0" x2="0.5" y2="1">
+      <stop offset="0%" stop-color="#FFD580"/>
+      <stop offset="45%" stop-color="#F78B2E"/>
+      <stop offset="100%" stop-color="#D85C00"/>
+    </linearGradient>
+    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="9" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="softglow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="18" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background rounded square -->
+  <rect width="512" height="512" rx="92" fill="url(#bg)"/>
+  <!-- Warm inner glow near the mark -->
+  <rect width="512" height="512" rx="92" fill="url(#bgWarm)"/>
+
+  <!-- Halo behind the mark (wide soft glow) -->
+  <g filter="url(#softglow)" opacity="0.35">
+    <path d="M 92 352 A 164 164 0 0 1 420 352" stroke="#F78B2E" stroke-width="52" fill="none" stroke-linecap="round"/>
+    <line x1="256" y1="354" x2="256" y2="108" stroke="#F78B2E" stroke-width="52" stroke-linecap="round"/>
+    <line x1="162" y1="218" x2="350" y2="218" stroke="#F78B2E" stroke-width="52" stroke-linecap="round"/>
+  </g>
+
+  <!-- Sunrise arc — base of icon -->
+  <path d="M 92 352 A 164 164 0 0 1 420 352"
+        stroke="url(#mark)" stroke-width="48"
+        fill="none" stroke-linecap="round"
+        filter="url(#glow)"/>
+
+  <!-- Cross vertical bar (rises from arc center) -->
+  <line x1="256" y1="354" x2="256" y2="108"
+        stroke="url(#mark)" stroke-width="48"
+        stroke-linecap="round"
+        filter="url(#glow)"/>
+
+  <!-- Cross horizontal bar -->
+  <line x1="162" y1="218" x2="350" y2="218"
+        stroke="url(#mark)" stroke-width="48"
+        stroke-linecap="round"
+        filter="url(#glow)"/>
+
+  <!-- Light rays — subtle, from top of cross -->
+  <g opacity="0.5" stroke="#FFD580" stroke-width="15" stroke-linecap="round" filter="url(#glow)">
+    <line x1="256" y1="90"  x2="256" y2="62"/>
+    <line x1="295" y1="104" x2="318" y2="78"/>
+    <line x1="217" y1="104" x2="194" y2="78"/>
+  </g>
+</svg>

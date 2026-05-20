@@ -1,0 +1,17 @@
+{
+  "name": "THE CCN DAILY",
+  "short_name": "CCN Daily",
+  "description": "Faith for the workday soul — daily devotionals, Scripture, podcasts, and community.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0D0B09",
+  "theme_color": "#0D0B09",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

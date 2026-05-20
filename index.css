@@ -1,36 +1,43 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Libre+Baskerville:wght@400;700&family=Source+Code+Pro:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Source+Code+Pro:wght@400;500;600&display=swap');
 @import "tailwindcss";
 
-:root {
-  --color-primary-blue-raw: 120 113 108;
-  --color-secondary-purple-raw: 168 162 158;
-  --color-accent-gold-raw: 120 113 108;
+/* ─── Design Tokens ────────────────────────────────────────────────────────── */
 
-  --bg-raw: 250 250 249;
-  --surface-raw: 245 245 244;
-  --surface-raised-raw: 239 237 235;
+:root {
+  /* Brand action color — vivid amber orange for CTAs, highlights */
+  --cta-raw: 242 125 38;        /* #F27D26 */
+  --cta-light-raw: 255 175 80;  /* #FFAF50 */
+
+  /* Semantic palette */
+  --color-primary-blue-raw: 66 99 140;     /* #42638C */
+  --color-secondary-purple-raw: 130 110 140; /* #826E8C */
+  --color-accent-gold-raw: 180 145 60;     /* #B4913C — distinct from blue */
+
+  /* Light theme surfaces */
+  --bg-raw: 250 248 245;
+  --surface-raw: 244 240 234;
+  --surface-raised-raw: 236 231 224;
   --text-primary-raw: 28 25 23;
   --text-secondary-raw: 87 83 78;
   --text-tertiary-raw: 168 162 158;
-  --border-raw: 231 229 228;
+  --border-raw: 228 224 218;
   --border-strong-raw: 168 162 158;
-  --accent-gold-raw: 120 113 108;
 
+  /* Fonts */
   --font-display: "Libre Baskerville", Georgia, "Times New Roman", serif;
   --font-ui: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --font-mono: "Source Code Pro", "Fira Code", Consolas, monospace;
 }
 
 .dark {
-  --bg-raw: 28 25 23;
-  --surface-raw: 41 37 36;
-  --surface-raised-raw: 58 51 45;
-  --text-primary-raw: 250 250 249;
-  --text-secondary-raw: 214 211 209;
-  --text-tertiary-raw: 168 162 158;
-  --border-raw: 68 64 60;
-  --border-strong-raw: 120 113 108;
-  --accent-gold-raw: 168 162 158;
+  --bg-raw: 15 13 11;
+  --surface-raw: 28 25 23;
+  --surface-raised-raw: 41 37 36;
+  --text-primary-raw: 250 248 245;
+  --text-secondary-raw: 196 190 185;
+  --text-tertiary-raw: 140 134 128;
+  --border-raw: 52 48 44;
+  --border-strong-raw: 90 84 78;
 }
 
 .sepia {
@@ -42,29 +49,42 @@
   --text-tertiary-raw: 139 116 94;
   --border-raw: 214 199 176;
   --border-strong-raw: 139 116 94;
-  --accent-gold-raw: 92 74 58;
 }
+
+/* ─── Tailwind v4 Theme Map ────────────────────────────────────────────────── */
 
 @theme {
-  --color-primary-blue: rgb(var(--color-primary-blue-raw));
-  --color-secondary-purple: rgb(var(--color-secondary-purple-raw));
-  --color-accent-gold: rgb(var(--color-accent-gold-raw));
-  
-  --color-brand-dark: rgb(var(--surface-raw));
-  --color-brand-secondary: rgb(var(--bg-raw));
-  --color-brand-light: rgb(var(--text-primary-raw));
+  --color-brand-cta:          rgb(var(--cta-raw));
+  --color-brand-cta-light:    rgb(var(--cta-light-raw));
+  --color-primary-blue:       rgb(var(--color-primary-blue-raw));
+  --color-secondary-purple:   rgb(var(--color-secondary-purple-raw));
+  --color-accent-gold:        rgb(var(--color-accent-gold-raw));
+
+  --color-brand-dark:         rgb(var(--surface-raw));
+  --color-brand-secondary:    rgb(var(--bg-raw));
+  --color-brand-light:        rgb(var(--text-primary-raw));
   --color-brand-text-primary: rgb(var(--text-primary-raw));
   --color-brand-text-secondary: rgb(var(--text-secondary-raw));
-  --color-brand-border: rgb(var(--border-raw));
-  --color-brand-gold: rgb(var(--accent-gold-raw));
-  --color-brand-accent: rgb(var(--color-primary-blue-raw));
+  --color-brand-text-tertiary:  rgb(var(--text-tertiary-raw));
+  --color-brand-border:       rgb(var(--border-raw));
+  --color-brand-border-strong: rgb(var(--border-strong-raw));
 
-  --color-dynamic-accent: var(--color-primary-blue-raw);
+  /* brand-accent = CTA orange (was: muted gray — fixed) */
+  --color-brand-accent:       rgb(var(--cta-raw));
+
+  /* Keyframes */
+  --animate-fade-in: fade-in 0.5s ease forwards;
+  --animate-slide-up: slide-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  --animate-glow-pulse: glow-pulse 3s ease-in-out infinite;
 }
+
+/* ─── Base ─────────────────────────────────────────────────────────────────── */
 
 @layer base {
   html {
     font-family: var(--font-ui);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
   body {
@@ -74,16 +94,41 @@
     @apply min-h-screen;
   }
 
-  h1,
-  h2,
-  h3,
-  .font-display {
+  h1, h2, h3, .font-display {
     font-family: var(--font-display);
   }
 
-  code,
-  pre,
-  kbd {
+  code, pre, kbd {
     font-family: var(--font-mono);
+  }
+}
+
+/* ─── Keyframes ─────────────────────────────────────────────────────────────── */
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes glow-pulse {
+  0%, 100% { opacity: 0.4; }
+  50%       { opacity: 0.75; }
+}
+
+/* ─── Accessibility: Reduced Motion ─────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

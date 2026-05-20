@@ -12,6 +12,7 @@ dist
 dist-ssr
 *.local
 .wrangler
+.dev.vars
 artifacts/browser-profiles
 
 # Editor directories and files
