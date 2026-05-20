@@ -1,50 +1,42 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Card from '../components/Card';
-import { db } from '../firebase';
-import { collection, query, orderBy, limit, onSnapshot, addDoc, serverTimestamp } from 'firebase/firestore';
 import { useAuth } from '../contexts/AuthContext';
 import { ChatBubbleLeftRightIcon, PaperAirplaneIcon } from '../components/icons';
-import { handleFirestoreError, OperationType } from '../utils/firestoreErrorHandler';
-
-interface ChatMessage {
-  id: string;
-  user: string;
-  userId: string;
-  text: string;
-  createdAt: any;
-}
+import { CommunityMessage, listCommunityMessages, sendCommunityMessage } from '../services/communityService';
 
 const CommunityRoomsPage: React.FC = () => {
   const { user } = useAuth();
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [messages, setMessages] = useState<CommunityMessage[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!user) return;
+    let cancelled = false;
 
-    const q = query(
-      collection(db, 'liveChat'),
-      orderBy('createdAt', 'desc'),
-      limit(50)
-    );
+    const loadMessages = async (showSpinner = false) => {
+      if (showSpinner) setLoading(true);
+      setError('');
+      try {
+        const fetchedMessages = await listCommunityMessages(50);
+        if (!cancelled) setMessages(fetchedMessages);
+      } catch (error) {
+        console.error('Failed to load community room messages:', error);
+        if (!cancelled) setError('Messages could not be refreshed. Please try again shortly.');
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const fetchedMessages: ChatMessage[] = [];
-      snapshot.forEach((doc) => {
-        fetchedMessages.push({ id: doc.id, ...doc.data() } as ChatMessage);
-      });
-      // Reverse to show oldest first (bottom to top)
-      setMessages(fetchedMessages.reverse());
-      setLoading(false);
-    }, (error) => {
-      handleFirestoreError(error, OperationType.GET, 'liveChat');
-      setLoading(false);
-    });
+    loadMessages(true);
+    const interval = window.setInterval(() => loadMessages(false), 5000);
 
-    return () => unsubscribe();
-  }, [user]);
+    return () => {
+      cancelled = true;
+      window.clearInterval(interval);
+    };
+  }, []);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -58,21 +50,22 @@ const CommunityRoomsPage: React.FC = () => {
     setNewMessage('');
 
     try {
-      await addDoc(collection(db, 'liveChat'), {
+      const sentMessage = await sendCommunityMessage({
         user: user.displayName || user.email?.split('@')[0] || 'Anonymous',
         userId: user.uid,
         text: messageText,
-        createdAt: serverTimestamp(),
       });
+      if (sentMessage) setMessages(prev => [...prev, sentMessage]);
     } catch (error) {
-      handleFirestoreError(error, OperationType.CREATE, 'liveChat');
-      setNewMessage(messageText); // Restore on failure
+      console.error('Failed to send community room message:', error);
+      setError(error instanceof Error ? error.message : 'Message could not be sent.');
+      setNewMessage(messageText);
     }
   };
 
-  const formatTime = (timestamp: any) => {
+  const formatTime = (timestamp?: string) => {
     if (!timestamp) return '';
-    const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+    const date = new Date(timestamp);
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
@@ -91,6 +84,11 @@ const CommunityRoomsPage: React.FC = () => {
       <Card className="flex-1 flex flex-col border-brand-border bg-brand-dark/50 overflow-hidden p-0">
         {/* Messages Area */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
+          {error && (
+            <Card className="border-status-warning/40 bg-status-warning/10">
+              <p className="text-sm text-brand-text-secondary">{error}</p>
+            </Card>
+          )}
           {loading ? (
             <div className="flex justify-center py-10">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-accent"></div>

@@ -212,6 +212,39 @@ CREATE TABLE IF NOT EXISTS event_registrations (
 
 CREATE INDEX IF NOT EXISTS idx_event_registrations_user ON event_registrations(user_id, created_at DESC);
 
+CREATE TABLE IF NOT EXISTS prayer_requests (
+  id TEXT PRIMARY KEY,
+  text TEXT NOT NULL,
+  author TEXT NOT NULL DEFAULT 'Anonymous',
+  author_uid TEXT,
+  prayer_count INTEGER NOT NULL DEFAULT 0,
+  testimony TEXT,
+  is_anonymous INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_prayer_requests_created ON prayer_requests(created_at DESC);
+
+CREATE TABLE IF NOT EXISTS prayer_request_prayers (
+  request_id TEXT NOT NULL,
+  user_id TEXT NOT NULL,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (request_id, user_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_prayer_request_prayers_user ON prayer_request_prayers(user_id, created_at DESC);
+
+CREATE TABLE IF NOT EXISTS community_messages (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  user_name TEXT NOT NULL DEFAULT 'Anonymous',
+  text TEXT NOT NULL,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_community_messages_created ON community_messages(created_at DESC);
+
 CREATE TABLE IF NOT EXISTS notifications (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL DEFAULT 'broadcast',

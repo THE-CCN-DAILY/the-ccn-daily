@@ -166,6 +166,26 @@ type EventRow = {
   updated_at?: string | null;
 };
 
+type PrayerRequestRow = {
+  id: string;
+  text: string;
+  author: string;
+  author_uid?: string | null;
+  prayer_count: number;
+  testimony?: string | null;
+  is_anonymous: number;
+  created_at?: string | null;
+  updated_at?: string | null;
+};
+
+type CommunityMessageRow = {
+  id: string;
+  user_id: string;
+  user_name: string;
+  text: string;
+  created_at?: string | null;
+};
+
 type DevotionalRow = {
   id: string;
   title: string;
@@ -431,6 +451,26 @@ const mapEvent = (row: EventRow) => ({
   status: row.status,
   createdAt: row.created_at || undefined,
   updatedAt: row.updated_at || undefined,
+});
+
+const mapPrayerRequest = (row: PrayerRequestRow) => ({
+  id: row.id,
+  text: row.text,
+  author: row.author,
+  authorUid: row.author_uid || undefined,
+  prayerCount: row.prayer_count || 0,
+  testimony: row.testimony || undefined,
+  isAnonymous: Boolean(row.is_anonymous),
+  createdAt: row.created_at || undefined,
+  updatedAt: row.updated_at || undefined,
+});
+
+const mapCommunityMessage = (row: CommunityMessageRow) => ({
+  id: row.id,
+  userId: row.user_id,
+  user: row.user_name,
+  text: row.text,
+  createdAt: row.created_at || undefined,
 });
 
 const mapDevotional = (row: DevotionalRow) => ({
@@ -1542,6 +1582,159 @@ app.delete('/api/admin/events/:id', async (c) => {
 
   await c.env.DB.prepare(`DELETE FROM event_registrations WHERE event_id = ?`).bind(id).run();
   await c.env.DB.prepare(`DELETE FROM events WHERE id = ?`).bind(id).run();
+
+  return c.json({ ok: true });
+});
+
+app.get('/api/community/prayer-requests', async (c) => {
+  if (!c.env.DB) return c.json({ requests: [], source: 'fallback' });
+
+  const result = await c.env.DB.prepare(
+    `SELECT * FROM prayer_requests
+     ORDER BY created_at DESC
+     LIMIT 100`
+  ).all<PrayerRequestRow>();
+
+  return c.json({ requests: result.results.map(mapPrayerRequest), source: 'd1' });
+});
+
+app.post('/api/community/prayer-requests', async (c) => {
+  if (!c.env.DB) return c.json({ error: 'D1 database binding is not configured' }, 503);
+
+  const body = await c.req.json();
+  const text = String(body.text || '').trim();
+  const isAnonymous = Boolean(body.isAnonymous);
+  const authorUid = String(body.authorUid || '').trim() || null;
+  const author = isAnonymous ? 'Anonymous' : String(body.author || 'Community Member').trim();
+  const prayerCount = Math.max(0, Number(body.prayerCount || 1));
+  const testimony = String(body.testimony || '').trim() || null;
+  const id = String(body.id || crypto.randomUUID()).trim();
+
+  if (!text) return c.json({ error: 'Prayer request text is required' }, 400);
+  if (!isSafeId(id)) return c.json({ error: 'Invalid prayer request id' }, 400);
+  if (authorUid && !isSafeId(authorUid)) return c.json({ error: 'Invalid author id' }, 400);
+
+  await c.env.DB.prepare(
+    `INSERT INTO prayer_requests (
+      id, text, author, author_uid, prayer_count, testimony, is_anonymous, created_at, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+    ON CONFLICT(id) DO UPDATE SET
+      text = excluded.text,
+      author = excluded.author,
+      author_uid = excluded.author_uid,
+      prayer_count = excluded.prayer_count,
+      testimony = excluded.testimony,
+      is_anonymous = excluded.is_anonymous,
+      updated_at = CURRENT_TIMESTAMP`
+  ).bind(id, text, author || 'Community Member', authorUid, prayerCount, testimony, isAnonymous ? 1 : 0).run();
+
+  if (prayerCount > 0) {
+    await c.env.DB.prepare(
+      `INSERT OR IGNORE INTO prayer_request_prayers (request_id, user_id, created_at)
+       VALUES (?, ?, CURRENT_TIMESTAMP)`
+    ).bind(id, authorUid || `seed:${id}`).run();
+  }
+
+  const request = await c.env.DB.prepare(
+    `SELECT * FROM prayer_requests WHERE id = ? LIMIT 1`
+  ).bind(id).first<PrayerRequestRow>();
+
+  return c.json({ request: request ? mapPrayerRequest(request) : null, source: 'd1' });
+});
+
+app.post('/api/community/prayer-requests/:id/pray', async (c) => {
+  const id = c.req.param('id');
+  if (!isSafeId(id)) return c.json({ error: 'Invalid prayer request id' }, 400);
+  if (!c.env.DB) return c.json({ error: 'D1 database binding is not configured' }, 503);
+
+  const body = await c.req.json().catch(() => ({}));
+  const userId = String(body.userId || 'anonymous').trim() || 'anonymous';
+  if (!isSafeId(userId)) return c.json({ error: 'Invalid user id' }, 400);
+
+  const existing = await c.env.DB.prepare(
+    `SELECT * FROM prayer_requests WHERE id = ? LIMIT 1`
+  ).bind(id).first<PrayerRequestRow>();
+  if (!existing) return c.json({ error: 'Prayer request not found' }, 404);
+
+  await c.env.DB.prepare(
+    `INSERT OR IGNORE INTO prayer_request_prayers (request_id, user_id, created_at)
+     VALUES (?, ?, CURRENT_TIMESTAMP)`
+  ).bind(id, userId).run();
+
+  await c.env.DB.prepare(
+    `UPDATE prayer_requests
+     SET prayer_count = MAX(prayer_count, (SELECT COUNT(*) FROM prayer_request_prayers WHERE request_id = ?)),
+         updated_at = CURRENT_TIMESTAMP
+     WHERE id = ?`
+  ).bind(id, id).run();
+
+  const request = await c.env.DB.prepare(
+    `SELECT * FROM prayer_requests WHERE id = ? LIMIT 1`
+  ).bind(id).first<PrayerRequestRow>();
+
+  return c.json({ request: request ? mapPrayerRequest(request) : null, source: 'd1' });
+});
+
+app.delete('/api/admin/community/prayer-requests/:id', async (c) => {
+  const denied = requireAdmin(c);
+  if (denied) return denied;
+  const id = c.req.param('id');
+  if (!isSafeId(id)) return c.json({ error: 'Invalid prayer request id' }, 400);
+  if (!c.env.DB) return c.json({ error: 'D1 database binding is not configured' }, 503);
+
+  await c.env.DB.prepare(`DELETE FROM prayer_request_prayers WHERE request_id = ?`).bind(id).run();
+  await c.env.DB.prepare(`DELETE FROM prayer_requests WHERE id = ?`).bind(id).run();
+
+  return c.json({ ok: true });
+});
+
+app.get('/api/community/rooms/messages', async (c) => {
+  if (!c.env.DB) return c.json({ messages: [], source: 'fallback' });
+  const rawLimit = Number(c.req.query('limit') || 50);
+  const messageLimit = Math.min(Math.max(Number.isFinite(rawLimit) ? rawLimit : 50, 1), 100);
+
+  const result = await c.env.DB.prepare(
+    `SELECT * FROM (
+       SELECT * FROM community_messages ORDER BY created_at DESC LIMIT ?
+     ) ORDER BY created_at ASC`
+  ).bind(messageLimit).all<CommunityMessageRow>();
+
+  return c.json({ messages: result.results.map(mapCommunityMessage), source: 'd1' });
+});
+
+app.post('/api/community/rooms/messages', async (c) => {
+  if (!c.env.DB) return c.json({ error: 'D1 database binding is not configured' }, 503);
+
+  const body = await c.req.json();
+  const text = String(body.text || '').trim();
+  const userId = String(body.userId || 'anonymous').trim() || 'anonymous';
+  const user = String(body.user || 'Anonymous').trim() || 'Anonymous';
+  const id = String(body.id || crypto.randomUUID()).trim();
+
+  if (!text) return c.json({ error: 'Message text is required' }, 400);
+  if (!isSafeId(id)) return c.json({ error: 'Invalid message id' }, 400);
+  if (!isSafeId(userId)) return c.json({ error: 'Invalid user id' }, 400);
+
+  await c.env.DB.prepare(
+    `INSERT INTO community_messages (id, user_id, user_name, text, created_at)
+     VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)`
+  ).bind(id, userId, user, text).run();
+
+  const message = await c.env.DB.prepare(
+    `SELECT * FROM community_messages WHERE id = ? LIMIT 1`
+  ).bind(id).first<CommunityMessageRow>();
+
+  return c.json({ message: message ? mapCommunityMessage(message) : null, source: 'd1' });
+});
+
+app.delete('/api/admin/community/messages/:id', async (c) => {
+  const denied = requireAdmin(c);
+  if (denied) return denied;
+  const id = c.req.param('id');
+  if (!isSafeId(id)) return c.json({ error: 'Invalid message id' }, 400);
+  if (!c.env.DB) return c.json({ error: 'D1 database binding is not configured' }, 503);
+
+  await c.env.DB.prepare(`DELETE FROM community_messages WHERE id = ?`).bind(id).run();
 
   return c.json({ ok: true });
 });

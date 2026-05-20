@@ -1,23 +1,21 @@
 
 import React, { useState, useEffect } from 'react';
 import Card from '../components/Card';
-import { PrayingHandsIcon, SendIcon, UserIcon, SparklesIcon, CheckIcon, SearchIcon, SpinnerIcon, AiIcon, CommunityIcon } from '../components/icons';
-import type { PrayerRequest } from '../types';
+import { PrayingHandsIcon, SendIcon, UserIcon, SparklesIcon, SearchIcon, SpinnerIcon, AiIcon, CommunityIcon } from '../components/icons';
 import { useGamification } from '../contexts/GamificationContext';
 import { getGroundedPrayerTopics } from '../services/geminiService';
-import { db, auth } from '../firebase';
-import { collection, addDoc, onSnapshot, query, orderBy, updateDoc, doc, increment, serverTimestamp } from 'firebase/firestore';
-import { handleFirestoreError, OperationType } from '../utils/firestoreErrorHandler';
 import { useAuth } from '../contexts/AuthContext';
+import { CommunityPrayerRequest, createPrayerRequest, listPrayerRequests, prayForRequest } from '../services/communityService';
 
 const TheCommunity: React.FC = () => {
     const { user } = useAuth();
-    const [requests, setRequests] = useState<any[]>([]);
+    const [requests, setRequests] = useState<CommunityPrayerRequest[]>([]);
     const [newRequestText, setNewRequestText] = useState('');
     const [isAnonymous, setIsAnonymous] = useState(false);
     const [prayedFor, setPrayedFor] = useState<string[]>([]);
     const [activeTab, setActiveTab] = useState<'wall' | 'lumina'>('lumina');
     const [isLoading, setIsLoading] = useState(true);
+    const [loadError, setLoadError] = useState('');
     
     // Grounded AI state
     const [groundedTopics, setGroundedTopics] = useState<any[]>([]);
@@ -26,25 +24,30 @@ const TheCommunity: React.FC = () => {
     const { dispatchGamificationEvent } = useGamification();
 
     useEffect(() => {
-        if (!user) {
-            setRequests([]);
-            setIsLoading(false);
-            return;
-        }
-        const q = query(collection(db, 'prayerRequests'), orderBy('createdAt', 'desc'));
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-            const data = snapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-            }));
-            setRequests(data);
-            setIsLoading(false);
-        }, (error) => {
-            handleFirestoreError(error, OperationType.GET, 'prayerRequests');
-        });
+        let cancelled = false;
 
-        return () => unsubscribe();
-    }, [user]);
+        const loadRequests = async (showSpinner = false) => {
+            if (showSpinner) setIsLoading(true);
+            setLoadError('');
+            try {
+                const data = await listPrayerRequests();
+                if (!cancelled) setRequests(data);
+            } catch (error) {
+                console.error('Failed to load prayer requests:', error);
+                if (!cancelled) setLoadError('The prayer wall could not refresh. Please try again shortly.');
+            } finally {
+                if (!cancelled) setIsLoading(false);
+            }
+        };
+
+        loadRequests(true);
+        const interval = window.setInterval(() => loadRequests(false), 15000);
+
+        return () => {
+            cancelled = true;
+            window.clearInterval(interval);
+        };
+    }, []);
 
     useEffect(() => {
         const fetchGrounded = async () => {
@@ -65,28 +68,33 @@ const TheCommunity: React.FC = () => {
     const handlePray = async (id: string) => {
         if (prayedFor.includes(id)) return;
         try {
-            const docRef = doc(db, 'prayerRequests', id);
-            await updateDoc(docRef, {
-                prayerCount: increment(1)
-            });
+            const updatedRequest = await prayForRequest(id, user?.uid || user?.email || 'anonymous');
+            if (updatedRequest) {
+                setRequests(prev => prev.map(req => req.id === id ? updatedRequest : req));
+            }
             setPrayedFor([...prayedFor, id]);
         } catch (error) {
-            handleFirestoreError(error, OperationType.UPDATE, `prayerRequests/${id}`);
+            console.error('Failed to mark prayer request:', error);
+            setLoadError(error instanceof Error ? error.message : 'Could not update that prayer request.');
         }
     };
 
     const addGroundedToWall = async (topic: any) => {
         try {
-            await addDoc(collection(db, 'prayerRequests'), {
+            const createdRequest = await createPrayerRequest({
                 text: `[Grounded Prayer] ${topic.title}: ${topic.snippet}`,
                 author: 'Strategic Sentinel',
+                authorUid: 'strategic-sentinel',
                 prayerCount: 1,
-                createdAt: serverTimestamp(),
                 isAnonymous: false
             });
+            if (createdRequest) {
+                setRequests(prev => [createdRequest, ...prev]);
+            }
             setGroundedTopics(prev => prev.filter(t => t.title !== topic.title));
         } catch (error) {
-            handleFirestoreError(error, OperationType.CREATE, 'prayerRequests');
+            console.error('Failed to post grounded prayer:', error);
+            setLoadError(error instanceof Error ? error.message : 'Could not post that grounded prayer.');
         }
     };
 
@@ -95,21 +103,23 @@ const TheCommunity: React.FC = () => {
         if (!newRequestText.trim()) return;
         
         try {
-            const user = auth.currentUser;
-            await addDoc(collection(db, 'prayerRequests'), {
+            const createdRequest = await createPrayerRequest({
                 text: newRequestText,
                 author: isAnonymous ? 'Anonymous' : (user?.displayName || 'Community Member'),
-                authorUid: user?.uid || null,
+                authorUid: user?.uid || undefined,
                 prayerCount: 1,
-                createdAt: serverTimestamp(),
                 isAnonymous
             });
+            if (createdRequest) {
+                setRequests(prev => [createdRequest, ...prev]);
+            }
             
             setNewRequestText('');
             setIsAnonymous(false);
             dispatchGamificationEvent('e5');
         } catch (error) {
-            handleFirestoreError(error, OperationType.CREATE, 'prayerRequests');
+            console.error('Failed to post prayer request:', error);
+            setLoadError(error instanceof Error ? error.message : 'Could not post that prayer request.');
         }
     };
 
@@ -150,7 +160,7 @@ const TheCommunity: React.FC = () => {
                             </div>
                             <div>
                                 <h2 className="text-2xl font-bold text-brand-text-primary">Lumina Daily Digest</h2>
-                                <p className="text-sm text-brand-text-secondary">AI-Synthesized insights from The Community • {new Date().toLocaleDateString()}</p>
+                                <p className="text-sm text-brand-text-secondary">AI-Synthesized insights from The Community - {new Date().toLocaleDateString()}</p>
                             </div>
                         </div>
 
@@ -284,6 +294,11 @@ const TheCommunity: React.FC = () => {
 
                     {/* Right Column: The Wall */}
                     <div className="md:w-2/3 space-y-6">
+                        {loadError && (
+                            <Card className="border-status-warning/40 bg-status-warning/10">
+                                <p className="text-sm text-brand-text-secondary">{loadError}</p>
+                            </Card>
+                        )}
                         {isLoading ? (
                             <div className="py-20 text-center">
                                 <SpinnerIcon className="w-10 h-10 text-brand-accent mx-auto mb-4 animate-spin" />
