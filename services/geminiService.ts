@@ -61,8 +61,6 @@ export const checkCapability = (feature: string, userTier: UserTier = 'free'): {
     const userIndex = tiers.indexOf(userTier);
     const minIndex = tiers.indexOf(capability.minTier);
 
-    console.log(`Checking capability: ${feature} for tier: ${userTier} (rank: ${userIndex}) vs min: ${capability.minTier} (rank: ${minIndex})`);
-
     if (userIndex < minIndex) {
         return { 
             allowed: false, 

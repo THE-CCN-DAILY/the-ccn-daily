@@ -207,7 +207,7 @@ const PricingPage: React.FC = () => {
       name: user?.displayName || 'App User',
     },
     customizations: {
-      title: 'Project Phoenix Subscription',
+      title: 'THE CCN DAILY Subscription',
       description: `${selectedTier?.toUpperCase()} - ${billingCycle} billing`,
       logo: 'https://st2.depositphotos.com/4403291/7418/v/450/depositphotos_74189661-stock-illustration-online-shop-log.jpg',
     },

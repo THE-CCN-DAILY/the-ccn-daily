@@ -15,9 +15,7 @@ export async function trackAnalyticsEvent(event: AnalyticsEvent) {
     },
   };
 
-  // TODO: replace with PostHog/Segment/Firebase/etc
-  console.log('[analytics]', enrichedEvent.name, enrichedEvent);
-
+  // TODO: replace with PostHog/Segment/Firebase/etc when analytics backend is wired
   // Optional: write to backend endpoint
   // await fetch('/api/analytics/track', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(enrichedEvent) });
 }

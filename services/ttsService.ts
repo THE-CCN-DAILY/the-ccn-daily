@@ -19,9 +19,6 @@ const voiceAudioMap = {
 
 
 export const getPremiumTtsAudio = async (text: string, voice: 'Zephyr' | 'Nova' | 'Kore'): Promise<string> => {
-    console.log(`Simulating TTS API call for voice: ${voice}`);
-    console.log(`Text to synthesize: "${text.substring(0, 100)}..."`);
-    
     // Simulate network delay
     await new Promise(resolve => setTimeout(resolve, 800));
 

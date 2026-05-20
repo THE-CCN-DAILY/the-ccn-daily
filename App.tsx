@@ -150,7 +150,7 @@ const App: React.FC = () => {
                           </Route>
 
                           {/* Catch-all */}
-                          <Route path="*" element={<Navigate to="/app/guided-journey" replace />} />
+                          <Route path="*" element={<Navigate to="/" replace />} />
                         </Routes>
                       </Layout>
                     </UpgradeModalProvider>

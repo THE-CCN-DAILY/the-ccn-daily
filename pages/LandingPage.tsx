@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 import {
   BookOpen,
   CalendarDays,
@@ -18,6 +19,8 @@ const featureRows = [
 ];
 
 const LandingPage: React.FC = () => {
+  const { user, signIn } = useAuth();
+
   return (
     <div className="min-h-screen bg-brand-secondary text-brand-text-primary">
       <header className="border-b border-brand-border">
@@ -31,12 +34,21 @@ const LandingPage: React.FC = () => {
             <Link to="/blog" className="hover:text-brand-text-primary">Blog</Link>
             <Link to="/pricing" className="hover:text-brand-text-primary">Pricing</Link>
           </nav>
-          <Link
-            to="/app/guided-journey"
-            className="border border-brand-border px-4 py-2 text-sm font-semibold text-brand-text-primary hover:bg-brand-dark"
-          >
-            Enter app
-          </Link>
+          {user ? (
+            <Link
+              to="/app/guided-journey"
+              className="border border-brand-border px-4 py-2 text-sm font-semibold text-brand-text-primary hover:bg-brand-dark"
+            >
+              Open app
+            </Link>
+          ) : (
+            <button
+              onClick={signIn}
+              className="border border-brand-border px-4 py-2 text-sm font-semibold text-brand-text-primary hover:bg-brand-dark"
+            >
+              Sign in
+            </button>
+          )}
         </div>
       </header>
 

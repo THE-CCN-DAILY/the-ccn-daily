@@ -18,4 +18,23 @@ export default defineConfig({
       '@': path.resolve(__dirname, '.'),
     },
   },
+  build: {
+    // Remove all console.* calls from production bundles
+    minify: 'esbuild',
+    rollupOptions: {
+      output: {
+        // Split large vendor chunks for better caching
+        manualChunks: {
+          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+          'vendor-firebase': ['firebase'],
+          'vendor-ui': ['lucide-react', 'motion', 'sonner'],
+        },
+      },
+    },
+  },
+  esbuild: {
+    // Drop console.log in production; keep console.error/warn for error tracking
+    drop: process.env.NODE_ENV === 'production' ? ['debugger'] : [],
+    pure: process.env.NODE_ENV === 'production' ? ['console.log'] : [],
+  },
 });

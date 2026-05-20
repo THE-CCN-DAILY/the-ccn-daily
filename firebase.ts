@@ -5,7 +5,6 @@ import { getStorage } from 'firebase/storage';
 import firebaseConfig from './firebase-applet-config.json';
 
 // Initialize Firebase SDK
-console.log('Initializing Firebase with config:', JSON.stringify({ ...firebaseConfig, apiKey: '***' }));
 const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
 export const auth = getAuth(app);

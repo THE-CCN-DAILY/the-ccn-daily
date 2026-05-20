@@ -145,7 +145,7 @@ const Sidebar: React.FC<SidebarProps> = ({ className = '', onNavigate }) => {
       <div className="flex items-center mb-6">
         <LogoIcon className="h-10 w-10 text-brand-accent" />
         <div className="ml-3">
-            <h1 className="text-lg font-bold text-brand-text-primary">Project Phoenix</h1>
+            <h1 className="text-lg font-bold text-brand-text-primary">THE CCN DAILY</h1>
             <p className="text-[10px] font-black tracking-widest text-brand-text-secondary uppercase">
               {isStrategyMode ? 'Command Center' : 'Sanctuary'}
             </p>

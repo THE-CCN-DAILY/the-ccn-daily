@@ -7,13 +7,11 @@ export const useSentinel = () => {
 
   useEffect(() => {
     const check = async () => {
-      console.log("Sentinel Monitoring AI Landscape...");
       const results = await runTechSentinelAudit({
         currentPhase: 5,
         target: "Grounding and Sentience"
       });
       if (results.length > 0) {
-        console.log("Sentinel found optimizations:", results);
         setAlerts(results);
       }
     };

@@ -25,8 +25,6 @@ const musicMap: Record<Mood, { title: string; url: string }> = {
 };
 
 export const getAtmosphericMusic = async (mood: Mood): Promise<{ title: string, url: string }> => {
-  console.log(`Simulating Lyria API call for mood: ${mood}`);
-  
   // Simulate network delay
   await new Promise(resolve => setTimeout(resolve, 500));
   

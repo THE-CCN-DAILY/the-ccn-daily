@@ -30,7 +30,7 @@ const GivingPage: React.FC = () => {
       name: auth.currentUser?.displayName || 'Generous Donor',
     },
     customizations: {
-      title: 'Project Phoenix Support',
+      title: 'THE CCN DAILY Support',
       description: `Payment for ${type} partnership`,
       logo: 'https://st2.depositphotos.com/4403291/7418/v/450/depositphotos_74189661-stock-illustration-online-shop-log.jpg',
     },
@@ -43,7 +43,6 @@ const GivingPage: React.FC = () => {
     
     handleFlutterPayment({
       callback: async (response) => {
-         console.log(response);
          closePaymentModal();
          if (response.status === 'successful') {
              await recordDonation();
@@ -104,7 +103,7 @@ const GivingPage: React.FC = () => {
           <CreditCardIcon className="w-10 h-10 text-brand-accent"/>
           Giving & Support
         </h1>
-        <p className="text-brand-text-secondary mt-2">Partner with us to expand Project Phoenix globally.</p>
+        <p className="text-brand-text-secondary mt-2">Partner with us to expand THE CCN DAILY globally.</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
