@@ -1,8 +1,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'motion/react';
 import Card from '../components/Card';
-// FIX: Added SoundWaveIcon to the imported icons list
 import { CheckIcon, FlagIcon, PencilIcon, PrayingHandsIcon, ReaderIcon, SparklesIcon, CloseIcon, ChevronLeftIcon, SoundWaveIcon } from '../components/icons';
 import RichTextJournal from '../components/RichTextJournal';
 import PrayerTimer from '../components/PrayerTimer';
@@ -200,80 +200,119 @@ const StepContent: React.FC<{ stepIndex: number; onComplete: () => void; devotio
     };
     
     return (
-        <Card className="flex flex-col items-center justify-center p-10 min-h-[35rem] animate-fade-in-up transition-all" style={{animationDuration: '0.6s'}}>
-            <div className="w-full max-w-xl">
-                 {renderContent()}
-                 <div className="mt-12 text-center">
-                    <button 
-                        onClick={onComplete} 
+        <Card className="relative flex flex-col items-center justify-center overflow-hidden p-10 min-h-[35rem]">
+            {/* Ambient inner glow */}
+            <div
+                className="pointer-events-none absolute inset-x-0 -top-24 h-64 opacity-10"
+                aria-hidden
+                style={{ background: 'radial-gradient(ellipse 70% 60% at 50% 0%, rgb(242 125 38) 0%, transparent 70%)' }}
+            />
+            <div className="relative z-10 w-full max-w-xl">
+                {renderContent()}
+                <div className="mt-12 text-center">
+                    <motion.button
+                        onClick={onComplete}
                         disabled={isPrayerStep && !isPrayerComplete}
-                        className="group relative px-10 py-4 rounded-full bg-brand-accent text-white font-black text-lg shadow-2xl transition-all hover:scale-105 active:scale-95 disabled:opacity-40 disabled:scale-100"
+                        className="group relative px-10 py-4 rounded-full bg-brand-accent text-white font-black text-lg shadow-2xl disabled:opacity-40"
+                        whileHover={{ scale: 1.04 }}
+                        whileTap={{ scale: 0.96 }}
+                        transition={{ type: 'spring', stiffness: 400, damping: 20 }}
                     >
                         <span className="flex items-center gap-2">
-                             {stepIndex === 0 ? "Step Inside" : stepIndex === journeySteps.length - 1 ? "Carry the Light" : "I've Finished This Step"}
-                             <ChevronLeftIcon className="w-5 h-5 rotate-180 group-hover:translate-x-1 transition-transform"/>
+                            {stepIndex === 0 ? "Step Inside" : stepIndex === journeySteps.length - 1 ? "Carry the Light" : "I've Finished This Step"}
+                            <ChevronLeftIcon className="w-5 h-5 rotate-180 group-hover:translate-x-1 transition-transform" />
                         </span>
-                    </button>
-                 </div>
+                    </motion.button>
+                </div>
             </div>
         </Card>
-    )
+    );
 }
+
+const STEP_EASE = [0.22, 1, 0.36, 1] as [number, number, number, number];
 
 const GuidedJourneyPage: React.FC = () => {
     const [currentStep, setCurrentStep] = useState(0);
+    const [direction, setDirection] = useState(1); // 1 = forward, -1 = backward
     const [devotional, setDevotional] = useState<Devotional | null>(null);
 
     useEffect(() => {
         const fetchTodayDevotional = async () => {
             try {
-                // Get today's date in YYYY-MM-DD format (local time)
                 const today = new Date();
-                const year = today.getFullYear();
-                const month = String(today.getMonth() + 1).padStart(2, '0');
-                const day = String(today.getDate()).padStart(2, '0');
-                const todayString = `${year}-${month}-${day}`;
-
+                const todayString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
                 const item = await getTodayDevotional(todayString);
                 if (item) setDevotional(item as Devotional);
             } catch (error) {
                 console.error("Error fetching today's devotional:", error);
             }
         };
-
         fetchTodayDevotional();
     }, []);
-    
+
     const handleNextStep = () => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
+        setDirection(1);
         if (currentStep < journeySteps.length - 1) {
-            setCurrentStep(currentStep + 1);
+            setCurrentStep(s => s + 1);
         } else {
             setCurrentStep(0);
         }
     };
 
+    const progressPct = (currentStep / (journeySteps.length - 1)) * 100;
+
     return (
         <div className="max-w-5xl mx-auto pb-20">
-            <div className="mb-10 text-center">
-                <h1 className="text-5xl font-black text-brand-text-primary mb-4 tracking-tight">The CCN Journey</h1>
-                <div className="h-1 w-24 bg-brand-accent mx-auto rounded-full" />
-            </div>
 
-            {/* Premium Stepper */}
+            {/* Header */}
+            <motion.div
+                className="mb-10 text-center"
+                initial={{ opacity: 0, y: -16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, ease: STEP_EASE }}
+            >
+                <p className="mb-2 text-[0.7rem] font-semibold uppercase tracking-[0.16em] text-brand-accent">
+                    {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+                </p>
+                <h1 className="font-display text-4xl font-bold text-brand-text-primary tracking-tight md:text-5xl">
+                    The Daily Sanctuary
+                </h1>
+                {/* Progress bar */}
+                <div className="mt-5 mx-auto h-0.5 w-48 rounded-full bg-brand-border overflow-hidden">
+                    <motion.div
+                        className="h-full rounded-full bg-brand-accent"
+                        animate={{ width: `${progressPct}%` }}
+                        transition={{ duration: 0.6, ease: STEP_EASE }}
+                    />
+                </div>
+            </motion.div>
+
+            {/* Stepper */}
             <div className="mb-12 overflow-x-auto py-4">
                 <ol className="flex items-center w-full max-w-4xl mx-auto px-4">
                     {journeySteps.map((step, index) => {
                         const isCompleted = index < currentStep;
                         const isCurrent = index === currentStep;
-
                         return (
-                             <li key={step.id} className={`relative flex w-full items-center ${index < journeySteps.length - 1 ? "after:content-[''] after:w-full after:h-[2px] after:inline-block" : ""} ${isCompleted ? 'after:bg-brand-accent' : 'after:bg-brand-border'}`}>
+                            <li
+                                key={step.id}
+                                className={`relative flex w-full items-center ${index < journeySteps.length - 1 ? "after:content-[''] after:w-full after:h-px after:inline-block" : ''} ${isCompleted ? 'after:bg-brand-accent' : 'after:bg-brand-border'}`}
+                            >
                                 <div className="flex flex-col items-center">
-                                    <div className={`flex items-center justify-center w-10 h-10 rounded-full transition-all duration-500 ${isCurrent ? 'bg-brand-accent text-white scale-125 shadow-[0_0_20px_rgba(var(--color-primary-blue),0.4)]' : isCompleted ? 'bg-brand-accent text-white opacity-60' : 'bg-brand-secondary text-brand-text-secondary border-2 border-brand-border'}`}>
+                                    <motion.div
+                                        animate={{
+                                            scale: isCurrent ? 1.22 : 1,
+                                            boxShadow: isCurrent ? '0 0 18px rgb(242 125 38 / 0.45)' : '0 0 0px transparent',
+                                        }}
+                                        transition={{ duration: 0.35, ease: STEP_EASE }}
+                                        className={`flex items-center justify-center w-10 h-10 rounded-full ${isCurrent ? 'bg-brand-accent text-white' : isCompleted ? 'bg-brand-accent/60 text-white' : 'bg-brand-secondary text-brand-text-secondary border border-brand-border'}`}
+                                    >
                                         {isCompleted ? <CheckIcon className="w-5 h-5" /> : <step.icon className="w-5 h-5" />}
-                                    </div>
-                                    <p className={`absolute top-12 whitespace-nowrap text-[10px] font-black uppercase tracking-widest transition-all duration-500 ${isCurrent ? 'text-brand-accent opacity-100' : 'text-brand-text-secondary opacity-40'}`}>{step.name}</p>
+                                    </motion.div>
+                                    <p className={`absolute top-12 whitespace-nowrap text-[10px] font-bold uppercase tracking-widest transition-all duration-400 ${isCurrent ? 'text-brand-accent' : 'text-brand-text-secondary opacity-40'}`}>
+                                        {step.name}
+                                    </p>
                                 </div>
                             </li>
                         );
@@ -281,9 +320,29 @@ const GuidedJourneyPage: React.FC = () => {
                 </ol>
             </div>
 
-            {/* Content with smoother movement */}
-            <div className="mt-20">
-                <StepContent key={currentStep} stepIndex={currentStep} onComplete={handleNextStep} devotional={devotional} />
+            {/* Step content — direction-aware transition */}
+            <div className="mt-20 overflow-hidden">
+                <AnimatePresence mode="wait" custom={direction}>
+                    <motion.div
+                        key={currentStep}
+                        custom={direction}
+                        variants={{
+                            enter: (d: number) => ({ opacity: 0, x: d * 40 }),
+                            center: { opacity: 1, x: 0 },
+                            exit: (d: number) => ({ opacity: 0, x: d * -30 }),
+                        }}
+                        initial="enter"
+                        animate="center"
+                        exit="exit"
+                        transition={{ duration: 0.45, ease: STEP_EASE }}
+                    >
+                        <StepContent
+                            stepIndex={currentStep}
+                            onComplete={handleNextStep}
+                            devotional={devotional}
+                        />
+                    </motion.div>
+                </AnimatePresence>
             </div>
 
         </div>

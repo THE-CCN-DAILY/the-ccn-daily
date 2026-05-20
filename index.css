@@ -75,6 +75,7 @@
   /* Keyframes */
   --animate-fade-in: fade-in 0.5s ease forwards;
   --animate-slide-up: slide-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  --animate-fade-in-up: fade-in-up 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards;
   --animate-glow-pulse: glow-pulse 3s ease-in-out infinite;
 }
 
@@ -118,6 +119,17 @@
 @keyframes glow-pulse {
   0%, 100% { opacity: 0.4; }
   50%       { opacity: 0.75; }
+}
+
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes ping-once {
+  0%   { transform: scale(1);   opacity: 0.7; }
+  80%  { transform: scale(1.8); opacity: 0; }
+  100% { transform: scale(1.8); opacity: 0; }
 }
 
 /* ─── Utilities ──────────────────────────────────────────────────────────────── */
