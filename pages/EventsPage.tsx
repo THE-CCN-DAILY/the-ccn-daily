@@ -1,6 +1,11 @@
 import React, { useEffect, useState } from 'react';
+import { motion } from 'motion/react';
 import Card from '../components/Card';
 import { CalendarIcon, ShareIcon, UserIcon } from '../components/icons';
+
+const EASE = [0.22, 1, 0.36, 1] as [number, number, number, number];
+const fadeUp = { hidden: { opacity: 0, y: 24 }, visible: { opacity: 1, y: 0 } };
+const stagger = { hidden: {}, visible: { transition: { staggerChildren: 0.1, delayChildren: 0.05 } } };
 import { useAuth } from '../contexts/AuthContext';
 import { useNotifications } from '../contexts/NotificationContext';
 import { AppEvent, listEvents, registerForEvent } from '../services/eventService';
@@ -71,11 +76,21 @@ const EventsPage: React.FC = () => {
   return (
     <div className="mx-auto max-w-4xl pb-20">
       <div className="mb-8">
-        <h1 className="flex items-center gap-4 text-4xl font-black text-brand-text-primary">
+        <motion.h1
+          className="flex items-center gap-4 text-4xl font-black text-brand-text-primary"
+          initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.55, ease: EASE }}
+        >
           <CalendarIcon className="h-10 w-10 text-brand-accent" />
           Live Events
-        </h1>
-        <p className="mt-2 text-brand-text-secondary">Register for upcoming online streams and physical gatherings.</p>
+        </motion.h1>
+        <motion.p
+          className="mt-2 text-brand-text-secondary"
+          initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+          transition={{ duration: 0.45, delay: 0.15 }}
+        >
+          Register for upcoming online streams and physical gatherings.
+        </motion.p>
       </div>
 
       {error && (
@@ -84,15 +99,21 @@ const EventsPage: React.FC = () => {
         </Card>
       )}
 
-      <div className="space-y-6">
+      <motion.div
+        className="space-y-6"
+        variants={stagger} initial="hidden" animate="visible"
+      >
         {events.length === 0 && !error ? (
+          <motion.div variants={fadeUp} transition={{ duration: 0.5, ease: EASE }}>
           <Card className="p-12 text-center">
             <CalendarIcon className="mx-auto mb-4 h-16 w-16 text-brand-text-secondary opacity-20" />
             <p className="text-brand-text-secondary">No upcoming events at the moment. Check back soon!</p>
           </Card>
+          </motion.div>
         ) : (
           events.map(event => (
-            <Card key={event.id} className="overflow-hidden border-l-4 border-brand-accent p-0">
+            <motion.div key={event.id} variants={fadeUp} transition={{ duration: 0.5, ease: EASE }}>
+            <Card className="overflow-hidden border-l-4 border-brand-accent p-0">
               <div className="p-6">
                 <div className="mb-4 flex items-start justify-between gap-4">
                   <div>
@@ -134,9 +155,10 @@ const EventsPage: React.FC = () => {
                 <span>Live event desk</span>
               </div>
             </Card>
+            </motion.div>
           ))
         )}
-      </div>
+      </motion.div>
     </div>
   );
 };

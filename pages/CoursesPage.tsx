@@ -1,8 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'motion/react';
 import Card from '../components/Card';
 import { SparklesIcon, PlayIcon, CheckIcon } from '../components/icons';
 import { listCourses, type Course } from '../services/courseService';
+
+const EASE = [0.22, 1, 0.36, 1] as [number, number, number, number];
+const fadeUp = { hidden: { opacity: 0, y: 24 }, visible: { opacity: 1, y: 0 } };
+const stagger = { hidden: {}, visible: { transition: { staggerChildren: 0.1, delayChildren: 0.05 } } };
 
 const CoursesPage: React.FC = () => {
   const [courses, setCourses] = useState<Course[]>([]);
@@ -27,10 +32,20 @@ const CoursesPage: React.FC = () => {
   return (
     <div className="max-w-6xl mx-auto pb-20 px-4">
       <div className="mb-8">
-        <h1 className="text-4xl font-black text-brand-text-primary mb-4">Courses</h1>
-        <p className="text-xl text-brand-text-secondary">
+        <motion.h1
+          className="text-4xl font-black text-brand-text-primary mb-4"
+          initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.55, ease: EASE }}
+        >
+          Courses
+        </motion.h1>
+        <motion.p
+          className="text-xl text-brand-text-secondary"
+          initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+          transition={{ duration: 0.45, delay: 0.15 }}
+        >
           Dive deep into structured formation paths designed to transform your spiritual life.
-        </p>
+        </motion.p>
       </div>
 
       {loading ? (
@@ -38,12 +53,15 @@ const CoursesPage: React.FC = () => {
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-accent"></div>
         </div>
       ) : courses.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <motion.div
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+          variants={stagger} initial="hidden" animate="visible"
+        >
           {courses.map((course) => (
-            <Card 
-              key={course.id} 
+            <motion.div key={course.id} variants={fadeUp} transition={{ duration: 0.5, ease: EASE }}>
+            <Card
               onClick={() => navigate(`/app/courses/${course.id}`)}
-              className="flex flex-col border-brand-border bg-brand-dark/30 overflow-hidden p-0 group cursor-pointer hover:border-brand-accent/50 transition-colors"
+              className="flex flex-col border-brand-border bg-brand-dark/30 overflow-hidden p-0 group cursor-pointer hover:border-brand-accent/50 transition-colors h-full"
             >
               <div className="relative h-48 w-full bg-brand-secondary flex items-center justify-center overflow-hidden">
                 {course.coverUrl ? (
@@ -75,8 +93,9 @@ const CoursesPage: React.FC = () => {
                 </div>
               </div>
             </Card>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
       ) : (
         <Card className="text-center py-20 border-brand-border border-dashed bg-transparent">
           <SparklesIcon className="w-12 h-12 text-brand-text-secondary mx-auto mb-4" />

@@ -1,6 +1,11 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { motion } from 'motion/react';
 import type { PodcastEpisode, SearchResult } from '../types';
+
+const EASE = [0.22, 1, 0.36, 1] as [number, number, number, number];
+const fadeUp = { hidden: { opacity: 0, y: 24 }, visible: { opacity: 1, y: 0 } };
+const stagger = { hidden: {}, visible: { transition: { staggerChildren: 0.09, delayChildren: 0.05 } } };
 import { useAudioPlayer } from '../contexts/AudioPlayerContext';
 import { HeartIcon, PauseIcon, PlayIcon, SparklesIcon, SpinnerIcon } from '../components/icons';
 import Card from '../components/Card';
@@ -203,7 +208,11 @@ const PodcastPage: React.FC = () => {
           <Link to="/" className="hover:text-brand-accent">THE CCN DAILY</Link>
           <Link to="/newsletter" className="hover:text-brand-accent">Newsletter</Link>
         </div>
-        <h1 className="font-display text-3xl font-bold leading-tight text-brand-text-primary">Podcasts</h1>
+        <motion.h1
+          className="font-display text-3xl font-bold leading-tight text-brand-text-primary"
+          initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: EASE }}
+        >Podcasts</motion.h1>
       </header>
 
       <form onSubmit={handleSearch} className="relative mb-6">
@@ -309,9 +318,16 @@ const PodcastPage: React.FC = () => {
 
           <h2 className="mb-4 text-xl font-bold text-brand-text-primary">{activeTab} Episodes</h2>
           {displayedEpisodes.length > 0 ? (
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-              {displayedEpisodes.map((episode) => <EpisodeListItem key={episode.id} episode={episode} />)}
-            </div>
+            <motion.div
+              className="grid grid-cols-1 gap-6 md:grid-cols-2"
+              variants={stagger} initial="hidden" animate="visible"
+            >
+              {displayedEpisodes.map((episode) => (
+                <motion.div key={episode.id} variants={fadeUp} transition={{ duration: 0.45, ease: EASE }}>
+                  <EpisodeListItem episode={episode} />
+                </motion.div>
+              ))}
+            </motion.div>
           ) : (
             <EmptyState
               message={

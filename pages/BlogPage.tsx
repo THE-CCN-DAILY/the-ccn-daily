@@ -1,7 +1,12 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { motion, AnimatePresence } from 'motion/react';
 import { ArrowRight, BookOpen, PenLine, RefreshCw, Search } from 'lucide-react';
 import { listPublishedBlogPosts, type BlogPost } from '../services/blogService';
+
+const EASE = [0.22, 1, 0.36, 1] as [number, number, number, number];
+const fadeUp = { hidden: { opacity: 0, y: 24 }, visible: { opacity: 1, y: 0 } };
+const stagger = { hidden: {}, visible: { transition: { staggerChildren: 0.08, delayChildren: 0.05 } } };
 
 const fallbackPosts: BlogPost[] = [
   {
@@ -106,30 +111,48 @@ const BlogPage: React.FC = () => {
       <main className="mx-auto max-w-6xl px-6 py-20">
         <section className="grid gap-12 border-b border-brand-border pb-16 lg:grid-cols-[1.05fr_0.95fr]">
           <div>
-            <p className="mb-5 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.08em] text-brand-text-secondary">
+            <motion.p
+              className="mb-5 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.08em] text-brand-text-secondary"
+              initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, ease: EASE }}
+            >
               <PenLine className="h-4 w-4" /> Blog
-            </p>
-            <h1 className="max-w-3xl font-display text-5xl font-bold leading-tight md:text-6xl">
+            </motion.p>
+            <motion.h1
+              className="max-w-3xl font-display text-5xl font-bold leading-tight md:text-6xl"
+              initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.65, delay: 0.06, ease: EASE }}
+            >
               Essays for faith, work, leadership, endurance, and the inner life.
-            </h1>
+            </motion.h1>
           </div>
           <div className="border-l border-brand-border pl-8 max-lg:border-l-0 max-lg:pl-0">
-            <p className="max-w-xl text-[17px] leading-[1.8] text-brand-text-secondary">
+            <motion.p
+              className="max-w-xl text-[17px] leading-[1.8] text-brand-text-secondary"
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+            >
               Thoughtful devotional writing for believers carrying real responsibilities:
               work, family, leadership, grief, calling, habits, Scripture, and prayer.
-            </p>
-            <div className="mt-8 flex flex-wrap gap-3">
+            </motion.p>
+            <motion.div
+              className="mt-8 flex flex-wrap gap-3"
+              variants={stagger} initial="hidden" animate="visible"
+            >
               {categories.map((category) => (
-                <button
+                <motion.button
                   key={category}
                   type="button"
                   onClick={() => setQuery(category)}
                   className="border border-brand-border px-4 py-2 text-xs font-semibold uppercase tracking-[0.08em] text-brand-text-secondary hover:border-brand-accent hover:text-brand-accent"
+                  variants={fadeUp}
+                  transition={{ duration: 0.35, ease: EASE }}
+                  whileHover={{ y: -1 }}
                 >
                   {category}
-                </button>
+                </motion.button>
               ))}
-            </div>
+            </motion.div>
           </div>
         </section>
 
@@ -162,6 +185,10 @@ const BlogPage: React.FC = () => {
 
         {leadPost ? (
           <section className="mt-14">
+            <motion.div
+              variants={fadeUp} initial="hidden" whileInView="visible"
+              viewport={{ once: true }} transition={{ duration: 0.6, ease: EASE }}
+            >
             <Link
               to={`/blog/${leadPost.slug}`}
               className="group grid gap-10 border-b border-brand-border pb-14 lg:grid-cols-[0.7fr_1fr]"
@@ -184,11 +211,19 @@ const BlogPage: React.FC = () => {
                 </div>
               </div>
             </Link>
+            </motion.div>
 
-            <div className="divide-y divide-brand-border border-b border-brand-border">
+            <motion.div
+              className="divide-y divide-brand-border border-b border-brand-border"
+              variants={stagger} initial="hidden" whileInView="visible"
+              viewport={{ once: true, margin: '-40px' }}
+            >
               {remainingPosts.map((post) => (
-                <Link
+                <motion.div
                   key={post.id}
+                  variants={fadeUp} transition={{ duration: 0.5, ease: EASE }}
+                >
+                <Link
                   to={`/blog/${post.slug}`}
                   className="group grid gap-8 py-10 md:grid-cols-[0.35fr_1fr]"
                 >
@@ -210,8 +245,9 @@ const BlogPage: React.FC = () => {
                     </div>
                   </div>
                 </Link>
+                </motion.div>
               ))}
-            </div>
+            </motion.div>
           </section>
         ) : (
           <section className="mt-16 border-y border-brand-border py-20 text-center">
