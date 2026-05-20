@@ -12,11 +12,14 @@
     "cf:deploy": "npm run build && wrangler pages deploy dist",
     "cf:typecheck": "tsc -p tsconfig.cloudflare.json --noEmit",
     "db:apply:local": "wrangler d1 execute project_phoenix_ccn_daily --local --file=schema/d1-schema.sql",
-    "db:apply": "wrangler d1 execute project_phoenix_ccn_daily --remote --file=schema/d1-schema.sql"
+    "db:apply": "wrangler d1 execute project_phoenix_ccn_daily --remote --file=schema/d1-schema.sql",
+    "remotion:studio": "remotion studio remotion/index.ts",
+    "remotion:render": "remotion render remotion/index.ts VerseCard out/verse-card.mp4"
   },
   "dependencies": {
     "@mux/mux-node": "^12.8.1",
     "@mux/mux-player-react": "^3.11.6",
+    "@remotion/player": "^4.0.464",
     "@sendgrid/mail": "^8.1.6",
     "@tailwindcss/vite": "^4.2.2",
     "express": "^5.2.1",
@@ -32,6 +35,7 @@
     "react-dom": "^19.2.0",
     "react-markdown": "^10.1.0",
     "react-router-dom": "^7.9.4",
+    "remotion": "^4.0.464",
     "resend": "^6.9.4",
     "rss-parser": "^3.13.0",
     "sonner": "^2.0.7",
