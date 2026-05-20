@@ -40,6 +40,8 @@ type Env = {
   ADMIN_API_TOKEN?: string;
   MEDIA_PUBLIC_BASE_URL?: string;
   WORKERS_AI_TEXT_MODEL?: string;
+  MUX_TOKEN_ID?: string;
+  MUX_TOKEN_SECRET?: string;
 };
 
 const app = new Hono<{ Bindings: Env }>();
@@ -179,6 +181,24 @@ type PrayerRequestRow = {
 };
 
 type CommunityMessageRow = {
+  id: string;
+  user_id: string;
+  user_name: string;
+  text: string;
+  created_at?: string | null;
+};
+
+type LiveStreamSettingsRow = {
+  id: string;
+  status: 'offline' | 'live';
+  playback_id?: string | null;
+  stream_id?: string | null;
+  title: string;
+  viewer_count: number;
+  updated_at?: string | null;
+};
+
+type LiveStreamMessageRow = {
   id: string;
   user_id: string;
   user_name: string;
@@ -466,6 +486,24 @@ const mapPrayerRequest = (row: PrayerRequestRow) => ({
 });
 
 const mapCommunityMessage = (row: CommunityMessageRow) => ({
+  id: row.id,
+  userId: row.user_id,
+  user: row.user_name,
+  text: row.text,
+  createdAt: row.created_at || undefined,
+});
+
+const mapLiveStreamSettings = (row?: LiveStreamSettingsRow | null) => ({
+  status: row?.status || 'offline',
+  isLive: row?.status === 'live' && Boolean(row.playback_id),
+  playbackId: row?.playback_id || undefined,
+  streamId: row?.stream_id || undefined,
+  title: row?.title || 'Global Broadcast',
+  viewerCount: row?.viewer_count || 0,
+  updatedAt: row?.updated_at || undefined,
+});
+
+const mapLiveStreamMessage = (row: LiveStreamMessageRow) => ({
   id: row.id,
   userId: row.user_id,
   user: row.user_name,
@@ -1737,6 +1775,163 @@ app.delete('/api/admin/community/messages/:id', async (c) => {
   await c.env.DB.prepare(`DELETE FROM community_messages WHERE id = ?`).bind(id).run();
 
   return c.json({ ok: true });
+});
+
+app.get('/api/live/status', async (c) => {
+  if (!c.env.DB) return c.json({ stream: mapLiveStreamSettings(null), source: 'fallback' });
+
+  const stream = await c.env.DB.prepare(
+    `SELECT * FROM live_stream_settings WHERE id = 'main' LIMIT 1`
+  ).first<LiveStreamSettingsRow>();
+
+  return c.json({ stream: mapLiveStreamSettings(stream), source: 'd1' });
+});
+
+app.put('/api/admin/live/status', async (c) => {
+  const denied = requireAdmin(c);
+  if (denied) return denied;
+  if (!c.env.DB) return c.json({ error: 'D1 database binding is not configured' }, 503);
+
+  const body = await c.req.json();
+  const playbackId = String(body.playbackId || '').trim() || null;
+  const streamId = String(body.streamId || '').trim() || null;
+  const title = String(body.title || 'Global Broadcast').trim() || 'Global Broadcast';
+  const status = String(body.status || (playbackId ? 'live' : 'offline')) === 'live' ? 'live' : 'offline';
+  const viewerCount = Math.max(0, Number(body.viewerCount || 0));
+
+  await c.env.DB.prepare(
+    `INSERT INTO live_stream_settings (
+      id, status, playback_id, stream_id, title, viewer_count, updated_at
+    ) VALUES ('main', ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+    ON CONFLICT(id) DO UPDATE SET
+      status = excluded.status,
+      playback_id = excluded.playback_id,
+      stream_id = excluded.stream_id,
+      title = excluded.title,
+      viewer_count = excluded.viewer_count,
+      updated_at = CURRENT_TIMESTAMP`
+  ).bind(status, playbackId, streamId, title, viewerCount).run();
+
+  const stream = await c.env.DB.prepare(
+    `SELECT * FROM live_stream_settings WHERE id = 'main' LIMIT 1`
+  ).first<LiveStreamSettingsRow>();
+
+  return c.json({ stream: mapLiveStreamSettings(stream), source: 'd1' });
+});
+
+app.get('/api/live/chat/messages', async (c) => {
+  if (!c.env.DB) return c.json({ messages: [], source: 'fallback' });
+  const rawLimit = Number(c.req.query('limit') || 100);
+  const messageLimit = Math.min(Math.max(Number.isFinite(rawLimit) ? rawLimit : 100, 1), 150);
+
+  const result = await c.env.DB.prepare(
+    `SELECT * FROM (
+       SELECT * FROM live_stream_messages ORDER BY created_at DESC LIMIT ?
+     ) ORDER BY created_at ASC`
+  ).bind(messageLimit).all<LiveStreamMessageRow>();
+
+  return c.json({ messages: result.results.map(mapLiveStreamMessage), source: 'd1' });
+});
+
+app.post('/api/live/chat/messages', async (c) => {
+  if (!c.env.DB) return c.json({ error: 'D1 database binding is not configured' }, 503);
+
+  const body = await c.req.json();
+  const text = String(body.text || '').trim();
+  const userId = String(body.userId || 'anonymous').trim() || 'anonymous';
+  const user = String(body.user || 'Anonymous').trim() || 'Anonymous';
+  const id = String(body.id || crypto.randomUUID()).trim();
+
+  if (!text) return c.json({ error: 'Message text is required' }, 400);
+  if (!isSafeId(id)) return c.json({ error: 'Invalid message id' }, 400);
+  if (!isSafeId(userId)) return c.json({ error: 'Invalid user id' }, 400);
+
+  await c.env.DB.prepare(
+    `INSERT INTO live_stream_messages (id, user_id, user_name, text, created_at)
+     VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)`
+  ).bind(id, userId, user, text).run();
+
+  const message = await c.env.DB.prepare(
+    `SELECT * FROM live_stream_messages WHERE id = ? LIMIT 1`
+  ).bind(id).first<LiveStreamMessageRow>();
+
+  return c.json({ message: message ? mapLiveStreamMessage(message) : null, source: 'd1' });
+});
+
+app.delete('/api/admin/live/chat/messages/:id', async (c) => {
+  const denied = requireAdmin(c);
+  if (denied) return denied;
+  const id = c.req.param('id');
+  if (!isSafeId(id)) return c.json({ error: 'Invalid message id' }, 400);
+  if (!c.env.DB) return c.json({ error: 'D1 database binding is not configured' }, 503);
+
+  await c.env.DB.prepare(`DELETE FROM live_stream_messages WHERE id = ?`).bind(id).run();
+
+  return c.json({ ok: true });
+});
+
+app.post('/api/mux/live', async (c) => {
+  const denied = requireAdmin(c);
+  if (denied) return denied;
+
+  if (!c.env.MUX_TOKEN_ID || !c.env.MUX_TOKEN_SECRET) {
+    return c.json({
+      error: 'MUX_NOT_CONFIGURED',
+      message: 'MUX_TOKEN_ID and MUX_TOKEN_SECRET must be configured before live stream keys can be generated.',
+    }, 501);
+  }
+
+  const response = await fetch('https://api.mux.com/video/v1/live-streams', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Basic ${btoa(`${c.env.MUX_TOKEN_ID}:${c.env.MUX_TOKEN_SECRET}`)}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      playback_policy: ['public'],
+      new_asset_settings: { playback_policy: ['public'] },
+    }),
+  });
+
+  const data: any = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    return c.json({
+      error: 'MUX_REQUEST_FAILED',
+      message: data?.error?.message || 'Mux live stream creation failed.',
+      details: data,
+    }, response.status as any);
+  }
+
+  const stream = data?.data || data;
+  const playbackId = stream?.playback_ids?.[0]?.id || '';
+  const streamId = stream?.id || '';
+  const streamKey = stream?.stream_key || '';
+
+  if (c.env.DB && playbackId) {
+    await c.env.DB.prepare(
+      `INSERT INTO live_stream_settings (
+        id, status, playback_id, stream_id, title, viewer_count, updated_at
+      ) VALUES ('main', 'live', ?, ?, 'Global Broadcast', 0, CURRENT_TIMESTAMP)
+      ON CONFLICT(id) DO UPDATE SET
+        status = 'live',
+        playback_id = excluded.playback_id,
+        stream_id = excluded.stream_id,
+        title = excluded.title,
+        updated_at = CURRENT_TIMESTAMP`
+    ).bind(playbackId, streamId).run();
+  }
+
+  return c.json({ streamKey, playbackId, streamId, source: 'mux' });
+});
+
+app.post('/api/mux/upload', async (c) => {
+  const denied = requireAdmin(c);
+  if (denied) return denied;
+
+  return c.json({
+    error: 'MUX_NOT_CONFIGURED',
+    message: 'Mux direct upload is not configured in the Cloudflare preview yet.',
+  }, 501);
 });
 
 const contentTypes = ['devotionals', 'audiobooks', 'books', 'challenges', 'courses'] as const;

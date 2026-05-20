@@ -1,74 +1,93 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Card from '../components/Card';
-import { SpeakerWaveIcon, ChatIcon, UserCircleIcon, SparklesIcon } from '../components/icons';
-import { db, auth } from '../firebase';
-import { collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, limit, doc } from 'firebase/firestore';
-import { handleFirestoreError, OperationType } from '../utils/firestoreErrorHandler';
+import { SpeakerWaveIcon, ChatIcon, UserCircleIcon } from '../components/icons';
 import { useAuth } from '../contexts/AuthContext';
 import MuxPlayer from '@mux/mux-player-react';
-
-interface ChatMessage {
-  id: string;
-  user: string;
-  text: string;
-  time: string;
-  createdAt: any;
-}
+import {
+  LiveStreamMessage,
+  getLiveStreamStatus,
+  listLiveStreamMessages,
+  sendLiveStreamMessage,
+} from '../services/liveStreamService';
 
 const LiveStreamPage: React.FC = () => {
   const [isLive, setIsLive] = useState(false);
   const [chatMessage, setChatMessage] = useState('');
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [chatMessages, setChatMessages] = useState<LiveStreamMessage[]>([]);
   const [playbackId, setPlaybackId] = useState<string | null>(null);
+  const [viewerCount, setViewerCount] = useState(0);
+  const [streamError, setStreamError] = useState('');
+  const [chatError, setChatError] = useState('');
+  const [loadingChat, setLoadingChat] = useState(true);
   const { user } = useAuth();
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Listen for the active live stream playback ID
-    const unsubscribeStream = onSnapshot(doc(db, 'settings', 'livestream'), (docSnap) => {
-      if (docSnap.exists() && docSnap.data().playbackId) {
-        setPlaybackId(docSnap.data().playbackId);
-        setIsLive(true);
-      } else {
-        setPlaybackId(null);
-        setIsLive(false);
+    let cancelled = false;
+
+    const loadStatus = async () => {
+      setStreamError('');
+      try {
+        const stream = await getLiveStreamStatus();
+        if (cancelled) return;
+        setPlaybackId(stream.playbackId || null);
+        setIsLive(stream.isLive);
+        setViewerCount(stream.viewerCount || 0);
+      } catch (error) {
+        console.error('Failed to load live stream status:', error);
+        if (!cancelled) {
+          setStreamError('Live stream status could not be refreshed.');
+          setIsLive(false);
+          setPlaybackId(null);
+        }
       }
-    }, (error) => {
-      console.error("Error fetching live stream settings:", error);
-    });
+    };
 
-    const q = query(
-      collection(db, 'liveChat'),
-      orderBy('createdAt', 'asc'),
-      limit(100)
-    );
-
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const messages: ChatMessage[] = [];
-      snapshot.forEach((doc) => {
-        const data = doc.data();
-        messages.push({
-          id: doc.id,
-          user: data.user,
-          text: data.text,
-          time: data.createdAt ? new Date(data.createdAt.toDate()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          createdAt: data.createdAt
-        });
-      });
-      setChatMessages(messages);
-      scrollToBottom();
-    }, (error) => {
-      handleFirestoreError(error, OperationType.GET, 'liveChat');
-    });
+    loadStatus();
+    const interval = window.setInterval(loadStatus, 10000);
 
     return () => {
-      unsubscribe();
-      unsubscribeStream();
+      cancelled = true;
+      window.clearInterval(interval);
+    };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadMessages = async (showSpinner = false) => {
+      if (showSpinner) setLoadingChat(true);
+      setChatError('');
+      try {
+        const messages = await listLiveStreamMessages(100);
+        if (!cancelled) {
+          setChatMessages(messages);
+          scrollToBottom();
+        }
+      } catch (error) {
+        console.error('Failed to load live stream chat:', error);
+        if (!cancelled) setChatError('Live chat could not be refreshed.');
+      } finally {
+        if (!cancelled) setLoadingChat(false);
+      }
+    };
+
+    loadMessages(true);
+    const interval = window.setInterval(() => loadMessages(false), 5000);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(interval);
     };
   }, []);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  const formatTime = (timestamp?: string) => {
+    if (!timestamp) return '';
+    return new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
   const handleSendMessage = async (e?: React.FormEvent) => {
@@ -79,14 +98,16 @@ const LiveStreamPage: React.FC = () => {
     setChatMessage('');
 
     try {
-      await addDoc(collection(db, 'liveChat'), {
+      const sentMessage = await sendLiveStreamMessage({
         user: user.displayName || 'Anonymous',
         userId: user.uid,
         text: messageText,
-        createdAt: serverTimestamp()
       });
+      if (sentMessage) setChatMessages(prev => [...prev, sentMessage]);
     } catch (error) {
-      handleFirestoreError(error, OperationType.CREATE, 'liveChat');
+      console.error('Failed to send live chat message:', error);
+      setChatError(error instanceof Error ? error.message : 'Message could not be sent.');
+      setChatMessage(messageText);
     }
   };
 
@@ -107,6 +128,11 @@ const LiveStreamPage: React.FC = () => {
           </div>
         )}
       </div>
+      {streamError && (
+        <Card className="mb-6 border-status-warning/40 bg-status-warning/10">
+          <p className="text-sm text-brand-text-secondary">{streamError}</p>
+        </Card>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2">
@@ -148,22 +174,36 @@ const LiveStreamPage: React.FC = () => {
                 <ChatIcon className="w-5 h-5 text-brand-accent" />
                 Live Chat
               </h3>
-              <span className="text-xs font-bold text-brand-text-secondary bg-brand-secondary px-2 py-1 rounded-full">1.2k watching</span>
+              <span className="text-xs font-bold text-brand-text-secondary bg-brand-secondary px-2 py-1 rounded-full">{viewerCount.toLocaleString()} watching</span>
             </div>
             
             <div className="flex-1 overflow-y-auto space-y-4 mb-4 pr-2 custom-scrollbar">
-              {chatMessages.map(msg => (
+              {chatError && (
+                <Card className="border-status-warning/40 bg-status-warning/10">
+                  <p className="text-sm text-brand-text-secondary">{chatError}</p>
+                </Card>
+              )}
+              {loadingChat ? (
+                <div className="flex justify-center py-10">
+                  <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-brand-accent"></div>
+                </div>
+              ) : chatMessages.length > 0 ? chatMessages.map(msg => (
                 <div key={msg.id} className="flex gap-3">
                   <UserCircleIcon className="w-8 h-8 text-brand-text-secondary flex-shrink-0" />
                   <div>
                     <div className="flex items-baseline gap-2">
                       <span className="font-bold text-sm text-brand-text-primary">{msg.user}</span>
-                      <span className="text-[10px] text-brand-text-secondary">{msg.time}</span>
+                      <span className="text-[10px] text-brand-text-secondary">{formatTime(msg.createdAt)}</span>
                     </div>
                     <p className="text-sm text-brand-text-secondary mt-1">{msg.text}</p>
                   </div>
                 </div>
-              ))}
+              )) : (
+                <div className="flex h-full flex-col items-center justify-center text-center text-brand-text-secondary">
+                  <ChatIcon className="mb-4 h-10 w-10 opacity-40" />
+                  <p>No live chat messages yet.</p>
+                </div>
+              )}
               <div ref={messagesEndRef} />
             </div>
 

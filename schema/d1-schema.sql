@@ -245,6 +245,26 @@ CREATE TABLE IF NOT EXISTS community_messages (
 
 CREATE INDEX IF NOT EXISTS idx_community_messages_created ON community_messages(created_at DESC);
 
+CREATE TABLE IF NOT EXISTS live_stream_settings (
+  id TEXT PRIMARY KEY,
+  status TEXT NOT NULL DEFAULT 'offline',
+  playback_id TEXT,
+  stream_id TEXT,
+  title TEXT NOT NULL DEFAULT 'Global Broadcast',
+  viewer_count INTEGER NOT NULL DEFAULT 0,
+  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS live_stream_messages (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  user_name TEXT NOT NULL DEFAULT 'Anonymous',
+  text TEXT NOT NULL,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_live_stream_messages_created ON live_stream_messages(created_at DESC);
+
 CREATE TABLE IF NOT EXISTS notifications (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL DEFAULT 'broadcast',

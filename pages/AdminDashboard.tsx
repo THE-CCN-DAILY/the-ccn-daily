@@ -11,6 +11,7 @@ import { handleFirestoreError, OperationType } from '../utils/firestoreErrorHand
 import { useAuth } from '../contexts/AuthContext';
 import { AdminUserStats, listAdminUsers } from '../services/adminService';
 import { createAdminEvent } from '../services/eventService';
+import { createMuxLiveStream } from '../services/liveStreamService';
 
 interface AppUser {
   id: string;
@@ -99,28 +100,9 @@ const AdminDashboard: React.FC = () => {
     const handleCreateMuxStream = async () => {
         setIsCreatingMuxStream(true);
         try {
-            const token = await auth.currentUser?.getIdToken();
-            const response = await fetch('/api/mux/live', { 
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || 'Failed to create Mux stream');
-            }
-            const data = await response.json();
+            const data = await createMuxLiveStream();
             setMuxStreamKey(data.streamKey);
             setMuxPlaybackId(data.playbackId);
-            
-            // Save the active playback ID to Firestore so the LiveStreamPage can read it
-            const { doc, setDoc } = await import('firebase/firestore');
-            await setDoc(doc(db, 'settings', 'livestream'), {
-                playbackId: data.playbackId,
-                streamId: data.streamId,
-                updatedAt: serverTimestamp()
-            });
 
             notify('Mux Live Stream created successfully! Save your Stream Key securely.', 'success');
         } catch (error: any) {
@@ -138,11 +120,10 @@ const AdminDashboard: React.FC = () => {
         
         try {
             // 1. Get direct upload URL from our backend
-            const token = await auth.currentUser?.getIdToken();
             const response = await fetch('/api/mux/upload', { 
                 method: 'POST',
                 headers: {
-                    'Authorization': `Bearer ${token}`
+                    'x-admin-email': 'pastor.eryeza@gmail.com'
                 }
             });
             if (!response.ok) {
