@@ -153,6 +153,19 @@ type CourseProgressRow = {
   updated_at?: string | null;
 };
 
+type EventRow = {
+  id: string;
+  title: string;
+  description: string;
+  event_date: string;
+  type: 'online' | 'physical';
+  attendee_count: number;
+  streaming_platform?: string | null;
+  status: 'draft' | 'published' | 'archived';
+  created_at?: string | null;
+  updated_at?: string | null;
+};
+
 type DevotionalRow = {
   id: string;
   title: string;
@@ -404,6 +417,19 @@ const mapCourseProgress = (row: CourseProgressRow) => ({
   userId: row.user_id,
   completedModules: parseTags(row.completed_modules) || [],
   lastAccessed: row.last_accessed || undefined,
+  updatedAt: row.updated_at || undefined,
+});
+
+const mapEvent = (row: EventRow) => ({
+  id: row.id,
+  title: row.title,
+  description: row.description,
+  date: row.event_date,
+  type: row.type,
+  attendeeCount: row.attendee_count,
+  streamingPlatform: row.streaming_platform || undefined,
+  status: row.status,
+  createdAt: row.created_at || undefined,
   updatedAt: row.updated_at || undefined,
 });
 
@@ -1426,6 +1452,96 @@ app.delete('/api/admin/courses/:id/modules/:moduleId', async (c) => {
          updated_at = CURRENT_TIMESTAMP
      WHERE id = ?`
   ).bind(courseId, courseId).run();
+
+  return c.json({ ok: true });
+});
+
+app.get('/api/events', async (c) => {
+  if (!c.env.DB) return c.json({ events: [], source: 'fallback' });
+  const result = await c.env.DB.prepare(
+    `SELECT * FROM events
+     WHERE status = 'published' AND event_date >= datetime('now', '-1 day')
+     ORDER BY event_date ASC`
+  ).all<EventRow>();
+  return c.json({ events: result.results.map(mapEvent), source: 'd1' });
+});
+
+app.post('/api/events/:id/register', async (c) => {
+  const id = c.req.param('id');
+  if (!isSafeId(id)) return c.json({ error: 'Invalid event id' }, 400);
+  if (!c.env.DB) return c.json({ error: 'D1 database binding is not configured' }, 503);
+
+  const body = await c.req.json().catch(() => ({}));
+  const userId = String(body.userId || 'anonymous').trim() || 'anonymous';
+  if (!isSafeId(userId)) return c.json({ error: 'Invalid user id' }, 400);
+
+  const event = await c.env.DB.prepare(`SELECT * FROM events WHERE id = ? LIMIT 1`).bind(id).first<EventRow>();
+  if (!event) return c.json({ error: 'Event not found' }, 404);
+
+  await c.env.DB.prepare(
+    `INSERT OR IGNORE INTO event_registrations (event_id, user_id, created_at)
+     VALUES (?, ?, CURRENT_TIMESTAMP)`
+  ).bind(id, userId).run();
+
+  await c.env.DB.prepare(
+    `UPDATE events
+     SET attendee_count = (SELECT COUNT(*) FROM event_registrations WHERE event_id = ?),
+         updated_at = CURRENT_TIMESTAMP
+     WHERE id = ?`
+  ).bind(id, id).run();
+
+  const updated = await c.env.DB.prepare(`SELECT * FROM events WHERE id = ? LIMIT 1`).bind(id).first<EventRow>();
+  return c.json({ event: updated ? mapEvent(updated) : null, source: 'd1' });
+});
+
+app.post('/api/admin/events', async (c) => {
+  const denied = requireAdmin(c);
+  if (denied) return denied;
+  if (!c.env.DB) return c.json({ error: 'D1 database binding is not configured' }, 503);
+
+  const body = await c.req.json();
+  const title = String(body.title || '').trim();
+  const description = String(body.description || '').trim();
+  const eventDate = String(body.date || body.eventDate || '').trim();
+  const type = String(body.type || 'online') === 'physical' ? 'physical' : 'online';
+  const streamingPlatform = String(body.streamingPlatform || '').trim() || null;
+  const status = contentStatus(body.status);
+
+  if (!title) return c.json({ error: 'Event title is required' }, 400);
+  if (!eventDate || Number.isNaN(new Date(eventDate).getTime())) {
+    return c.json({ error: 'A valid event date is required' }, 400);
+  }
+
+  const id = String(body.id || crypto.randomUUID()).trim();
+  if (!isSafeId(id)) return c.json({ error: 'Invalid event id' }, 400);
+
+  await c.env.DB.prepare(
+    `INSERT INTO events (
+      id, title, description, event_date, type, attendee_count, streaming_platform, status, created_at, updated_at
+    ) VALUES (?, ?, ?, ?, ?, 0, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+    ON CONFLICT(id) DO UPDATE SET
+      title = excluded.title,
+      description = excluded.description,
+      event_date = excluded.event_date,
+      type = excluded.type,
+      streaming_platform = excluded.streaming_platform,
+      status = excluded.status,
+      updated_at = CURRENT_TIMESTAMP`
+  ).bind(id, title, description, new Date(eventDate).toISOString(), type, streamingPlatform, status).run();
+
+  const event = await c.env.DB.prepare(`SELECT * FROM events WHERE id = ? LIMIT 1`).bind(id).first<EventRow>();
+  return c.json({ event: event ? mapEvent(event) : null, source: 'd1' });
+});
+
+app.delete('/api/admin/events/:id', async (c) => {
+  const denied = requireAdmin(c);
+  if (denied) return denied;
+  const id = c.req.param('id');
+  if (!isSafeId(id)) return c.json({ error: 'Invalid event id' }, 400);
+  if (!c.env.DB) return c.json({ error: 'D1 database binding is not configured' }, 503);
+
+  await c.env.DB.prepare(`DELETE FROM event_registrations WHERE event_id = ?`).bind(id).run();
+  await c.env.DB.prepare(`DELETE FROM events WHERE id = ?`).bind(id).run();
 
   return c.json({ ok: true });
 });

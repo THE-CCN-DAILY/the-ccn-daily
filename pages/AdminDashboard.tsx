@@ -10,6 +10,7 @@ import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { handleFirestoreError, OperationType } from '../utils/firestoreErrorHandler';
 import { useAuth } from '../contexts/AuthContext';
 import { AdminUserStats, listAdminUsers } from '../services/adminService';
+import { createAdminEvent } from '../services/eventService';
 
 interface AppUser {
   id: string;
@@ -454,23 +455,21 @@ const AdminDashboard: React.FC = () => {
         if (!eventTitle || !eventDate) return;
         setIsCreatingEvent(true);
         try {
-            await addDoc(collection(db, 'events'), {
+            await createAdminEvent({
                 title: eventTitle,
-                date: new Date(eventDate),
+                date: new Date(eventDate).toISOString(),
                 description: eventDesc,
                 type: eventType,
-                attendeeCount: 0,
-                createdAt: serverTimestamp()
             });
             setIsCreatingEvent(false);
             setEventTitle('');
             setEventDate('');
             setEventDesc('');
             notify('Event created successfully!', 'success');
-        } catch (error) {
+        } catch (error: any) {
             setIsCreatingEvent(false);
-            handleFirestoreError(error, OperationType.CREATE, 'events');
-            notify('Failed to create event.', 'error');
+            console.error('Failed to create D1 event:', error);
+            notify(error.message || 'Failed to create event.', 'error');
         }
     };
 
