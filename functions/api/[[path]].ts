@@ -631,6 +631,11 @@ const requireAdmin = (c: any) => {
   }, 401);
 };
 
+const isLocalPreviewRequest = (c: any) => {
+  const host = c.req.header('host') || '';
+  return Boolean(c.env.CF_PAGES) && (host.startsWith('127.0.0.1') || host.startsWith('localhost'));
+};
+
 const decodeXml = (value: string) =>
   value
     .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1')
@@ -2702,6 +2707,47 @@ app.post('/api/auth/profile', async (c) => {
 
   if (!user) return c.json({ error: 'Profile could not be loaded' }, 500);
   return c.json({ user: mapUser(user), source: 'd1' });
+});
+
+app.get('/api/auth/preview-session', async (c) => {
+  if (!isLocalPreviewRequest(c)) {
+    return c.json({
+      error: 'PREVIEW_SESSION_UNAVAILABLE',
+      message: 'Preview sessions are only available on the local Cloudflare Pages preview server.',
+    }, 404);
+  }
+
+  const adminEmail = (c.env.ADMIN_EMAIL || 'pastor.eryeza@gmail.com').toLowerCase();
+  const previewUser = {
+    uid: 'preview-admin',
+    id: 'preview-admin',
+    email: adminEmail,
+    displayName: 'Preview Admin',
+    photoURL: undefined,
+    role: 'admin',
+    tier: 'max',
+  };
+
+  if (!c.env.DB) {
+    return c.json({ user: previewUser, source: 'preview-fallback' });
+  }
+
+  await c.env.DB.prepare(
+    `INSERT INTO users (
+      id, email, display_name, photo_url, role, tier, created_at, updated_at, last_active_at
+    ) VALUES (?, ?, ?, ?, 'admin', 'max', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+    ON CONFLICT(email) DO UPDATE SET
+      role = 'admin',
+      tier = 'max',
+      last_active_at = CURRENT_TIMESTAMP,
+      updated_at = CURRENT_TIMESTAMP`
+  ).bind(previewUser.id, previewUser.email, previewUser.displayName, null).run();
+
+  const user = await c.env.DB.prepare(
+    `SELECT * FROM users WHERE email = ? LIMIT 1`
+  ).bind(previewUser.email).first<UserRow>();
+
+  return c.json({ user: user ? mapUser(user) : previewUser, source: 'local-preview' });
 });
 
 app.get('/api/user/profile', (c) => {

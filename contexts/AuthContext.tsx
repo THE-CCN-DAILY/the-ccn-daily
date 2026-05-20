@@ -1,7 +1,7 @@
 import React, { createContext, useState, useContext, useEffect, useMemo, useCallback } from 'react';
 import { auth, googleProvider, signInWithPopup, firebaseSignOut, onAuthStateChanged } from '../firebase';
 import type { AppUser } from '../types';
-import { syncCloudflareUserProfile } from '../services/userProfileService';
+import { getPreviewSessionUser, syncCloudflareUserProfile } from '../services/userProfileService';
 
 interface AuthContextType {
   user: AppUser | null;
@@ -56,7 +56,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setUser({ ...firebaseUser, role: 'user' } as AppUser);
           }
         } else {
-          setUser(null);
+          const previewUser = await getPreviewSessionUser().catch(() => null);
+          setUser(previewUser);
         }
       } catch (error) {
         console.error("Error in auth state change:", error);

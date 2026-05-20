@@ -50,3 +50,25 @@ export const syncCloudflareUserProfile = async (firebaseUser: any): Promise<AppU
     tier: profile.tier || 'free',
   } as AppUser;
 };
+
+export const getPreviewSessionUser = async (): Promise<AppUser | null> => {
+  const response = await fetch('/api/auth/preview-session');
+  if (!response.ok) return null;
+
+  const data = await response.json() as { user?: CloudflareProfile };
+  if (!data.user) return null;
+
+  return {
+    uid: data.user.uid || data.user.id,
+    id: data.user.id || data.user.uid,
+    email: data.user.email,
+    displayName: data.user.displayName || 'Preview Admin',
+    photoURL: data.user.photoURL || null,
+    role: data.user.role || 'admin',
+    tier: data.user.tier || 'max',
+    emailVerified: true,
+    isAnonymous: false,
+    providerData: [],
+    getIdToken: async () => 'local-preview-token',
+  } as unknown as AppUser;
+};
