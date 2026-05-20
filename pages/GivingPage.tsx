@@ -1,6 +1,11 @@
 import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import Card from '../components/Card';
 import { CreditCardIcon, DbIcon, CheckIcon } from '../components/icons';
+
+const EASE = [0.22, 1, 0.36, 1] as [number, number, number, number];
+const fadeUp = { hidden: { opacity: 0, y: 24 }, visible: { opacity: 1, y: 0 } };
+const stagger = { hidden: {}, visible: { transition: { staggerChildren: 0.08, delayChildren: 0.03 } } };
 import { db } from '../firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { handleFirestoreError, OperationType } from '../utils/firestoreErrorHandler';
@@ -100,14 +105,28 @@ const GivingPage: React.FC = () => {
   return (
     <div className="max-w-4xl mx-auto pb-20">
       <div className="mb-8">
-        <h1 className="text-4xl font-black text-brand-text-primary flex items-center gap-4">
+        <motion.h1
+          className="text-4xl font-black text-brand-text-primary flex items-center gap-4"
+          initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.55, ease: EASE }}
+        >
           <CreditCardIcon className="w-10 h-10 text-brand-accent"/>
           Giving & Support
-        </h1>
-        <p className="text-brand-text-secondary mt-2">Partner with us to expand THE CCN DAILY globally.</p>
+        </motion.h1>
+        <motion.p
+          className="text-brand-text-secondary mt-2"
+          initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+          transition={{ duration: 0.45, delay: 0.15 }}
+        >
+          Partner with us to expand THE CCN DAILY globally.
+        </motion.p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <motion.div
+        className="grid grid-cols-1 lg:grid-cols-2 gap-8"
+        variants={stagger} initial="hidden" animate="visible"
+      >
+        <motion.div variants={fadeUp} transition={{ duration: 0.5, ease: EASE }}>
         <Card className="space-y-6">
           <h2 className="text-xl font-bold text-brand-text-primary mb-4">Select Amount</h2>
           
@@ -126,17 +145,22 @@ const GivingPage: React.FC = () => {
             </button>
           </div>
 
-          <div className="grid grid-cols-3 gap-4">
+          <motion.div
+            className="grid grid-cols-3 gap-4"
+            variants={stagger} initial="hidden" animate="visible"
+          >
             {[25, 50, 100, 250, 500, 1000].map(val => (
-              <button 
+              <motion.button
                 key={val}
                 onClick={() => setAmount(val)}
                 className={`py-4 rounded-xl font-bold border transition-all ${amount === val ? 'bg-brand-accent/20 text-brand-accent border-brand-accent' : 'bg-brand-dark text-brand-text-primary border-brand-border hover:border-brand-accent/50'}`}
+                variants={fadeUp} transition={{ duration: 0.3, ease: EASE }}
+                whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
               >
                 ${val}
-              </button>
+              </motion.button>
             ))}
-          </div>
+          </motion.div>
 
           <div>
             <label className="block text-xs font-bold text-brand-text-secondary uppercase mb-2">Custom Amount</label>
@@ -151,7 +175,9 @@ const GivingPage: React.FC = () => {
             </div>
           </div>
         </Card>
+        </motion.div>
 
+        <motion.div variants={fadeUp} transition={{ duration: 0.5, ease: EASE }}>
         <Card className="space-y-6">
           <h2 className="text-xl font-bold text-brand-text-primary mb-4">Payment Method</h2>
           
@@ -184,7 +210,8 @@ const GivingPage: React.FC = () => {
             Accepts international cards and local mobile money.
           </p>
         </Card>
-      </div>
+        </motion.div>
+      </motion.div>
     </div>
   );
 };
