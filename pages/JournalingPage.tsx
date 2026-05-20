@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import Card from '../components/Card';
 import { PaintBrushIcon, PlusCircleIcon } from '../components/icons';
+
+const EASE = [0.22, 1, 0.36, 1] as [number, number, number, number];
+const fadeUp = { hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } };
+const stagger = { hidden: {}, visible: { transition: { staggerChildren: 0.08, delayChildren: 0.03 } } };
 import { useAuth } from '../contexts/AuthContext';
 import {
   listJournalEntries,
@@ -92,24 +97,49 @@ const JournalingPage: React.FC = () => {
     <div className="max-w-4xl mx-auto pb-20 px-4">
       <div className="flex justify-between items-end mb-8">
         <div>
-          <h1 className="text-4xl font-black text-brand-text-primary mb-2">My Journal</h1>
-          <p className="text-xl text-brand-text-secondary">
-            Reflect on your spiritual journey and record what God is teaching you.
-          </p>
-        </div>
-        {!isWriting && (
-          <button
-            onClick={() => setIsWriting(true)}
-            className="flex items-center px-4 py-2 bg-brand-accent text-white font-bold hover:bg-opacity-90 transition-colors"
+          <motion.h1
+            className="text-4xl font-black text-brand-text-primary mb-2"
+            initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.55, ease: EASE }}
           >
-            <PlusCircleIcon className="w-5 h-5 mr-2" />
-            New Entry
-          </button>
-        )}
+            My Journal
+          </motion.h1>
+          <motion.p
+            className="text-xl text-brand-text-secondary"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+            transition={{ duration: 0.45, delay: 0.15 }}
+          >
+            Reflect on your spiritual journey and record what God is teaching you.
+          </motion.p>
+        </div>
+        <AnimatePresence>
+          {!isWriting && (
+            <motion.button
+              onClick={() => setIsWriting(true)}
+              className="flex items-center px-4 py-2 bg-brand-accent text-white font-bold hover:bg-opacity-90 transition-colors"
+              initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              transition={{ duration: 0.25, ease: EASE }}
+              whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }}
+            >
+              <PlusCircleIcon className="w-5 h-5 mr-2" />
+              New Entry
+            </motion.button>
+          )}
+        </AnimatePresence>
       </div>
 
+      <AnimatePresence>
       {isWriting && (
-        <Card className="mb-8 border-brand-accent/50 bg-brand-dark/50 p-6">
+        <motion.div
+          key="writing-panel"
+          initial={{ opacity: 0, y: -12, scale: 0.98 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: -8, scale: 0.98 }}
+          transition={{ duration: 0.35, ease: EASE }}
+          className="mb-8"
+        >
+        <Card className="border-brand-accent/50 bg-brand-dark/50 p-6">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-lg font-bold text-brand-text-primary">New Reflection</h3>
             <div className="flex space-x-2">
@@ -145,7 +175,9 @@ const JournalingPage: React.FC = () => {
             </button>
           </div>
         </Card>
+        </motion.div>
       )}
+      </AnimatePresence>
 
       {error && (
         <Card className="mb-6 border-status-error/40 bg-status-error/10 p-4">
@@ -158,11 +190,15 @@ const JournalingPage: React.FC = () => {
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-accent"></div>
         </div>
       ) : entries.length > 0 ? (
-        <div className="space-y-6">
+        <motion.div
+          className="space-y-6"
+          variants={stagger} initial="hidden" animate="visible"
+        >
           {entries.map((entry) => {
             const colorObj = colors.find(c => c.id === entry.color) || colors[0];
             return (
-              <Card key={entry.id} className={`border ${colorObj.border} ${colorObj.bg} p-6`}>
+              <motion.div key={entry.id} variants={fadeUp} transition={{ duration: 0.45, ease: EASE }}>
+              <Card className={`border ${colorObj.border} ${colorObj.bg} p-6`}>
                 <div className="flex justify-between items-start mb-4">
                   <span className="text-sm font-bold text-brand-text-secondary">
                     {formatDate(entry.createdAt)}
@@ -173,9 +209,10 @@ const JournalingPage: React.FC = () => {
                   {entry.text}
                 </p>
               </Card>
+              </motion.div>
             );
           })}
-        </div>
+        </motion.div>
       ) : (
         !isWriting && (
           <Card className="text-center py-20 border-brand-border border-dashed bg-transparent">

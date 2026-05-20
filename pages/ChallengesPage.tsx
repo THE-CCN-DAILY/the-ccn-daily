@@ -1,8 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'motion/react';
 import Card from '../components/Card';
 import { SparklesIcon, TeamIcon } from '../components/icons';
 import { listChallenges, type Challenge } from '../services/challengeService';
+
+const EASE = [0.22, 1, 0.36, 1] as [number, number, number, number];
+const fadeUp = { hidden: { opacity: 0, y: 24 }, visible: { opacity: 1, y: 0 } };
+const stagger = { hidden: {}, visible: { transition: { staggerChildren: 0.1, delayChildren: 0.05 } } };
 
 const ChallengesPage: React.FC = () => {
   const navigate = useNavigate();
@@ -44,10 +49,20 @@ const ChallengesPage: React.FC = () => {
   return (
     <div className="max-w-6xl mx-auto pb-20 px-4">
       <div className="mb-8">
-        <h1 className="text-4xl font-black text-brand-text-primary mb-4">Challenges</h1>
-        <p className="text-xl text-brand-text-secondary">
+        <motion.h1
+          className="text-4xl font-black text-brand-text-primary mb-4"
+          initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.55, ease: EASE }}
+        >
+          Challenges
+        </motion.h1>
+        <motion.p
+          className="text-xl text-brand-text-secondary"
+          initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+          transition={{ duration: 0.45, delay: 0.15 }}
+        >
           Join community-driven spiritual growth challenges. Build consistency together.
-        </p>
+        </motion.p>
       </div>
 
       <div className="flex gap-4 mb-8 border-b border-brand-border pb-2">
@@ -78,11 +93,17 @@ const ChallengesPage: React.FC = () => {
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-accent"></div>
         </div>
       ) : displayChallenges.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <AnimatePresence mode="wait">
+        <motion.div
+          key={activeTab}
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+          variants={stagger} initial="hidden" animate="visible"
+          exit={{ opacity: 0, y: -8, transition: { duration: 0.2 } }}
+        >
           {displayChallenges.map((challenge) => (
-            <Card 
-              key={challenge.id} 
-              className="flex flex-col border-brand-border bg-brand-dark/30 overflow-hidden p-0 cursor-pointer hover:border-brand-accent/50 transition-colors group"
+            <motion.div key={challenge.id} variants={fadeUp} transition={{ duration: 0.5, ease: EASE }}>
+            <Card
+              className="flex flex-col border-brand-border bg-brand-dark/30 overflow-hidden p-0 cursor-pointer hover:border-brand-accent/50 transition-colors group h-full"
               onClick={() => navigate(`/app/challenges/${challenge.id}`)}
             >
               <div className="relative h-48 w-full bg-brand-secondary flex items-center justify-center overflow-hidden">
@@ -110,8 +131,10 @@ const ChallengesPage: React.FC = () => {
                 </div>
               </div>
             </Card>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
+        </AnimatePresence>
       ) : (
         <Card className="text-center py-20 border-brand-border border-dashed bg-transparent">
           <SparklesIcon className="w-12 h-12 text-brand-text-secondary mx-auto mb-4" />
