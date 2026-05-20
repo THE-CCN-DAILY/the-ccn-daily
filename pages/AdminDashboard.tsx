@@ -4,7 +4,7 @@ import Card from '../components/Card';
 import ChallengeCreator from '../components/admin/ChallengeCreator';
 import { UserIcon, PlusCircleIcon, ChatBubbleLeftRightIcon, PencilIcon, SpeakerWaveIcon, ReaderIcon, EllipsisHorizontalIcon, CommunityIcon, DbIcon, TrophyIcon, SpinnerIcon, CalendarIcon } from '../components/icons';
 import { useNotifications } from '../contexts/NotificationContext';
-import { db, storage, auth } from '../firebase';
+import { db, storage } from '../firebase';
 import { collection, addDoc, serverTimestamp, query, orderBy, onSnapshot } from 'firebase/firestore';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { handleFirestoreError, OperationType } from '../utils/firestoreErrorHandler';
@@ -393,12 +393,11 @@ const AdminDashboard: React.FC = () => {
                 const targetEmails = users.map(u => u.email).filter(Boolean);
                 
                 if (targetEmails.length > 0) {
-                    const token = await auth.currentUser?.getIdToken();
                     const response = await fetch('/api/send-email', {
                         method: 'POST',
+                        credentials: 'include',
                         headers: {
                             'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${token}`
                         },
                         body: JSON.stringify({
                             to: targetEmails,

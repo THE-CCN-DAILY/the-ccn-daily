@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import Card from '../components/Card';
 import { CreditCardIcon, DbIcon, CheckIcon } from '../components/icons';
-import { db, auth } from '../firebase';
+import { db } from '../firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { handleFirestoreError, OperationType } from '../utils/firestoreErrorHandler';
 import { useFlutterwave, closePaymentModal } from 'flutterwave-react-v3';
@@ -9,9 +9,11 @@ import { useFlutterwave, closePaymentModal } from 'flutterwave-react-v3';
 const FLUTTERWAVE_PUBLIC_KEY = (import.meta as any).env.VITE_FLUTTERWAVE_PUBLIC_KEY || 'FLWPUBK_TEST-SANDBOXDEMOKEY-X';
 
 import { useNotifications } from '../contexts/NotificationContext';
+import { useAuth } from '../contexts/AuthContext';
 
 const GivingPage: React.FC = () => {
   const { notify } = useNotifications();
+  const { user } = useAuth();
   const [amount, setAmount] = useState<number>(50);
   const [type, setType] = useState<'one-time' | 'monthly'>('monthly');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -25,9 +27,9 @@ const GivingPage: React.FC = () => {
     currency: 'USD',
     payment_options: 'card,mobilemoney,ussd',
     customer: {
-      email: auth.currentUser?.email || 'donor@example.com',
+      email: user?.email || 'donor@example.com',
       phone_number: '',
-      name: auth.currentUser?.displayName || 'Generous Donor',
+      name: user?.displayName || 'Generous Donor',
     },
     customizations: {
       title: 'THE CCN DAILY Support',
@@ -59,7 +61,6 @@ const GivingPage: React.FC = () => {
 
   const recordDonation = async () => {
     try {
-      const user = auth.currentUser;
       await addDoc(collection(db, 'donations'), {
         amount,
         type,

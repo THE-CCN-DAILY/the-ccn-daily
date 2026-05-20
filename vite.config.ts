@@ -26,7 +26,7 @@ export default defineConfig({
         // Split large vendor chunks for better caching
         manualChunks: {
           'vendor-react': ['react', 'react-dom', 'react-router-dom'],
-          'vendor-firebase': ['firebase'],
+          'vendor-firebase': ['firebase/app', 'firebase/firestore', 'firebase/storage'],
           'vendor-ui': ['lucide-react', 'motion', 'sonner'],
         },
       },

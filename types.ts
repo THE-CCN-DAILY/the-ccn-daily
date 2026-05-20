@@ -1,14 +1,17 @@
 
-// FIX: Replaced incorrect component code with actual type definitions.
 import React from 'react';
 import type { Theme } from './contexts/ThemeContext';
-import type { User } from 'firebase/auth';
 
-// For AuthContext.tsx
-export type FirebaseUser = User;
 export type UserRoleType = 'admin' | 'lead_developer' | 'group_lead' | 'family_lead' | 'user';
 
-export interface AppUser extends FirebaseUser {
+export interface AppUser {
+  uid: string;
+  id?: string;
+  email: string | null;
+  displayName: string | null;
+  photoURL: string | null;
+  emailVerified?: boolean;
+  isAnonymous?: boolean;
   role: UserRoleType;
   tier?: import('./types/pricing').SubscriptionTier;
 }

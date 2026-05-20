@@ -1,4 +1,5 @@
 import { Hono } from 'hono';
+import { SignJWT, jwtVerify } from 'jose';
 
 type D1PreparedStatement = {
   bind: (...values: unknown[]) => D1PreparedStatement;
@@ -42,6 +43,9 @@ type Env = {
   WORKERS_AI_TEXT_MODEL?: string;
   MUX_TOKEN_ID?: string;
   MUX_TOKEN_SECRET?: string;
+  GOOGLE_CLIENT_ID?: string;
+  GOOGLE_CLIENT_SECRET?: string;
+  AUTH_SECRET?: string;
 };
 
 const app = new Hono<{ Bindings: Env }>();
@@ -2750,14 +2754,208 @@ app.get('/api/auth/preview-session', async (c) => {
   return c.json({ user: user ? mapUser(user) : previewUser, source: 'local-preview' });
 });
 
-app.get('/api/user/profile', (c) => {
-  const authHeader = c.req.header('authorization');
-  if (!authHeader?.startsWith('Bearer ')) return c.json({ error: 'Unauthorized' }, 401);
+// ─── Cloudflare-native Google OAuth + JWT session ────────────────────────────
+
+const JWT_COOKIE = 'ccn_session';
+const LOCAL_AUTH_SECRET = 'local-dev-preview-secret-ccndaily!!';
+
+async function signSession(payload: Record<string, unknown>, secret: string): Promise<string> {
+  const key = new TextEncoder().encode(secret);
+  return new SignJWT(payload)
+    .setProtectedHeader({ alg: 'HS256' })
+    .setIssuedAt()
+    .setExpirationTime('7d')
+    .sign(key);
+}
+
+async function verifySession(token: string, secret: string): Promise<Record<string, unknown> | null> {
+  try {
+    const key = new TextEncoder().encode(secret);
+    const { payload } = await jwtVerify(token, key);
+    return payload as Record<string, unknown>;
+  } catch {
+    return null;
+  }
+}
+
+function getCookieValue(req: Request, name: string): string | undefined {
+  const header = req.headers.get('Cookie') || '';
+  for (const part of header.split(';')) {
+    const [k, ...v] = part.trim().split('=');
+    if (k === name) return decodeURIComponent(v.join('='));
+  }
+  return undefined;
+}
+
+function makeSessionCookie(token: string): string {
+  return `${JWT_COOKIE}=${token}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=604800`;
+}
+
+function clearSessionCookie(): string {
+  return `${JWT_COOKIE}=; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=0`;
+}
+
+async function upsertGoogleUser(
+  db: D1DatabaseBinding,
+  userId: string,
+  email: string,
+  displayName: string,
+  photoUrl: string | null,
+  adminEmail: string,
+): Promise<{ role: string; tier: string }> {
+  const isAdmin = email === adminEmail;
+  await db.prepare(
+    `INSERT INTO users (id, email, display_name, photo_url, role, tier, created_at, updated_at, last_active_at)
+     VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+     ON CONFLICT(email) DO UPDATE SET
+       display_name = excluded.display_name,
+       photo_url    = excluded.photo_url,
+       last_active_at = CURRENT_TIMESTAMP,
+       updated_at   = CURRENT_TIMESTAMP`
+  ).bind(userId, email, displayName, photoUrl, isAdmin ? 'admin' : 'user', isAdmin ? 'max' : 'free').run();
+
+  const row = await db.prepare(`SELECT role, tier FROM users WHERE email = ? LIMIT 1`).bind(email).first<{ role: string; tier: string }>();
+  return row || { role: isAdmin ? 'admin' : 'user', tier: isAdmin ? 'max' : 'free' };
+}
+
+// GET /api/auth/google — redirect to Google OAuth (or issue preview session locally)
+app.get('/api/auth/google', async (c) => {
+  const secret = c.env.AUTH_SECRET || LOCAL_AUTH_SECRET;
+  const adminEmail = (c.env.ADMIN_EMAIL || 'pastor.eryeza@gmail.com').toLowerCase();
+
+  if (isLocalPreviewRequest(c)) {
+    if (c.env.DB) {
+      await upsertGoogleUser(c.env.DB, 'preview-admin', adminEmail, 'Preview Admin', null, adminEmail);
+    }
+    const token = await signSession({ sub: 'preview-admin', email: adminEmail, name: 'Preview Admin', picture: null, role: 'admin', tier: 'max' }, secret);
+    return new Response(null, {
+      status: 302,
+      headers: { Location: '/app/guided-journey', 'Set-Cookie': makeSessionCookie(token) },
+    });
+  }
+
+  if (!c.env.GOOGLE_CLIENT_ID) {
+    return c.json({ error: 'GOOGLE_CLIENT_ID is not configured. Add it as a Cloudflare secret.' }, 503);
+  }
+
+  const state = crypto.randomUUID();
+  const origin = new URL(c.req.url).origin;
+  const callbackUrl = `${origin}/api/auth/callback/google`;
+
+  const googleUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
+  googleUrl.searchParams.set('client_id', c.env.GOOGLE_CLIENT_ID);
+  googleUrl.searchParams.set('redirect_uri', callbackUrl);
+  googleUrl.searchParams.set('response_type', 'code');
+  googleUrl.searchParams.set('scope', 'openid email profile');
+  googleUrl.searchParams.set('state', state);
+  googleUrl.searchParams.set('access_type', 'online');
+  googleUrl.searchParams.set('prompt', 'select_account');
+
+  return new Response(null, {
+    status: 302,
+    headers: {
+      Location: googleUrl.toString(),
+      'Set-Cookie': `oauth_state=${state}; HttpOnly; Secure; SameSite=Lax; Path=/api/auth; Max-Age=600`,
+    },
+  });
+});
+
+// GET /api/auth/callback/google — exchange code, issue session cookie
+app.get('/api/auth/callback/google', async (c) => {
+  const { code, state, error } = c.req.query();
+
+  if (error) return new Response(null, { status: 302, headers: { Location: '/?auth_error=access_denied' } });
+
+  const storedState = getCookieValue(c.req.raw, 'oauth_state');
+  if (!storedState || storedState !== state) {
+    return new Response(null, { status: 302, headers: { Location: '/?auth_error=state_mismatch' } });
+  }
+
+  if (!c.env.GOOGLE_CLIENT_ID || !c.env.GOOGLE_CLIENT_SECRET) {
+    return c.json({ error: 'Google OAuth credentials are not configured.' }, 503);
+  }
+
+  const origin = new URL(c.req.url).origin;
+  const callbackUrl = `${origin}/api/auth/callback/google`;
+
+  const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ code, client_id: c.env.GOOGLE_CLIENT_ID, client_secret: c.env.GOOGLE_CLIENT_SECRET, redirect_uri: callbackUrl, grant_type: 'authorization_code' }).toString(),
+  });
+
+  if (!tokenRes.ok) return new Response(null, { status: 302, headers: { Location: '/?auth_error=token_failed' } });
+
+  const tokens = await tokenRes.json() as { access_token: string };
+
+  const userRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+    headers: { Authorization: `Bearer ${tokens.access_token}` },
+  });
+
+  if (!userRes.ok) return new Response(null, { status: 302, headers: { Location: '/?auth_error=userinfo_failed' } });
+
+  const gu = await userRes.json() as { sub: string; email: string; name: string; picture?: string };
+  const email = gu.email.toLowerCase();
+  const userId = `google-${gu.sub}`;
+  const adminEmail = (c.env.ADMIN_EMAIL || 'pastor.eryeza@gmail.com').toLowerCase();
+
+  const { role, tier } = c.env.DB
+    ? await upsertGoogleUser(c.env.DB, userId, email, gu.name, gu.picture || null, adminEmail)
+    : { role: email === adminEmail ? 'admin' : 'user', tier: email === adminEmail ? 'max' : 'free' };
+
+  const secret = c.env.AUTH_SECRET || LOCAL_AUTH_SECRET;
+  const token = await signSession({ sub: userId, email, name: gu.name, picture: gu.picture || null, role, tier }, secret);
+
+  return new Response(null, {
+    status: 302,
+    headers: { Location: '/app/guided-journey', 'Set-Cookie': makeSessionCookie(token) },
+  });
+});
+
+// GET /api/auth/session — return current user from JWT cookie
+app.get('/api/auth/session', async (c) => {
+  const secret = c.env.AUTH_SECRET || LOCAL_AUTH_SECRET;
+  const token = getCookieValue(c.req.raw, JWT_COOKIE);
+  if (!token) return c.json({ user: null });
+
+  const payload = await verifySession(token, secret);
+  if (!payload) return c.json({ user: null });
+
+  if (c.env.DB && payload.email) {
+    const row = await c.env.DB.prepare(`SELECT * FROM users WHERE email = ? LIMIT 1`).bind(payload.email).first<UserRow>();
+    if (row) {
+      return c.json({
+        user: {
+          uid: row.id, id: row.id,
+          email: row.email,
+          displayName: row.display_name || payload.name || '',
+          photoURL: row.photo_url || payload.picture || null,
+          role: row.role,
+          tier: row.tier,
+        },
+      });
+    }
+  }
 
   return c.json({
-    error: 'AUTH_PROVIDER_PENDING',
-    message: 'Cloudflare preview is live; Firebase Auth replacement is scheduled for Phase 2.',
-  }, 501);
+    user: {
+      uid: String(payload.sub),
+      id: String(payload.sub),
+      email: String(payload.email),
+      displayName: String(payload.name || ''),
+      photoURL: payload.picture ? String(payload.picture) : null,
+      role: String(payload.role || 'user'),
+      tier: String(payload.tier || 'free'),
+    },
+  });
+});
+
+// POST /api/auth/signout — clear session cookie
+app.post('/api/auth/signout', (c) => {
+  return new Response(JSON.stringify({ success: true }), {
+    status: 200,
+    headers: { 'Content-Type': 'application/json', 'Set-Cookie': clearSessionCookie() },
+  });
 });
 
 export const onRequest = (context: any) =>
