@@ -1,9 +1,14 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { motion, AnimatePresence } from 'motion/react';
 import Card from '../components/Card';
 import { FeedItem, fetchRSSFeed } from '../services/rssService';
 import { ReaderIcon, SparklesIcon, SpinnerIcon } from '../components/icons';
 import { cleanFeedText, excerptFeedText } from '../utils/feedText';
+
+const EASE = [0.22, 1, 0.36, 1] as [number, number, number, number];
+const fadeUp = { hidden: { opacity: 0, y: 24 }, visible: { opacity: 1, y: 0 } };
+const stagger = { hidden: {}, visible: { transition: { staggerChildren: 0.09, delayChildren: 0.05 } } };
 
 const SUBSTACK_FEED_URL = 'https://theccndaily.substack.com/feed';
 
@@ -85,13 +90,21 @@ const NewsletterPage: React.FC = () => {
     <div className="mx-auto max-w-4xl px-4 pb-20">
       <header className="mb-8">
         {publicNav}
-        <h1 className="mb-2 flex items-center gap-4 text-4xl font-black text-brand-text-primary">
+        <motion.h1
+          className="mb-2 flex items-center gap-4 text-4xl font-black text-brand-text-primary"
+          initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.55, ease: EASE }}
+        >
           <ReaderIcon className="h-10 w-10 text-brand-accent" />
           The CCN Daily
-        </h1>
-        <p className="text-brand-text-secondary">
+        </motion.h1>
+        <motion.p
+          className="text-brand-text-secondary"
+          initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+          transition={{ duration: 0.45, delay: 0.15 }}
+        >
           Explore the latest insight, devotionals, and community updates.
-        </p>
+        </motion.p>
       </header>
 
       {loading && (
@@ -113,14 +126,29 @@ const NewsletterPage: React.FC = () => {
         </div>
       )}
 
-      {!loading && !error && posts.length > 0 && (
-        <div className="space-y-6">
-          {featuredPost && <PostCard post={{ ...featuredPost, contentSnippet: cleanFeedText(getPostText(featuredPost)) }} featured />}
-          {remainingPosts.map((post, index) => (
-            <PostCard key={post.guid || post.link || index} post={{ ...post, contentSnippet: cleanFeedText(getPostText(post)) }} />
-          ))}
-        </div>
-      )}
+      <AnimatePresence>
+        {!loading && !error && posts.length > 0 && (
+          <motion.div
+            className="space-y-6"
+            variants={stagger} initial="hidden" animate="visible"
+          >
+            {featuredPost && (
+              <motion.div variants={fadeUp} transition={{ duration: 0.55, ease: EASE }}>
+                <PostCard post={{ ...featuredPost, contentSnippet: cleanFeedText(getPostText(featuredPost)) }} featured />
+              </motion.div>
+            )}
+            {remainingPosts.map((post, index) => (
+              <motion.div
+                key={post.guid || post.link || index}
+                variants={fadeUp}
+                transition={{ duration: 0.5, ease: EASE }}
+              >
+                <PostCard post={{ ...post, contentSnippet: cleanFeedText(getPostText(post)) }} />
+              </motion.div>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

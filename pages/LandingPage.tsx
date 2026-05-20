@@ -462,37 +462,43 @@ const LandingPage: React.FC = () => {
 
         {/* ── Closing CTA ───────────────────────────────────────────────────── */}
         <Reveal>
-          <section className="border-t border-brand-border bg-brand-dark">
-            <div className="relative mx-auto max-w-6xl overflow-hidden px-6 py-20 text-center md:py-28">
-              {/* Glow */}
-              <div
-                className="pointer-events-none absolute inset-x-0 bottom-0 h-64 opacity-20"
-                aria-hidden
-                style={{
-                  background: 'radial-gradient(ellipse 70% 80% at 50% 100%, rgb(242 125 38) 0%, transparent 70%)',
-                }}
-              />
-              <p className="relative mb-4 text-xs font-semibold uppercase tracking-[0.12em] text-brand-accent">
+          <section className="relative overflow-hidden border-t border-brand-border">
+            {/* Unsplash: mountain sunrise — hope / new beginning */}
+            <img
+              src="https://images.unsplash.com/photo-1501854140801-50d01698950b?auto=format&fit=crop&w=1920&q=80"
+              alt=""
+              aria-hidden
+              className="absolute inset-0 h-full w-full object-cover object-center"
+              loading="lazy"
+            />
+            <div className="absolute inset-0 bg-[#0F0D0B]/80" aria-hidden />
+            <div
+              className="pointer-events-none absolute inset-x-0 bottom-0 h-72 opacity-30"
+              aria-hidden
+              style={{ background: 'radial-gradient(ellipse 70% 80% at 50% 100%, rgb(242 125 38) 0%, transparent 70%)' }}
+            />
+            <div className="relative mx-auto max-w-6xl px-6 py-24 text-center md:py-36">
+              <p className="mb-4 text-xs font-semibold uppercase tracking-[0.14em] text-brand-accent">
                 Begin for free
               </p>
-              <h2 className="relative font-display text-4xl font-bold leading-tight md:text-5xl">
-                New mercies. Every morning.
+              <h2 className="font-display text-4xl font-bold leading-tight text-white md:text-5xl lg:text-6xl">
+                New mercies.<br className="hidden sm:block" /> Every morning.
               </h2>
-              <p className="relative mx-auto mt-6 max-w-xl text-lg leading-relaxed text-brand-text-secondary">
+              <p className="mx-auto mt-6 max-w-xl text-lg leading-relaxed text-white/70">
                 No noise. No performance. Just ten minutes with God before the day begins.
                 Start free — upgrade when you're ready.
               </p>
-              <div className="relative mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
+              <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
                 <Link
                   to="/app/guided-journey"
-                  className="group flex items-center gap-2 bg-brand-accent px-8 py-4 text-sm font-semibold text-white transition-all hover:shadow-[0_0_32px_rgb(242_125_38_/_0.4)]"
+                  className="group flex items-center gap-2 bg-brand-accent px-8 py-4 text-sm font-semibold text-white transition-all hover:bg-[#FFAF50] hover:shadow-[0_0_40px_rgb(242_125_38_/_0.5)]"
                 >
                   Start your morning rhythm
                   <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
                 </Link>
                 <Link
                   to="/pricing"
-                  className="flex items-center gap-2 border border-brand-border px-8 py-4 text-sm font-semibold text-brand-text-primary transition-colors hover:bg-brand-secondary"
+                  className="flex items-center gap-2 border border-white/25 px-8 py-4 text-sm font-semibold text-white/80 transition-colors hover:border-white/50 hover:text-white"
                 >
                   View plans
                 </Link>

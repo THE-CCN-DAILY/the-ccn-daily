@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { motion } from 'motion/react';
 import Card from '../components/Card';
 import { SparklesIcon, CheckIcon } from '../components/icons';
+
+const EASE = [0.22, 1, 0.36, 1] as [number, number, number, number];
+const fadeUp = { hidden: { opacity: 0, y: 24 }, visible: { opacity: 1, y: 0 } };
+const stagger = { hidden: {}, visible: { transition: { staggerChildren: 0.1, delayChildren: 0.05 } } };
 import { getLocalizedPrice } from '../utils/ppp';
 import { useAuth } from '../contexts/AuthContext';
 import { useNotifications } from '../contexts/NotificationContext';
@@ -299,50 +304,83 @@ const PricingPage: React.FC = () => {
 
   return (
     <div className="max-w-6xl mx-auto pb-20 px-4">
-      <div className="text-center mb-12">
-        <h1 className="text-4xl md:text-5xl font-black text-brand-text-primary mb-6">
-          Choose Your Growth Path
-        </h1>
-        <p className="text-xl text-brand-text-secondary max-w-3xl mx-auto">
-          Scripture depth, structured practice, and community accountability for every season of your journey.
-        </p>
 
-        <div className="mt-10 inline-flex bg-brand-dark rounded-full p-1 border border-brand-border">
+      {/* ── Hero header ────────────────────────────────────────────── */}
+      <div className="relative overflow-hidden text-center py-16 mb-4">
+        {/* Ambient glow */}
+        <div
+          className="pointer-events-none absolute inset-x-0 -top-32 h-80 opacity-20"
+          aria-hidden
+          style={{ background: 'radial-gradient(ellipse 70% 60% at 50% 0%, rgb(242 125 38) 0%, transparent 70%)' }}
+        />
+        <motion.p
+          className="relative mb-4 text-xs font-semibold uppercase tracking-[0.14em] text-brand-accent"
+          initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, ease: EASE }}
+        >
+          Invest in your formation
+        </motion.p>
+        <motion.h1
+          className="relative font-display text-4xl font-bold text-brand-text-primary md:text-5xl"
+          initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.55, delay: 0.08, ease: EASE }}
+        >
+          Choose Your Growth Path
+        </motion.h1>
+        <motion.p
+          className="relative mx-auto mt-5 max-w-2xl text-lg leading-relaxed text-brand-text-secondary"
+          initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+        >
+          Scripture depth, structured practice, and community accountability for every season of your journey.
+        </motion.p>
+
+        {/* Billing toggle */}
+        <motion.div
+          className="mt-10 inline-flex rounded-full border border-brand-border bg-brand-dark p-1"
+          initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.4, delay: 0.3, ease: EASE }}
+        >
           <button
             onClick={() => setBillingCycle('monthly')}
-            className={`px-6 py-2 rounded-full text-sm font-bold transition-colors ${
-              billingCycle === 'monthly'
-                ? 'bg-brand-accent text-white'
-                : 'text-brand-text-secondary hover:text-brand-text-primary'
-            }`}
+            className={`rounded-full px-6 py-2 text-sm font-bold transition-colors ${billingCycle === 'monthly' ? 'bg-brand-accent text-white' : 'text-brand-text-secondary hover:text-brand-text-primary'}`}
           >
             Monthly
           </button>
           <button
             onClick={() => setBillingCycle('yearly')}
-            className={`px-6 py-2 rounded-full text-sm font-bold transition-colors flex items-center gap-2 ${
-              billingCycle === 'yearly'
-                ? 'bg-brand-accent text-white'
-                : 'text-brand-text-secondary hover:text-brand-text-primary'
-            }`}
+            className={`flex items-center gap-2 rounded-full px-6 py-2 text-sm font-bold transition-colors ${billingCycle === 'yearly' ? 'bg-brand-accent text-white' : 'text-brand-text-secondary hover:text-brand-text-primary'}`}
           >
-            Yearly <span className="text-[10px] bg-status-success/20 text-status-success px-2 py-0.5 rounded-full">Save up to 44%</span>
+            Yearly
+            <span className="rounded-full bg-green-500/20 px-2 py-0.5 text-[10px] text-green-400">Save up to 44%</span>
           </button>
-        </div>
+        </motion.div>
 
         {activeDiscount && (
-          <div className="mt-4 inline-block bg-brand-accent/10 border border-brand-accent/30 rounded-lg px-4 py-2">
-            <p className="text-sm font-bold text-brand-accent flex items-center gap-2">
-              <SparklesIcon className="w-4 h-4" />
+          <motion.div
+            className="mt-4 inline-block rounded-sm border border-brand-accent/30 bg-brand-accent/10 px-4 py-2"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+            transition={{ duration: 0.4, delay: 0.4 }}
+          >
+            <p className="flex items-center gap-2 text-sm font-bold text-brand-accent">
+              <SparklesIcon className="h-4 w-4" />
               {activeDiscount.name}: Extra {activeDiscount.percentage}% OFF
             </p>
-          </div>
+          </motion.div>
         )}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      {/* ── Pricing cards ──────────────────────────────────────────── */}
+      <motion.div
+        className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4"
+        variants={stagger}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, margin: '-60px' }}
+      >
         {/* Foundation */}
-        <Card className="flex flex-col border-brand-border bg-brand-dark/30">
+        <motion.div variants={fadeUp} transition={{ duration: 0.5, ease: EASE }}>
+        <Card className="flex flex-col border-brand-border bg-brand-dark/30 h-full">
           <div className="mb-8">
             <h3 className="text-2xl font-bold text-brand-text-primary mb-2">{PLAN_UI.free.label}</h3>
             <p className="text-brand-text-secondary text-sm h-10">{PLAN_UI.free.tagline}</p>
@@ -370,9 +408,11 @@ const PricingPage: React.FC = () => {
             {PLAN_UI.free.cta}
           </button>
         </Card>
+        </motion.div>
 
         {/* Growth */}
-        <Card className="flex flex-col border-brand-accent relative transform md:-translate-y-4 shadow-2xl shadow-brand-accent/10">
+        <motion.div variants={fadeUp} transition={{ duration: 0.5, ease: EASE }}>
+        <Card className="flex flex-col border-brand-accent relative transform md:-translate-y-4 shadow-2xl shadow-brand-accent/10 h-full">
           {!!PLAN_UI.pro.badge && (
             <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-brand-accent text-white text-xs font-bold px-4 py-1 rounded-full uppercase tracking-wider">
               {PLAN_UI.pro.badge}
@@ -414,9 +454,11 @@ const PricingPage: React.FC = () => {
             {isProcessing && selectedTier === 'pro' ? 'Processing...' : PLAN_UI.pro.cta}
           </button>
         </Card>
+        </motion.div>
 
         {/* Family */}
-        <Card className="flex flex-col border-secondary-purple bg-secondary-purple/5">
+        <motion.div variants={fadeUp} transition={{ duration: 0.5, ease: EASE }}>
+        <Card className="flex flex-col border-secondary-purple bg-secondary-purple/5 h-full">
           <div className="mb-8">
             <h3 className="text-2xl font-bold text-brand-text-primary mb-2 flex items-center gap-2">
               {PLAN_UI.max.label} <SparklesIcon className="w-6 h-6 text-secondary-purple" />
@@ -454,9 +496,11 @@ const PricingPage: React.FC = () => {
             {isProcessing && selectedTier === 'max' ? 'Processing...' : PLAN_UI.max.cta}
           </button>
         </Card>
+        </motion.div>
 
         {/* Leader */}
-        <Card className="flex flex-col border-brand-border bg-brand-dark/30">
+        <motion.div variants={fadeUp} transition={{ duration: 0.5, ease: EASE }}>
+        <Card className="flex flex-col border-brand-border bg-brand-dark/30 h-full">
           <div className="mb-8">
             <h3 className="text-2xl font-bold text-brand-text-primary mb-2 flex items-center gap-2">
               {PLAN_UI.partner.label}
@@ -494,9 +538,14 @@ const PricingPage: React.FC = () => {
             {isProcessing && selectedTier === 'partner' ? 'Processing...' : PLAN_UI.partner.cta}
           </button>
         </Card>
-      </div>
+        </motion.div>
+      </motion.div>
 
-      <div className="mt-10 p-5 rounded-2xl border border-brand-border bg-brand-secondary/30">
+      <motion.div
+        className="mt-10 p-5 rounded-2xl border border-brand-border bg-brand-secondary/30"
+        variants={fadeUp} initial="hidden" whileInView="visible"
+        viewport={{ once: true }} transition={{ duration: 0.5, ease: EASE }}
+      >
         <h4 className="text-lg font-bold text-brand-text-primary mb-3">Ownership & Access Clarity</h4>
         <ul className="space-y-2">
           {OWNERSHIP_NOTES.map((note) => (
@@ -506,10 +555,15 @@ const PricingPage: React.FC = () => {
             </li>
           ))}
         </ul>
-      </div>
+      </motion.div>
 
-      <div className="mt-10 grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="border-brand-border bg-brand-dark/20">
+      <motion.div
+        className="mt-10 grid grid-cols-1 lg:grid-cols-2 gap-6"
+        variants={stagger} initial="hidden" whileInView="visible"
+        viewport={{ once: true, margin: '-40px' }}
+      >
+        <motion.div variants={fadeUp} transition={{ duration: 0.5, ease: EASE }}>
+        <Card className="border-brand-border bg-brand-dark/20 h-full">
           <h3 className="text-xl font-bold text-brand-text-primary mb-2">Add-ons (Simple & Non-conflicting)</h3>
           <ul className="space-y-2 text-sm text-brand-text-secondary">
             <li>• Books (Own Forever): $4.99–$14.99</li>
@@ -519,8 +573,10 @@ const PricingPage: React.FC = () => {
             <li>• Premium Event Ticket: dynamic, with 10–20% subscriber discount</li>
           </ul>
         </Card>
+        </motion.div>
 
-        <Card className="border-brand-border bg-brand-dark/20">
+        <motion.div variants={fadeUp} transition={{ duration: 0.5, ease: EASE }}>
+        <Card className="border-brand-border bg-brand-dark/20 h-full">
           <h3 className="text-xl font-bold text-brand-text-primary mb-2">Mission-Access Lane</h3>
           <p className="text-sm text-brand-text-secondary mb-4">
             We believe everyone should have access to spiritual formation tools. If you cannot afford a subscription, please apply for our scholarship program or regional pricing.
@@ -529,9 +585,14 @@ const PricingPage: React.FC = () => {
             Apply for Scholarship
           </button>
         </Card>
-      </div>
+        </motion.div>
+      </motion.div>
 
-      <div className="mt-12 bg-brand-dark rounded-2xl p-8 border border-brand-border text-center">
+      <motion.div
+        className="mt-12 bg-brand-dark rounded-2xl p-8 border border-brand-border text-center"
+        variants={fadeUp} initial="hidden" whileInView="visible"
+        viewport={{ once: true }} transition={{ duration: 0.5, ease: EASE }}
+      >
         <h3 className="text-2xl font-bold text-brand-text-primary mb-4">Gift a Growth Path</h3>
         <p className="text-brand-text-secondary mb-6 max-w-2xl mx-auto">
           Bless someone with premium formation tools, courses, and community access.
@@ -539,7 +600,7 @@ const PricingPage: React.FC = () => {
         <button className="px-8 py-3 rounded-xl bg-brand-secondary text-brand-text-primary font-bold border border-brand-border hover:bg-brand-dark transition-colors">
           Gift a Subscription
         </button>
-      </div>
+      </motion.div>
     </div>
   );
 };
