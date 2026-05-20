@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
+import { AnimatePresence, motion } from 'motion/react';
 import {
   Activity,
   BookOpen,
@@ -264,7 +265,17 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   if (isPublicRoute) {
     return (
       <>
-        {children}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={location.pathname}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] }}
+          >
+            {children}
+          </motion.div>
+        </AnimatePresence>
         {isDetailedPlayerOpen && <DetailedPlayerModal />}
         {currentTrack && !isDetailedPlayerOpen && <MiniPlayer />}
       </>
@@ -335,7 +346,17 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                   <NavLink to="/studio/diagnostics" className="text-[10px] underline text-brand-accent font-bold">VIEW</NavLink>
               </div>
           )}
-          {children}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={location.pathname}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] }}
+            >
+              {children}
+            </motion.div>
+          </AnimatePresence>
         </div>
       </main>
       {isDetailedPlayerOpen && <DetailedPlayerModal />}

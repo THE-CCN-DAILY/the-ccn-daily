@@ -124,6 +124,83 @@ const Reveal: React.FC<{
   );
 };
 
+/* ─── Sunrise Emblem (decorative SVG) ────────────────────────────────────── */
+
+const SunriseEmblem: React.FC<{ className?: string }> = ({ className }) => (
+  <svg
+    className={className}
+    viewBox="0 0 200 200"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    aria-hidden="true"
+  >
+    <defs>
+      <radialGradient id="glowRad" cx="50%" cy="60%" r="50%">
+        <stop offset="0%" stopColor="#F27D26" stopOpacity="0.25" />
+        <stop offset="100%" stopColor="#F27D26" stopOpacity="0" />
+      </radialGradient>
+      <linearGradient id="crossGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stopColor="#FFAF50" />
+        <stop offset="100%" stopColor="#F27D26" />
+      </linearGradient>
+      <linearGradient id="arcGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stopColor="#F27D26" stopOpacity="0.3" />
+        <stop offset="50%" stopColor="#FFAF50" stopOpacity="0.9" />
+        <stop offset="100%" stopColor="#F27D26" stopOpacity="0.3" />
+      </linearGradient>
+      <filter id="glow">
+        <feGaussianBlur stdDeviation="3" result="blur" />
+        <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+      </filter>
+    </defs>
+    {/* Ambient fill */}
+    <circle cx="100" cy="120" r="70" fill="url(#glowRad)" />
+    {/* Horizon line */}
+    <line x1="30" y1="130" x2="170" y2="130" stroke="#F27D26" strokeWidth="1" strokeOpacity="0.3" />
+    {/* Sunrise arc */}
+    <path
+      d="M 42 130 A 58 58 0 0 1 158 130"
+      stroke="url(#arcGrad)"
+      strokeWidth="1.5"
+      fill="none"
+      filter="url(#glow)"
+    />
+    {/* Light rays */}
+    {[0, 30, 60, 90, 120, 150, 180].map((angle, i) => {
+      const rad = (angle - 90) * (Math.PI / 180);
+      const r1 = 62, r2 = 74;
+      const x1 = 100 + r1 * Math.cos(rad);
+      const y1 = 130 + r1 * Math.sin(rad);
+      const x2 = 100 + r2 * Math.cos(rad);
+      const y2 = 130 + r2 * Math.sin(rad);
+      if (y1 > 132 || y2 > 132) return null;
+      return (
+        <line
+          key={i}
+          x1={x1} y1={y1} x2={x2} y2={y2}
+          stroke="#FFAF50"
+          strokeWidth="1"
+          strokeOpacity={i === 3 ? 0.9 : 0.4}
+        />
+      );
+    })}
+    {/* Cross — vertical */}
+    <rect
+      x="96" y="66" width="8" height="52"
+      fill="url(#crossGrad)"
+      rx="1"
+      filter="url(#glow)"
+    />
+    {/* Cross — horizontal */}
+    <rect
+      x="80" y="82" width="40" height="7"
+      fill="url(#crossGrad)"
+      rx="1"
+      filter="url(#glow)"
+    />
+  </svg>
+);
+
 /* ─── Component ───────────────────────────────────────────────────────────── */
 
 const LandingPage: React.FC = () => {
@@ -172,7 +249,7 @@ const LandingPage: React.FC = () => {
       <main>
 
         {/* ── Hero ───────────────────────────────────────────────────────────── */}
-        <section className="relative overflow-hidden">
+        <section className="grain relative overflow-hidden">
           {/* Ambient glow */}
           <div
             className="pointer-events-none absolute inset-x-0 -top-40 h-[600px] opacity-30"
@@ -181,6 +258,16 @@ const LandingPage: React.FC = () => {
               background: 'radial-gradient(ellipse 80% 60% at 50% 0%, rgb(242 125 38 / 0.35) 0%, transparent 70%)',
             }}
           />
+          {/* Large decorative emblem — faint, behind content */}
+          <motion.div
+            className="pointer-events-none absolute -right-16 -top-16 h-[520px] w-[520px] opacity-[0.07] lg:opacity-[0.12]"
+            aria-hidden
+            initial={{ opacity: 0, scale: 0.92, rotate: -4 }}
+            animate={{ opacity: 0.12, scale: 1, rotate: 0 }}
+            transition={{ duration: 1.4, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <SunriseEmblem className="h-full w-full" />
+          </motion.div>
 
           <div className="mx-auto grid max-w-6xl gap-12 px-6 py-20 lg:grid-cols-[1.1fr_0.9fr] lg:py-32">
 

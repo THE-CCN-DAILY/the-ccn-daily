@@ -120,6 +120,31 @@
   50%       { opacity: 0.75; }
 }
 
+/* ─── Utilities ──────────────────────────────────────────────────────────────── */
+
+@layer utilities {
+  /* Film-grain noise overlay — apply to a positioned container */
+  .grain::before {
+    content: '';
+    position: absolute;
+    inset: -50%;
+    width: 200%;
+    height: 200%;
+    pointer-events: none;
+    z-index: 1;
+    opacity: 0.04;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg'><filter id='n' x='0' y='0'><feTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+    background-size: 180px 180px;
+  }
+
+  /* Scrollbar styling */
+  .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+  .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+  .custom-scrollbar::-webkit-scrollbar-thumb { background: rgb(var(--border-raw)); border-radius: 2px; }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgb(var(--border-strong-raw)); }
+}
+
 /* ─── Accessibility: Reduced Motion ─────────────────────────────────────────── */
 
 @media (prefers-reduced-motion: reduce) {
