@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion } from 'motion/react';
 import { Player } from '@remotion/player';
 import Card from '../components/Card';
 import { AiIcon, SparklesIcon, SpinnerIcon, ShareIcon, DownloadIcon, CheckIcon, LockIcon } from '../components/icons';
@@ -97,12 +98,23 @@ const QuoteGeneratorPage: React.FC = () => {
     theme: videoTheme,
   };
 
+  const EASE = [0.22, 1, 0.36, 1] as [number, number, number, number];
+
   return (
     <div className="max-w-5xl mx-auto">
-      <h1 className="font-display text-4xl font-bold text-brand-text-primary mb-2">Generative Quote Suite</h1>
-      <p className="text-lg text-brand-text-secondary mb-8">
-        Transform scripture and devotional lines into polished static images and shareable animated video cards.
-      </p>
+      <motion.div
+        className="mb-8"
+        initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: EASE }}
+      >
+        <p className="text-xs font-bold uppercase tracking-widest text-brand-accent mb-2">Publish</p>
+        <h1 className="text-4xl font-black text-brand-text-primary mb-2" style={{ fontFamily: 'var(--font-display)' }}>
+          Quote Graphics
+        </h1>
+        <p className="text-brand-text-secondary">
+          Turn Scripture into shareable images and animated video cards — built for Instagram, WhatsApp, and beyond.
+        </p>
+      </motion.div>
 
       {/* ── Tab switcher ────────────────────────────────────────────── */}
       <div className="mb-8 inline-flex rounded-sm border border-brand-border overflow-hidden">
