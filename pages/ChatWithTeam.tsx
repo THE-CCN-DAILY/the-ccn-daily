@@ -56,9 +56,9 @@ const ChatWithTeam: React.FC = () => {
 
   return (
     <div className="flex flex-col h-[calc(100vh-4rem)]">
-      <h1 className="text-4xl font-bold text-brand-text-primary mb-2">AI Coach Prototype</h1>
+      <h1 className="text-4xl font-bold text-brand-text-primary mb-2">AI Team Coach</h1>
       <p className="text-lg text-brand-text-secondary mb-8">
-        This chat now simulates the AI Coach's new long-term memory capabilities.
+        An AI coach with persistent context — continue conversations across sessions.
       </p>
 
     <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-6 min-h-0">

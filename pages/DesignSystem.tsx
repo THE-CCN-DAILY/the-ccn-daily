@@ -20,9 +20,9 @@ const DesignSystem: React.FC = () => {
 
     return (
         <div>
-            <h1 className="text-4xl font-bold text-brand-text-primary mb-2">Design System Prototype</h1>
+            <h1 className="text-4xl font-bold text-brand-text-primary mb-2">Design System</h1>
             <p className="text-lg text-brand-text-secondary mb-8">
-                This is the living style guide for Project Phoenix, establishing our premium look and feel. Your feedback here will shape the entire application.
+                The living style guide for THE CCN DAILY — tokens, typography, components, and color themes.
             </p>
 
             {/* Color Palette Section */}
@@ -76,7 +76,7 @@ const DesignSystem: React.FC = () => {
                     <div>
                         <p className="text-sm text-brand-text-secondary mb-1">Body Text</p>
                         <p className="text-brand-text-primary">
-                            This is how the main body text will appear. We are aiming for a clean, legible, and immersive experience. The background and text colors automatically adapt to the selected theme—<strong>light, dark, or the paper-like sepia mode</strong>. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed non risus. Suspendisse lectus tortor, dignissim sit amet.
+                            Body text renders at this size and weight across all content. Colors adapt automatically across the three themes — <strong>light, dark, and sepia</strong> — ensuring legibility in every reading context.
                         </p>
                     </div>
                 </div>

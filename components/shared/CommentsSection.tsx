@@ -49,8 +49,8 @@ const CommentsSection: React.FC<CommentsSectionProps> = ({ contentId, contentTyp
     const weakTextColor = isPlayer ? 'text-white/50' : 'text-brand-text-secondary/70';
     const formBgColor = isPlayer ? 'bg-black/30' : 'bg-brand-secondary';
     const formBorderColor = isPlayer ? 'border-white/20' : 'border-brand-border';
-    const formFocusRingColor = isPlayer ? 'focus:ring-brand-gold' : 'focus:ring-brand-accent';
-    const submitBtnColor = isPlayer ? 'bg-brand-gold text-brand-dark' : 'bg-brand-accent text-white';
+    const formFocusRingColor = isPlayer ? 'focus:ring-brand-accent' : 'focus:ring-brand-accent';
+    const submitBtnColor = isPlayer ? 'bg-brand-accent text-brand-dark' : 'bg-brand-accent text-white';
 
     return (
         <div className="animate-fade-in-up flex flex-col h-full" style={{animationDuration: '0.3s'}}>

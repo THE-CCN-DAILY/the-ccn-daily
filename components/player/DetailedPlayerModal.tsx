@@ -32,7 +32,7 @@ const SeekBar: React.FC<{ progress: number, duration: number, onSeek: (percentag
                 onClick={handleSeek}
             >
                 <div 
-                    className="h-1.5 bg-brand-gold rounded-full relative" 
+                    className="h-1.5 bg-brand-accent rounded-full relative" 
                     style={{ width: `${progress}%` }}
                 >
                     <div className={`absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full transition-opacity ${disabled ? '' : 'opacity-0 group-hover:opacity-100'}`}></div>
@@ -88,7 +88,7 @@ const OptionsMenu: React.FC<{
                             <button 
                                 key={rate} 
                                 onClick={() => setPlaybackRate(rate)}
-                                className={`px-3 py-1 text-sm rounded-full transition-colors ${playbackRate === rate ? 'bg-brand-gold text-black font-semibold' : 'hover:bg-white/10'}`}
+                                className={`px-3 py-1 text-sm rounded-full transition-colors ${playbackRate === rate ? 'bg-brand-accent text-black font-semibold' : 'hover:bg-white/10'}`}
                             >
                                 {rate}x
                             </button>
@@ -216,7 +216,7 @@ const DetailedPlayerModal: React.FC = () => {
             disabled={disabled}
             className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-semibold border-b-2 transition-colors duration-200 ${
                 activeTab === name
-                ? 'text-brand-gold border-brand-gold'
+                ? 'text-brand-accent border-brand-accent'
                 : 'text-white/60 border-transparent hover:text-white disabled:text-white/30 disabled:cursor-not-allowed'
             }`}
         >
@@ -284,7 +284,7 @@ const DetailedPlayerModal: React.FC = () => {
                                     <ul className="space-y-2">
                                         {currentTrack.keyTakeaways?.map((item, index) => (
                                             <li key={index} className="flex items-start">
-                                                <CheckIcon className="w-4 h-4 text-brand-gold mr-2 mt-0.5 flex-shrink-0"/>
+                                                <CheckIcon className="w-4 h-4 text-brand-accent mr-2 mt-0.5 flex-shrink-0"/>
                                                 <span className="text-white/80">{item}</span>
                                             </li>
                                         ))}
@@ -301,7 +301,7 @@ const DetailedPlayerModal: React.FC = () => {
                                                 ref={isActive ? activeLineRef : null}
                                                 onClick={() => handleSeekToTime(line.time)}
                                                 className={`cursor-pointer p-1 rounded transition-colors ${
-                                                    isActive ? 'text-brand-gold font-semibold' : 'text-white/70 hover:text-white hover:bg-white/10'
+                                                    isActive ? 'text-brand-accent font-semibold' : 'text-white/70 hover:text-white hover:bg-white/10'
                                                 }`}
                                             >
                                                 {line.text}
@@ -319,7 +319,7 @@ const DetailedPlayerModal: React.FC = () => {
                                                 <button
                                                     onClick={() => handleSeekToTime(chapter.time)}
                                                     className={`w-full text-left flex items-center justify-between p-3 rounded transition-colors ${
-                                                        isActive ? 'bg-brand-gold/20 text-brand-gold font-semibold' : 'hover:bg-white/10'
+                                                        isActive ? 'bg-brand-accent/20 text-brand-accent font-semibold' : 'hover:bg-white/10'
                                                     }`}
                                                 >
                                                     <span className="truncate">{chapter.title}</span>
@@ -348,7 +348,7 @@ const DetailedPlayerModal: React.FC = () => {
                         <button onClick={() => skip(-15)} className="text-white/80 hover:text-white transition-colors disabled:opacity-50" disabled={isLoading}>
                             <SkipBackIcon className="w-10 h-10"/>
                         </button>
-                        <button onClick={togglePlayPause} className="w-20 h-20 bg-brand-gold rounded-full flex items-center justify-center text-brand-dark disabled:bg-brand-gold/50 shadow-lg shadow-brand-gold/20" disabled={isLoading}>
+                        <button onClick={togglePlayPause} className="w-20 h-20 bg-brand-accent rounded-full flex items-center justify-center text-brand-dark disabled:bg-brand-accent/50 shadow-lg shadow-brand-accent/20" disabled={isLoading}>
                             {isLoading ? <SpinnerIcon className="w-10 h-10"/> : isPlaying ? <PauseIcon className="w-10 h-10" /> : <PlayIcon className="w-10 h-10" />}
                         </button>
                         <button onClick={() => skip(15)} className="text-white/80 hover:text-white transition-colors disabled:opacity-50" disabled={isLoading}>

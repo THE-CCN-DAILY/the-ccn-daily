@@ -11,7 +11,7 @@ const MiniPlayer: React.FC = () => {
         <div className="fixed bottom-0 left-0 right-0 z-40 shadow-[0_-10px_20px_-10px_rgba(0,0,0,0.3)]">
              <div className="h-1 w-full bg-white/10">
                 <div 
-                    className="h-1 bg-brand-gold transition-all duration-1000 linear" 
+                    className="h-1 bg-brand-accent transition-all duration-1000 linear" 
                     style={{ width: `${isLoading ? 0 : progress}%` }}
                 ></div>
             </div>
