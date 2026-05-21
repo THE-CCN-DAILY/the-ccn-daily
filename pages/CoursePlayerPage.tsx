@@ -41,7 +41,6 @@ const CoursePlayerPage: React.FC = () => {
         }
 
       } catch (error) {
-        console.error("Error fetching course data:", error);
       } finally {
         setLoading(false);
       }
@@ -64,7 +63,6 @@ const CoursePlayerPage: React.FC = () => {
         setActiveModuleId(modules[currentIndex + 1].id);
       }
     } catch (error) {
-      console.error("Error updating progress:", error);
     } finally {
       setCompleting(false);
     }

@@ -29,7 +29,6 @@ const ChallengeModuleViewerPage: React.FC = () => {
         setModule(data.module);
         setIsCompleted(data.completed);
       } catch (error) {
-        console.error('Failed to load challenge module', error);
       } finally {
         setLoading(false);
       }
@@ -46,7 +45,6 @@ const ChallengeModuleViewerPage: React.FC = () => {
       await completeChallengeModule(challengeId, moduleId, user.uid);
       setIsCompleted(true);
     } catch (error) {
-      console.error('Failed to complete challenge module', error);
     } finally {
       setCompleting(false);
     }

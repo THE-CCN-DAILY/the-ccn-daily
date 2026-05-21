@@ -37,7 +37,7 @@ const DevotionalGeneratorPage: React.FC = () => {
                 setDailyDevotional(parsedData);
             }
         }
-    } catch (e) { console.error("Failed to load devotional from storage", e); }
+    } catch { /* localStorage read failed — start fresh */ }
   }, []);
 
   useEffect(() => {
@@ -45,7 +45,7 @@ const DevotionalGeneratorPage: React.FC = () => {
         try {
             // Now only saving the devotional data, not highlights
             localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(dailyDevotional));
-        } catch (e) { console.error("Failed to save devotional to storage", e); }
+        } catch { /* localStorage write failed — non-critical */ }
     }
   }, [dailyDevotional]);
 

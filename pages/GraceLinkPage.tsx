@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion } from 'motion/react';
 import Card from '../components/Card';
 import { GiftIcon, ReaderIcon, SpeakerWaveIcon, SendIcon, CheckIcon, CloseIcon, SpinnerIcon, SparklesIcon, CommunityIcon } from '../components/icons';
 import { sendGiftEmail } from '../services/emailService';
@@ -12,6 +13,7 @@ interface GiftableItem {
     isPremium: boolean;
 }
 
+// Placeholder — replace with Firestore gifting data
 const mockGiftableItems: GiftableItem[] = [
     {
         id: 'dev1',
@@ -133,13 +135,18 @@ const GraceLinkPage: React.FC = () => {
 
     return (
         <div className="max-w-6xl mx-auto pb-20">
-            <h1 className="text-4xl font-bold text-brand-text-primary mb-2 flex items-center gap-3">
-                <SparklesIcon className="w-10 h-10 text-brand-accent"/>
+            <motion.div
+              className="mb-8"
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+            >
+              <p className="text-xs font-bold uppercase tracking-widest text-brand-accent mb-2">COMMUNITY</p>
+              <h1 className="text-4xl font-black text-brand-text-primary mb-2" style={{ fontFamily: 'var(--font-display)' }}>
                 Grace Links
-            </h1>
-            <p className="text-lg text-brand-text-secondary mb-8">
-                Share the gift of faith instantly. Zero friction, zero app downloads.
-            </p>
+              </h1>
+              <p className="text-brand-text-secondary">Send the gift of faith. Share access to content that transforms.</p>
+            </motion.div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {mockGiftableItems.map(item => (

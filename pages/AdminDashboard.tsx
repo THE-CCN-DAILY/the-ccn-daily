@@ -106,7 +106,6 @@ const AdminDashboard: React.FC = () => {
 
             notify('Mux Live Stream created successfully! Save your Stream Key securely.', 'success');
         } catch (error: any) {
-            console.error('Mux error:', error);
             notify(`Failed to create Mux stream: ${error.message}`, 'error');
         } finally {
             setIsCreatingMuxStream(false);
@@ -166,7 +165,6 @@ const AdminDashboard: React.FC = () => {
             setUploadFile(null);
             setResourceTitle('');
         } catch (error: any) {
-            console.error('Mux upload error:', error);
             setUploadMessage(`Upload failed: ${error.message}`);
         } finally {
             setIsUploading(false);
@@ -188,7 +186,6 @@ const AdminDashboard: React.FC = () => {
                     setUploadProgress(progress);
                 }, 
                 (error) => {
-                    console.error("Upload failed:", error);
                     setUploadMessage('Upload failed. Please try again.');
                     setIsUploading(false);
                 }, 
@@ -222,8 +219,7 @@ const AdminDashboard: React.FC = () => {
                     }
                 }
             );
-        } catch (error) {
-            console.error(error);
+        } catch {
             setUploadMessage('An error occurred during upload.');
             setIsUploading(false);
         }
@@ -241,8 +237,8 @@ const AdminDashboard: React.FC = () => {
             const { getUsageStats } = await import('../services/budgetService');
             const stats = await getUsageStats();
             setUsageStats(stats);
-        } catch (error) {
-            console.error("Error fetching budget stats:", error);
+        } catch {
+            // Budget stats unavailable — silently skipped
         } finally {
             setLoadingBudget(false);
         }
@@ -267,7 +263,6 @@ const AdminDashboard: React.FC = () => {
             })
             .catch((error) => {
                 if (cancelled) return;
-                console.error('Failed to load D1 admin users:', error);
                 notify(error instanceof Error ? error.message : 'Failed to load users.', 'error');
                 setUsers([]);
                 setUserStats({ total: 0, admins: 0, active30d: 0 });
@@ -425,7 +420,6 @@ const AdminDashboard: React.FC = () => {
             setBroadcastTitle('');
             notify('Broadcast sent successfully!', 'success');
         } catch (error: any) {
-            console.error('Broadcast error:', error);
             notify(`Failed to send broadcast: ${error.message}`, 'error');
             setIsSending(false);
         }
@@ -448,7 +442,6 @@ const AdminDashboard: React.FC = () => {
             notify('Event created successfully!', 'success');
         } catch (error: any) {
             setIsCreatingEvent(false);
-            console.error('Failed to create D1 event:', error);
             notify(error.message || 'Failed to create event.', 'error');
         }
     };

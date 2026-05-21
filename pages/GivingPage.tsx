@@ -104,23 +104,18 @@ const GivingPage: React.FC = () => {
 
   return (
     <div className="max-w-4xl mx-auto pb-20">
-      <div className="mb-8">
-        <motion.h1
-          className="text-4xl font-black text-brand-text-primary flex items-center gap-4"
-          initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.55, ease: EASE }}
-        >
-          <CreditCardIcon className="w-10 h-10 text-brand-accent"/>
-          Giving & Support
-        </motion.h1>
-        <motion.p
-          className="text-brand-text-secondary mt-2"
-          initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-          transition={{ duration: 0.45, delay: 0.15 }}
-        >
-          Partner with us to expand THE CCN DAILY globally.
-        </motion.p>
-      </div>
+      <motion.div
+        className="mb-8"
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: EASE }}
+      >
+        <p className="text-xs font-bold uppercase tracking-widest text-brand-accent mb-2">GIVE</p>
+        <h1 className="text-4xl font-black text-brand-text-primary mb-2" style={{ fontFamily: 'var(--font-display)' }}>
+          Giving &amp; Support
+        </h1>
+        <p className="text-brand-text-secondary">Your generosity fuels the mission. Every gift builds something eternal.</p>
+      </motion.div>
 
       <motion.div
         className="grid grid-cols-1 lg:grid-cols-2 gap-8"

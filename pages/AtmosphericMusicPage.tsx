@@ -63,18 +63,15 @@ const AtmosphericMusicPage: React.FC = () => {
                 const handleCanPlay = () => {
                     const playPromise = audio.play();
                     if(playPromise !== undefined) {
-                        playPromise.catch(error => {
-                            if (error.name !== 'AbortError') {
-                                console.error("Audio playback failed:", error);
-                            }
+                        playPromise.catch(() => {
+                            // Autoplay blocked by browser — user interaction required
                         });
                     }
                 };
                 audio.addEventListener('canplay', handleCanPlay, { once: true });
                 audio.src = track.url;
             }
-        } catch (error) {
-            console.error("Failed to get music:", error);
+        } catch {
             notify("Could not load atmospheric music.", "error");
         } finally {
             setIsLoading(false);

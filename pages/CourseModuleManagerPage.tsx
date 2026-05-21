@@ -40,7 +40,6 @@ const CourseModuleManagerPage: React.FC = () => {
       const data = await getCourseDetail(courseId!);
       setCourseTitle(data.course.title);
     } catch (error) {
-      console.error('Error fetching course:', error);
       setCourseTitle('Course Not Found');
     }
   };
@@ -55,7 +54,6 @@ const CourseModuleManagerPage: React.FC = () => {
         setOrder(fetchedModules[fetchedModules.length - 1].order + 1);
       }
     } catch (error) {
-      console.error('Failed to fetch course modules', error);
     } finally {
       setLoading(false);
     }
@@ -87,7 +85,6 @@ const CourseModuleManagerPage: React.FC = () => {
 
       fetchModules();
     } catch (error) {
-      console.error('Failed to save course module', error);
       notify('Failed to add module.', 'error');
     } finally {
       setIsSaving(false);
@@ -102,7 +99,6 @@ const CourseModuleManagerPage: React.FC = () => {
       notify('Module deleted successfully!', 'success');
       fetchModules();
     } catch (error) {
-      console.error('Failed to delete course module', error);
       notify('Failed to delete module.', 'error');
     }
   };

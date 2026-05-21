@@ -33,8 +33,7 @@ const LiveStreamPage: React.FC = () => {
         setPlaybackId(stream.playbackId || null);
         setIsLive(stream.isLive);
         setViewerCount(stream.viewerCount || 0);
-      } catch (error) {
-        console.error('Failed to load live stream status:', error);
+      } catch {
         if (!cancelled) {
           setStreamError('Live stream status could not be refreshed.');
           setIsLive(false);
@@ -64,8 +63,7 @@ const LiveStreamPage: React.FC = () => {
           setChatMessages(messages);
           scrollToBottom();
         }
-      } catch (error) {
-        console.error('Failed to load live stream chat:', error);
+      } catch {
         if (!cancelled) setChatError('Live chat could not be refreshed.');
       } finally {
         if (!cancelled) setLoadingChat(false);
@@ -105,7 +103,6 @@ const LiveStreamPage: React.FC = () => {
       });
       if (sentMessage) setChatMessages(prev => [...prev, sentMessage]);
     } catch (error) {
-      console.error('Failed to send live chat message:', error);
       setChatError(error instanceof Error ? error.message : 'Message could not be sent.');
       setChatMessage(messageText);
     }

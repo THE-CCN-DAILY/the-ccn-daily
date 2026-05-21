@@ -61,7 +61,7 @@ const ContentDisplay: React.FC<ContentDisplayProps> = ({ contentId, initialConte
       setIsLoadingHighlights(true);
       getHighlightsForContent(user.uid, contentId)
         .then(setHighlights)
-        .catch(console.error)
+        .catch(() => { /* non-critical */ })
         .finally(() => setIsLoadingHighlights(false));
     } else {
       // If user logs out, clear highlights
@@ -104,7 +104,7 @@ const ContentDisplay: React.FC<ContentDisplayProps> = ({ contentId, initialConte
 
     if (audio) {
       if (audio.ended) audio.currentTime = 0;
-      audio.play().catch(err => console.error("Audio resume/replay failed:", err.message));
+      audio.play().catch(() => { /* autoplay blocked — user interaction required */ });
       return;
     }
 
@@ -116,7 +116,6 @@ const ContentDisplay: React.FC<ContentDisplayProps> = ({ contentId, initialConte
       const handleCanPlay = () => {
         newAudio.play().catch(err => {
           if (err.name !== 'AbortError') {
-            console.error("Audio playback failed:", err.message);
             notify("Sorry, an audio playback error occurred.", "error");
           }
         });
@@ -205,7 +204,6 @@ const ContentDisplay: React.FC<ContentDisplayProps> = ({ contentId, initialConte
       };
       setHighlights(prev => [...prev, newHighlight]); // Optimistic update
       saveHighlight(user.uid, newHighlight).catch(err => {
-        console.error("Failed to save highlight:", err);
         setHighlights(prev => prev.filter(h => h.id !== newHighlight.id)); // Revert on error
       });
       dispatchGamificationEvent('e4');
@@ -218,7 +216,6 @@ const ContentDisplay: React.FC<ContentDisplayProps> = ({ contentId, initialConte
       const originalHighlights = [...highlights];
       setHighlights(prev => prev.filter(h => h.id !== id)); // Optimistic update
       deleteHighlight(user.uid, id).catch(err => {
-        console.error("Failed to delete highlight:", err);
         setHighlights(originalHighlights); // Revert on error
       });
       setHighlightPopover(null);
@@ -239,7 +236,6 @@ const ContentDisplay: React.FC<ContentDisplayProps> = ({ contentId, initialConte
       
       setHighlights(prev => [...prev, newHighlight]);
       saveHighlight(user.uid, newHighlight).catch(err => {
-        console.error("Failed to save highlight:", err);
         setHighlights(prev => prev.filter(h => h.id !== newHighlight.id));
       });
       
@@ -283,7 +279,6 @@ const ContentDisplay: React.FC<ContentDisplayProps> = ({ contentId, initialConte
       setHighlights(prev => prev.map(h => h.id === highlightId ? changes : h));
       
       updateHighlight(user.uid, highlightId, { note: noteText, voiceNoteUrl, tags }).catch(err => {
-        console.error("Failed to update note:", err);
         setHighlights(originalHighlights);
       });
       setEditingHighlight(null);

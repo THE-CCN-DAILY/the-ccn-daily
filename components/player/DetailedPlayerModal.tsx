@@ -184,18 +184,15 @@ const DetailedPlayerModal: React.FC = () => {
         if (isMobileScreen && navigator.share) {
             try {
                 await navigator.share(shareData);
-            } catch (err) {
-                if ((err as Error).name !== 'AbortError') {
-                    console.error("Share failed:", err);
-                }
+            } catch {
+                // Share cancelled or unavailable
             }
         } else {
             try {
                 await navigator.clipboard.writeText(shareData.url);
                 setShareStatus('copied');
                 setTimeout(() => setShareStatus('idle'), 2000);
-            } catch (err) {
-                console.error("Copy to clipboard failed:", err);
+            } catch {
                 notify("Failed to copy link.", "error");
             }
         }

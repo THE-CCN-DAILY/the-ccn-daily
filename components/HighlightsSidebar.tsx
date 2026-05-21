@@ -164,7 +164,6 @@ const HighlightsSidebar: React.FC<HighlightsSidebarProps> = ({ highlights, editi
         recognition.onstart = () => setIsListening(true);
         recognition.onend = () => cleanupMedia();
         recognition.onerror = (event) => {
-            console.error("Speech recognition error:", event.error);
             cleanupMedia();
         };
 
@@ -184,7 +183,6 @@ const HighlightsSidebar: React.FC<HighlightsSidebarProps> = ({ highlights, editi
         recorder.start();
 
     } catch (err) {
-        console.error("Error accessing microphone:", err);
         notify("Could not access the microphone. Please check your browser permissions.", "error");
     }
   };
@@ -199,7 +197,6 @@ const HighlightsSidebar: React.FC<HighlightsSidebarProps> = ({ highlights, editi
             generatedTags = await generateTagsForNote(noteText);
         }
       } catch (e) {
-          console.error("Failed to generate AI tags:", e);
           generatedTags.push("Untagged"); // Fallback tag
       }
       
@@ -288,7 +285,6 @@ const HighlightsSidebar: React.FC<HighlightsSidebarProps> = ({ highlights, editi
                     const handleCanPlay = () => {
                         audio.play().catch(e => {
                             if (e.name !== 'AbortError') {
-                                console.error("Audio playback failed:", e);
                             }
                         });
                     };

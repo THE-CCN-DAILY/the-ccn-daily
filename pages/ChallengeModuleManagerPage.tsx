@@ -41,7 +41,6 @@ const ChallengeModuleManagerPage: React.FC = () => {
       const data = await getChallengeDetail(challengeId!);
       setChallengeTitle(data.challenge.title);
     } catch (error) {
-      console.error('Error fetching challenge:', error);
       setChallengeTitle('Challenge Not Found');
     }
   };
@@ -57,7 +56,6 @@ const ChallengeModuleManagerPage: React.FC = () => {
         setDayNumber(fetchedModules[fetchedModules.length - 1].dayNumber + 1);
       }
     } catch (error) {
-      console.error('Failed to fetch challenge modules', error);
     } finally {
       setLoading(false);
     }
@@ -92,7 +90,6 @@ const ChallengeModuleManagerPage: React.FC = () => {
       fetchModules();
       
     } catch (error) {
-      console.error('Failed to save challenge module', error);
       notify('Failed to add module.', 'error');
     } finally {
       setIsSaving(false);
@@ -107,7 +104,6 @@ const ChallengeModuleManagerPage: React.FC = () => {
       notify('Module deleted successfully!', 'success');
       fetchModules();
     } catch (error) {
-      console.error('Failed to delete challenge module', error);
       notify('Failed to delete module.', 'error');
     }
   };

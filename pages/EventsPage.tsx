@@ -29,7 +29,6 @@ const EventsPage: React.FC = () => {
         const fetchedEvents = await listEvents();
         if (!cancelled) setEvents(fetchedEvents);
       } catch (error) {
-        console.error('Failed to load events:', error);
         if (!cancelled) {
           setError('Events could not be loaded. Please try again shortly.');
           setEvents([]);
@@ -54,7 +53,6 @@ const EventsPage: React.FC = () => {
       setRegistered(prev => ({ ...prev, [id]: true }));
       notify('Successfully registered! A Grace Link has been sent to your email.', 'success');
     } catch (error) {
-      console.error('Failed to register for event:', error);
       notify(error instanceof Error ? error.message : 'Failed to register for event.', 'error');
     }
   };
@@ -75,23 +73,18 @@ const EventsPage: React.FC = () => {
 
   return (
     <div className="mx-auto max-w-4xl pb-20">
-      <div className="mb-8">
-        <motion.h1
-          className="flex items-center gap-4 text-4xl font-black text-brand-text-primary"
-          initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.55, ease: EASE }}
-        >
-          <CalendarIcon className="h-10 w-10 text-brand-accent" />
+      <motion.div
+        className="mb-8"
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: EASE }}
+      >
+        <p className="text-xs font-bold uppercase tracking-widest text-brand-accent mb-2">LIVE</p>
+        <h1 className="text-4xl font-black text-brand-text-primary mb-2" style={{ fontFamily: 'var(--font-display)' }}>
           Live Events
-        </motion.h1>
-        <motion.p
-          className="mt-2 text-brand-text-secondary"
-          initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-          transition={{ duration: 0.45, delay: 0.15 }}
-        >
-          Register for upcoming online streams and physical gatherings.
-        </motion.p>
-      </div>
+        </h1>
+        <p className="text-brand-text-secondary">Gatherings, conferences, and encounters — join the body in real time.</p>
+      </motion.div>
 
       {error && (
         <Card className="mb-6 border-status-warning/40 bg-status-warning/10">

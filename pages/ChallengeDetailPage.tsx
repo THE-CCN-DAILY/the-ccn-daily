@@ -33,7 +33,6 @@ const ChallengeDetailPage: React.FC = () => {
         setIsParticipant(Boolean(data.participant));
         setCompletedModules(data.participant?.completedModules || []);
       } catch (error) {
-        console.error('Failed to load challenge', error);
       } finally {
         setLoading(false);
       }
@@ -53,7 +52,6 @@ const ChallengeDetailPage: React.FC = () => {
       if (result.challenge) setChallenge(result.challenge);
 
     } catch (error) {
-      console.error('Failed to join challenge', error);
     } finally {
       setJoining(false);
     }

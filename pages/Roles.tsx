@@ -21,7 +21,6 @@ const Roles: React.FC = () => {
         })) as AppUser[];
         setUsers(usersData);
       } catch (error) {
-        console.error("Error fetching users:", error);
         toast.error("Failed to load users.");
       } finally {
         setLoading(false);
@@ -43,7 +42,6 @@ const Roles: React.FC = () => {
       setUsers(users.map(u => u.uid === userId ? { ...u, role: newRole } : u));
       toast.success("Role updated successfully.");
     } catch (error) {
-      console.error("Error updating role:", error);
       toast.error("Failed to update role.");
     }
   };

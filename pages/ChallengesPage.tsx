@@ -20,7 +20,6 @@ const ChallengesPage: React.FC = () => {
       try {
         setChallenges(await listChallenges());
       } catch (error) {
-        console.error('Failed to load challenges', error);
       } finally {
         setLoading(false);
       }
@@ -48,22 +47,18 @@ const ChallengesPage: React.FC = () => {
 
   return (
     <div className="max-w-6xl mx-auto pb-20 px-4">
-      <div className="mb-8">
-        <motion.h1
-          className="text-4xl font-black text-brand-text-primary mb-4"
-          initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.55, ease: EASE }}
-        >
+      <motion.div
+        className="mb-8"
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: EASE }}
+      >
+        <p className="text-xs font-bold uppercase tracking-widest text-brand-accent mb-2">COMMUNITY</p>
+        <h1 className="text-4xl font-black text-brand-text-primary mb-2" style={{ fontFamily: 'var(--font-display)' }}>
           Challenges
-        </motion.h1>
-        <motion.p
-          className="text-xl text-brand-text-secondary"
-          initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-          transition={{ duration: 0.45, delay: 0.15 }}
-        >
-          Join community-driven spiritual growth challenges. Build consistency together.
-        </motion.p>
-      </div>
+        </h1>
+        <p className="text-brand-text-secondary">Grow together. Take on spiritual challenges with your community.</p>
+      </motion.div>
 
       <div className="flex gap-4 mb-8 border-b border-brand-border pb-2">
         <button

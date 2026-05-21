@@ -47,8 +47,7 @@ const ChallengeCreator: React.FC = () => {
             const cleanText = responseText.replace(/```json/g, '').replace(/```/g, '').trim();
             const result = JSON.parse(cleanText || '{}');
             setGeneratedChallenge(result);
-        } catch (error) {
-            console.error('AI Generation Error:', error);
+        } catch {
             notify('Failed to generate course. Please try again.', 'error');
         } finally {
             setIsGenerating(false);
@@ -69,8 +68,7 @@ const ChallengeCreator: React.FC = () => {
             notify('Challenge published successfully to the community!', 'success');
             setGeneratedChallenge(null);
             setSourceValue('');
-        } catch (error) {
-            console.error('Challenge publish failed:', error);
+        } catch {
             notify('Failed to publish challenge.', 'error');
         } finally {
             setIsPublishing(false);
