@@ -24,10 +24,10 @@ const JournalingPage: React.FC = () => {
   const [selectedColor, setSelectedColor] = useState<JournalEntry['color']>('blue');
 
   const colors = [
-    { id: 'blue', bg: 'bg-blue-900/30', border: 'border-blue-500/50' },
-    { id: 'green', bg: 'bg-green-900/30', border: 'border-green-500/50' },
-    { id: 'yellow', bg: 'bg-yellow-900/30', border: 'border-yellow-500/50' },
-    { id: 'pink', bg: 'bg-pink-900/30', border: 'border-pink-500/50' },
+    { id: 'blue',   bg: 'bg-blue-900/30',   border: 'border-blue-500/50',   stripe: 'bg-blue-400/60' },
+    { id: 'green',  bg: 'bg-green-900/30',  border: 'border-green-500/50',  stripe: 'bg-green-400/60' },
+    { id: 'yellow', bg: 'bg-yellow-900/30', border: 'border-yellow-500/50', stripe: 'bg-yellow-400/60' },
+    { id: 'pink',   bg: 'bg-pink-900/30',   border: 'border-pink-500/50',   stripe: 'bg-pink-400/60' },
   ];
 
   useEffect(() => {
@@ -110,7 +110,7 @@ const JournalingPage: React.FC = () => {
           {!isWriting && (
             <motion.button
               onClick={() => setIsWriting(true)}
-              className="flex items-center px-4 py-2 bg-brand-accent text-white font-bold hover:bg-opacity-90 transition-colors"
+              className="flex items-center px-4 py-2 bg-brand-accent text-white font-bold rounded-xl hover:bg-opacity-90 transition-colors"
               initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
               transition={{ duration: 0.25, ease: EASE }}
@@ -133,40 +133,49 @@ const JournalingPage: React.FC = () => {
           transition={{ duration: 0.35, ease: EASE }}
           className="mb-8"
         >
-        <Card className="border-brand-accent/50 bg-brand-dark/50 p-6">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-bold text-brand-text-primary">New Reflection</h3>
-            <div className="flex space-x-2">
-              {colors.map((c) => (
-                <button
-                  key={c.id}
-                  onClick={() => setSelectedColor(c.id as JournalEntry['color'])}
-                  className={`w-6 h-6 border-2 ${c.bg} ${selectedColor === c.id ? c.border : 'border-transparent'}`}
-                  aria-label={`Use ${c.id} journal color`}
-                />
-              ))}
+        <Card className="border-brand-accent/50 bg-brand-dark/50 p-0 overflow-hidden">
+          {/* Accent stripe */}
+          <div className="h-1 w-full bg-brand-accent/70 rounded-t-2xl" />
+          <div className="p-6">
+            <div className="flex justify-between items-center mb-5">
+              <h3 className="text-lg font-bold text-brand-text-primary">New Reflection</h3>
+              <div className="flex items-center gap-2">
+                {colors.map((c) => (
+                  <button
+                    key={c.id}
+                    onClick={() => setSelectedColor(c.id as JournalEntry['color'])}
+                    className={`w-6 h-6 rounded-full border-2 ${c.stripe} ${selectedColor === c.id ? c.border + ' ring-2 ring-offset-1 ring-offset-brand-dark ring-brand-accent/40' : 'border-transparent'} transition-transform hover:scale-110`}
+                    aria-label={`Use ${c.id} journal color`}
+                  />
+                ))}
+              </div>
             </div>
-          </div>
-          <textarea
-            value={newEntryText}
-            onChange={(e) => setNewEntryText(e.target.value)}
-            placeholder="What is on your heart today?"
-            className="w-full h-40 bg-brand-dark border border-brand-border p-4 text-brand-text-primary focus:outline-none focus:border-brand-accent resize-none mb-4"
-          />
-          <div className="flex justify-end space-x-4">
-            <button
-              onClick={() => setIsWriting(false)}
-              className="px-4 py-2 text-brand-text-secondary font-bold hover:text-brand-text-primary"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleSaveEntry}
-              disabled={!newEntryText.trim() || saving}
-              className="px-6 py-2 bg-brand-accent text-white font-bold disabled:opacity-50 hover:bg-opacity-90 transition-colors"
-            >
-              {saving ? 'Saving...' : 'Save Entry'}
-            </button>
+            <textarea
+              value={newEntryText}
+              onChange={(e) => setNewEntryText(e.target.value)}
+              placeholder="What is on your heart today?"
+              className="w-full h-40 bg-brand-dark border border-brand-border rounded-xl p-4 text-brand-text-primary focus:outline-none focus:border-brand-accent focus:ring-1 focus:ring-brand-accent/30 resize-none mb-5 placeholder-brand-text-secondary/60 leading-relaxed"
+            />
+            <div className="flex justify-between items-center">
+              <span className="text-xs text-brand-text-secondary/60">
+                {newEntryText.trim() ? `${newEntryText.trim().split(/\s+/).filter(Boolean).length} words` : 'Start writing…'}
+              </span>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setIsWriting(false)}
+                  className="px-4 py-2 text-brand-text-secondary font-semibold hover:text-brand-text-primary transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSaveEntry}
+                  disabled={!newEntryText.trim() || saving}
+                  className="px-6 py-2 bg-brand-accent text-white font-bold rounded-xl disabled:opacity-50 hover:bg-opacity-90 transition-colors"
+                >
+                  {saving ? 'Saving…' : 'Save Entry'}
+                </button>
+              </div>
+            </div>
           </div>
         </Card>
         </motion.div>
@@ -192,16 +201,25 @@ const JournalingPage: React.FC = () => {
             const colorObj = colors.find(c => c.id === entry.color) || colors[0];
             return (
               <motion.div key={entry.id} variants={fadeUp} transition={{ duration: 0.45, ease: EASE }}>
-              <Card className={`border ${colorObj.border} ${colorObj.bg} p-6`}>
-                <div className="flex justify-between items-start mb-4">
-                  <span className="text-sm font-bold text-brand-text-secondary">
-                    {formatDate(entry.createdAt)}
-                  </span>
-                  <PaintBrushIcon className="w-5 h-5 text-brand-text-secondary/50" />
+              <Card className={`border ${colorObj.border} ${colorObj.bg} p-0 overflow-hidden`}>
+                {/* Color-keyed accent stripe */}
+                <div className={`h-1 w-full ${colorObj.stripe} rounded-t-2xl`} />
+                <div className="p-6">
+                  <div className="flex justify-between items-start mb-4">
+                    <span className={`inline-flex items-center text-xs font-semibold px-2.5 py-1 rounded-full border ${colorObj.border} ${colorObj.bg} text-brand-text-secondary`}>
+                      {formatDate(entry.createdAt)}
+                    </span>
+                    <PaintBrushIcon className="w-4 h-4 text-brand-text-secondary/40" />
+                  </div>
+                  <p className="text-brand-text-primary whitespace-pre-wrap leading-relaxed text-[15px]">
+                    {entry.text}
+                  </p>
+                  <div className="mt-5 pt-3 border-t border-current/10 flex items-center justify-end">
+                    <span className="text-xs text-brand-text-secondary/50">
+                      {entry.text.trim().split(/\s+/).filter(Boolean).length} words
+                    </span>
+                  </div>
                 </div>
-                <p className="text-brand-text-primary whitespace-pre-wrap leading-relaxed">
-                  {entry.text}
-                </p>
               </Card>
               </motion.div>
             );
@@ -210,14 +228,14 @@ const JournalingPage: React.FC = () => {
       ) : (
         !isWriting && (
           <Card className="text-center py-20 border-brand-border border-dashed bg-transparent">
-            <PaintBrushIcon className="w-12 h-12 text-brand-text-secondary mx-auto mb-4" />
-            <h3 className="text-xl font-bold text-brand-text-primary mb-2">No journal entries yet</h3>
-            <p className="text-brand-text-secondary mb-6">
-              Start documenting your spiritual journey today.
+            <PaintBrushIcon className="w-12 h-12 text-brand-text-secondary/50 mx-auto mb-5" />
+            <h3 className="text-xl font-bold text-brand-text-primary mb-2">Your journal is empty</h3>
+            <p className="text-brand-text-secondary mb-8 max-w-sm mx-auto leading-relaxed">
+              Write what God is speaking to you. Every word matters here.
             </p>
             <button
               onClick={() => setIsWriting(true)}
-              className="px-6 py-2 bg-brand-secondary text-brand-text-primary font-bold border border-brand-border hover:bg-brand-dark transition-colors"
+              className="px-6 py-2.5 bg-brand-accent text-white font-bold rounded-xl border border-brand-accent hover:bg-opacity-90 transition-colors"
             >
               Write First Entry
             </button>

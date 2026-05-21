@@ -16,7 +16,7 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(({ children, className 
 
   return (
     // FIX: Spread the rest of the props onto the div.
-    <div ref={ref} {...props} style={{ ...cardStyle, ...props.style }} className={`border p-6 ${className}`}>
+    <div ref={ref} {...props} style={{ ...cardStyle, ...props.style }} className={`rounded-2xl border p-6 ${className}`}>
       {children}
     </div>
   );
