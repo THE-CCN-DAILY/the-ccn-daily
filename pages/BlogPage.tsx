@@ -36,7 +36,7 @@ const fallbackPosts: BlogPost[] = [
   {
     id: 'fallback-professional-rhythm',
     slug: 'a-better-rhythm-for-christian-professionals',
-    title: 'A better rhythm for Christian professionals',
+    title: 'A better rhythm for working believers',
     excerpt:
       'The working believer needs more than motivation. We need Scripture, prayer, reflection, and a way to return to God in the middle of pressure.',
     content: '',
