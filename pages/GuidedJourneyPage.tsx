@@ -3,11 +3,12 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import Card from '../components/Card';
-import { CheckIcon, FlagIcon, PencilIcon, PrayingHandsIcon, ReaderIcon, SparklesIcon, CloseIcon, ChevronLeftIcon, SoundWaveIcon } from '../components/icons';
+import { CheckIcon, FlagIcon, PencilIcon, PrayingHandsIcon, ReaderIcon, SparklesIcon, CloseIcon, ChevronLeftIcon, SoundWaveIcon, PlayIcon, PauseIcon } from '../components/icons';
 import RichTextJournal from '../components/RichTextJournal';
 import PrayerTimer from '../components/PrayerTimer';
 import { getScriptureSnippet } from '../services/bibleService';
 import { getTodayDevotional } from '../services/contentService';
+import { useAudioPlayer } from '../contexts/AudioPlayerContext';
 import ReactMarkdown from 'react-markdown';
 
 interface Devotional {
@@ -83,6 +84,7 @@ const StepContent: React.FC<{ stepIndex: number; onComplete: () => void; devotio
     const [isPrayerComplete, setIsPrayerComplete] = useState(false);
     const [activeSnippet, setActiveSnippet] = useState<string | null>(null);
     const isPrayerStep = stepIndex === 4;
+    const { playTrack, currentTrack, isPlaying, togglePlayPause } = useAudioPlayer();
 
     const renderContent = () => {
         switch (stepIndex) {
@@ -117,14 +119,46 @@ const StepContent: React.FC<{ stepIndex: number; onComplete: () => void; devotio
                         {devotional ? (
                             <div className="text-left max-w-2xl mx-auto">
                                 <h3 className="text-xl font-bold text-brand-accent mb-4 text-center">{devotional.title}</h3>
-                                {devotional.audioUrl && (
-                                    <div className="mb-6">
-                                        <audio controls className="w-full h-10 rounded-full bg-brand-secondary">
-                                            <source src={devotional.audioUrl} type="audio/mpeg" />
-                                            Your browser does not support the audio element.
-                                        </audio>
-                                    </div>
-                                )}
+                                {devotional.audioUrl && (() => {
+                                    const isThisTrack = currentTrack?.id === devotional.id;
+                                    const isThisPlaying = isThisTrack && isPlaying;
+                                    const handleAudio = () => {
+                                        if (isThisTrack) {
+                                            togglePlayPause();
+                                        } else {
+                                            playTrack({
+                                                id: devotional.id,
+                                                title: devotional.title,
+                                                description: 'Daily Devotional',
+                                                author: 'THE CCN DAILY',
+                                                coverArt: '',
+                                                audioUrl: devotional.audioUrl!,
+                                                duration: 0,
+                                                releaseDate: devotional.date,
+                                            });
+                                        }
+                                    };
+                                    return (
+                                        <div className="mb-6 flex items-center gap-4 p-4 bg-brand-secondary/50 rounded-2xl border border-brand-border">
+                                            <button
+                                                onClick={handleAudio}
+                                                aria-label={isThisPlaying ? 'Pause devotional audio' : 'Play devotional audio'}
+                                                className="flex-shrink-0 w-12 h-12 rounded-full bg-brand-accent flex items-center justify-center text-white hover:scale-105 transition-transform shadow-lg"
+                                            >
+                                                {isThisPlaying
+                                                    ? <PauseIcon className="w-5 h-5" />
+                                                    : <PlayIcon className="w-5 h-5 ml-0.5" />}
+                                            </button>
+                                            <div>
+                                                <p className="text-xs font-bold uppercase tracking-widest text-brand-accent">Audio Reflection</p>
+                                                <p className="text-sm text-brand-text-primary font-semibold mt-0.5">{devotional.title}</p>
+                                                {isThisPlaying && (
+                                                    <p className="text-xs text-brand-text-secondary mt-0.5 animate-pulse">Now playing in the audio player below</p>
+                                                )}
+                                            </div>
+                                        </div>
+                                    );
+                                })()}
                                 <div className="prose prose-sm text-brand-text-secondary mx-auto">
                                     <ReactMarkdown>{devotional.content}</ReactMarkdown>
                                 </div>
@@ -243,8 +277,8 @@ const GuidedJourneyPage: React.FC = () => {
                 const todayString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
                 const item = await getTodayDevotional(todayString);
                 if (item) setDevotional(item as Devotional);
-            } catch (error) {
-                console.error("Error fetching today's devotional:", error);
+            } catch {
+                // No devotional published today — journey continues without it
             }
         };
         fetchTodayDevotional();
