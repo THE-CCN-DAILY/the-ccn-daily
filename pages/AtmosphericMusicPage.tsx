@@ -94,20 +94,25 @@ const AtmosphericMusicPage: React.FC = () => {
     return (
         <div>
             <audio ref={audioRef} />
-            <h1 className="text-4xl font-bold text-brand-text-primary mb-2">Atmospheric AI Music</h1>
-            <p className="text-lg text-brand-text-secondary mb-8">
-                This prototype demonstrates how AI-generated music (from Google's Lyria) can create an immersive spiritual atmosphere.
-            </p>
+            <div className="mb-8">
+              <p className="text-xs font-bold uppercase tracking-widest text-brand-accent mb-3">Sanctuary</p>
+              <h1 className="text-4xl font-black text-brand-text-primary mb-3" style={{ fontFamily: 'var(--font-display)' }}>
+                Atmospheric Prayer Music
+              </h1>
+              <p className="text-lg text-brand-text-secondary">
+                Choose a mood and let the music create a space for focus, reflection, or quiet prayer.
+              </p>
+            </div>
 
             <div className="max-w-2xl mx-auto">
                 <Card>
                     <div className="text-center">
                         <h2 className="text-2xl font-bold text-brand-text-primary mb-2 flex items-center justify-center">
                             <SoundWaveIcon className="w-6 h-6 mr-3 text-brand-accent"/>
-                            Simulate a Devotional Mood
+                            Set Your Mood
                         </h2>
                         <p className="text-brand-text-secondary max-w-2xl mx-auto mb-6">
-                            Select a mood below to hear the corresponding ambient music track.
+                            Select a mood — the music will carry you into a space of quiet focus.
                         </p>
                         
                         <div className="flex flex-wrap justify-center gap-4 mb-8">
@@ -145,15 +150,6 @@ const AtmosphericMusicPage: React.FC = () => {
                     </div>
                 </Card>
 
-                <Card className="mt-8">
-                    <h3 className="text-xl font-bold text-brand-text-primary mb-2 flex items-center">
-                        <SparklesIcon className="w-5 h-5 mr-2 text-brand-accent"/>
-                        The Vision: Google Lyria
-                    </h3>
-                    <p className="text-brand-text-secondary">
-                        In the final app, this won't be pre-selected music. Instead, we'll use Google's Lyria, a generative music model. After analyzing the devotional's mood, a Genkit flow will instruct Lyria to create a unique, instrumental audio stream in real-time that perfectly matches the tone of the message, ensuring a deeply personal and never-repeated immersive experience for the user.
-                    </p>
-                </Card>
             </div>
         </div>
     );

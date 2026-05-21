@@ -119,7 +119,9 @@ const LiveStreamPage: React.FC = () => {
             <SpeakerWaveIcon className="w-10 h-10 text-brand-accent"/>
             Global Broadcast
           </h1>
-          <p className="text-brand-text-secondary mt-2">Low-latency audio/video streaming via Mux/Agora.</p>
+          <p className="text-brand-text-secondary mt-2">
+            Join us live — worship, teaching, and community broadcast in real time.
+          </p>
         </div>
         {isLive && (
           <div className="flex items-center gap-2 px-4 py-2 bg-red-500/20 text-red-400 rounded-full font-bold animate-pulse">
@@ -155,15 +157,15 @@ const LiveStreamPage: React.FC = () => {
                 <div className="text-center p-8">
                   <SpeakerWaveIcon className="w-16 h-16 text-brand-text-secondary mx-auto mb-4 opacity-50" />
                   <h3 className="text-xl font-bold text-brand-text-primary mb-2">Broadcast Offline</h3>
-                  <p className="text-brand-text-secondary">We are not currently live. Please check back later.</p>
+                  <p className="text-brand-text-secondary">No broadcast is live right now. Come back for the next gathering.</p>
                 </div>
               )}
             </div>
           </Card>
 
           <div className="mt-6">
-            <h3 className="text-2xl font-bold text-brand-text-primary mb-2">The Power of Community</h3>
-            <p className="text-brand-text-secondary">Join us as we explore the depths of faith and connection in today's digital age. This broadcast is streamed globally with real-time translation available.</p>
+            <h3 className="text-2xl font-bold text-brand-text-primary mb-2">Gathering Together</h3>
+            <p className="text-brand-text-secondary">A global moment of worship and teaching, live from our community. Watch here, pray alongside thousands, and join the chat below.</p>
           </div>
         </div>
 

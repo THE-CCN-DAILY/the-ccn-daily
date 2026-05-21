@@ -120,10 +120,15 @@ const DevotionalGeneratorPage: React.FC = () => {
 
   return (
     <div>
-      <h1 className="text-4xl font-bold text-brand-text-primary mb-2">Personalized Devotional</h1>
-      <p className="text-lg text-brand-text-secondary mb-8">
-        This page now uses the unified reader. It has themes, font controls, and a Smart Library, just like the ePub prototype.
-      </p>
+      <div className="mb-8">
+        <p className="text-xs font-bold uppercase tracking-widest text-brand-accent mb-3">Daily Formation</p>
+        <h1 className="text-4xl font-black text-brand-text-primary mb-3" style={{ fontFamily: 'var(--font-display)' }}>
+          Your Devotional
+        </h1>
+        <p className="text-lg text-brand-text-secondary">
+          A reflection written for you, from Scripture, shaped around your spiritual journey today.
+        </p>
+      </div>
 
       <div className="flex flex-col xl:flex-row gap-6">
         {/* Controls Column */}

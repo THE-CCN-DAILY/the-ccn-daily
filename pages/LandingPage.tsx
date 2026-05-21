@@ -295,7 +295,7 @@ const LandingPage: React.FC = () => {
                 variants={fadeUp}
                 className="mt-7 max-w-xl text-[1.125rem] leading-[1.8] text-brand-text-secondary"
               >
-                THE CCN DAILY helps busy professionals begin again with God — read, listen, reflect,
+                THE CCN DAILY helps you begin again with God — read, listen, reflect,
                 journal, and lead with a formed inner life. Ten minutes. Every morning.
               </motion.p>
 
