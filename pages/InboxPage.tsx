@@ -1,31 +1,39 @@
 import React from 'react';
+import { motion } from 'motion/react';
 import Card from '../components/Card';
 import { useNotifications } from '../contexts/NotificationContext';
 import { BellIcon, CheckIcon } from '../components/icons';
+
+const EASE = [0.22, 1, 0.36, 1] as [number, number, number, number];
 
 const InboxPage: React.FC = () => {
   const { notifications, markAsRead, markAllAsRead, unreadCount } = useNotifications();
 
   return (
     <div className="max-w-4xl mx-auto pb-20">
-      <div className="flex justify-between items-end mb-8">
+      <motion.div
+        className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8"
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: EASE }}
+      >
         <div>
-          <h1 className="text-4xl font-black text-brand-text-primary flex items-center gap-4">
-            <BellIcon className="w-10 h-10 text-brand-accent"/>
-            Inbox & Updates
+          <p className="text-xs font-bold uppercase tracking-widest text-brand-accent mb-2">Account</p>
+          <h1 className="text-4xl font-black text-brand-text-primary mb-2" style={{ fontFamily: 'var(--font-display)' }}>
+            Inbox &amp; Updates
           </h1>
-          <p className="text-brand-text-secondary mt-2">Stay connected with the latest announcements and broadcasts.</p>
+          <p className="text-brand-text-secondary">Announcements, broadcasts, and system updates — all in one place.</p>
         </div>
         {unreadCount > 0 && (
-          <button 
+          <button
             onClick={markAllAsRead}
-            className="text-sm font-bold text-brand-accent hover:text-brand-accent/80 flex items-center gap-2"
+            className="flex-shrink-0 text-sm font-bold text-brand-accent hover:text-brand-accent/80 flex items-center gap-2 self-start sm:self-auto"
           >
             <CheckIcon className="w-4 h-4" />
             Mark all as read
           </button>
         )}
-      </div>
+      </motion.div>
 
       <Card className="p-0 overflow-hidden">
         {notifications.length === 0 ? (

@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
+import { motion } from 'motion/react';
 import Card from '../components/Card';
+
+const EASE = [0.22, 1, 0.36, 1] as [number, number, number, number];
 import { useAuth } from '../contexts/AuthContext';
 import { useNotifications } from '../contexts/NotificationContext';
 import { PlusIcon, UserIcon, SparklesIcon, GamificationIcon, CloseIcon } from '../components/icons';
@@ -19,7 +22,7 @@ const FamilyDashboardPage: React.FC = () => {
   const [inviteEmail, setInviteEmail] = useState('');
   const [isInviting, setIsInviting] = useState(false);
 
-  // Mock data for prototype
+  // Placeholder family members — replace with Firestore family plan data
   const [members, setMembers] = useState<FamilyMember[]>([
     {
       id: '1',
@@ -79,11 +82,19 @@ const FamilyDashboardPage: React.FC = () => {
   };
 
   return (
-    <div className="max-w-5xl mx-auto pb-20 px-4">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-brand-text-primary mb-2">Family Dashboard</h1>
-        <p className="text-brand-text-secondary">Manage your family plan, invite members, and grow together.</p>
-      </div>
+    <div className="max-w-5xl mx-auto pb-20">
+      <motion.div
+        className="mb-8"
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: EASE }}
+      >
+        <p className="text-xs font-bold uppercase tracking-widest text-brand-accent mb-2">Account</p>
+        <h1 className="text-4xl font-black text-brand-text-primary mb-2" style={{ fontFamily: 'var(--font-display)' }}>
+          Family Dashboard
+        </h1>
+        <p className="text-brand-text-secondary">Invite family members to your shared plan and grow together in faith.</p>
+      </motion.div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Left Column: Plan & Invites */}

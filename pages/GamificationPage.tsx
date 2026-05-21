@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import Card from '../components/Card';
 import type { Achievement, RewardItem } from '../types';
 import { FireIcon, SparklesIcon, TrophyIcon, GamificationIcon, PlusCircleIcon, CheckIcon } from '../components/icons';
 import { useGamification } from '../contexts/GamificationContext';
 import { useAuth } from '../contexts/AuthContext';
 import { mockAchievements, mockRewards, mockEarningActions } from '../data/gamificationData';
+
+const EASE = [0.22, 1, 0.36, 1] as [number, number, number, number];
 
 const TabButton: React.FC<{ label: string; icon: React.ElementType; isActive: boolean; onClick: () => void; }> = ({ label, icon: Icon, isActive, onClick }) => (
     <button
@@ -107,28 +110,48 @@ const GamificationPage: React.FC = () => {
 
     if (!user) {
         return (
-            <div>
-                 <h1 className="text-4xl font-bold text-brand-text-primary mb-2">Your Journey</h1>
-                <p className="text-lg text-brand-text-secondary mb-8">
-                    Track your progress, build consistent habits, and unlock rewards for your dedication.
-                </p>
-                <Card className="text-center py-16">
-                    <h2 className="text-2xl font-bold text-brand-text-primary mb-2">Sign In to See Your Progress</h2>
-                    <p className="text-brand-text-secondary mb-6">Your achievements, points, and rewards are waiting for you.</p>
-                    <button onClick={signIn} className="px-6 py-2 rounded-lg bg-brand-accent hover:bg-opacity-90 text-white font-semibold shadow-md">
-                        Sign In
-                    </button>
-                </Card>
-            </div>
-        );
+      <div className="max-w-5xl mx-auto pb-20">
+        <motion.div
+          className="mb-8"
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: EASE }}
+        >
+          <p className="text-xs font-bold uppercase tracking-widest text-brand-accent mb-2">Account</p>
+          <h1 className="text-4xl font-black text-brand-text-primary mb-2" style={{ fontFamily: 'var(--font-display)' }}>
+            Your Journey
+          </h1>
+          <p className="text-brand-text-secondary">
+            Track your progress, build consistent habits, and unlock rewards for your faithfulness.
+          </p>
+        </motion.div>
+        <Card className="text-center py-16">
+          <h2 className="text-2xl font-black text-brand-text-primary mb-2" style={{ fontFamily: 'var(--font-display)' }}>Sign In to See Your Progress</h2>
+          <p className="text-brand-text-secondary mb-6">Your achievements, points, and rewards are waiting.</p>
+          <button onClick={signIn} className="px-6 py-2 rounded-full bg-brand-accent hover:bg-opacity-90 text-white font-semibold shadow-md">
+            Sign In
+          </button>
+        </Card>
+      </div>
+    );
     }
 
     return (
-        <div>
-            <h1 className="text-4xl font-bold text-brand-text-primary mb-2">Your Journey</h1>
-            <p className="text-lg text-brand-text-secondary mb-8">
-                Track your progress, build consistent habits, and unlock rewards for your dedication.
+        <div className="max-w-5xl mx-auto pb-20">
+          <motion.div
+            className="mb-8"
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: EASE }}
+          >
+            <p className="text-xs font-bold uppercase tracking-widest text-brand-accent mb-2">Account</p>
+            <h1 className="text-4xl font-black text-brand-text-primary mb-2" style={{ fontFamily: 'var(--font-display)' }}>
+              Your Journey
+            </h1>
+            <p className="text-brand-text-secondary">
+              Track your progress, build consistent habits, and unlock rewards for your faithfulness.
             </p>
+          </motion.div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                 <Card className="flex items-center p-6">
@@ -140,7 +163,7 @@ const GamificationPage: React.FC = () => {
                     </div>
                 </Card>
                  <Card className="flex items-center p-6">
-                    <SparklesIcon className="w-16 h-16 text-brand-gold mr-6"/>
+                    <SparklesIcon className="w-16 h-16 text-brand-accent mr-6"/>
                     <div>
                         <h2 className="text-4xl font-bold text-brand-text-primary">{stats.points.toLocaleString()}</h2>
                         <p className="text-brand-text-secondary">Total Points Balance</p>
@@ -157,26 +180,41 @@ const GamificationPage: React.FC = () => {
                 </div>
                 
                 <div className="p-4">
+                    <AnimatePresence mode="wait">
                     {activeTab === 'progress' && (
-                        <div className="space-y-4 animate-fade-in-up" style={{animationDuration: '0.3s'}}>
-                            <h2 className="text-2xl font-bold text-brand-text-primary mb-2">Your Achievements</h2>
+                        <motion.div
+                          key="progress"
+                          className="space-y-4"
+                          initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                          transition={{ duration: 0.25, ease: EASE }}
+                        >
+                            <h2 className="text-xl font-bold text-brand-text-primary mb-2">Your Achievements</h2>
                             {mockAchievements.map(ach => <AchievementItem key={ach.id} achievement={ach} isUnlocked={unlockedAchievements.includes(ach.id)} />)}
-                        </div>
+                        </motion.div>
                     )}
-                    
+
                     {activeTab === 'earn' && (
-                         <div className="space-y-4 animate-fade-in-up" style={{animationDuration: '0.3s'}}>
-                            <h2 className="text-2xl font-bold text-brand-text-primary mb-2">Earn Points Through Engagement</h2>
+                        <motion.div
+                          key="earn"
+                          className="space-y-4"
+                          initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                          transition={{ duration: 0.25, ease: EASE }}
+                        >
+                            <h2 className="text-xl font-bold text-brand-text-primary mb-2">Earn Points Through Engagement</h2>
                             {mockEarningActions.map(action => <EarningActionItem key={action.id} action={action} />)}
-                        </div>
+                        </motion.div>
                     )}
 
                     {activeTab === 'rewards' && (
-                        <div className="animate-fade-in-up" style={{animationDuration: '0.3s'}}>
-                            <h2 className="text-2xl font-bold text-brand-text-primary mb-2">Redeem Your Points</h2>
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <motion.div
+                          key="rewards"
+                          initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                          transition={{ duration: 0.25, ease: EASE }}
+                        >
+                            <h2 className="text-xl font-bold text-brand-text-primary mb-2">Redeem Your Points</h2>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-4">
                                 {mockRewards.map(reward => (
-                                    <RewardItemCard 
+                                    <RewardItemCard
                                         key={reward.id}
                                         reward={reward}
                                         userPoints={stats.points}
@@ -185,8 +223,9 @@ const GamificationPage: React.FC = () => {
                                     />
                                 ))}
                             </div>
-                        </div>
+                        </motion.div>
                     )}
+                    </AnimatePresence>
                 </div>
             </Card>
         </div>

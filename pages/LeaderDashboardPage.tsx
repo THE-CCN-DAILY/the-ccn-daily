@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
+import { motion } from 'motion/react';
 import Card from '../components/Card';
+
+const EASE = [0.22, 1, 0.36, 1] as [number, number, number, number];
 import { useAuth } from '../contexts/AuthContext';
 import { useNotifications } from '../contexts/NotificationContext';
 import { PlusIcon, UserIcon, SparklesIcon, ChartBarIcon, ReaderIcon, CloseIcon } from '../components/icons';
@@ -19,7 +22,7 @@ const LeaderDashboardPage: React.FC = () => {
   const [inviteEmail, setInviteEmail] = useState('');
   const [isInviting, setIsInviting] = useState(false);
 
-  // Mock data for prototype
+  // Placeholder group members — replace with Firestore group data
   const [members, setMembers] = useState<GroupMember[]>([
     {
       id: '1',
@@ -84,16 +87,24 @@ const LeaderDashboardPage: React.FC = () => {
   };
 
   return (
-    <div className="max-w-6xl mx-auto pb-20 px-4">
-      <div className="mb-8 flex justify-between items-end">
+    <div className="max-w-6xl mx-auto pb-20">
+      <motion.div
+        className="mb-8 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4"
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: EASE }}
+      >
         <div>
-          <h1 className="text-3xl font-bold text-brand-text-primary mb-2">Leader Dashboard</h1>
-          <p className="text-brand-text-secondary">Manage your small group, assign content, and track engagement.</p>
+          <p className="text-xs font-bold uppercase tracking-widest text-brand-accent mb-2">Account</p>
+          <h1 className="text-4xl font-black text-brand-text-primary mb-2" style={{ fontFamily: 'var(--font-display)' }}>
+            Leader Dashboard
+          </h1>
+          <p className="text-brand-text-secondary">Manage your group, assign content, and track member engagement.</p>
         </div>
-        <button className="px-6 py-2 bg-brand-accent text-white font-bold rounded-lg hover:bg-opacity-90 transition-colors">
+        <button className="flex-shrink-0 px-6 py-2.5 bg-brand-accent text-white font-bold rounded-full hover:bg-opacity-90 transition-colors self-start sm:self-auto">
           Assign Content
         </button>
-      </div>
+      </motion.div>
 
       {/* Analytics Overview */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
