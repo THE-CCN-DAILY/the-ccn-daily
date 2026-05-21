@@ -344,7 +344,7 @@ const LandingPage: React.FC = () => {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.7, delay: 0.35, ease: EASE }}
-              className="relative border border-brand-border bg-brand-dark p-8 lg:self-start"
+              className="relative rounded-2xl border border-brand-border bg-brand-dark p-8 lg:self-start overflow-hidden"
             >
               {/* Subtle inner glow */}
               <div
@@ -360,11 +360,9 @@ const LandingPage: React.FC = () => {
               </p>
 
               {/* Verse preview */}
-              <blockquote className="relative mb-6 border-l-2 border-brand-accent pl-4">
-                <p className="font-display text-sm italic leading-relaxed text-brand-text-primary">
-                  "{dailyVerse.text}"
-                </p>
-                <footer className="mt-2 text-xs text-brand-accent">{dailyVerse.ref}</footer>
+              <blockquote className="scripture-quote relative mb-6 text-sm">
+                "{dailyVerse.text}"
+                <cite>{dailyVerse.ref}</cite>
               </blockquote>
 
               <h2 className="relative font-display text-2xl font-bold leading-snug text-brand-text-primary">
@@ -380,7 +378,7 @@ const LandingPage: React.FC = () => {
                     transition={{ delay: 0.55 + i * 0.08, duration: 0.4 }}
                     className="flex items-center gap-3.5 text-brand-text-secondary"
                   >
-                    <div className="flex h-7 w-7 items-center justify-center rounded-sm border border-brand-border bg-brand-secondary">
+                    <div className="flex h-7 w-7 items-center justify-center rounded-md border border-brand-border bg-brand-secondary">
                       <Icon className="h-3.5 w-3.5 text-brand-accent" />
                     </div>
                     <span className="text-sm">{label as string}</span>
@@ -450,10 +448,10 @@ const LandingPage: React.FC = () => {
                 variants={fadeUp}
                 className="group bg-brand-secondary p-8 transition-colors hover:bg-brand-dark"
               >
-                <div className="mb-5 flex h-9 w-9 items-center justify-center rounded-sm border border-brand-border bg-brand-dark transition-colors group-hover:border-brand-accent/40 group-hover:bg-brand-accent/10">
-                  <Icon className="h-4.5 w-4.5 text-brand-accent" />
+                <div className="mb-5 flex h-10 w-10 items-center justify-center rounded-lg border border-brand-border bg-brand-dark transition-colors group-hover:border-brand-accent/40 group-hover:bg-brand-accent/10">
+                  <Icon className="h-5 w-5 text-brand-accent" />
                 </div>
-                <h3 className="text-base font-semibold">{label}</h3>
+                <h3 className="font-display text-base font-bold">{label}</h3>
                 <p className="mt-3 text-sm leading-7 text-brand-text-secondary">{text}</p>
               </motion.article>
             ))}

@@ -27,6 +27,12 @@
   --font-display: "Libre Baskerville", Georgia, "Times New Roman", serif;
   --font-ui: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --font-mono: "Source Code Pro", "Fira Code", Consolas, monospace;
+
+  /* Dynamic accent — used by Layout.tsx ambient radial glow */
+  --color-dynamic-accent: var(--cta-raw);
+
+  /* Card depth — inner top highlight simulating light from above */
+  --card-shine: inset 0 1px 0 0 rgba(255, 255, 255, 0.55), 0 1px 3px rgba(0, 0, 0, 0.06);
 }
 
 .dark {
@@ -38,6 +44,8 @@
   --text-tertiary-raw: 140 134 128;
   --border-raw: 52 48 44;
   --border-strong-raw: 90 84 78;
+
+  --card-shine: inset 0 1px 0 0 rgba(255, 255, 255, 0.05), 0 1px 4px rgba(0, 0, 0, 0.35);
 }
 
 .sepia {
@@ -49,6 +57,8 @@
   --text-tertiary-raw: 139 116 94;
   --border-raw: 214 199 176;
   --border-strong-raw: 139 116 94;
+
+  --card-shine: inset 0 1px 0 0 rgba(255, 255, 255, 0.45), 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
 /* ─── Tailwind v4 Theme Map ────────────────────────────────────────────────── */
@@ -68,6 +78,9 @@
   --color-brand-text-tertiary:  rgb(var(--text-tertiary-raw));
   --color-brand-border:       rgb(var(--border-raw));
   --color-brand-border-strong: rgb(var(--border-strong-raw));
+
+  /* brand-primary = elevated surface (drawers, floating panels) */
+  --color-brand-primary:      rgb(var(--surface-raised-raw));
 
   /* brand-accent = CTA orange (was: muted gray — fixed) */
   --color-brand-accent:       rgb(var(--cta-raw));
@@ -155,6 +168,68 @@
   .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
   .custom-scrollbar::-webkit-scrollbar-thumb { background: rgb(var(--border-raw)); border-radius: 2px; }
   .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgb(var(--border-strong-raw)); }
+
+  /* ── Scripture pull-quote — editorial treatment for Bible verses ────────── */
+  .scripture-quote {
+    border-left: 2px solid rgb(var(--cta-raw));
+    padding-left: 1rem;
+    font-family: var(--font-display);
+    font-style: italic;
+    color: rgb(var(--text-secondary-raw));
+    line-height: 1.85;
+  }
+  .scripture-quote cite {
+    display: block;
+    margin-top: 0.375rem;
+    font-style: normal;
+    font-family: var(--font-ui);
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgb(var(--cta-raw));
+  }
+
+  /* ── Glass panel — frosted surface for drawers, modals, overlays ────────── */
+  .glass-panel {
+    background: rgba(var(--surface-raw), 0.82);
+    backdrop-filter: blur(20px) saturate(1.3);
+    -webkit-backdrop-filter: blur(20px) saturate(1.3);
+  }
+
+  /* ── Ambient glow orb — decorative radial used in hero sections ─────────── */
+  .ambient-orb {
+    background: radial-gradient(
+      ellipse 70% 60% at 50% 0%,
+      rgba(var(--cta-raw), 0.2) 0%,
+      transparent 70%
+    );
+  }
+
+  /* ── Status badge ──────────────────────────────────────────────────────── */
+  .status-live {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.125rem 0.625rem;
+    border-radius: 9999px;
+    background: rgba(var(--cta-raw), 0.12);
+    border: 1px solid rgba(var(--cta-raw), 0.3);
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgb(var(--cta-raw));
+  }
+  .status-live::before {
+    content: '';
+    display: block;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: rgb(var(--cta-raw));
+    animation: glow-pulse 2s ease-in-out infinite;
+  }
 }
 
 /* ─── Accessibility: Reduced Motion ─────────────────────────────────────────── */

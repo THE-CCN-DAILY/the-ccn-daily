@@ -92,8 +92,8 @@ const StepContent: React.FC<{ stepIndex: number; onComplete: () => void; devotio
             case 0:
                 return (
                     <div className="text-center py-8">
-                        <h2 className="text-3xl font-bold text-brand-text-primary mb-4 text-dynamic-accent">Prepare Your Heart</h2>
-                        <p className="text-lg text-brand-text-secondary mb-6">Welcome to a space designed for peace. Today's journey is a 12-minute investment in your spiritual clarity.</p>
+                        <h2 className="text-3xl font-bold text-brand-text-primary mb-4">Prepare Your Heart</h2>
+                        <p className="text-lg text-brand-text-secondary mb-6">A space designed for peace. Twelve minutes before the day takes your attention.</p>
                     </div>
                 );
             case 1:
@@ -103,10 +103,12 @@ const StepContent: React.FC<{ stepIndex: number; onComplete: () => void; devotio
                             <PrayingHandsIcon className="w-8 h-8 text-brand-accent"/>
                             Opening Prayer
                         </h2>
-                        <div className="bg-brand-secondary/40 p-8 rounded-2xl border border-brand-border">
-                            <p className="text-xl text-brand-text-primary italic leading-relaxed">
-                                "Father, I acknowledge Your presence here with me. As I step away from the noise of the world, I ask that You would tune my heart to Your frequency. Speak through the stillness. Amen."
-                            </p>
+                        <div className="bg-brand-secondary/40 p-8 rounded-2xl border border-brand-border relative overflow-hidden">
+                            <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-brand-accent/30 to-transparent" aria-hidden />
+                            <blockquote className="scripture-quote text-lg">
+                                Father, I acknowledge Your presence here with me. As I step away from the noise of the world, I ask that You would tune my heart to Your frequency. Speak through the stillness.
+                                <cite>Amen</cite>
+                            </blockquote>
                         </div>
                     </div>
                 );
@@ -191,11 +193,12 @@ const StepContent: React.FC<{ stepIndex: number; onComplete: () => void; devotio
                 );
             case 5:
                 return (
-                     <div className="text-center py-10">
-                        <p className="text-xs font-bold text-brand-accent uppercase tracking-[0.2em] mb-4">Daily Declaration</p>
-                        <h2 className="text-3xl font-black text-brand-text-primary leading-tight px-4 border-l-4 border-brand-accent">
-                            "I am not a slave to fear. I am a child of God. His peace, which surpasses understanding, guards my mind and my heart today."
-                        </h2>
+                     <div className="py-10 max-w-2xl mx-auto">
+                        <p className="text-xs font-bold text-brand-accent uppercase tracking-[0.2em] mb-6 text-center">Daily Declaration</p>
+                        <blockquote className="scripture-quote text-lg">
+                            I am not a slave to fear. I am a child of God. His peace, which surpasses understanding, guards my mind and my heart today.
+                            <cite>Speak it aloud. Receive it.</cite>
+                        </blockquote>
                     </div>
                 );
             case 6:

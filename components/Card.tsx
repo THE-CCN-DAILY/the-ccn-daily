@@ -12,6 +12,8 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(({ children, className 
     // Default to global variables, but allow reader-specific variables to override
     backgroundColor: `rgb(var(--reader-bg, var(--surface-raw)))`,
     borderColor: `rgb(var(--reader-border, var(--color-brand-border)))`,
+    // Inner top highlight simulates ambient light from above — depth without heavy shadow
+    boxShadow: 'var(--card-shine)',
   };
 
   return (

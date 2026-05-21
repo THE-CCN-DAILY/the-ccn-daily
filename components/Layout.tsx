@@ -137,9 +137,10 @@ const Sidebar: React.FC<SidebarProps> = ({ className = '', onNavigate }) => {
 
   const activeItems = isStrategyMode ? filteredCommandCenterItems : filteredSanctuaryItems;
 
-  const baseLinkClasses = "flex min-w-0 items-center p-3 my-1 rounded-lg transition-all duration-200";
+  const baseLinkClasses = "flex min-w-0 items-center p-3 my-0.5 rounded-lg transition-all duration-200";
   const inactiveLinkClasses = "text-brand-text-secondary hover:bg-brand-secondary hover:text-brand-text-primary";
-  const activeLinkClasses = "bg-brand-accent text-white shadow-lg scale-[1.02]";
+  // Refined active state: accent-tinted fill + orange text + left accent line — inspired by Linear/Arc
+  const activeLinkClasses = "bg-brand-accent/[0.13] text-brand-accent font-semibold border-l-2 border-brand-accent pl-[10px]";
 
   return (
     <aside className={`w-64 bg-brand-dark flex-shrink-0 p-4 border-r border-brand-border flex flex-col ${className}`}>
@@ -310,7 +311,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             className="absolute inset-0 bg-black/60"
             onClick={() => setIsMobileNavOpen(false)}
           />
-          <div className="absolute inset-y-0 left-0 w-72 max-w-[82vw]">
+          <div className="absolute inset-y-0 left-0 w-72 max-w-[82vw] glass-panel">
             <Sidebar className="h-full w-full" onNavigate={() => setIsMobileNavOpen(false)} />
           </div>
           <button
