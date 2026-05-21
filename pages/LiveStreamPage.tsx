@@ -121,10 +121,7 @@ const LiveStreamPage: React.FC = () => {
           </p>
         </div>
         {isLive && (
-          <div className="flex items-center gap-2 px-4 py-2 bg-red-500/20 text-red-400 rounded-full font-bold animate-pulse">
-            <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-            LIVE NOW
-          </div>
+          <span className="status-live">On Air</span>
         )}
       </div>
       {streamError && (
