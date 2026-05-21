@@ -1,8 +1,43 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import Card from '../components/Card';
 import { useAuth } from '../contexts/AuthContext';
 import { ChatBubbleLeftRightIcon, PaperAirplaneIcon } from '../components/icons';
-import { CommunityMessage, listCommunityMessages, sendCommunityMessage } from '../services/communityService';
+import { type CommunityMessage, listCommunityMessages, sendCommunityMessage } from '../services/communityService';
+
+const EASE = [0.22, 1, 0.36, 1] as [number, number, number, number];
+
+// Deterministic avatar color from user name
+const AVATAR_COLORS = [
+  'bg-sky-500/20 text-sky-400',
+  'bg-emerald-500/20 text-emerald-400',
+  'bg-purple-500/20 text-purple-400',
+  'bg-amber-500/20 text-amber-400',
+  'bg-rose-500/20 text-rose-400',
+  'bg-teal-500/20 text-teal-400',
+];
+
+function avatarColor(name: string): string {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = (hash * 31 + name.charCodeAt(i)) & 0xffffff;
+  }
+  return AVATAR_COLORS[hash % AVATAR_COLORS.length];
+}
+
+function initials(name: string): string {
+  return name
+    .split(' ')
+    .slice(0, 2)
+    .map((w) => w[0]?.toUpperCase() ?? '')
+    .join('');
+}
+
+function formatTime(timestamp?: string): string {
+  if (!timestamp) return '';
+  const date = new Date(timestamp);
+  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
 
 const CommunityRoomsPage: React.FC = () => {
   const { user } = useAuth();
@@ -19,10 +54,9 @@ const CommunityRoomsPage: React.FC = () => {
       if (showSpinner) setLoading(true);
       setError('');
       try {
-        const fetchedMessages = await listCommunityMessages(50);
-        if (!cancelled) setMessages(fetchedMessages);
-      } catch (error) {
-        console.error('Failed to load community room messages:', error);
+        const fetched = await listCommunityMessages(50);
+        if (!cancelled) setMessages(fetched);
+      } catch {
         if (!cancelled) setError('Messages could not be refreshed. Please try again shortly.');
       } finally {
         if (!cancelled) setLoading(false);
@@ -55,94 +89,131 @@ const CommunityRoomsPage: React.FC = () => {
         userId: user.uid,
         text: messageText,
       });
-      if (sentMessage) setMessages(prev => [...prev, sentMessage]);
-    } catch (error) {
-      console.error('Failed to send community room message:', error);
-      setError(error instanceof Error ? error.message : 'Message could not be sent.');
+      if (sentMessage) setMessages((prev) => [...prev, sentMessage]);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Message could not be sent.');
       setNewMessage(messageText);
     }
   };
 
-  const formatTime = (timestamp?: string) => {
-    if (!timestamp) return '';
-    const date = new Date(timestamp);
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  };
-
   return (
-    <div className="max-w-5xl mx-auto pb-20 px-4 h-[calc(100vh-100px)] flex flex-col">
-      <div className="mb-6 flex-shrink-0">
-        <h1 className="text-4xl font-black text-brand-text-primary mb-2 flex items-center">
-          <ChatBubbleLeftRightIcon className="w-10 h-10 mr-4 text-brand-accent" />
+    <div className="max-w-5xl mx-auto pb-20 h-[calc(100vh-100px)] flex flex-col">
+      {/* Header */}
+      <motion.div
+        className="mb-6 flex-shrink-0"
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: EASE }}
+      >
+        <p className="text-xs font-bold uppercase tracking-widest text-brand-accent mb-2">
+          Community
+        </p>
+        <h1
+          className="text-4xl font-black text-brand-text-primary mb-2"
+          style={{ fontFamily: 'var(--font-display)' }}
+        >
           The Sanctuary Room
         </h1>
-        <p className="text-xl text-brand-text-secondary">
-          Connect, pray, and grow with the global community.
+        <p className="text-brand-text-secondary">
+          A live space to pray, encourage, and share with the global CCN family.
         </p>
-      </div>
+      </motion.div>
 
-      <Card className="flex-1 flex flex-col border-brand-border bg-brand-dark/50 overflow-hidden p-0">
-        {/* Messages Area */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-6">
-          {error && (
-            <Card className="border-status-warning/40 bg-status-warning/10">
-              <p className="text-sm text-brand-text-secondary">{error}</p>
-            </Card>
-          )}
+      <Card className="flex-1 flex flex-col overflow-hidden p-0">
+        {/* Messages area */}
+        <div className="flex-1 overflow-y-auto p-5 space-y-4">
+          {/* Error banner */}
+          <AnimatePresence>
+            {error && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="text-sm text-brand-text-secondary bg-status-warning/10 border border-status-warning/30 rounded-xl px-4 py-3"
+              >
+                {error}
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           {loading ? (
             <div className="flex justify-center py-10">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-accent"></div>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-accent" />
             </div>
           ) : messages.length > 0 ? (
-            messages.map((msg) => {
-              const isMe = msg.userId === user?.uid;
-              return (
-                <div key={msg.id} className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
-                  <div className="flex items-baseline space-x-2 mb-1">
-                    <span className="text-xs font-bold text-brand-text-secondary">
-                      {isMe ? 'You' : msg.user}
-                    </span>
-                    <span className="text-[10px] text-brand-text-secondary/50">
-                      {formatTime(msg.createdAt)}
-                    </span>
-                  </div>
-                  <div 
-                    className={`px-4 py-3 rounded-2xl max-w-[80%] ${
-                      isMe 
-                        ? 'bg-brand-accent text-white rounded-tr-sm' 
-                        : 'bg-brand-secondary text-brand-text-primary border border-brand-border rounded-tl-sm'
-                    }`}
+            <AnimatePresence initial={false}>
+              {messages.map((msg) => {
+                const isMe = msg.userId === user?.uid;
+                const displayName = isMe ? 'You' : msg.user;
+                const colorClass = isMe ? '' : avatarColor(msg.user);
+                const abbrev = initials(msg.user || 'A');
+
+                return (
+                  <motion.div
+                    key={msg.id}
+                    className={`flex gap-2.5 ${isMe ? 'flex-row-reverse' : 'flex-row'}`}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.25 }}
                   >
-                    <p className="whitespace-pre-wrap break-words">{msg.text}</p>
-                  </div>
-                </div>
-              );
-            })
+                    {/* Avatar — only for other users */}
+                    {!isMe && (
+                      <div
+                        className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 mt-5 ${colorClass}`}
+                      >
+                        {abbrev}
+                      </div>
+                    )}
+
+                    <div className={`flex flex-col ${isMe ? 'items-end' : 'items-start'} max-w-[78%]`}>
+                      <div className="flex items-baseline gap-1.5 mb-1">
+                        <span className="text-xs font-bold text-brand-text-secondary">
+                          {displayName}
+                        </span>
+                        <span className="text-[10px] text-brand-text-secondary/50">
+                          {formatTime(msg.createdAt)}
+                        </span>
+                      </div>
+                      <div
+                        className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${
+                          isMe
+                            ? 'bg-brand-accent text-white rounded-tr-sm'
+                            : 'bg-brand-secondary text-brand-text-primary border border-brand-border rounded-tl-sm'
+                        }`}
+                      >
+                        <p className="whitespace-pre-wrap break-words">{msg.text}</p>
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </AnimatePresence>
           ) : (
-            <div className="h-full flex flex-col items-center justify-center text-brand-text-secondary">
-              <ChatBubbleLeftRightIcon className="w-12 h-12 mb-4 opacity-50" />
-              <p>No messages yet. Be the first to say hello!</p>
+            <div className="h-full flex flex-col items-center justify-center text-brand-text-secondary py-12">
+              <ChatBubbleLeftRightIcon className="w-12 h-12 mb-4 opacity-40" />
+              <p className="text-sm">No messages yet — be the first to say hello!</p>
             </div>
           )}
+
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Input Area */}
-        <div className="p-4 bg-brand-dark border-t border-brand-border">
-          <form onSubmit={handleSendMessage} className="flex space-x-4">
+        {/* Input area */}
+        <div className="p-4 bg-brand-dark border-t border-brand-border flex-shrink-0">
+          <form onSubmit={handleSendMessage} className="flex gap-3">
             <input
               type="text"
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
-              placeholder="Share a thought, prayer, or encouragement..."
-              className="flex-1 bg-brand-secondary border border-brand-border rounded-full px-6 py-3 text-brand-text-primary focus:outline-none focus:border-brand-accent"
+              placeholder="Share a thought, prayer, or encouragement…"
+              className="flex-1 bg-brand-secondary border border-brand-border rounded-full px-5 py-2.5 text-sm text-brand-text-primary placeholder-brand-text-secondary focus:outline-none focus:ring-2 focus:ring-brand-accent"
             />
             <button
               type="submit"
               disabled={!newMessage.trim()}
-              className="w-12 h-12 rounded-full bg-brand-accent text-white flex items-center justify-center disabled:opacity-50 hover:bg-opacity-90 transition-colors flex-shrink-0"
+              className="w-11 h-11 rounded-full bg-brand-accent text-white flex items-center justify-center disabled:opacity-40 hover:bg-opacity-90 transition-opacity flex-shrink-0"
             >
-              <PaperAirplaneIcon className="w-5 h-5" />
+              <PaperAirplaneIcon className="w-4 h-4" />
             </button>
           </form>
         </div>
