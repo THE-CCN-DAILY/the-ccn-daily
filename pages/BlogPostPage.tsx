@@ -1,8 +1,10 @@
 import React from 'react';
 import { Link, useParams } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
-import { ArrowLeft, CalendarDays, Headphones, PenLine } from 'lucide-react';
+import { ArrowLeft, CalendarDays, PenLine } from 'lucide-react';
 import { getPublishedBlogPost, type BlogPost } from '../services/blogService';
+import { useAudioPlayer } from '../contexts/AudioPlayerContext';
+import { PlayIcon, PauseIcon } from '../components/icons';
 
 const formatDate = (value?: string) => {
   if (!value) return 'Unscheduled';
@@ -20,6 +22,7 @@ const BlogPostPage: React.FC = () => {
   const [post, setPost] = React.useState<BlogPost | null>(null);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState('');
+  const { playTrack, currentTrack, isPlaying, togglePlayPause } = useAudioPlayer();
 
   React.useEffect(() => {
     let active = true;
@@ -100,11 +103,38 @@ const BlogPostPage: React.FC = () => {
                 <span className="inline-flex items-center gap-2">
                   <CalendarDays className="h-4 w-4" /> {formatDate(post.publishedAt)}
                 </span>
-                {post.audioUrl && (
-                  <a href={post.audioUrl} className="inline-flex items-center gap-2 text-brand-accent hover:underline">
-                    <Headphones className="h-4 w-4" /> Listen
-                  </a>
-                )}
+                {post.audioUrl && (() => {
+                  const trackId = `blog-${post.id}`;
+                  const isThisTrack = currentTrack?.id === trackId;
+                  const isThisPlaying = isThisTrack && isPlaying;
+                  const handleAudio = () => {
+                    if (isThisTrack) {
+                      togglePlayPause();
+                    } else {
+                      playTrack({
+                        id: trackId,
+                        title: post.title,
+                        description: post.excerpt || '',
+                        author: post.authorName,
+                        coverArt: '',
+                        audioUrl: post.audioUrl!,
+                        duration: 0,
+                        releaseDate: post.publishedAt || '',
+                      });
+                    }
+                  };
+                  return (
+                    <button
+                      onClick={handleAudio}
+                      className="inline-flex items-center gap-2 text-brand-accent hover:underline font-semibold"
+                      aria-label={isThisPlaying ? 'Pause audio' : 'Listen to this essay'}
+                    >
+                      {isThisPlaying
+                        ? <><PauseIcon className="h-4 w-4" /> Pause</>
+                        : <><PlayIcon className="h-4 w-4" /> Listen</>}
+                    </button>
+                  );
+                })()}
               </div>
             </div>
 
