@@ -329,14 +329,18 @@ const ContentDisplay: React.FC<ContentDisplayProps> = ({ contentId, initialConte
                     />
                 )}
 
-                <ReaderEngine 
+                <ReaderEngine
                   articleRef={articleRef}
                   initialContent={initialContent}
                   highlights={highlights}
                   settings={settings}
                 />
-               
+
                 <ReaderFooter />
+
+                {/* Rendered inside the positioned Card so absolute inset-0 overlays it immediately */}
+                {isSettingsOpen && <ReaderSettingsModal settings={settings} onChange={handleSettingsChange} onClose={() => setIsSettingsOpen(false)} />}
+                {isContentsOpen && <ContentsModal onClose={() => setIsContentsOpen(false)} />}
             </Card>
         </div>
         <div className="lg:col-span-1 flex flex-col min-h-0">
@@ -349,9 +353,6 @@ const ContentDisplay: React.FC<ContentDisplayProps> = ({ contentId, initialConte
               />
           </Card>
         </div>
-      
-      {isSettingsOpen && <ReaderSettingsModal settings={settings} onChange={handleSettingsChange} onClose={() => setIsSettingsOpen(false)} />}
-      {isContentsOpen && <ContentsModal onClose={() => setIsContentsOpen(false)} />}
     </div>
   );
 };

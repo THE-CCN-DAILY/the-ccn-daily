@@ -463,15 +463,78 @@ const LandingPage: React.FC = () => {
         {/* ── Closing CTA ───────────────────────────────────────────────────── */}
         <Reveal>
           <section className="relative overflow-hidden border-t border-brand-border">
-            {/* Unsplash: mountain sunrise — hope / new beginning */}
-            <img
-              src="https://images.unsplash.com/photo-1501854140801-50d01698950b?auto=format&fit=crop&w=1920&q=80"
-              alt=""
+            {/* Custom abstract dawn illustration — "new mercies, every morning" motif.
+                Concentric arcs + radiant light rays suggest sunrise without using stock photography. */}
+            <svg
+              viewBox="0 0 1920 800"
+              xmlns="http://www.w3.org/2000/svg"
+              preserveAspectRatio="xMidYMid slice"
+              className="absolute inset-0 h-full w-full"
               aria-hidden
-              className="absolute inset-0 h-full w-full object-cover object-center"
-              loading="lazy"
-            />
-            <div className="absolute inset-0 bg-[#0F0D0B]/80" aria-hidden />
+            >
+              <defs>
+                <radialGradient id="rg-dawn" cx="50%" cy="100%" r="75%">
+                  <stop offset="0%" stopColor="#F27D26" stopOpacity="0.5" />
+                  <stop offset="45%" stopColor="#7B3200" stopOpacity="0.2" />
+                  <stop offset="100%" stopColor="#0C0A08" stopOpacity="0" />
+                </radialGradient>
+                <radialGradient id="rg-center" cx="50%" cy="55%" r="45%">
+                  <stop offset="0%" stopColor="#F27D26" stopOpacity="0.06" />
+                  <stop offset="100%" stopColor="#0C0A08" stopOpacity="0" />
+                </radialGradient>
+                <linearGradient id="lg-sky" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#0D0B09" />
+                  <stop offset="100%" stopColor="#1C0F08" />
+                </linearGradient>
+              </defs>
+              {/* Base sky */}
+              <rect width="1920" height="800" fill="url(#lg-sky)" />
+              {/* Dawn horizon glow */}
+              <rect width="1920" height="800" fill="url(#rg-dawn)" />
+              {/* Subtle centre atmosphere */}
+              <rect width="1920" height="800" fill="url(#rg-center)" />
+              {/* Concentric arcs — sunrise ripples */}
+              <g fill="none" stroke="#F27D26">
+                <circle cx="960" cy="960" r="380" strokeWidth="1.5" strokeOpacity="0.2" />
+                <circle cx="960" cy="960" r="560" strokeWidth="1" strokeOpacity="0.14" />
+                <circle cx="960" cy="960" r="750" strokeWidth="0.8" strokeOpacity="0.1" />
+                <circle cx="960" cy="960" r="950" strokeWidth="0.6" strokeOpacity="0.07" />
+                <circle cx="960" cy="960" r="1160" strokeWidth="0.4" strokeOpacity="0.05" />
+                <circle cx="960" cy="960" r="1400" strokeWidth="0.3" strokeOpacity="0.03" />
+              </g>
+              {/* Light rays radiating upward */}
+              <g stroke="#F8A060" strokeOpacity="0.055" strokeWidth="2">
+                <line x1="960" y1="960" x2="80"  y2="0" />
+                <line x1="960" y1="960" x2="340" y2="0" />
+                <line x1="960" y1="960" x2="560" y2="0" />
+                <line x1="960" y1="960" x2="760" y2="0" />
+                <line x1="960" y1="960" x2="960" y2="0" />
+                <line x1="960" y1="960" x2="1160" y2="0" />
+                <line x1="960" y1="960" x2="1380" y2="0" />
+                <line x1="960" y1="960" x2="1600" y2="0" />
+                <line x1="960" y1="960" x2="1840" y2="0" />
+              </g>
+              {/* Stars — scattered light particles */}
+              <g fill="#F8C090" fillOpacity="0.4">
+                <circle cx="185"  cy="135" r="1"   />
+                <circle cx="490"  cy="90"  r="1.5" />
+                <circle cx="730"  cy="165" r="1"   />
+                <circle cx="1020" cy="78"  r="1.5" />
+                <circle cx="1280" cy="125" r="1"   />
+                <circle cx="1590" cy="180" r="1.5" />
+                <circle cx="320"  cy="270" r="1"   />
+                <circle cx="655"  cy="305" r="1"   />
+                <circle cx="1160" cy="245" r="1.5" />
+                <circle cx="1455" cy="285" r="1"   />
+                <circle cx="840"  cy="215" r="1"   />
+                <circle cx="1720" cy="138" r="1"   />
+                <circle cx="420"  cy="400" r="1"   />
+                <circle cx="1500" cy="380" r="1"   />
+              </g>
+              {/* Warm horizon brightspot */}
+              <ellipse cx="960" cy="800" rx="500" ry="120" fill="#F27D26" fillOpacity="0.07" />
+            </svg>
+            <div className="absolute inset-0 bg-[#0F0D0B]/65" aria-hidden />
             <div
               className="pointer-events-none absolute inset-x-0 bottom-0 h-72 opacity-30"
               aria-hidden

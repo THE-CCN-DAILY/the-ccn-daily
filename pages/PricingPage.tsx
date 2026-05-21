@@ -566,11 +566,11 @@ const PricingPage: React.FC = () => {
         <Card className="border-brand-border bg-brand-dark/20 h-full">
           <h3 className="text-xl font-bold text-brand-text-primary mb-2">Add-ons (Simple & Non-conflicting)</h3>
           <ul className="space-y-2 text-sm text-brand-text-secondary">
-            <li>• Books (Own Forever): $4.99–$14.99</li>
-            <li>• Flagship Courses (Own Forever): $29–$99</li>
-            <li>• Premium Audiobooks (Own Forever): $9.99–$24.99</li>
-            <li>• Mentorship Session: $39–$99 (subscriber discount optional)</li>
-            <li>• Premium Event Ticket: dynamic, with 10–20% subscriber discount</li>
+            <li>• Books (Own Forever): single purchase, yours to keep</li>
+            <li>• Flagship Courses (Own Forever): single purchase with subscriber savings</li>
+            <li>• Premium Audiobooks (Own Forever): single purchase, no subscription required</li>
+            <li>• Mentorship Session: subscriber discount available at checkout</li>
+            <li>• Premium Event Ticket: dynamic pricing, with 10–20% subscriber discount</li>
           </ul>
         </Card>
         </motion.div>
