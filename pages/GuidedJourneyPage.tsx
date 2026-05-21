@@ -3,9 +3,10 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import Card from '../components/Card';
-import { CheckIcon, FlagIcon, PencilIcon, PrayingHandsIcon, ReaderIcon, SparklesIcon, CloseIcon, ChevronLeftIcon, SoundWaveIcon, PlayIcon, PauseIcon } from '../components/icons';
+import { CheckIcon, FlagIcon, PencilIcon, PrayingHandsIcon, ReaderIcon, SparklesIcon, CloseIcon, ChevronLeftIcon, SoundWaveIcon, PlayIcon, PauseIcon, MicrophoneIcon } from '../components/icons';
 import RichTextJournal from '../components/RichTextJournal';
 import PrayerTimer from '../components/PrayerTimer';
+import VoiceCompanionDrawer from '../components/VoiceCompanionDrawer';
 import { getScriptureSnippet } from '../services/bibleService';
 import { getTodayDevotional } from '../services/contentService';
 import { useAudioPlayer } from '../contexts/AudioPlayerContext';
@@ -80,7 +81,7 @@ const ScriptureSnippetModal: React.FC<{
     );
 };
 
-const StepContent: React.FC<{ stepIndex: number; onComplete: () => void; devotional: Devotional | null }> = ({ stepIndex, onComplete, devotional }) => {
+const StepContent: React.FC<{ stepIndex: number; onComplete: () => void; devotional: Devotional | null; onOpenVoice: (ctx: string) => void }> = ({ stepIndex, onComplete, devotional, onOpenVoice }) => {
     const [isPrayerComplete, setIsPrayerComplete] = useState(false);
     const [activeSnippet, setActiveSnippet] = useState<string | null>(null);
     const isPrayerStep = stepIndex === 4;
@@ -243,7 +244,7 @@ const StepContent: React.FC<{ stepIndex: number; onComplete: () => void; devotio
             />
             <div className="relative z-10 w-full max-w-xl">
                 {renderContent()}
-                <div className="mt-12 text-center">
+                <div className="mt-12 flex flex-col items-center gap-4">
                     <motion.button
                         onClick={onComplete}
                         disabled={isPrayerStep && !isPrayerComplete}
@@ -257,6 +258,13 @@ const StepContent: React.FC<{ stepIndex: number; onComplete: () => void; devotio
                             <ChevronLeftIcon className="w-5 h-5 rotate-180 group-hover:translate-x-1 transition-transform" />
                         </span>
                     </motion.button>
+                    <button
+                        onClick={() => onOpenVoice(journeySteps[stepIndex]?.name || 'Daily Journey')}
+                        className="flex items-center gap-2 text-xs font-bold text-brand-text-secondary hover:text-brand-accent transition-colors"
+                    >
+                        <MicrophoneIcon className="w-3.5 h-3.5" />
+                        Pray Aloud
+                    </button>
                 </div>
             </div>
         </Card>
@@ -269,6 +277,8 @@ const GuidedJourneyPage: React.FC = () => {
     const [currentStep, setCurrentStep] = useState(0);
     const [direction, setDirection] = useState(1); // 1 = forward, -1 = backward
     const [devotional, setDevotional] = useState<Devotional | null>(null);
+    const [voiceDrawerOpen, setVoiceDrawerOpen] = useState(false);
+    const [voiceStepContext, setVoiceStepContext] = useState('');
 
     useEffect(() => {
         const fetchTodayDevotional = async () => {
@@ -374,6 +384,10 @@ const GuidedJourneyPage: React.FC = () => {
                             stepIndex={currentStep}
                             onComplete={handleNextStep}
                             devotional={devotional}
+                            onOpenVoice={(ctx) => {
+                                setVoiceStepContext(ctx);
+                                setVoiceDrawerOpen(true);
+                            }}
                         />
                     </motion.div>
                 </AnimatePresence>

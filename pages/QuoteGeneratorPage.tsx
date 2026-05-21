@@ -80,7 +80,7 @@ const QuoteGeneratorPage: React.FC = () => {
         await navigator.share({ title: 'Daily Inspiration', text: quoteText, url: window.location.href });
         setShareStatus('shared');
         setTimeout(() => setShareStatus('idle'), 2000);
-      } catch (e) { console.error(e); }
+      } catch (e) { /* share cancelled or unsupported */ }
     } else {
       notify('Sharing not supported on this device. Download the image instead.', 'error');
     }

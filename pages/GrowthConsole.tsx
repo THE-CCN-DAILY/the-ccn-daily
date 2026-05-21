@@ -2,12 +2,12 @@ import React from 'react';
 import GrowthDashboard from '../components/admin/GrowthDashboard';
 
 const GrowthConsole: React.FC = () => {
-  // TODO: fetch real data
+  // Demo data — connect to analytics service when ready
   return (
     <div className="max-w-6xl mx-auto pb-20">
       <h1 className="text-4xl font-bold text-brand-text-primary mb-2">Growth Console</h1>
       <p className="text-brand-text-secondary mb-8">
-        Monetization, retention, and margin intelligence for Project Phoenix.
+        Monetization, retention, and margin intelligence for THE CCN DAILY.
       </p>
 
       <GrowthDashboard

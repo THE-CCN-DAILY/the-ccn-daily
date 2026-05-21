@@ -2,7 +2,7 @@ import React from 'react';
 import ReleaseHealthPanel from '../components/admin/ReleaseHealthPanel';
 
 const ReleaseOpsConsole: React.FC = () => {
-  // TODO: fetch from releaseController endpoints
+  // Demo data — connect to release pipeline service when ready
   const demo = [
     { featureKey: 'entitlement_v2', stage: 20, status: 'running' as const, reasons: [] },
     { featureKey: 'paywall_layout_v1', stage: 50, status: 'paused' as const, reasons: ['Churn spike 28% > 25%'] },

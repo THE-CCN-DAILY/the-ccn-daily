@@ -42,7 +42,6 @@ const JournalingPage: React.FC = () => {
       try {
         setEntries(await listJournalEntries(user.uid));
       } catch (error) {
-        console.error('Failed to load journal entries', error);
         setError('We could not load your journal entries. Please try again.');
       } finally {
         setLoading(false);
@@ -74,7 +73,6 @@ const JournalingPage: React.FC = () => {
         current.map((entry) => (entry.id === optimisticEntry.id ? savedEntry : entry))
       );
     } catch (error) {
-      console.error('Failed to save journal entry', error);
       setEntries((current) => current.filter((entry) => entry.id !== optimisticEntry.id));
       setError('We could not save that journal entry. Please try again.');
     } finally {
@@ -96,22 +94,18 @@ const JournalingPage: React.FC = () => {
   return (
     <div className="max-w-4xl mx-auto pb-20 px-4">
       <div className="flex justify-between items-end mb-8">
-        <div>
-          <motion.h1
-            className="text-4xl font-black text-brand-text-primary mb-2"
-            initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.55, ease: EASE }}
-          >
-            My Journal
-          </motion.h1>
-          <motion.p
-            className="text-xl text-brand-text-secondary"
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-            transition={{ duration: 0.45, delay: 0.15 }}
-          >
-            Reflect on your spiritual journey and record what God is teaching you.
-          </motion.p>
-        </div>
+        <motion.div
+          className="mb-8"
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+        >
+          <p className="text-xs font-bold uppercase tracking-widest text-brand-accent mb-2">PRAY</p>
+          <h1 className="text-4xl font-black text-brand-text-primary mb-2" style={{ fontFamily: 'var(--font-display)' }}>
+            Journaling
+          </h1>
+          <p className="text-brand-text-secondary">Write what God is speaking to you. Your private sanctuary of reflection.</p>
+        </motion.div>
         <AnimatePresence>
           {!isWriting && (
             <motion.button

@@ -52,7 +52,6 @@ const DiagnosticsPage: React.FC = () => {
                 timestamp: new Date().toISOString()
             });
         } catch (err: any) {
-            console.error('[AI Diagnostic Test Error]:', err);
             setAiTestResult({
                 status: 'failed',
                 error: err.message,

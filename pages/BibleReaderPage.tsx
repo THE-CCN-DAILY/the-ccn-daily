@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import { BookOpenCheck } from 'lucide-react';
 import Card from '../components/Card';
 import ContentDisplay from '../components/reader/ContentDisplay';
+import BibleStudyGuide from '../components/BibleStudyGuide';
 import { getBibleBooks, getChapterText, searchBible, type TranslationCode } from '../services/bibleService';
 import type { BibleBook, BibleSearchResult } from '../types';
 import { ChevronDownIcon, SpinnerIcon, SearchIcon, SparklesIcon, CloseIcon } from '../components/icons';
@@ -18,10 +20,16 @@ const BibleReaderPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
+  const [studyGuideOpen, setStudyGuideOpen] = useState(false);
+
   const [searchQuery, setSearchQuery] = useState('');
   const [searchScope, setSearchScope] = useState<'all' | 'OT' | 'NT' | string>('all');
   const [searchResults, setSearchResults] = useState<BibleSearchResult[] | null>(null);
   const [isSearching, setIsSearching] = useState(false);
+
+  const currentPassageString = selectedBook
+    ? `${selectedBook.name} ${selectedChapter}`
+    : '';
 
   const currentChapterKey = selectedBook ? `${translation}-${selectedBook.name}-${selectedChapter}` : '';
 
@@ -92,7 +100,7 @@ const BibleReaderPage: React.FC = () => {
         >
           Scripture
         </motion.p>
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-3">
           <motion.h1
             className="text-3xl md:text-4xl font-black text-brand-text-primary"
             style={{ fontFamily: 'var(--font-display)' }}
@@ -101,15 +109,29 @@ const BibleReaderPage: React.FC = () => {
           >
             Bible Reader
           </motion.h1>
-          {/* Mobile sidebar toggle */}
-          <button
-            onClick={() => setSidebarOpen(o => !o)}
-            className="lg:hidden flex items-center gap-2 px-3 py-1.5 rounded-lg bg-brand-secondary text-sm font-semibold text-brand-text-secondary hover:text-brand-text-primary transition-colors"
-            aria-expanded={sidebarOpen}
-          >
-            <SearchIcon className="w-4 h-4" />
-            {sidebarOpen ? 'Hide nav' : 'Navigate'}
-          </button>
+          <div className="flex items-center gap-2">
+            {/* Study with a Guide toggle */}
+            <button
+              onClick={() => setStudyGuideOpen(o => !o)}
+              className={`flex items-center gap-2 text-sm font-bold px-4 py-2 rounded-full transition-colors ${
+                studyGuideOpen
+                  ? 'bg-brand-accent text-white'
+                  : 'bg-brand-secondary border border-brand-border text-brand-text-secondary hover:text-brand-accent'
+              }`}
+            >
+              <BookOpenCheck className="w-4 h-4" />
+              <span className="hidden sm:inline">{studyGuideOpen ? 'Close Guide' : 'Study with a Guide'}</span>
+            </button>
+            {/* Mobile sidebar toggle */}
+            <button
+              onClick={() => setSidebarOpen(o => !o)}
+              className="lg:hidden flex items-center gap-2 px-3 py-1.5 rounded-lg bg-brand-secondary text-sm font-semibold text-brand-text-secondary hover:text-brand-text-primary transition-colors"
+              aria-expanded={sidebarOpen}
+            >
+              <SearchIcon className="w-4 h-4" />
+              {sidebarOpen ? 'Hide nav' : 'Navigate'}
+            </button>
+          </div>
         </div>
         {selectedBook && (
           <motion.p
@@ -232,100 +254,124 @@ const BibleReaderPage: React.FC = () => {
           )}
         </AnimatePresence>
 
-        {/* Main content */}
-        <motion.div
-          className={sidebarOpen ? 'lg:col-span-3 min-h-[50rem]' : 'lg:col-span-4 min-h-[50rem]'}
-          variants={fadeUp} initial="hidden" animate="visible"
-          transition={{ duration: 0.4, ease: EASE, delay: 0.1 }}
+        {/* Main content + Study Guide */}
+        <div
+          className={`${sidebarOpen ? 'lg:col-span-3' : 'lg:col-span-4'} flex flex-col lg:flex-row gap-4 min-h-[50rem]`}
         >
-          <AnimatePresence mode="wait">
-            {isSearching && (
-              <motion.div
-                key="search-loading"
-                className="h-full flex flex-col items-center justify-center text-center"
-                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              >
-                <Card className="w-full flex flex-col items-center justify-center py-16">
-                  <SpinnerIcon className="w-10 h-10 text-brand-accent mb-4 animate-spin" />
-                  <p className="text-brand-text-secondary">Searching Scripture…</p>
-                </Card>
-              </motion.div>
-            )}
-
-            {!isSearching && searchResults && (
-              <motion.div
-                key="search-results"
-                initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-                transition={{ duration: 0.4, ease: EASE }}
-              >
-                <Card className="overflow-y-auto max-h-[80vh]">
-                  <div className="flex justify-between items-center mb-5">
-                    <h2 className="text-lg font-bold text-brand-text-primary flex items-center gap-2">
-                      <SparklesIcon className="w-5 h-5 text-brand-accent" />
-                      {searchResults.length} result{searchResults.length !== 1 ? 's' : ''} for &ldquo;{searchQuery}&rdquo;
-                    </h2>
-                    <button
-                      onClick={() => { setSearchResults(null); setSearchQuery(''); }}
-                      className="flex items-center gap-1.5 text-xs font-semibold text-brand-text-secondary hover:text-brand-text-primary transition-colors"
-                    >
-                      <CloseIcon className="w-3.5 h-3.5" /> Clear
-                    </button>
-                  </div>
-                  {searchResults.length === 0 ? (
-                    <p className="text-center py-10 text-brand-text-secondary">
-                      No results found. Try a different word or phrase.
-                    </p>
-                  ) : (
-                    <div className="space-y-3">
-                      {searchResults.map((result, index) => (
-                        <div
-                          key={index}
-                          onClick={() => handleResultClick(result)}
-                          className="cursor-pointer rounded-xl border border-brand-border p-4 hover:border-brand-accent hover:bg-brand-accent/5 transition-all"
-                        >
-                          <h4 className="font-bold text-brand-text-primary text-sm mb-1">
-                            {result.book} {result.chapter}
-                          </h4>
-                          <p
-                            className="text-sm italic text-brand-text-secondary leading-6"
-                            dangerouslySetInnerHTML={{ __html: result.contextSnippet }}
-                          />
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </Card>
-              </motion.div>
-            )}
-
-            {!isSearching && !searchResults && (
-              isLoading ? (
+          {/* Bible text column */}
+          <motion.div
+            className={studyGuideOpen ? 'lg:w-3/5 w-full' : 'w-full'}
+            variants={fadeUp} initial="hidden" animate="visible"
+            transition={{ duration: 0.4, ease: EASE, delay: 0.1 }}
+          >
+            <AnimatePresence mode="wait">
+              {isSearching && (
                 <motion.div
-                  key="chapter-loading"
-                  className="h-full"
+                  key="search-loading"
+                  className="h-full flex flex-col items-center justify-center text-center"
                   initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                 >
-                  <Card className="flex flex-col items-center justify-center py-24">
+                  <Card className="w-full flex flex-col items-center justify-center py-16">
                     <SpinnerIcon className="w-10 h-10 text-brand-accent mb-4 animate-spin" />
-                    <p className="text-brand-text-secondary">Loading Scripture…</p>
+                    <p className="text-brand-text-secondary">Searching Scripture…</p>
                   </Card>
                 </motion.div>
-              ) : (
+              )}
+
+              {!isSearching && searchResults && (
                 <motion.div
-                  key={currentChapterKey}
-                  initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+                  key="search-results"
+                  initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
                   transition={{ duration: 0.4, ease: EASE }}
                 >
-                  <ContentDisplay
-                    contentId={currentChapterKey}
-                    initialContent={chapterContent}
-                    title={`${selectedBook?.name} ${selectedChapter} (${translation.toUpperCase()})`}
-                  />
+                  <Card className="overflow-y-auto max-h-[80vh]">
+                    <div className="flex justify-between items-center mb-5">
+                      <h2 className="text-lg font-bold text-brand-text-primary flex items-center gap-2">
+                        <SparklesIcon className="w-5 h-5 text-brand-accent" />
+                        {searchResults.length} result{searchResults.length !== 1 ? 's' : ''} for &ldquo;{searchQuery}&rdquo;
+                      </h2>
+                      <button
+                        onClick={() => { setSearchResults(null); setSearchQuery(''); }}
+                        className="flex items-center gap-1.5 text-xs font-semibold text-brand-text-secondary hover:text-brand-text-primary transition-colors"
+                      >
+                        <CloseIcon className="w-3.5 h-3.5" /> Clear
+                      </button>
+                    </div>
+                    {searchResults.length === 0 ? (
+                      <p className="text-center py-10 text-brand-text-secondary">
+                        No results found. Try a different word or phrase.
+                      </p>
+                    ) : (
+                      <div className="space-y-3">
+                        {searchResults.map((result, index) => (
+                          <div
+                            key={index}
+                            onClick={() => handleResultClick(result)}
+                            className="cursor-pointer rounded-xl border border-brand-border p-4 hover:border-brand-accent hover:bg-brand-accent/5 transition-all"
+                          >
+                            <h4 className="font-bold text-brand-text-primary text-sm mb-1">
+                              {result.book} {result.chapter}
+                            </h4>
+                            <p
+                              className="text-sm italic text-brand-text-secondary leading-6"
+                              dangerouslySetInnerHTML={{ __html: result.contextSnippet }}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </Card>
                 </motion.div>
-              )
+              )}
+
+              {!isSearching && !searchResults && (
+                isLoading ? (
+                  <motion.div
+                    key="chapter-loading"
+                    className="h-full"
+                    initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                  >
+                    <Card className="flex flex-col items-center justify-center py-24">
+                      <SpinnerIcon className="w-10 h-10 text-brand-accent mb-4 animate-spin" />
+                      <p className="text-brand-text-secondary">Loading Scripture…</p>
+                    </Card>
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key={currentChapterKey}
+                    initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4, ease: EASE }}
+                  >
+                    <ContentDisplay
+                      contentId={currentChapterKey}
+                      initialContent={chapterContent}
+                      title={`${selectedBook?.name} ${selectedChapter} (${translation.toUpperCase()})`}
+                    />
+                  </motion.div>
+                )
+              )}
+            </AnimatePresence>
+          </motion.div>
+
+          {/* Study Guide panel */}
+          <AnimatePresence>
+            {studyGuideOpen && (
+              <motion.div
+                className="lg:w-2/5 w-full"
+                initial={{ opacity: 0, x: 40 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 40 }}
+                transition={{ type: 'spring', stiffness: 320, damping: 38 }}
+              >
+                <BibleStudyGuide
+                  currentPassage={currentPassageString}
+                  isOpen={studyGuideOpen}
+                  onClose={() => setStudyGuideOpen(false)}
+                />
+              </motion.div>
             )}
           </AnimatePresence>
-        </motion.div>
+        </div>
       </div>
     </div>
   );

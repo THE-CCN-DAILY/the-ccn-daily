@@ -402,7 +402,7 @@ const AdminDashboard: React.FC = () => {
                                     <h2 style="color: #F27D26;">${broadcastTitle || 'Community Update'}</h2>
                                     <p style="color: #333; line-height: 1.6; font-size: 16px;">${broadcastMsg.replace(/\n/g, '<br>')}</p>
                                     <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;" />
-                                    <p style="color: #999; font-size: 12px; text-align: center;">Sent via Project Phoenix Broadcast Engine</p>
+                                    <p style="color: #999; font-size: 12px; text-align: center;">Sent via THE CCN DAILY Broadcast</p>
                                 </div>
                             `
                         })
@@ -522,7 +522,7 @@ const AdminDashboard: React.FC = () => {
         <div className="max-w-6xl mx-auto pb-20">
             <h1 className="text-4xl font-bold text-brand-text-primary mb-2">Nexus Admin Hub</h1>
             <p className="text-lg text-brand-text-secondary mb-8">
-                Global Command Center for Project Phoenix.
+                Global Command Center for THE CCN DAILY.
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">

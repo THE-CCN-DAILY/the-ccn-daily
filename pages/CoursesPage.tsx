@@ -20,7 +20,6 @@ const CoursesPage: React.FC = () => {
         const fetchedCourses = await listCourses();
         setCourses(fetchedCourses);
       } catch (error) {
-        console.error('Failed to fetch courses', error);
       } finally {
         setLoading(false);
       }
@@ -31,22 +30,18 @@ const CoursesPage: React.FC = () => {
 
   return (
     <div className="max-w-6xl mx-auto pb-20 px-4">
-      <div className="mb-8">
-        <motion.h1
-          className="text-4xl font-black text-brand-text-primary mb-4"
-          initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.55, ease: EASE }}
-        >
+      <motion.div
+        className="mb-8"
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+      >
+        <p className="text-xs font-bold uppercase tracking-widest text-brand-accent mb-2">LEARN</p>
+        <h1 className="text-4xl font-black text-brand-text-primary mb-2" style={{ fontFamily: 'var(--font-display)' }}>
           Courses
-        </motion.h1>
-        <motion.p
-          className="text-xl text-brand-text-secondary"
-          initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-          transition={{ duration: 0.45, delay: 0.15 }}
-        >
-          Dive deep into structured formation paths designed to transform your spiritual life.
-        </motion.p>
-      </div>
+        </h1>
+        <p className="text-brand-text-secondary">Deepen your faith with structured teaching from trusted voices.</p>
+      </motion.div>
 
       {loading ? (
         <div className="flex justify-center py-20">

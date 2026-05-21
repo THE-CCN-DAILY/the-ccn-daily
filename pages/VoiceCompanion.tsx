@@ -122,7 +122,7 @@ const VoiceCompanion: React.FC = () => {
                   transition={{ type: 'spring', stiffness: 400, damping: 20 }}
                 >
                   {canUseLiveVoice ? (
-                    <><MicrophoneIcon className="w-5 h-5" /> Begin Journey</>
+                    <><MicrophoneIcon className="w-5 h-5" /> Begin Session</>
                   ) : (
                     <><LockIcon className="w-5 h-5" /> Unlock Kai</>
                   )}

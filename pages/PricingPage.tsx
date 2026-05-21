@@ -118,7 +118,7 @@ const PricingPage: React.FC = () => {
         setFlutterwaveKey(docSnap.data().flutterwavePublicKey);
       }
     } catch (error) {
-      console.error('Error fetching payment settings:', error);
+      // silently handled
     }
   };
 
@@ -152,7 +152,7 @@ const PricingPage: React.FC = () => {
 
       setActiveDiscount(bestDiscount);
     } catch (error) {
-      console.error('Error fetching discounts:', error);
+      // silently handled
     }
   };
 

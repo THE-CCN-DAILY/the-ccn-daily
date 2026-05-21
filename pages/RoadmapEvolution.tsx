@@ -42,7 +42,7 @@ const RoadmapEvolution: React.FC = () => {
         <div>
           <h1 className="text-4xl font-bold text-brand-text-primary mb-2 text-dynamic-accent">Roadmap Evolution</h1>
           <p className="text-lg text-brand-text-secondary">
-            The Sentinel is monitoring the AI landscape to keep Project Phoenix at the cutting edge.
+            The Sentinel monitors the AI horizon to keep THE CCN DAILY ahead of what matters.
           </p>
         </div>
         <button 
