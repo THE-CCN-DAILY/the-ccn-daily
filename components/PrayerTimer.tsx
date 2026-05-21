@@ -34,7 +34,7 @@ const PrayerTimer: React.FC<PrayerTimerProps> = ({ duration, onComplete }) => {
         setSecondsLeft(duration);
         setIsActive(true);
         if (isMusicOn && audioRef.current) {
-            audioRef.current.play().catch(e => console.log("Music play failed", e));
+            audioRef.current.play().catch(() => { /* audio play blocked by browser */ });
         }
     };
 

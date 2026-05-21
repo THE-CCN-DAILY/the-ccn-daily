@@ -16,7 +16,6 @@ export interface GiftEmailPayload {
 }
 
 export const sendGiftEmail = async (payload: GiftEmailPayload): Promise<{ success: boolean; messageId?: string }> => {
-  console.log("Sending gift email via SendGrid:", payload);
   
   if (!SENDGRID_API_KEY) {
     console.warn("SENDGRID_API_KEY is not set. Simulating email send.");
@@ -44,7 +43,6 @@ export const sendGiftEmail = async (payload: GiftEmailPayload): Promise<{ succes
 
   try {
     const response = await sgMail.send(msg);
-    console.log(`Email successfully sent to ${payload.recipientEmail}`, response);
     return { success: true, messageId: response[0].headers['x-message-id'] };
   } catch (error) {
     console.error("Error sending email via SendGrid:", error);
