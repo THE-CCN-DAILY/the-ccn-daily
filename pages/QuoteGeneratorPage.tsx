@@ -266,7 +266,7 @@ const QuoteGeneratorPage: React.FC = () => {
                 >
                   {canGenerateQuoteImages
                     ? <><SparklesIcon className="h-5 w-5" /> Generate Image</>
-                    : <><LockIcon className="h-5 w-5" /> Unlock Image Generation</>}
+                    : <><LockIcon className="h-5 w-5" /> Access Image Generation</>}
                 </button>
                 {error && (
                   <div className="rounded-sm border border-brand-accent/20 bg-brand-accent/10 p-3 text-xs text-brand-accent">

@@ -124,7 +124,7 @@ const VoiceCompanion: React.FC = () => {
                   {canUseLiveVoice ? (
                     <><MicrophoneIcon className="w-5 h-5" /> Begin Session</>
                   ) : (
-                    <><LockIcon className="w-5 h-5" /> Unlock Kai</>
+                    <><LockIcon className="w-5 h-5" /> Upgrade to Pray Aloud</>
                   )}
                 </motion.button>
               ) : (

@@ -92,22 +92,24 @@ const DevotionalGeneratorPage: React.FC = () => {
     const bodyHtml = data.body.split('\n\n').map(p => `<p>${p.trim()}</p>`).join('');
 
     return `
-      <p class="text-center text-sm text-brand-text-secondary mb-4">${formattedDate}</p>
-      <blockquote class="text-center italic text-brand-text-secondary border-y-2 border-brand-border py-4 my-6">
-        <p>"${data.openingVerse.split('" - ')[0]}"</p>
-        <cite class="not-italic mt-2 block text-sm">- ${data.openingVerse.split('" - ')[1]}</cite>
+      <p class="text-center text-xs font-bold uppercase tracking-widest text-brand-accent mb-6">${formattedDate}</p>
+      <blockquote class="scripture-quote my-8 text-lg">
+        "${data.openingVerse.split('" - ')[0]}"
+        <cite>${data.openingVerse.split('" - ')[1] || ''}</cite>
       </blockquote>
       ${bodyHtml}
-      <div class="mt-8 pt-6 border-t border-brand-border">
-        <h4 class="text-lg font-bold text-brand-text-primary mb-2">Prayer</h4>
-        <p class="italic text-brand-text-secondary">${data.prayer}</p>
+      <div class="mt-10 pt-6 border-t border-brand-border">
+        <p class="text-xs font-bold uppercase tracking-widest text-brand-accent mb-4">Prayer</p>
+        <blockquote class="scripture-quote text-base">
+          ${data.prayer}
+        </blockquote>
       </div>
-      <div class="mt-6 p-4 bg-brand-accent/10 rounded-lg">
-        <h4 class="text-lg font-bold text-brand-text-primary mb-2">Declaration</h4>
-        <p class="font-semibold text-brand-accent">${data.declaration}</p>
+      <div class="mt-8 p-6 rounded-2xl" style="background:rgba(var(--cta-raw),0.08);border:1px solid rgba(var(--cta-raw),0.18)">
+        <p class="text-xs font-bold uppercase tracking-widest text-brand-accent mb-3">Declaration</p>
+        <p class="font-bold text-brand-text-primary text-lg leading-relaxed">${data.declaration}</p>
       </div>
-       <div class="mt-8 pt-6 border-t border-brand-border">
-        <h4 class="text-lg font-bold text-brand-text-primary mb-2">For Further Study</h4>
+      <div class="mt-10 pt-6 border-t border-brand-border">
+        <p class="text-xs font-bold uppercase tracking-widest text-brand-accent mb-4">For Further Study</p>
         <ul class="list-none !pl-0 space-y-2">
             ${data.furtherStudy.map(s => `<li class="flex items-center"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 mr-3 text-brand-text-secondary flex-shrink-0"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"></path></svg><span class="text-brand-text-secondary">${s}</span></li>`).join('')}
         </ul>
@@ -154,7 +156,7 @@ const DevotionalGeneratorPage: React.FC = () => {
               disabled={isLoading || !!dailyDevotional} 
               className="w-full mt-6 px-4 py-2 rounded-lg bg-brand-accent text-white font-semibold flex items-center justify-center disabled:bg-opacity-50 disabled:cursor-not-allowed"
             >
-                {isLoading ? <SpinnerIcon className="w-5 h-5" /> : dailyDevotional ? 'Generated for Today' : canGenerate ? <><SparklesIcon className="w-5 h-5 mr-2"/> Generate Devotional</> : <><LockIcon className="w-5 h-5 mr-2"/> Unlock Devotionals</>}
+                {isLoading ? <SpinnerIcon className="w-5 h-5" /> : dailyDevotional ? 'Generated for Today' : canGenerate ? <><SparklesIcon className="w-5 h-5 mr-2"/> Generate Devotional</> : <><LockIcon className="w-5 h-5 mr-2"/> Access Devotionals</>}
             </button>
             {dailyDevotional && (
                  <button
