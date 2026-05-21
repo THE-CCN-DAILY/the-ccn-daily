@@ -126,7 +126,7 @@ const DevotionalGeneratorPage: React.FC = () => {
           Your Devotional
         </h1>
         <p className="text-lg text-brand-text-secondary">
-          A reflection written for you, from Scripture, shaped around your spiritual journey today.
+          A reflection written for you, from Scripture — shaped around where you are with God today.
         </p>
       </div>
 

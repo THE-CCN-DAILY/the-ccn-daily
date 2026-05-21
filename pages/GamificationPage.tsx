@@ -122,7 +122,7 @@ const GamificationPage: React.FC = () => {
             Your Journey
           </h1>
           <p className="text-brand-text-secondary">
-            Track your progress, build consistent habits, and unlock rewards for your faithfulness.
+            Track your progress, build consistent habits, and earn rewards for your faithfulness.
           </p>
         </motion.div>
         <Card className="text-center py-16">
@@ -149,7 +149,7 @@ const GamificationPage: React.FC = () => {
               Your Journey
             </h1>
             <p className="text-brand-text-secondary">
-              Track your progress, build consistent habits, and unlock rewards for your faithfulness.
+              Track your progress, build consistent habits, and earn rewards for your faithfulness.
             </p>
           </motion.div>
 

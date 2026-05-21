@@ -332,7 +332,7 @@ const PricingPage: React.FC = () => {
           initial={{ opacity: 0 }} animate={{ opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.2 }}
         >
-          Scripture depth, structured practice, and community accountability for every season of your journey.
+          Scripture depth, structured practice, and community accountability — wherever you are in your walk with God.
         </motion.p>
 
         {/* Billing toggle */}

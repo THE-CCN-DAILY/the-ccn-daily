@@ -54,10 +54,10 @@ const UpgradeModal: React.FC<UpgradeModalProps> = ({ isOpen, onClose, featureNam
                             <div>
                                 <h2 className="text-2xl font-bold text-brand-text-primary flex items-center gap-2">
                                     <LockIcon className="w-6 h-6 text-brand-accent" />
-                                    Unlock {featureName || 'Premium Features'}
+                                    Access {featureName || 'Premium Features'}
                                 </h2>
                                 <p className="text-sm text-brand-text-secondary mt-1">
-                                    Choose the plan that best supports your spiritual journey.
+                                    Choose the plan that fits where you are right now.
                                 </p>
                             </div>
                             <button 

@@ -296,7 +296,7 @@ const ExpertCouncilPage: React.FC = () => {
                     <div className="flex justify-start">
                       <div className="bg-brand-secondary px-4 py-3 rounded-2xl rounded-tl-none max-w-[82%]">
                         <p className="text-sm text-brand-text-primary leading-relaxed">
-                          Hello! I am {selectedExpert.name}. How can I assist your journey today?
+                          Hello! I am {selectedExpert.name}. How can I help you today?
                         </p>
                       </div>
                     </div>

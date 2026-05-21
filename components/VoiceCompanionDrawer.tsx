@@ -168,7 +168,7 @@ const VoiceCompanionDrawer: React.FC<VoiceCompanionDrawerProps> = ({ isOpen, onC
                       transition={{ type: 'spring', stiffness: 400, damping: 20 }}
                     >
                       <MicrophoneIcon className="w-4 h-4" />
-                      {canUseLiveVoice ? 'Begin Prayer' : 'Unlock Kai'}
+                      {canUseLiveVoice ? 'Begin Prayer' : 'Upgrade to Pray Aloud'}
                     </motion.button>
                   ) : (
                     <motion.button

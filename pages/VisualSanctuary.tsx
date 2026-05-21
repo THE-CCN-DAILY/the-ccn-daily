@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { motion } from 'motion/react';
 import Card from '../components/Card';
 import { SparklesIcon, SpinnerIcon, PaintBrushIcon, DownloadIcon, ChevronLeftIcon } from '../components/icons';
 import { generateSanctuaryVideo } from '../services/geminiService';
@@ -31,19 +32,24 @@ const VisualSanctuary: React.FC = () => {
 
     return (
         <div className="max-w-5xl mx-auto h-[calc(100vh-8rem)] flex flex-col">
-            <div className="mb-8">
-                <h1 className="text-4xl font-black text-brand-text-primary flex items-center gap-4">
-                    <PaintBrushIcon className="w-10 h-10 text-brand-accent"/>
+            <motion.div
+                className="mb-8"
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+            >
+                <p className="text-xs font-bold uppercase tracking-widest text-brand-accent mb-2">SANCTUARY</p>
+                <h1 className="text-4xl font-black text-brand-text-primary mb-2" style={{ fontFamily: 'var(--font-display)' }}>
                     Cinematic Sanctuary
                 </h1>
-                <p className="text-brand-text-secondary">A guided visual prayer space for quiet reflection, ambience, and premium cinematic meditation.</p>
-            </div>
+                <p className="text-brand-text-secondary">A visual prayer space for quiet reflection, sacred ambience, and cinematic meditation.</p>
+            </motion.div>
 
             <div className="flex-1 grid grid-cols-1 lg:grid-cols-4 gap-6 min-h-0">
                 <div className="lg:col-span-1 space-y-6">
                     <Card className="h-full">
                         <h2 className="text-lg font-bold text-brand-text-primary mb-4">Design Space</h2>
-                        <p className="text-xs text-brand-text-secondary mb-4">Describe the atmosphere you want to inhabit during your spiritual journey.</p>
+                        <p className="text-xs text-brand-text-secondary mb-4">Describe the atmosphere you want to inhabit in prayer — the light, the place, the sacred mood.</p>
                         <textarea 
                             value={prompt}
                             onChange={(e) => setPrompt(e.target.value)}
