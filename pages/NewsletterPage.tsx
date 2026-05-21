@@ -19,6 +19,7 @@ const NewsletterPage: React.FC = () => {
   const [posts, setPosts] = useState<FeedItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [expandedPost, setExpandedPost] = useState<FeedItem | null>(null);
 
   useEffect(() => {
     const loadPosts = async () => {
@@ -28,8 +29,7 @@ const NewsletterPage: React.FC = () => {
       try {
         const feed = await fetchRSSFeed(SUBSTACK_FEED_URL);
         setPosts(feed.items);
-      } catch (error) {
-        console.error('Failed to load newsletter posts:', error);
+      } catch {
         setError('The newsletter feed could not be loaded. Please try again shortly.');
       } finally {
         setLoading(false);
@@ -38,6 +38,16 @@ const NewsletterPage: React.FC = () => {
 
     loadPosts();
   }, []);
+
+  // Lock body scroll while reader is open
+  useEffect(() => {
+    if (expandedPost) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => { document.body.style.overflow = ''; };
+  }, [expandedPost]);
 
   const featuredPost = useMemo(() => posts[0], [posts]);
   const remainingPosts = useMemo(() => posts.slice(1), [posts]);
@@ -48,14 +58,14 @@ const NewsletterPage: React.FC = () => {
         THE CCN DAILY
       </Link>
       <div className="flex items-center gap-5 text-sm font-semibold text-brand-text-secondary">
-        <Link to="/blog" className="hover:text-brand-accent">Blog</Link>
-        <Link to="/podcasts" className="hover:text-brand-accent">Podcasts</Link>
+        <Link to="/blog" className="hover:text-brand-accent transition-colors">Blog</Link>
+        <Link to="/podcasts" className="hover:text-brand-accent transition-colors">Podcasts</Link>
       </div>
     </nav>
   );
 
   const PostCard: React.FC<{ post: FeedItem; featured?: boolean }> = ({ post, featured = false }) => (
-    <Card className="overflow-hidden p-0 group">
+    <Card className="overflow-hidden p-0 group cursor-pointer" onClick={() => setExpandedPost(post)}>
       <div className="p-6">
         <div className="mb-3 flex items-start justify-between gap-4">
           <span className="rounded bg-brand-accent/10 px-2 py-0.5 text-[10px] font-black uppercase tracking-widest text-brand-accent">
@@ -65,23 +75,21 @@ const NewsletterPage: React.FC = () => {
             {post.pubDate ? new Date(post.pubDate).toLocaleDateString() : ''}
           </span>
         </div>
-        <h2 className={`${featured ? 'text-3xl' : 'text-2xl'} mb-3 font-bold leading-tight text-brand-text-primary transition-colors group-hover:text-brand-accent`}>
+        <h2
+          className={`${featured ? 'text-3xl' : 'text-2xl'} mb-3 font-bold leading-tight text-brand-text-primary transition-colors group-hover:text-brand-accent`}
+        >
           {post.title || 'Untitled newsletter'}
         </h2>
         <p className="mb-5 text-sm leading-6 text-brand-text-secondary">
           {excerptFeedText(getPostText(post), featured ? 360 : 220)}
         </p>
-        {post.link && (
-          <a
-            href={post.link}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 text-sm font-bold text-brand-accent hover:underline"
-          >
-            Read Full Story on Substack
-            <SparklesIcon className="h-4 w-4" />
-          </a>
-        )}
+        <button
+          onClick={(e) => { e.stopPropagation(); setExpandedPost(post); }}
+          className="inline-flex items-center gap-2 text-sm font-bold text-brand-accent hover:underline"
+        >
+          Read this issue
+          <SparklesIcon className="h-4 w-4" />
+        </button>
       </div>
     </Card>
   );
@@ -92,6 +100,7 @@ const NewsletterPage: React.FC = () => {
         {publicNav}
         <motion.h1
           className="mb-2 flex items-center gap-4 text-4xl font-black text-brand-text-primary"
+          style={{ fontFamily: 'var(--font-display)' }}
           initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.55, ease: EASE }}
         >
@@ -103,26 +112,26 @@ const NewsletterPage: React.FC = () => {
           initial={{ opacity: 0 }} animate={{ opacity: 1 }}
           transition={{ duration: 0.45, delay: 0.15 }}
         >
-          Explore the latest insight, devotionals, and community updates.
+          Essays and devotionals for faith, work, and endurance — read every issue right here.
         </motion.p>
       </header>
 
       {loading && (
         <div className="flex flex-col items-center justify-center border-y border-brand-border py-24">
           <SpinnerIcon className="mb-4 h-10 w-10 animate-spin text-brand-accent" />
-          <p className="animate-pulse text-brand-text-secondary">Fetching latest updates from THE CCN DAILY...</p>
+          <p className="animate-pulse text-brand-text-secondary">Loading latest issues…</p>
         </div>
       )}
 
       {!loading && error && (
-        <div className="border border-status-warning/40 bg-status-warning/10 p-5 text-sm text-brand-text-secondary">
+        <div className="rounded-xl border border-status-warning/40 bg-status-warning/10 p-5 text-sm text-brand-text-secondary">
           {error}
         </div>
       )}
 
       {!loading && !error && posts.length === 0 && (
         <div className="border-y border-brand-border py-12 text-center">
-          <p className="text-brand-text-secondary">No newsletter posts are available from the feed yet.</p>
+          <p className="text-brand-text-secondary">No issues available yet — check back soon.</p>
         </div>
       )}
 
@@ -134,7 +143,10 @@ const NewsletterPage: React.FC = () => {
           >
             {featuredPost && (
               <motion.div variants={fadeUp} transition={{ duration: 0.55, ease: EASE }}>
-                <PostCard post={{ ...featuredPost, contentSnippet: cleanFeedText(getPostText(featuredPost)) }} featured />
+                <PostCard
+                  post={{ ...featuredPost, contentSnippet: cleanFeedText(getPostText(featuredPost)) }}
+                  featured
+                />
               </motion.div>
             )}
             {remainingPosts.map((post, index) => (
@@ -147,6 +159,82 @@ const NewsletterPage: React.FC = () => {
               </motion.div>
             ))}
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ─── In-app reader drawer ─────────────────────────────────────── */}
+      <AnimatePresence>
+        {expandedPost && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              key="backdrop"
+              className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm"
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              transition={{ duration: 0.25 }}
+              onClick={() => setExpandedPost(null)}
+            />
+
+            {/* Drawer panel */}
+            <motion.div
+              key="drawer"
+              className="fixed inset-x-0 bottom-0 z-50 flex flex-col bg-brand-dark rounded-t-3xl"
+              style={{ maxHeight: '92vh' }}
+              initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
+              transition={{ type: 'spring', stiffness: 320, damping: 38 }}
+            >
+              {/* Drag handle */}
+              <div className="flex justify-center pt-3 pb-1 flex-shrink-0">
+                <div className="w-10 h-1 rounded-full bg-brand-border" />
+              </div>
+
+              {/* Drawer header */}
+              <div className="flex items-start justify-between px-6 pt-4 pb-3 border-b border-brand-border flex-shrink-0">
+                <div className="flex-1 min-w-0 pr-4">
+                  <span className="text-xs font-bold uppercase tracking-widest text-brand-accent">
+                    {expandedPost.pubDate ? new Date(expandedPost.pubDate).toLocaleDateString() : 'Newsletter'}
+                  </span>
+                  <h2 className="text-xl font-bold text-brand-text-primary mt-1 leading-snug line-clamp-2"
+                    style={{ fontFamily: 'var(--font-display)' }}>
+                    {expandedPost.title}
+                  </h2>
+                </div>
+                <button
+                  onClick={() => setExpandedPost(null)}
+                  aria-label="Close reader"
+                  className="flex-shrink-0 w-8 h-8 rounded-full bg-brand-secondary flex items-center justify-center text-brand-text-secondary hover:text-brand-text-primary transition-colors"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              {/* Scrollable content */}
+              <div className="flex-1 overflow-y-auto px-6 py-6">
+                <div className="max-w-2xl mx-auto">
+                  <p className="text-brand-text-primary leading-8 text-[1.0625rem] whitespace-pre-line">
+                    {cleanFeedText(getPostText(expandedPost))}
+                  </p>
+                </div>
+              </div>
+
+              {/* Drawer footer */}
+              <div className="flex-shrink-0 px-6 py-4 border-t border-brand-border flex items-center justify-between">
+                <p className="text-xs text-brand-text-secondary">THE CCN DAILY Newsletter</p>
+                {expandedPost.link && (
+                  <a
+                    href={expandedPost.link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs font-semibold text-brand-accent hover:underline"
+                  >
+                    Open on Substack ↗
+                  </a>
+                )}
+              </div>
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
     </div>
