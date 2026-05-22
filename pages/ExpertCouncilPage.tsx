@@ -243,7 +243,7 @@ const ExpertCouncilPage: React.FC = () => {
                         {expert.name}
                       </h3>
                       <span
-                        className={`inline-block text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full mt-0.5 ${expert.badge}`}
+                        className={`inline-block text-[12px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full mt-0.5 ${expert.badge}`}
                       >
                         {expert.role}
                       </span>

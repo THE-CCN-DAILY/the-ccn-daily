@@ -142,7 +142,7 @@ const PrayerTimer: React.FC<PrayerTimerProps> = ({ duration, onComplete }) => {
                             <span className="text-4xl font-black font-mono text-brand-text-primary">
                                 {formatTime(secondsLeft)}
                             </span>
-                            <span className="text-[10px] uppercase tracking-widest font-bold text-brand-text-secondary">Sanctuary</span>
+                            <span className="text-[12px] uppercase tracking-widest font-bold text-brand-text-secondary">Sanctuary</span>
                         </div>
                     </div>
                     

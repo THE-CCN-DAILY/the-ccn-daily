@@ -100,7 +100,7 @@ const JournalingPage: React.FC = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.42, ease: EASE }}
         >
-          <p style={{ fontFamily: 'var(--sans-ui)', fontSize: '10px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#8E1B1B' }} className="mb-2">Pray</p>
+          <p style={{ fontFamily: 'var(--sans-ui)', fontSize: '12px', fontWeight: 700, letterSpacing: '0.10em', textTransform: 'uppercase', color: '#8E1B1B' }} className="mb-2">Pray</p>
           <h1 className="text-4xl font-black text-brand-text-primary mb-2" style={{ fontFamily: 'var(--serif-display, var(--font-display))', fontWeight: 600, lineHeight: 1.2 }}>
             Journaling
           </h1>

@@ -169,7 +169,7 @@ const TestimonyCard: React.FC<{ testimony: UnifiedTestimony }> = ({ testimony })
         </p>
         {testimony.contextText && (
           <div className="p-3 bg-brand-dark rounded-xl border border-brand-border">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-brand-text-secondary mb-1">
+            <p className="text-[12px] font-bold uppercase tracking-wider text-brand-text-secondary mb-1">
               Original Prayer
             </p>
             <p className="text-xs text-brand-text-secondary italic leading-relaxed">

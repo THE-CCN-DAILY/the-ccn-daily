@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { ArrowRight, BookOpen, PenLine, RefreshCw, Search } from 'lucide-react';
 import { listPublishedBlogPosts, type BlogPost } from '../services/blogService';
+import CcnLogo from '../components/CcnLogo';
 
 const EASE = [0.2, 0.6, 0.2, 1] as [number, number, number, number];
 const fadeUp = { hidden: { opacity: 0, y: 24 }, visible: { opacity: 1, y: 0 } };
@@ -95,8 +96,8 @@ const BlogPage: React.FC = () => {
     <div className="min-h-screen text-brand-text-primary" style={{ background: 'var(--bg-paper, #F6EFE1)' }}>
       <header className="border-b border-brand-border" style={{ background: 'var(--bg-paper, #F6EFE1)' }}>
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-6 py-5">
-          <Link to="/" className="whitespace-nowrap font-display text-xl font-bold" style={{ fontFamily: 'var(--serif-display, "Cormorant Garamond", Georgia, serif)' }}>
-            THE CCN DAILY
+          <Link to="/" aria-label="THE CCN DAILY — home">
+            <CcnLogo size="md" theme="auto" />
           </Link>
           <nav className="flex w-full items-center justify-between border-t border-brand-border pt-4 text-sm font-semibold text-brand-text-secondary sm:w-auto sm:justify-start sm:gap-5 sm:border-t-0 sm:pt-0" style={{ fontFamily: 'var(--sans-ui, "Inter Tight", -apple-system, sans-serif)' }}>
             <Link to="/newsletter" className="hover:text-brand-text-primary">Newsletter</Link>
@@ -113,7 +114,7 @@ const BlogPage: React.FC = () => {
           <div>
             <motion.p
               className="mb-5 flex items-center gap-2"
-              style={{ fontFamily: 'var(--sans-ui, "Inter Tight", -apple-system, sans-serif)', fontSize: '10px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--crimson, #8E1B1B)' }}
+              style={{ fontFamily: 'var(--sans-ui, "Inter Tight", -apple-system, sans-serif)', fontSize: '12px', fontWeight: 700, letterSpacing: '0.10em', textTransform: 'uppercase', color: 'var(--crimson, #8E1B1B)' }}
               initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.42, ease: EASE }}
             >
@@ -200,7 +201,7 @@ const BlogPage: React.FC = () => {
               className="group grid gap-10 border-b border-brand-border pb-14 lg:grid-cols-[0.7fr_1fr]"
             >
               <div>
-                <p style={{ fontFamily: 'var(--sans-ui, "Inter Tight", -apple-system, sans-serif)', fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.12em', color: 'var(--crimson, #8E1B1B)' }}>
+                <p style={{ fontFamily: 'var(--sans-ui, "Inter Tight", -apple-system, sans-serif)', fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.10em', color: 'var(--crimson, #8E1B1B)' }}>
                   Featured essay
                 </p>
                 <p className="mt-3" style={{ fontFamily: 'var(--sans-ui, "Inter Tight", -apple-system, sans-serif)', fontSize: '11px', color: 'var(--fg-3, #8A7A6A)' }}>{formatDate(leadPost.publishedAt)}</p>

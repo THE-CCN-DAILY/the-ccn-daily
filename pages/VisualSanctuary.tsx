@@ -67,8 +67,8 @@ const VisualSanctuary: React.FC = () => {
                         <div className="mt-8 pt-8 border-t border-brand-border">
                             <h3 className="text-xs font-black uppercase text-brand-text-secondary tracking-widest mb-4">Premium access</h3>
                             <div className="p-4 bg-brand-accent/10 rounded-xl border border-brand-accent/30">
-                                <p className="text-[10px] font-bold text-brand-accent mb-1">Cinematic sanctuary video</p>
-                                <p className="text-[10px] text-brand-text-secondary leading-tight">Video generation is currently reserved for Premium members to ensure sustainable resource allocation.</p>
+                                <p className="text-[12px] font-bold text-brand-accent mb-1">Cinematic sanctuary video</p>
+                                <p className="text-[12px] text-brand-text-secondary leading-tight">Video generation is currently reserved for Premium members to ensure sustainable resource allocation.</p>
                             </div>
                         </div>
                     </Card>

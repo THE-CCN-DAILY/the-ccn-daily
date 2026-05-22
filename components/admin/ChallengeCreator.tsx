@@ -138,13 +138,13 @@ const ChallengeCreator: React.FC = () => {
                 <Card className="border-2 border-brand-accent/30 animate-fade-in-up">
                     <div className="flex justify-between items-start mb-6">
                         <div>
-                            <span className="text-[10px] font-black bg-brand-accent/10 text-brand-accent px-2 py-1 rounded uppercase tracking-widest">AI Draft Generated</span>
+                            <span className="text-[12px] font-black bg-brand-accent/10 text-brand-accent px-2 py-1 rounded uppercase tracking-widest">AI Draft Generated</span>
                             <h3 className="text-2xl font-bold text-brand-text-primary mt-2">{generatedChallenge.title}</h3>
                             <p className="text-brand-text-secondary">{generatedChallenge.description}</p>
                         </div>
                         <div className="text-right">
                             <p className="text-xl font-black text-brand-accent">{generatedChallenge.duration}</p>
-                            <p className="text-[10px] font-bold text-brand-text-secondary uppercase">Duration</p>
+                            <p className="text-[12px] font-bold text-brand-text-secondary uppercase">Duration</p>
                         </div>
                     </div>
 
@@ -152,7 +152,7 @@ const ChallengeCreator: React.FC = () => {
                         <p className="text-xs font-bold text-brand-text-secondary uppercase">Curriculum Preview</p>
                         {generatedChallenge.tasks?.map((task: string, i: number) => (
                             <div key={i} className="flex items-center gap-3 p-3 bg-brand-secondary rounded-lg border border-brand-border">
-                                <div className="w-6 h-6 rounded-full bg-brand-accent/10 border border-brand-accent/30 flex items-center justify-center text-[10px] font-bold text-brand-accent">
+                                <div className="w-6 h-6 rounded-full bg-brand-accent/10 border border-brand-accent/30 flex items-center justify-center text-[12px] font-bold text-brand-accent">
                                     {i + 1}
                                 </div>
                                 <p className="text-sm text-brand-text-primary">{task}</p>

@@ -577,7 +577,7 @@ const AdminDashboard: React.FC = () => {
                                                     </div>
                                                 </th>
                                                 <td className="px-6 py-4">
-                                                    <span className={`px-2 py-1 text-[10px] font-bold uppercase rounded-full ${user.role === 'admin' ? 'bg-red-500/20 text-red-400' : 'bg-green-500/20 text-green-400'}`}>
+                                                    <span className={`px-2 py-1 text-[12px] font-bold uppercase rounded-full ${user.role === 'admin' ? 'bg-red-500/20 text-red-400' : 'bg-green-500/20 text-green-400'}`}>
                                                         {user.role}
                                                     </span>
                                                 </td>
@@ -672,7 +672,7 @@ const AdminDashboard: React.FC = () => {
                                             {usageStats?.recentLogs.map((log: any, idx: number) => (
                                                 <tr key={idx}>
                                                     <td className="py-3 capitalize text-sm">{log.feature}</td>
-                                                    <td className="py-3 text-[10px] font-mono text-brand-text-secondary">{log.model}</td>
+                                                    <td className="py-3 text-[12px] font-mono text-brand-text-secondary">{log.model}</td>
                                                     <td className="py-3 font-mono text-sm text-brand-accent">${log.costEstimate?.toFixed(4)}</td>
                                                     <td className="py-3 text-xs text-brand-text-secondary">
                                                         {log.timestamp?.toDate()?.toLocaleString() || 'Just now'}
@@ -845,7 +845,7 @@ const AdminDashboard: React.FC = () => {
                                             <p className="text-xs text-brand-text-secondary">Global Cards, Mobile Money & Local Payments</p>
                                         </div>
                                     </div>
-                                    <span className="px-2 py-1 bg-green-500/20 text-green-400 text-[10px] font-bold uppercase rounded-full">Connected</span>
+                                    <span className="px-2 py-1 bg-green-500/20 text-green-400 text-[12px] font-bold uppercase rounded-full">Connected</span>
                                 </div>
 
                                 <div className="p-6 border border-brand-border rounded-xl bg-brand-secondary/30">
@@ -860,7 +860,7 @@ const AdminDashboard: React.FC = () => {
                                                 className="w-full bg-brand-dark border border-brand-border rounded-xl p-3 text-brand-text-primary focus:border-brand-accent outline-none font-mono text-sm" 
                                                 placeholder="FLWPUBK_TEST-..."
                                             />
-                                            <p className="text-[10px] text-brand-text-secondary mt-2 italic">
+                                            <p className="text-[12px] text-brand-text-secondary mt-2 italic">
                                                 This key is used for client-side payment initialization. Keep it secure.
                                             </p>
                                         </div>
@@ -891,7 +891,7 @@ const AdminDashboard: React.FC = () => {
                                             </div>
                                             <div className="flex items-center gap-4">
                                                 <span className="text-lg font-black text-brand-accent">20% OFF</span>
-                                                <span className="px-2 py-1 bg-green-500/20 text-green-400 text-[10px] font-bold uppercase rounded-full">Active</span>
+                                                <span className="px-2 py-1 bg-green-500/20 text-green-400 text-[12px] font-bold uppercase rounded-full">Active</span>
                                             </div>
                                         </div>
                                         {loadingDiscounts ? (
@@ -903,9 +903,9 @@ const AdminDashboard: React.FC = () => {
                                                         <h4 className="font-bold text-brand-text-primary">{discount.name}</h4>
                                                         <p className="text-xs text-brand-text-secondary">
                                                             Valid: {discount.startDate} - {discount.endDate}
-                                                            <span className="ml-2 px-1 bg-brand-secondary rounded text-[10px] uppercase">{discount.type}</span>
+                                                            <span className="ml-2 px-1 bg-brand-secondary rounded text-[12px] uppercase">{discount.type}</span>
                                                         </p>
-                                                        <p className="text-[10px] text-brand-text-secondary mt-1">
+                                                        <p className="text-[12px] text-brand-text-secondary mt-1">
                                                             Target: {discount.targetTier} plans ({discount.targetBilling})
                                                         </p>
                                                     </div>
@@ -914,13 +914,13 @@ const AdminDashboard: React.FC = () => {
                                                         <div className="flex flex-col gap-2">
                                                             <button 
                                                                 onClick={() => handleToggleDiscount(discount.id, discount.isActive)}
-                                                                className={`px-3 py-1 text-[10px] font-bold uppercase rounded-full transition-colors ${discount.isActive ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30' : 'bg-red-500/20 text-red-400 hover:bg-red-500/30'}`}
+                                                                className={`px-3 py-1 text-[12px] font-bold uppercase rounded-full transition-colors ${discount.isActive ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30' : 'bg-red-500/20 text-red-400 hover:bg-red-500/30'}`}
                                                             >
                                                                 {discount.isActive ? 'Active' : 'Inactive'}
                                                             </button>
                                                             <button 
                                                                 onClick={() => handleDeleteDiscount(discount.id)}
-                                                                className="text-[10px] text-brand-text-secondary hover:text-status-error uppercase font-bold"
+                                                                className="text-[12px] text-brand-text-secondary hover:text-status-error uppercase font-bold"
                                                             >
                                                                 Delete
                                                             </button>
@@ -1168,14 +1168,14 @@ const AdminDashboard: React.FC = () => {
                                                             {res.priceUsd > 0 && ` • $${res.priceUsd}`}
                                                             {res.tierRequired && ` • ${res.tierRequired.toUpperCase()} Required`}
                                                         </p>
-                                                        <p className="text-[10px] text-brand-text-secondary mt-1">
+                                                        <p className="text-[12px] text-brand-text-secondary mt-1">
                                                             Uploaded: {res.createdAt}
                                                         </p>
                                                     </div>
                                                     <div className="flex items-center gap-4">
                                                         <button 
                                                             onClick={() => handleDeleteResource(res.id)}
-                                                            className="text-[10px] text-brand-text-secondary hover:text-status-error uppercase font-bold"
+                                                            className="text-[12px] text-brand-text-secondary hover:text-status-error uppercase font-bold"
                                                         >
                                                             Delete
                                                         </button>
@@ -1197,7 +1197,7 @@ const AdminDashboard: React.FC = () => {
                                     </div>
                                     <div className="text-right">
                                         <p className="text-xl font-black text-brand-accent">1,250</p>
-                                        <p className="text-[10px] uppercase font-bold text-brand-text-secondary">Active Members</p>
+                                        <p className="text-[12px] uppercase font-bold text-brand-text-secondary">Active Members</p>
                                     </div>
                                 </div>
                             </Card>

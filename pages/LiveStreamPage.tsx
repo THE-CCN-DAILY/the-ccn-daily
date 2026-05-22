@@ -189,7 +189,7 @@ const LiveStreamPage: React.FC = () => {
                   <div>
                     <div className="flex items-baseline gap-2">
                       <span className="font-bold text-sm text-brand-text-primary">{msg.user}</span>
-                      <span className="text-[10px] text-brand-text-secondary">{formatTime(msg.createdAt)}</span>
+                      <span className="text-[12px] text-brand-text-secondary">{formatTime(msg.createdAt)}</span>
                     </div>
                     <p className="text-sm text-brand-text-secondary mt-1">{msg.text}</p>
                   </div>

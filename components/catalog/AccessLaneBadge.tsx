@@ -13,7 +13,7 @@ const AccessLaneBadge: React.FC<{ resource: Resource }> = ({ resource }) => {
 
   return (
     <span
-      className={`inline-flex items-center px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide border ${toneClasses[badge.tone]}`}
+      className={`inline-flex items-center px-2 py-1 rounded-full text-[12px] font-bold uppercase tracking-wide border ${toneClasses[badge.tone]}`}
     >
       {badge.label}
     </span>

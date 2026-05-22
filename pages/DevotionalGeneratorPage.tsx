@@ -90,7 +90,7 @@ const DevotionalGeneratorPage: React.FC = () => {
   const devotionalHtmlContent = (data: DevotionalOutput, date: string) => {
     const formattedDate = new Date(date + 'T00:00:00').toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
     const bodyHtml = data.body.split('\n\n').map(p => `<p style="font-family:var(--serif-body,'EB Garamond','Garamond',Georgia,serif);font-size:18px;line-height:1.75;color:var(--fg-1,#2A1C15);margin-bottom:1em">${p.trim()}</p>`).join('');
-    const eyebrowStyle = `font-family:var(--sans-ui,'Inter Tight',-apple-system,sans-serif);font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--crimson,#8E1B1B)`;
+    const eyebrowStyle = `font-family:var(--sans-ui,'Inter Tight',-apple-system,sans-serif);font-size:12px;font-weight:700;letter-spacing:0.10em;text-transform:uppercase;color:var(--crimson,#8E1B1B)`;
     const scriptureBlockStyle = `font-family:var(--serif-body,'EB Garamond','Garamond',Georgia,serif);font-style:italic;font-size:20px;line-height:1.6;border-left:2px solid var(--crimson,#8E1B1B);padding:1em 1.5em;background:var(--bg-paper,#F6EFE1);color:var(--fg-1,#2A1C15);margin:1.5em 0`;
     const citeStyle = `display:block;margin-top:0.75em;font-style:normal;font-family:var(--sans-ui,'Inter Tight',-apple-system,sans-serif);font-size:11px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--crimson,#8E1B1B)`;
     const prayerStyle = `font-family:var(--serif-display,'Cormorant Garamond','Didot',Georgia,serif);font-style:italic;font-size:21px;line-height:1.6;text-align:center;max-width:440px;margin:1.5em auto;color:var(--fg-1,#2A1C15)`;
@@ -127,7 +127,7 @@ const DevotionalGeneratorPage: React.FC = () => {
   return (
     <div>
       <div className="mb-8">
-        <p style={{ fontFamily: 'var(--sans-ui, "Inter Tight", -apple-system, sans-serif)', fontSize: '10px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--crimson, #8E1B1B)', marginBottom: '0.5rem' }}>Daily Formation</p>
+        <p style={{ fontFamily: 'var(--sans-ui, "Inter Tight", -apple-system, sans-serif)', fontSize: '12px', fontWeight: 700, letterSpacing: '0.10em', textTransform: 'uppercase', color: 'var(--crimson, #8E1B1B)', marginBottom: '0.5rem' }}>Daily Formation</p>
         <h1 style={{ fontFamily: 'var(--serif-display, "Cormorant Garamond", "Didot", Georgia, serif)', fontWeight: 600, fontSize: 'clamp(2rem, 5vw, 3rem)', lineHeight: 1.15, color: 'var(--fg-1, #2A1C15)', marginBottom: '0.75rem' }}>
           Your Devotional
         </h1>

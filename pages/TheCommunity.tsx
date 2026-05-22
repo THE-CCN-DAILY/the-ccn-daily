@@ -266,7 +266,7 @@ const TheCommunity: React.FC = () => {
                                                 <p className="text-xs text-brand-text-secondary mb-3 line-clamp-2">{topic.snippet}</p>
                                                 <button
                                                     onClick={() => addGroundedToWall(topic)}
-                                                    className="w-full py-1.5 bg-brand-secondary text-brand-accent text-[10px] font-bold rounded-lg uppercase hover:bg-brand-accent hover:text-white transition-colors"
+                                                    className="w-full py-1.5 bg-brand-secondary text-brand-accent text-[12px] font-bold rounded-lg uppercase hover:bg-brand-accent hover:text-white transition-colors"
                                                 >
                                                     Post to Prayer Wall
                                                 </button>

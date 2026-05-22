@@ -185,10 +185,10 @@ const FamilyDashboardPage: React.FC = () => {
                       <h4 className="text-brand-text-primary font-bold flex items-center gap-2">
                         {member.name}
                         {member.role === 'owner' && (
-                          <span className="px-2 py-0.5 text-[10px] bg-brand-accent/20 text-brand-accent rounded-full uppercase tracking-wider">Owner</span>
+                          <span className="px-2 py-0.5 text-[12px] bg-brand-accent/20 text-brand-accent rounded-full uppercase tracking-wider">Owner</span>
                         )}
                         {member.role === 'pending' && (
-                          <span className="px-2 py-0.5 text-[10px] bg-yellow-500/20 text-yellow-500 rounded-full uppercase tracking-wider">Pending</span>
+                          <span className="px-2 py-0.5 text-[12px] bg-yellow-500/20 text-yellow-500 rounded-full uppercase tracking-wider">Pending</span>
                         )}
                       </h4>
                       <p className="text-xs text-brand-text-secondary">{member.email}</p>

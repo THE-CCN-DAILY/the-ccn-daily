@@ -359,7 +359,7 @@ const ContentManagerPage: React.FC = () => {
                         <div className="flex items-center gap-2">
                           <h4 className="text-brand-text-primary font-bold truncate">{item.title}</h4>
                           {item.isPremium && (
-                            <span className="px-2 py-0.5 text-[10px] font-bold bg-brand-accent/20 text-brand-accent rounded-full whitespace-nowrap">
+                            <span className="px-2 py-0.5 text-[12px] font-bold bg-brand-accent/20 text-brand-accent rounded-full whitespace-nowrap">
                               Premium {item.price ? `($${item.price})` : ''}
                             </span>
                           )}

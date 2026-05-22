@@ -197,13 +197,13 @@ const BibleStudyGuide: React.FC<BibleStudyGuideProps> = ({ currentPassage, onClo
       <div className="flex-shrink-0 flex items-center justify-between px-4 py-3 border-b border-brand-border">
         <div className="flex items-center gap-2">
           <div
-            className={`w-7 h-7 rounded-full flex items-center justify-center font-black text-[10px] flex-shrink-0 ${expert.avatarBg} ${expert.avatarText}`}
+            className={`w-7 h-7 rounded-full flex items-center justify-center font-black text-[12px] flex-shrink-0 ${expert.avatarBg} ${expert.avatarText}`}
           >
             {expert.avatar}
           </div>
           <div>
             <p className="text-xs font-bold text-brand-text-primary leading-none">{expert.name}</p>
-            <p className={`text-[10px] font-semibold leading-none mt-0.5 ${expert.avatarText}`}>
+            <p className={`text-[12px] font-semibold leading-none mt-0.5 ${expert.avatarText}`}>
               {expert.specialty}
             </p>
           </div>
@@ -237,7 +237,7 @@ const BibleStudyGuide: React.FC<BibleStudyGuideProps> = ({ currentPassage, onClo
       {/* Passage context badge */}
       {currentPassage && (
         <div className="flex-shrink-0 px-3 py-1.5 bg-brand-accent/10 border-b border-brand-accent/20">
-          <p className="text-[10px] font-semibold text-brand-accent truncate">
+          <p className="text-[12px] font-semibold text-brand-accent truncate">
             Studying: {currentPassage}
           </p>
         </div>

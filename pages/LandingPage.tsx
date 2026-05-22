@@ -2,6 +2,7 @@ import React, { useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, useInView } from 'motion/react';
 import { useAuth } from '../contexts/AuthContext';
+import CcnLogo from '../components/CcnLogo';
 import {
   BookOpen,
   CalendarDays,
@@ -219,8 +220,8 @@ const LandingPage: React.FC = () => {
         transition={{ duration: 0.4, ease: 'easeOut' }}
       >
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-          <Link to="/" className="font-display text-lg font-bold tracking-tight text-brand-text-primary">
-            THE CCN DAILY
+          <Link to="/" aria-label="THE CCN DAILY — home">
+            <CcnLogo size="md" theme="auto" />
           </Link>
           <nav className="hidden items-center gap-7 text-sm text-brand-text-secondary md:flex">
             <Link to="/newsletter" className="transition-colors hover:text-brand-text-primary">Newsletter</Link>

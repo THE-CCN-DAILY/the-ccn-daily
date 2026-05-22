@@ -152,7 +152,7 @@ const GraceLinkPage: React.FC = () => {
                 {mockGiftableItems.map(item => (
                     <Card key={item.id} className="flex flex-col relative overflow-hidden">
                         {item.isPremium && (
-                            <div className="absolute top-3 right-3 bg-brand-accent/20 text-brand-accent text-[10px] font-bold px-2 py-1 rounded uppercase">
+                            <div className="absolute top-3 right-3 bg-brand-accent/20 text-brand-accent text-[12px] font-bold px-2 py-1 rounded uppercase">
                                 Premium Gift
                             </div>
                         )}

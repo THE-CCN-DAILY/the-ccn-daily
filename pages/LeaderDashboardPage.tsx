@@ -183,7 +183,7 @@ const LeaderDashboardPage: React.FC = () => {
               <div className="p-4 rounded-lg bg-brand-dark border border-brand-border">
                 <div className="flex justify-between items-start mb-2">
                   <h4 className="text-sm text-brand-text-primary font-bold">Foundations of Faith</h4>
-                  <span className="text-[10px] bg-brand-accent/20 text-brand-accent px-2 py-0.5 rounded-full">Course</span>
+                  <span className="text-[12px] bg-brand-accent/20 text-brand-accent px-2 py-0.5 rounded-full">Course</span>
                 </div>
                 <div className="w-full bg-brand-secondary rounded-full h-1.5 mb-1">
                   <div className="bg-brand-accent h-1.5 rounded-full" style={{ width: '60%' }}></div>
@@ -194,7 +194,7 @@ const LeaderDashboardPage: React.FC = () => {
               <div className="p-4 rounded-lg bg-brand-dark border border-brand-border">
                 <div className="flex justify-between items-start mb-2">
                   <h4 className="text-sm text-brand-text-primary font-bold">30 Days of Prayer</h4>
-                  <span className="text-[10px] bg-brand-accent/20 text-brand-accent px-2 py-0.5 rounded-full">Challenge</span>
+                  <span className="text-[12px] bg-brand-accent/20 text-brand-accent px-2 py-0.5 rounded-full">Challenge</span>
                 </div>
                 <div className="w-full bg-brand-secondary rounded-full h-1.5 mb-1">
                   <div className="bg-brand-accent h-1.5 rounded-full" style={{ width: '25%' }}></div>

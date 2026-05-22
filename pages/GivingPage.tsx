@@ -110,7 +110,7 @@ const GivingPage: React.FC = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.42, ease: EASE }}
       >
-        <p style={{ fontFamily: 'var(--sans-ui)', fontSize: '10px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#B7892E' }} className="mb-2">Give</p>
+        <p style={{ fontFamily: 'var(--sans-ui)', fontSize: '12px', fontWeight: 700, letterSpacing: '0.10em', textTransform: 'uppercase', color: '#B7892E' }} className="mb-2">Give</p>
         <h1 className="text-4xl text-brand-text-primary mb-2" style={{ fontFamily: 'var(--serif-display, var(--font-display))', fontWeight: 600, lineHeight: 1.2 }}>
           Giving &amp; Support
         </h1>
@@ -159,7 +159,7 @@ const GivingPage: React.FC = () => {
           </motion.div>
 
           <div>
-            <label className="block mb-2" style={{ fontFamily: 'var(--sans-ui)', fontSize: '10px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--fg-3, #8A7A6A)' }}>Custom Amount</label>
+            <label className="block mb-2" style={{ fontFamily: 'var(--sans-ui)', fontSize: '12px', fontWeight: 700, letterSpacing: '0.10em', textTransform: 'uppercase', color: 'var(--fg-3, #8A7A6A)' }}>Custom Amount</label>
             <div className="relative">
               <span className="absolute left-4 top-1/2 -translate-y-1/2 text-brand-text-secondary font-bold">$</span>
               <input 

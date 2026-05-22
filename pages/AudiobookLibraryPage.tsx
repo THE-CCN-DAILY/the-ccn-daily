@@ -131,7 +131,7 @@ const AudiobookLibraryPage: React.FC = () => {
 
                     {/* Now playing chip */}
                     {isCurrentlyPlaying && (
-                      <div className="absolute top-2 left-2 flex items-center gap-1.5 bg-brand-accent/90 text-white text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full">
+                      <div className="absolute top-2 left-2 flex items-center gap-1.5 bg-brand-accent/90 text-white text-[12px] font-bold uppercase tracking-wider px-2 py-1 rounded-full">
                         <span className="flex gap-0.5">
                           <span className="w-0.5 h-3 bg-white rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
                           <span className="w-0.5 h-3 bg-white rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />

@@ -352,7 +352,7 @@ const PricingPage: React.FC = () => {
             className={`flex items-center gap-2 rounded-full px-6 py-2 text-sm font-bold transition-colors ${billingCycle === 'yearly' ? 'bg-brand-accent text-white' : 'text-brand-text-secondary hover:text-brand-text-primary'}`}
           >
             Yearly
-            <span className="rounded-full bg-green-500/20 px-2 py-0.5 text-[10px] text-green-400">Save up to 44%</span>
+            <span className="rounded-full bg-green-500/20 px-2 py-0.5 text-[12px] text-green-400">Save up to 44%</span>
           </button>
         </motion.div>
 

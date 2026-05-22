@@ -79,7 +79,7 @@ const EventsPage: React.FC = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.42, ease: EASE }}
       >
-        <p style={{ fontFamily: 'var(--sans-ui)', fontSize: '10px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#E87A2C' }} className="mb-2">Live</p>
+        <p style={{ fontFamily: 'var(--sans-ui)', fontSize: '12px', fontWeight: 700, letterSpacing: '0.10em', textTransform: 'uppercase', color: '#E87A2C' }} className="mb-2">Live</p>
         <h1 className="text-4xl text-brand-text-primary mb-2" style={{ fontFamily: 'var(--serif-display, var(--font-display))', fontWeight: 600, lineHeight: 1.2 }}>
           Live Events
         </h1>

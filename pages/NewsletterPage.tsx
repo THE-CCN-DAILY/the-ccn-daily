@@ -92,7 +92,7 @@ const NewsletterPage: React.FC = () => {
         )}
         <div className="p-6">
           <div className="mb-3 flex items-start justify-between gap-4">
-            <span className="rounded bg-brand-accent/10 px-2 py-0.5 text-[10px] font-black uppercase tracking-widest text-brand-accent">
+            <span className="rounded bg-brand-accent/10 px-2 py-0.5 text-[12px] font-black uppercase tracking-widest text-brand-accent">
               Newsletter
             </span>
             <span className="shrink-0 text-xs text-brand-text-secondary">
@@ -131,7 +131,7 @@ const NewsletterPage: React.FC = () => {
         >
           <div>
             <p
-              className="mb-1 text-[10px] font-black uppercase tracking-widest text-brand-accent"
+              className="mb-1 text-[12px] font-black uppercase tracking-widest text-brand-accent"
               style={{ fontFamily: 'var(--sans-ui)' }}
             >
               Newsletter

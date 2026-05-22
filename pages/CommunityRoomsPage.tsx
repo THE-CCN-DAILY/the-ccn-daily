@@ -170,7 +170,7 @@ const CommunityRoomsPage: React.FC = () => {
                         <span className="text-xs font-bold text-brand-text-secondary">
                           {displayName}
                         </span>
-                        <span className="text-[10px] text-brand-text-secondary/50">
+                        <span className="text-[12px] text-brand-text-secondary/50">
                           {formatTime(msg.createdAt)}
                         </span>
                       </div>

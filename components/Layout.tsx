@@ -38,6 +38,7 @@ import {
 } from 'lucide-react';
 import { ChatIcon, LogoIcon, UserCircleIcon, BellIcon } from './icons';
 import ThemeSwitcher from './ThemeSwitcher';
+import CcnLogo from './CcnLogo';
 import { useAudioPlayer } from '../contexts/AudioPlayerContext';
 import DetailedPlayerModal from './player/DetailedPlayerModal';
 import MiniPlayer from './player/MiniPlayer';
@@ -108,9 +109,9 @@ const sanctuaryGroupColors: Record<string, string> = {
 
 const groupLabelStyle = (color: string): React.CSSProperties => ({
   fontFamily: 'var(--sans-ui, "Inter Tight", -apple-system, sans-serif)',
-  fontSize: '10px',
+  fontSize: '11px',
   fontWeight: 700,
-  letterSpacing: '0.12em',
+  letterSpacing: '0.10em',
   textTransform: 'uppercase' as const,
   color,
 });
@@ -161,14 +162,11 @@ const Sidebar: React.FC<SidebarProps> = ({ className = '', onNavigate }) => {
 
   return (
     <aside className={`w-64 bg-brand-dark flex-shrink-0 p-4 border-r border-brand-border flex flex-col ${className}`}>
-      <div className="flex items-center mb-6">
-        <LogoIcon className="h-10 w-10 text-brand-accent" />
-        <div className="ml-3">
-            <h1 className="text-lg" style={{ fontFamily: 'var(--serif-display, "Cormorant Garamond", Georgia, serif)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--crimson, #8E1B1B)' }}>THE CCN DAILY</h1>
-            <p style={{ fontFamily: 'var(--sans-ui, "Inter Tight", -apple-system, sans-serif)', fontSize: '11px', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--gold-ds, #B7892E)', fontWeight: 600 }}>
-              {isStrategyMode ? 'Command Center' : 'Sanctuary'}
-            </p>
-        </div>
+      <div className="flex flex-col gap-1 mb-6">
+        <CcnLogo size="sm" theme="auto" />
+        <p style={{ fontFamily: 'var(--sans-ui, "Inter Tight", -apple-system, sans-serif)', fontSize: '11px', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--gold-ds, #B7892E)', fontWeight: 600 }}>
+          {isStrategyMode ? 'Command Center' : 'Sanctuary'}
+        </p>
       </div>
 
       <div className="mb-6">
@@ -176,10 +174,10 @@ const Sidebar: React.FC<SidebarProps> = ({ className = '', onNavigate }) => {
           onClick={toggleMode}
           className={`w-full p-1 rounded-full border border-brand-border flex items-center transition-all ${isStrategyMode ? 'bg-brand-accent/10 border-brand-accent/30' : 'bg-brand-secondary'}`}
         >
-          <div className={`flex-1 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-tighter transition-all ${!isStrategyMode ? 'bg-brand-accent text-white shadow-md' : 'text-brand-text-secondary'}`}>
+          <div className={`flex-1 py-1.5 rounded-full text-[12px] font-bold uppercase tracking-tighter transition-all ${!isStrategyMode ? 'bg-brand-accent text-white shadow-md' : 'text-brand-text-secondary'}`}>
             Sanctuary
           </div>
-          <div className={`flex-1 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-tighter transition-all ${isStrategyMode ? 'bg-brand-accent text-white shadow-md' : 'text-brand-text-secondary'}`}>
+          <div className={`flex-1 py-1.5 rounded-full text-[12px] font-bold uppercase tracking-tighter transition-all ${isStrategyMode ? 'bg-brand-accent text-white shadow-md' : 'text-brand-text-secondary'}`}>
             Strategy
           </div>
         </button>
@@ -361,7 +359,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                   <p className="text-xs font-bold text-brand-accent flex items-center">
                     <Activity className="w-4 h-4 mr-2"/> Sentinel Alert: System recommendations are ready for operational review.
                   </p>
-                  <NavLink to="/studio/diagnostics" className="text-[10px] underline text-brand-accent font-bold">VIEW</NavLink>
+                  <NavLink to="/studio/diagnostics" className="text-[12px] underline text-brand-accent font-bold">VIEW</NavLink>
               </div>
           )}
           <AnimatePresence mode="wait">

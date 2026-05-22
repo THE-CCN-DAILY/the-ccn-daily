@@ -171,7 +171,7 @@ const VoiceCompanion: React.FC = () => {
                           : 'bg-brand-secondary text-brand-accent font-semibold rounded-tl-sm'
                       }`}>
                         {!t.isUser && (
-                          <span className="text-[10px] font-black uppercase tracking-widest text-brand-accent/70 block mb-0.5">Kai</span>
+                          <span className="text-[12px] font-black uppercase tracking-widest text-brand-accent/70 block mb-0.5">Kai</span>
                         )}
                         {t.text}
                       </div>

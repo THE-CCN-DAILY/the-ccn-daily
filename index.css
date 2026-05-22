@@ -81,7 +81,16 @@
   --fg-1: #F0E8D8;
   --fg-2: #C8B8A0;
   --fg-3: #8A7A6A;
+
+  /* DS colors adjusted for dark mode — lightened for contrast */
+  --crimson:      #E8645A;   /* was #8E1B1B — too dark on dark bg */
+  --crimson-deep: #C23B1E;   /* was #5E0F0F */
+  --ember:        #F08060;   /* was #C23B1E */
+  --amber-ds:     #F5A855;   /* was #E87A2C */
+  --gold-ds:      #D4A840;   /* was #B7892E */
 }
+
+.dark .ds-eyebrow { color: var(--ember); }
 
 .sepia {
   --bg-raw: 245 242 232;
@@ -293,12 +302,17 @@
   }
 }
 
+/* ─── Logo: ensure SVG text picks up the correct theme color via currentColor ── */
+.ccn-logo {
+  color: var(--fg-1);
+}
+
 /* === DS UTILITY CLASSES === */
 .ds-eyebrow {
   font-family: var(--sans-ui);
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.10em;
   text-transform: uppercase;
   color: var(--crimson);
 }

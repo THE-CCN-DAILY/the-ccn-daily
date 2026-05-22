@@ -75,7 +75,7 @@ const SentinelSuggestions: React.FC = () => {
                 {suggestions.map((s) => (
                     <Card key={s.id} className="group hover:border-brand-accent/50 transition-all cursor-pointer relative overflow-hidden">
                         <div className="absolute top-0 right-0 p-2">
-                            <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded ${selectedIds.has(s.id) ? 'text-status-success bg-status-success/10' : 'text-brand-accent bg-brand-accent/10'}`}>
+                            <span className={`text-[12px] font-black uppercase tracking-widest px-2 py-1 rounded ${selectedIds.has(s.id) ? 'text-status-success bg-status-success/10' : 'text-brand-accent bg-brand-accent/10'}`}>
                                 {selectedIds.has(s.id) ? 'Selected' : s.status}
                             </span>
                         </div>
@@ -87,7 +87,7 @@ const SentinelSuggestions: React.FC = () => {
                             {s.description}
                         </p>
                         <div className="mt-auto pt-4 border-t border-brand-border">
-                            <p className="text-[10px] font-bold text-brand-text-secondary uppercase tracking-widest mb-1">Impact</p>
+                            <p className="text-[12px] font-bold text-brand-text-secondary uppercase tracking-widest mb-1">Impact</p>
                             <p className="text-xs text-brand-accent font-medium">{s.benefit}</p>
                         </div>
                         <div className="mt-4 flex justify-between items-center">
