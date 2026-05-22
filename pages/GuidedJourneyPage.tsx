@@ -57,8 +57,8 @@ const ScriptureSnippetModal: React.FC<{
                     <div className="py-12 text-center text-brand-text-secondary animate-pulse">Summoning Scripture...</div>
                 ) : (
                     <div className="animate-fade-in-up">
-                        <h3 className="text-xl font-bold text-brand-accent mb-4">{snippet?.ref}</h3>
-                        <div className="prose prose-sm text-brand-text-primary italic mb-8" dangerouslySetInnerHTML={{ __html: snippet?.text || '' }} />
+                        <h3 style={{ fontFamily: 'var(--sans-ui, "Inter Tight", -apple-system, sans-serif)', fontSize: '11px', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--crimson, #8E1B1B)', marginBottom: '1rem' }}>{snippet?.ref}</h3>
+                        <div style={{ fontFamily: 'var(--serif-body, "EB Garamond", "Garamond", Georgia, serif)', fontStyle: 'italic', fontSize: '20px', lineHeight: 1.6, borderLeft: '2px solid var(--crimson, #8E1B1B)', padding: '1em 1.5em', background: 'var(--bg-paper, #F6EFE1)', color: 'var(--fg-1, #2A1C15)', margin: '0 0 2rem 0' }} dangerouslySetInnerHTML={{ __html: snippet?.text || '' }} />
                         
                         <div className="flex gap-4">
                             <button 
@@ -92,36 +92,36 @@ const StepContent: React.FC<{ stepIndex: number; onComplete: () => void; devotio
             case 0:
                 return (
                     <div className="text-center py-8">
-                        <h2 className="text-3xl font-bold text-brand-text-primary mb-4">Prepare Your Heart</h2>
-                        <p className="text-lg text-brand-text-secondary mb-6">A space designed for peace. Twelve minutes before the day takes your attention.</p>
+                        <p style={{ fontFamily: 'var(--sans-ui, "Inter Tight", -apple-system, sans-serif)', fontSize: '10px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--crimson, #8E1B1B)', marginBottom: '0.75rem' }}>Daily Sanctuary</p>
+                        <h2 style={{ fontFamily: 'var(--serif-display, "Cormorant Garamond", "Didot", Georgia, serif)', fontWeight: 600, fontSize: '1.75rem', lineHeight: 1.2, color: 'var(--fg-1, #2A1C15)', marginBottom: '1rem' }}>Prepare Your Heart</h2>
+                        <p style={{ fontFamily: 'var(--serif-body, "EB Garamond", "Garamond", Georgia, serif)', fontSize: '18px', lineHeight: 1.75, color: 'var(--fg-2, #5B4A3C)', marginBottom: '1.5rem' }}>A space designed for peace. Twelve minutes before the day takes your attention.</p>
                     </div>
                 );
             case 1:
                 return (
                     <div className="py-4">
-                        <h2 className="text-2xl font-bold text-brand-text-primary mb-6 flex items-center gap-3">
+                        <p style={{ fontFamily: 'var(--sans-ui, "Inter Tight", -apple-system, sans-serif)', fontSize: '10px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--crimson, #8E1B1B)', marginBottom: '0.5rem' }}>Step 1</p>
+                        <h2 style={{ fontFamily: 'var(--serif-display, "Cormorant Garamond", "Didot", Georgia, serif)', fontWeight: 600, fontSize: '1.75rem', lineHeight: 1.2, color: 'var(--fg-1, #2A1C15)', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                             <PrayingHandsIcon className="w-8 h-8 text-brand-accent"/>
                             Opening Prayer
                         </h2>
-                        <div className="bg-brand-secondary/40 p-8 rounded-2xl border border-brand-border relative overflow-hidden">
+                        <div style={{ background: 'var(--bg-paper, #F6EFE1)', borderRadius: '1rem', border: '1px solid rgba(42,28,21,0.08)', padding: '2rem', position: 'relative', overflow: 'hidden' }}>
                             <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-brand-accent/30 to-transparent" aria-hidden />
-                            <blockquote className="scripture-quote text-lg">
+                            <blockquote style={{ fontFamily: 'var(--serif-display, "Cormorant Garamond", "Didot", Georgia, serif)', fontStyle: 'italic', fontSize: '21px', lineHeight: 1.6, textAlign: 'center', maxWidth: '440px', margin: '0 auto', color: 'var(--fg-1, #2A1C15)' }}>
                                 Father, I acknowledge Your presence here with me. As I step away from the noise of the world, I ask that You would tune my heart to Your frequency. Speak through the stillness.
-                                <cite>Amen</cite>
+                                <cite style={{ display: 'block', marginTop: '1em', fontStyle: 'normal', fontFamily: 'var(--sans-ui, "Inter Tight", -apple-system, sans-serif)', fontSize: '11px', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--crimson, #8E1B1B)' }}>Amen</cite>
                             </blockquote>
                         </div>
                     </div>
                 );
             case 2:
                 return (
-                    <div className="text-center py-8">
-                        <div className="w-20 h-20 mx-auto bg-brand-accent/10 rounded-full flex items-center justify-center mb-6">
-                            <ReaderIcon className="w-10 h-10 text-brand-accent"/>
-                        </div>
-                        <h2 className="text-2xl font-bold text-brand-text-primary mb-4">Today's Reflection</h2>
+                    <div style={{ background: 'var(--bg-paper, #F6EFE1)', borderRadius: '1rem', padding: '2rem', boxShadow: 'var(--sh-card, 0 1px 2px rgba(42,28,21,.06), 0 8px 24px rgba(42,28,21,.05))' }}>
+                        <p style={{ fontFamily: 'var(--sans-ui, "Inter Tight", -apple-system, sans-serif)', fontSize: '10px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--crimson, #8E1B1B)', marginBottom: '0.5rem', textAlign: 'center' }}>Step 2</p>
+                        <h2 style={{ fontFamily: 'var(--serif-display, "Cormorant Garamond", "Didot", Georgia, serif)', fontWeight: 600, fontSize: '1.75rem', lineHeight: 1.2, color: 'var(--fg-1, #2A1C15)', marginBottom: '1.5rem', textAlign: 'center' }}>Today's Reflection</h2>
                         {devotional ? (
                             <div className="text-left max-w-2xl mx-auto">
-                                <h3 className="text-xl font-bold text-brand-accent mb-4 text-center">{devotional.title}</h3>
+                                <h3 style={{ fontFamily: 'var(--serif-display, "Cormorant Garamond", "Didot", Georgia, serif)', fontWeight: 600, fontSize: '1.4rem', color: 'var(--crimson, #8E1B1B)', marginBottom: '1rem', textAlign: 'center' }}>{devotional.title}</h3>
                                 {devotional.audioUrl && (() => {
                                     const isThisTrack = currentTrack?.id === devotional.id;
                                     const isThisPlaying = isThisTrack && isPlaying;
@@ -153,7 +153,7 @@ const StepContent: React.FC<{ stepIndex: number; onComplete: () => void; devotio
                                                     : <PlayIcon className="w-5 h-5 ml-0.5" />}
                                             </button>
                                             <div>
-                                                <p className="text-xs font-bold uppercase tracking-widest text-brand-accent">Audio Reflection</p>
+                                                <p style={{ fontFamily: 'var(--sans-ui, "Inter Tight", -apple-system, sans-serif)', fontSize: '11px', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--crimson, #8E1B1B)' }}>Audio Reflection</p>
                                                 <p className="text-sm text-brand-text-primary font-semibold mt-0.5">{devotional.title}</p>
                                                 {isThisPlaying && (
                                                     <p className="text-xs text-brand-text-secondary mt-0.5 animate-pulse">Now playing in the audio player below</p>
@@ -162,12 +162,12 @@ const StepContent: React.FC<{ stepIndex: number; onComplete: () => void; devotio
                                         </div>
                                     );
                                 })()}
-                                <div className="prose prose-sm text-brand-text-secondary mx-auto">
+                                <div style={{ fontFamily: 'var(--serif-body, "EB Garamond", "Garamond", Georgia, serif)', fontSize: '18px', lineHeight: 1.75, color: 'var(--fg-1, #2A1C15)' }}>
                                     <ReactMarkdown>{devotional.content}</ReactMarkdown>
                                 </div>
                             </div>
                         ) : (
-                            <p className="text-brand-text-secondary max-w-md mx-auto">
+                            <p style={{ fontFamily: 'var(--serif-body, "EB Garamond", "Garamond", Georgia, serif)', fontSize: '18px', lineHeight: 1.75, color: 'var(--fg-2, #5B4A3C)', maxWidth: '28rem', margin: '0 auto', textAlign: 'center' }}>
                                 Today's devotional is not available yet. Focus on the core message of <strong>"Unshakeable Peace"</strong>.
                             </p>
                         )}
@@ -176,15 +176,17 @@ const StepContent: React.FC<{ stepIndex: number; onComplete: () => void; devotio
             case 3:
                 return (
                      <div>
-                        <h2 className="text-2xl font-bold text-brand-text-primary mb-4">Journal Your Response</h2>
-                        <p className="text-brand-text-secondary mb-6">Where in your life do you need God's strength today? Type it out—the act of writing is an act of release.</p>
+                        <p style={{ fontFamily: 'var(--sans-ui, "Inter Tight", -apple-system, sans-serif)', fontSize: '10px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--crimson, #8E1B1B)', marginBottom: '0.5rem' }}>Step 3</p>
+                        <h2 style={{ fontFamily: 'var(--serif-display, "Cormorant Garamond", "Didot", Georgia, serif)', fontWeight: 600, fontSize: '1.75rem', lineHeight: 1.2, color: 'var(--fg-1, #2A1C15)', marginBottom: '1rem' }}>Journal Your Response</h2>
+                        <p style={{ fontFamily: 'var(--serif-body, "EB Garamond", "Garamond", Georgia, serif)', fontSize: '18px', lineHeight: 1.75, color: 'var(--fg-2, #5B4A3C)', marginBottom: '1.5rem' }}>Where in your life do you need God's strength today? Type it out—the act of writing is an act of release.</p>
                         <RichTextJournal />
                     </div>
                 );
             case 4:
                 return (
                     <div>
-                        <h2 className="text-2xl font-bold text-brand-text-primary mb-6 flex items-center gap-3">
+                        <p style={{ fontFamily: 'var(--sans-ui, "Inter Tight", -apple-system, sans-serif)', fontSize: '10px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--crimson, #8E1B1B)', marginBottom: '0.5rem' }}>Step 4</p>
+                        <h2 style={{ fontFamily: 'var(--serif-display, "Cormorant Garamond", "Didot", Georgia, serif)', fontWeight: 600, fontSize: '1.75rem', lineHeight: 1.2, color: 'var(--fg-1, #2A1C15)', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                             <SoundWaveIcon className="w-8 h-8 text-brand-accent animate-pulse"/>
                             Guided Prayer Sanctuary
                         </h2>
@@ -193,19 +195,20 @@ const StepContent: React.FC<{ stepIndex: number; onComplete: () => void; devotio
                 );
             case 5:
                 return (
-                     <div className="py-10 max-w-2xl mx-auto">
-                        <p className="text-xs font-bold text-brand-accent uppercase tracking-[0.2em] mb-6 text-center">Daily Declaration</p>
-                        <blockquote className="scripture-quote text-lg">
+                     <div style={{ paddingTop: '2.5rem', paddingBottom: '2.5rem', maxWidth: '42rem', margin: '0 auto' }}>
+                        <p style={{ fontFamily: 'var(--sans-ui, "Inter Tight", -apple-system, sans-serif)', fontSize: '10px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--crimson, #8E1B1B)', marginBottom: '1.5rem', textAlign: 'center' }}>Daily Declaration</p>
+                        <blockquote style={{ fontFamily: 'var(--serif-display, "Cormorant Garamond", "Didot", Georgia, serif)', fontStyle: 'italic', fontSize: '21px', lineHeight: 1.6, textAlign: 'center', maxWidth: '440px', margin: '0 auto', color: 'var(--fg-1, #2A1C15)' }}>
                             I am not a slave to fear. I am a child of God. His peace, which surpasses understanding, guards my mind and my heart today.
-                            <cite>Speak it aloud. Receive it.</cite>
+                            <cite style={{ display: 'block', marginTop: '1em', fontStyle: 'normal', fontFamily: 'var(--sans-ui, "Inter Tight", -apple-system, sans-serif)', fontSize: '11px', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--crimson, #8E1B1B)' }}>Speak it aloud. Receive it.</cite>
                         </blockquote>
                     </div>
                 );
             case 6:
                 return (
                      <div>
-                        <h2 className="text-2xl font-bold text-brand-text-primary mb-6">For Further Study</h2>
-                        <p className="text-brand-text-secondary mb-6">Click a verse to read it instantly in your sanctuary.</p>
+                        <p style={{ fontFamily: 'var(--sans-ui, "Inter Tight", -apple-system, sans-serif)', fontSize: '10px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--crimson, #8E1B1B)', marginBottom: '0.5rem' }}>Step 6</p>
+                        <h2 style={{ fontFamily: 'var(--serif-display, "Cormorant Garamond", "Didot", Georgia, serif)', fontWeight: 600, fontSize: '1.75rem', lineHeight: 1.2, color: 'var(--fg-1, #2A1C15)', marginBottom: '1.5rem' }}>For Further Study</h2>
+                        <p style={{ fontFamily: 'var(--serif-body, "EB Garamond", "Garamond", Georgia, serif)', fontSize: '18px', lineHeight: 1.75, color: 'var(--fg-2, #5B4A3C)', marginBottom: '1.5rem' }}>Click a verse to read it instantly in your sanctuary.</p>
                          <div className="grid gap-3">
                             {['Joshua 1:9', 'Deuteronomy 31:6', '2 Timothy 1:7'].map(ref => (
                                 <button 
@@ -228,8 +231,8 @@ const StepContent: React.FC<{ stepIndex: number; onComplete: () => void; devotio
                             <CheckIcon className="w-20 h-20 text-status-success"/>
                             <div className="absolute inset-0 bg-status-success/20 rounded-full animate-ping"></div>
                         </div>
-                        <h2 className="text-3xl font-bold text-brand-text-primary mb-2">Journey Fulfilled</h2>
-                        <p className="text-brand-text-secondary">You have set a firm foundation for your day. Go in peace and power.</p>
+                        <h2 style={{ fontFamily: 'var(--serif-display, "Cormorant Garamond", "Didot", Georgia, serif)', fontWeight: 600, fontSize: '1.75rem', lineHeight: 1.2, color: 'var(--fg-1, #2A1C15)', marginBottom: '0.5rem' }}>Journey Fulfilled</h2>
+                        <p style={{ fontFamily: 'var(--serif-body, "EB Garamond", "Garamond", Georgia, serif)', fontSize: '18px', lineHeight: 1.75, color: 'var(--fg-2, #5B4A3C)' }}>You have set a firm foundation for your day. Go in peace and power.</p>
                     </div>
                 );
             default:
@@ -238,7 +241,7 @@ const StepContent: React.FC<{ stepIndex: number; onComplete: () => void; devotio
     };
     
     return (
-        <Card className="relative flex flex-col items-center justify-center overflow-hidden p-10 min-h-[35rem]">
+        <Card className="relative flex flex-col items-center justify-center overflow-hidden p-10 min-h-[35rem]" style={{ background: 'var(--bg-card, #FBF6EA)', boxShadow: 'var(--sh-card, 0 1px 2px rgba(42,28,21,.06), 0 8px 24px rgba(42,28,21,.05))' }}>
             {/* Ambient inner glow */}
             <div
                 className="pointer-events-none absolute inset-x-0 -top-24 h-64 opacity-10"
@@ -274,7 +277,7 @@ const StepContent: React.FC<{ stepIndex: number; onComplete: () => void; devotio
     );
 }
 
-const STEP_EASE = [0.22, 1, 0.36, 1] as [number, number, number, number];
+const STEP_EASE = [0.2, 0.6, 0.2, 1] as [number, number, number, number];
 
 const GuidedJourneyPage: React.FC = () => {
     const [currentStep, setCurrentStep] = useState(0);
@@ -317,12 +320,12 @@ const GuidedJourneyPage: React.FC = () => {
                 className="mb-10 text-center"
                 initial={{ opacity: 0, y: -16 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, ease: STEP_EASE }}
+                transition={{ duration: 0.42, ease: STEP_EASE }}
             >
-                <p className="mb-2 text-[0.7rem] font-semibold uppercase tracking-[0.16em] text-brand-accent">
+                <p style={{ fontFamily: 'var(--sans-ui, "Inter Tight", -apple-system, sans-serif)', fontSize: '10px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--crimson, #8E1B1B)', marginBottom: '0.5rem' }}>
                     {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
                 </p>
-                <h1 className="font-display text-4xl font-bold text-brand-text-primary tracking-tight md:text-5xl">
+                <h1 style={{ fontFamily: 'var(--serif-display, "Cormorant Garamond", "Didot", Georgia, serif)', fontWeight: 600, fontSize: 'clamp(2rem, 5vw, 3rem)', lineHeight: 1.15, color: 'var(--fg-1, #2A1C15)', letterSpacing: '-0.01em' }}>
                     The Daily Sanctuary
                 </h1>
                 {/* Progress bar */}
@@ -330,7 +333,7 @@ const GuidedJourneyPage: React.FC = () => {
                     <motion.div
                         className="h-full rounded-full bg-brand-accent"
                         animate={{ width: `${progressPct}%` }}
-                        transition={{ duration: 0.6, ease: STEP_EASE }}
+                        transition={{ duration: 0.42, ease: STEP_EASE }}
                     />
                 </div>
             </motion.div>
@@ -381,7 +384,7 @@ const GuidedJourneyPage: React.FC = () => {
                         initial="enter"
                         animate="center"
                         exit="exit"
-                        transition={{ duration: 0.45, ease: STEP_EASE }}
+                        transition={{ duration: 0.42, ease: STEP_EASE }}
                     >
                         <StepContent
                             stepIndex={currentStep}

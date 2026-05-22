@@ -98,6 +98,23 @@ interface SidebarProps {
   onNavigate?: () => void;
 }
 
+const sanctuaryGroupColors: Record<string, string> = {
+  'Pray': 'var(--crimson, #8E1B1B)',
+  'Read': 'var(--ember, #C23B1E)',
+  'Community': 'var(--amber-ds, #E87A2C)',
+  'Live': 'var(--amber-ds, #E87A2C)',
+  'Account': 'var(--gold-ds, #B7892E)',
+};
+
+const groupLabelStyle = (color: string): React.CSSProperties => ({
+  fontFamily: 'var(--sans-ui, "Inter Tight", -apple-system, sans-serif)',
+  fontSize: '10px',
+  fontWeight: 700,
+  letterSpacing: '0.12em',
+  textTransform: 'uppercase' as const,
+  color,
+});
+
 const Sidebar: React.FC<SidebarProps> = ({ className = '', onNavigate }) => {
   const { user, loading, signIn, signOut } = useAuth();
 
@@ -147,8 +164,8 @@ const Sidebar: React.FC<SidebarProps> = ({ className = '', onNavigate }) => {
       <div className="flex items-center mb-6">
         <LogoIcon className="h-10 w-10 text-brand-accent" />
         <div className="ml-3">
-            <h1 className="text-lg font-bold text-brand-text-primary">THE CCN DAILY</h1>
-            <p className="text-[10px] font-black tracking-widest text-brand-text-secondary uppercase">
+            <h1 className="text-lg" style={{ fontFamily: 'var(--serif-display, "Cormorant Garamond", Georgia, serif)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--crimson, #8E1B1B)' }}>THE CCN DAILY</h1>
+            <p style={{ fontFamily: 'var(--sans-ui, "Inter Tight", -apple-system, sans-serif)', fontSize: '11px', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--gold-ds, #B7892E)', fontWeight: 600 }}>
               {isStrategyMode ? 'Command Center' : 'Sanctuary'}
             </p>
         </div>
@@ -178,7 +195,7 @@ const Sidebar: React.FC<SidebarProps> = ({ className = '', onNavigate }) => {
               return (
                 <div key={group} className="mb-4">
                   <div className="mb-2 px-3">
-                    <p className="text-[10px] font-bold text-brand-text-secondary uppercase tracking-widest">
+                    <p style={groupLabelStyle('var(--crimson, #8E1B1B)')}>
                       {group}
                     </p>
                   </div>
@@ -204,7 +221,7 @@ const Sidebar: React.FC<SidebarProps> = ({ className = '', onNavigate }) => {
           ['Read', 'Pray', 'Community', 'Live', 'Account'].map(group => (
             <div key={group} className="mb-4">
               <div className="mb-2 px-3">
-                <p className="text-[10px] font-bold text-brand-text-secondary uppercase tracking-widest">
+                <p style={groupLabelStyle(sanctuaryGroupColors[group] ?? 'var(--crimson, #8E1B1B)')}>
                   {group}
                 </p>
               </div>

@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import Card from '../components/Card';
 import { PaintBrushIcon, PlusCircleIcon } from '../components/icons';
 
-const EASE = [0.22, 1, 0.36, 1] as [number, number, number, number];
+const EASE = [0.2, 0.6, 0.2, 1] as [number, number, number, number];
 const fadeUp = { hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } };
 const stagger = { hidden: {}, visible: { transition: { staggerChildren: 0.08, delayChildren: 0.03 } } };
 import { useAuth } from '../contexts/AuthContext';
@@ -98,13 +98,13 @@ const JournalingPage: React.FC = () => {
           className="mb-8"
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+          transition={{ duration: 0.42, ease: EASE }}
         >
-          <p className="text-xs font-bold uppercase tracking-widest text-brand-accent mb-2">PRAY</p>
-          <h1 className="text-4xl font-black text-brand-text-primary mb-2" style={{ fontFamily: 'var(--font-display)' }}>
+          <p style={{ fontFamily: 'var(--sans-ui)', fontSize: '10px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#8E1B1B' }} className="mb-2">Pray</p>
+          <h1 className="text-4xl font-black text-brand-text-primary mb-2" style={{ fontFamily: 'var(--serif-display, var(--font-display))', fontWeight: 600, lineHeight: 1.2 }}>
             Journaling
           </h1>
-          <p className="text-brand-text-secondary">Write what God is speaking to you. Your private sanctuary of reflection.</p>
+          <p style={{ fontFamily: 'var(--serif-body)', fontSize: '18px', lineHeight: 1.65, color: 'var(--fg-2, #5B4A3C)' }}>Write what God is speaking to you. Your private sanctuary of reflection.</p>
         </motion.div>
         <AnimatePresence>
           {!isWriting && (
@@ -113,7 +113,7 @@ const JournalingPage: React.FC = () => {
               className="flex items-center px-4 py-2 bg-brand-accent text-white font-bold rounded-xl hover:bg-opacity-90 transition-colors"
               initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
-              transition={{ duration: 0.25, ease: EASE }}
+              transition={{ duration: 0.24, ease: EASE }}
               whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }}
             >
               <PlusCircleIcon className="w-5 h-5 mr-2" />
@@ -130,15 +130,13 @@ const JournalingPage: React.FC = () => {
           initial={{ opacity: 0, y: -12, scale: 0.98 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: -8, scale: 0.98 }}
-          transition={{ duration: 0.35, ease: EASE }}
+          transition={{ duration: 0.42, ease: EASE }}
           className="mb-8"
         >
-        <Card className="border-brand-accent/50 bg-brand-dark/50 p-0 overflow-hidden">
-          {/* Accent stripe */}
-          <div className="h-1 w-full bg-brand-accent/70 rounded-t-2xl" />
+        <Card className="p-0 overflow-hidden" style={{ background: 'var(--bg-card, #FBF6EA)', boxShadow: 'var(--sh-card, 0 1px 2px rgba(42,28,21,.06), 0 8px 24px rgba(42,28,21,.05))', borderRadius: '6px', borderTop: '2px solid #8E1B1B' }}>
           <div className="p-6">
             <div className="flex justify-between items-center mb-5">
-              <h3 className="text-lg font-bold text-brand-text-primary">New Reflection</h3>
+              <h3 className="text-lg font-bold text-brand-text-primary" style={{ fontFamily: 'var(--serif-display, var(--font-display))', fontWeight: 600 }}>New Reflection</h3>
               <div className="flex items-center gap-2">
                 {colors.map((c) => (
                   <button
@@ -154,7 +152,8 @@ const JournalingPage: React.FC = () => {
               value={newEntryText}
               onChange={(e) => setNewEntryText(e.target.value)}
               placeholder="What is on your heart today?"
-              className="w-full h-40 bg-brand-dark border border-brand-border rounded-xl p-4 text-brand-text-primary focus:outline-none focus:border-brand-accent focus:ring-1 focus:ring-brand-accent/30 resize-none mb-5 placeholder-brand-text-secondary/60 leading-relaxed"
+              className="w-full h-40 border border-brand-border rounded-xl p-4 text-brand-text-primary focus:outline-none focus:border-brand-accent focus:ring-1 focus:ring-brand-accent/30 resize-none mb-5 placeholder-brand-text-secondary/60"
+              style={{ fontFamily: 'var(--serif-body)', lineHeight: 1.65, background: 'var(--bg-paper, #F6EFE1)' }}
             />
             <div className="flex justify-between items-center">
               <span className="text-xs text-brand-text-secondary/60">
@@ -200,18 +199,16 @@ const JournalingPage: React.FC = () => {
           {entries.map((entry) => {
             const colorObj = colors.find(c => c.id === entry.color) || colors[0];
             return (
-              <motion.div key={entry.id} variants={fadeUp} transition={{ duration: 0.45, ease: EASE }}>
-              <Card className={`border ${colorObj.border} ${colorObj.bg} p-0 overflow-hidden`}>
-                {/* Color-keyed accent stripe */}
-                <div className={`h-1 w-full ${colorObj.stripe} rounded-t-2xl`} />
+              <motion.div key={entry.id} variants={fadeUp} transition={{ duration: 0.42, ease: EASE }}>
+              <Card className={`p-0 overflow-hidden`} style={{ background: 'var(--bg-card, #FBF6EA)', boxShadow: 'var(--sh-card, 0 1px 2px rgba(42,28,21,.06), 0 8px 24px rgba(42,28,21,.05))', borderRadius: '6px', borderTop: '2px solid #8E1B1B' }}>
                 <div className="p-6">
                   <div className="flex justify-between items-start mb-4">
-                    <span className={`inline-flex items-center text-xs font-semibold px-2.5 py-1 rounded-full border ${colorObj.border} ${colorObj.bg} text-brand-text-secondary`}>
+                    <span style={{ fontFamily: 'var(--sans-ui)', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--fg-3, #8A7A6A)' }} className="inline-flex items-center px-2.5 py-1 rounded-full border border-brand-border">
                       {formatDate(entry.createdAt)}
                     </span>
                     <PaintBrushIcon className="w-4 h-4 text-brand-text-secondary/40" />
                   </div>
-                  <p className="text-brand-text-primary whitespace-pre-wrap leading-relaxed text-[15px]">
+                  <p className="whitespace-pre-wrap text-[15px]" style={{ fontFamily: 'var(--serif-body)', lineHeight: 1.65, color: 'var(--fg-2, #5B4A3C)' }}>
                     {entry.text}
                   </p>
                   <div className="mt-5 pt-3 border-t border-current/10 flex items-center justify-end">
@@ -229,8 +226,8 @@ const JournalingPage: React.FC = () => {
         !isWriting && (
           <Card className="text-center py-20 border-brand-border border-dashed bg-transparent">
             <PaintBrushIcon className="w-12 h-12 text-brand-text-secondary/50 mx-auto mb-5" />
-            <h3 className="text-xl font-bold text-brand-text-primary mb-2">Your journal is empty</h3>
-            <p className="text-brand-text-secondary mb-8 max-w-sm mx-auto leading-relaxed">
+            <h3 className="text-xl font-bold text-brand-text-primary mb-2" style={{ fontFamily: 'var(--serif-display, var(--font-display))', fontWeight: 600 }}>Your journal is empty</h3>
+            <p className="mb-8 max-w-sm mx-auto" style={{ fontFamily: 'var(--serif-body)', lineHeight: 1.65, color: 'var(--fg-2, #5B4A3C)' }}>
               Write what God is speaking to you. Every word matters here.
             </p>
             <button

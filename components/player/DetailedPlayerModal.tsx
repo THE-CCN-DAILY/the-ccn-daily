@@ -175,26 +175,31 @@ const DetailedPlayerModal: React.FC = () => {
     const handleShare = async () => {
         if (!currentTrack) return;
 
-        const shareData = {
-            title: currentTrack.title,
-            text: `Listen to "${currentTrack.title}" on THE CCN DAILY.`,
-            url: new URL(window.location.pathname, window.location.origin).href,
-        };
-        
-        if (isMobileScreen && navigator.share) {
+        const episodeUrl = currentTrack.audioUrl || window.location.href;
+        const shareText = `Listen to "${currentTrack.title}" on THE CCN DAILY Podcast.`;
+
+        // Use Web Share API on mobile / supported browsers
+        if (navigator.share && /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)) {
             try {
-                await navigator.share(shareData);
+                await navigator.share({
+                    title: currentTrack.title,
+                    text: shareText,
+                    url: episodeUrl,
+                });
             } catch {
-                // Share cancelled or unavailable
+                // User cancelled — do nothing
             }
-        } else {
-            try {
-                await navigator.clipboard.writeText(shareData.url);
-                setShareStatus('copied');
-                setTimeout(() => setShareStatus('idle'), 2000);
-            } catch {
-                notify("Failed to copy link.", "error");
-            }
+            return;
+        }
+
+        // Desktop fallback: copy episode URL to clipboard
+        try {
+            await navigator.clipboard.writeText(episodeUrl);
+            setShareStatus('copied');
+            setTimeout(() => setShareStatus('idle'), 2500);
+        } catch {
+            // Clipboard API not available — open episode audio in new tab
+            window.open(episodeUrl, '_blank', 'noopener,noreferrer');
         }
     };
     

@@ -104,9 +104,9 @@ const VoiceCompanionDrawer: React.FC<VoiceCompanionDrawerProps> = ({ isOpen, onC
             {/* Header */}
             <div className="relative z-10 flex items-center justify-between px-6 pt-5 pb-3">
               <div>
-                <p className="text-xs font-bold uppercase tracking-widest text-brand-accent">Kai — Sentient Guide</p>
+                <p style={{ fontFamily: 'var(--sans-ui, "Inter Tight", -apple-system, sans-serif)', fontSize: '11px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--crimson, #8E1B1B)' }}>Kai — Sentient Guide</p>
                 {stepContext && (
-                  <p className="text-xs text-brand-text-secondary mt-0.5">Praying through: {stepContext}</p>
+                  <p style={{ fontFamily: 'var(--serif-body, "EB Garamond", "Garamond", Georgia, serif)', fontSize: '14px', lineHeight: 1.5, color: 'var(--fg-3, #8A7A6A)', marginTop: '0.125rem' }}>Praying through: {stepContext}</p>
                 )}
               </div>
               <button
@@ -195,13 +195,13 @@ const VoiceCompanionDrawer: React.FC<VoiceCompanionDrawerProps> = ({ isOpen, onC
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.2 }}
                           >
-                            <div className={`max-w-[80%] px-3 py-2 rounded-2xl text-xs leading-relaxed ${
+                            <div className={`max-w-[80%] px-3 py-2 rounded-2xl leading-relaxed ${
                               t.isUser
                                 ? 'bg-brand-accent/20 text-brand-text-primary rounded-tr-sm'
                                 : 'bg-brand-secondary text-brand-accent font-semibold rounded-tl-sm'
-                            }`}>
+                            }`} style={{ fontFamily: 'var(--serif-body, "EB Garamond", "Garamond", Georgia, serif)', fontSize: '15px' }}>
                               {!t.isUser && (
-                                <span className="text-[9px] font-black uppercase tracking-widest text-brand-accent/70 block mb-0.5">Kai</span>
+                                <span style={{ fontFamily: 'var(--sans-ui, "Inter Tight", -apple-system, sans-serif)', fontSize: '9px', fontWeight: 900, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'rgba(142,27,27,0.7)', display: 'block', marginBottom: '0.125rem' }}>Kai</span>
                               )}
                               {t.text}
                             </div>

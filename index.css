@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Source+Code+Pro:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&family=Inter+Tight:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600&display=swap');
 @import "tailwindcss";
 
 /* ─── Design Tokens ────────────────────────────────────────────────────────── */
@@ -24,9 +24,36 @@
   --border-strong-raw: 168 162 158;
 
   /* Fonts */
-  --font-display: "Libre Baskerville", Georgia, "Times New Roman", serif;
-  --font-ui: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-display: 'Cormorant Garamond', 'Didot', Georgia, serif;
+  --font-body: 'EB Garamond', 'Garamond', Georgia, serif;
+  --font-ui: 'Inter Tight', -apple-system, sans-serif;
   --font-mono: "Source Code Pro", "Fira Code", Consolas, monospace;
+
+  /* === THE CCN DAILY DESIGN SYSTEM === */
+  --bg-paper: #F6EFE1;
+  --bg-card:  #FBF6EA;
+  --bg-sunk:  #EFE6D2;
+  --bg-deep:  #2A1C15;
+  --fg-1: #2A1C15;
+  --fg-2: #5B4A3C;
+  --fg-3: #8A7A6A;
+  --crimson:      #8E1B1B;
+  --crimson-deep: #5E0F0F;
+  --ember:        #C23B1E;
+  --amber-ds:     #E87A2C;
+  --gold-ds:      #B7892E;
+  --sage:         #6B7A5A;
+  --flame-grad: linear-gradient(180deg, #5E0F0F 0%, #8E1B1B 40%, #C23B1E 70%, #E87A2C 100%);
+  --serif-display: 'Cormorant Garamond', 'Didot', Georgia, serif;
+  --serif-body:    'EB Garamond', 'Garamond', Georgia, serif;
+  --sans-ui:       'Inter Tight', -apple-system, sans-serif;
+  --sh-card:  0 1px 2px rgba(42,28,21,.06), 0 8px 24px rgba(42,28,21,.05);
+  --sh-hover: 0 1px 2px rgba(42,28,21,.08), 0 14px 32px rgba(42,28,21,.08);
+  --ease-ds:      cubic-bezier(0.2, 0.6, 0.2, 1);
+  --dur-micro: 240ms;
+  --dur-hero:  420ms;
+  --read-width: 620px;
+  --r-cap: 999px;
 
   /* Dynamic accent — used by Layout.tsx ambient radial glow */
   --color-dynamic-accent: var(--cta-raw);
@@ -46,6 +73,14 @@
   --border-strong-raw: 90 84 78;
 
   --card-shine: inset 0 1px 0 0 rgba(255, 255, 255, 0.05), 0 1px 4px rgba(0, 0, 0, 0.35);
+
+  --bg-paper: #1A1210;
+  --bg-card:  #221915;
+  --bg-sunk:  #150F0C;
+  --bg-deep:  #0D0908;
+  --fg-1: #F0E8D8;
+  --fg-2: #C8B8A0;
+  --fg-3: #8A7A6A;
 }
 
 .sepia {
@@ -84,6 +119,19 @@
 
   /* brand-accent = CTA orange (was: muted gray — fixed) */
   --color-brand-accent:       rgb(var(--cta-raw));
+
+  --color-ds-paper: #F6EFE1;
+  --color-ds-card: #FBF6EA;
+  --color-ds-sunk: #EFE6D2;
+  --color-ds-deep: #2A1C15;
+  --color-ds-fg1: #2A1C15;
+  --color-ds-fg2: #5B4A3C;
+  --color-ds-fg3: #8A7A6A;
+  --color-crimson: #8E1B1B;
+  --color-crimson-deep: #5E0F0F;
+  --color-ember: #C23B1E;
+  --color-gold-ds: #B7892E;
+  --color-sage: #6B7A5A;
 
   /* Keyframes */
   --animate-fade-in: fade-in 0.5s ease forwards;
@@ -244,3 +292,108 @@
     scroll-behavior: auto !important;
   }
 }
+
+/* === DS UTILITY CLASSES === */
+.ds-eyebrow {
+  font-family: var(--sans-ui);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--crimson);
+}
+
+.ds-display {
+  font-family: var(--serif-display);
+  font-weight: 600;
+}
+
+.ds-reading-body {
+  font-family: var(--serif-body);
+  font-size: 18px;
+  line-height: 1.75;
+  color: var(--fg-1);
+}
+.ds-reading-body p + p { margin-top: 1.25em; }
+
+.ds-scripture {
+  font-family: var(--serif-body);
+  font-style: italic;
+  font-size: 20px;
+  line-height: 1.6;
+  border-left: 2px solid var(--crimson);
+  padding: 1em 1.5em;
+  background: var(--bg-paper);
+  color: var(--fg-1);
+  margin: 1.5em 0;
+}
+.ds-scripture cite {
+  font-family: var(--sans-ui);
+  font-style: normal;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--crimson);
+  display: block;
+  margin-top: 0.75em;
+}
+
+.ds-prayer {
+  font-family: var(--serif-display);
+  font-style: italic;
+  font-size: 21px;
+  line-height: 1.6;
+  text-align: center;
+  max-width: 440px;
+  margin: 1.5em auto;
+  color: var(--fg-1);
+}
+
+.ds-fleuron {
+  display: block;
+  text-align: center;
+  font-size: 24px;
+  color: var(--crimson);
+  margin: 0.75em 0;
+}
+
+.ds-dropcap::first-letter {
+  font-family: var(--serif-display);
+  font-weight: 700;
+  font-size: 4.4em;
+  line-height: 0.8;
+  float: left;
+  color: var(--crimson);
+  margin-right: 0.06em;
+  padding-top: 0.1em;
+}
+
+.ds-card {
+  background: var(--bg-card);
+  box-shadow: var(--sh-card);
+  border-radius: 6px;
+  transition: box-shadow var(--dur-micro) var(--ease-ds), transform var(--dur-micro) var(--ease-ds);
+}
+.ds-card:hover { box-shadow: var(--sh-hover); }
+
+.ds-card-top { border-top: 2px solid var(--crimson); }
+
+.ds-subscribe-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  padding: 0.55em 1.4em;
+  background: var(--crimson);
+  color: #fff;
+  font-family: var(--sans-ui);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  border-radius: var(--r-cap);
+  border: none;
+  cursor: pointer;
+  transition: background var(--dur-micro) var(--ease-ds);
+  text-decoration: none;
+}
+.ds-subscribe-btn:hover { background: var(--crimson-deep); }
