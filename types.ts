@@ -220,4 +220,89 @@ export interface QuoteGraphic {
   style: string;
 }
 
+// ─── Book System ────────────────────────────────────────────────────────────
+
+export type BookVariantType = 'ebook' | 'audiobook' | 'print' | 'translation';
+export type PrintFormat = 'paperback' | 'hardcover';
+export type EbookFormat = 'epub' | 'pdf';
+
+export interface BookVariant {
+  id: string;
+  type: BookVariantType;
+  // Translation fields
+  language?: string;        // ISO 639-1: 'sw', 'fr', 'es', 'lg', 'rw', etc.
+  languageName?: string;    // Display: 'Swahili', 'French', 'Luganda'
+  // Digital file fields
+  format?: EbookFormat | 'mp3';
+  fileUrl?: string;         // Hosted file URL for ebooks/audiobooks
+  // Print fields
+  printFormat?: PrintFormat;
+  region?: string;          // 'Global', 'Africa', 'North America', 'Europe', etc.
+  // Pricing
+  price?: number;
+  currency?: string;        // ISO 4217: 'USD', 'UGX', 'GBP', etc.
+  isFree: boolean;
+  // External purchase
+  purchaseUrl?: string;
+}
+
+export type PodPlatformId =
+  | 'amazon_kdp' | 'apple_books' | 'google_play' | 'kobo'
+  | 'barnes_noble' | 'draft2digital' | 'smashwords' | 'lulu'
+  | 'ingramspark' | 'bookbaby' | 'custom';
+
+export interface BookPurchaseLink {
+  id: string;
+  platform: PodPlatformId;
+  name: string;       // For 'custom' platforms or display override
+  url: string;
+  region?: string;    // e.g., 'Global', 'Africa', 'US Only'
+  logoUrl?: string;   // For custom platforms
+}
+
+export interface Book {
+  id: string;
+  title: string;
+  subtitle?: string;
+  author: string;
+  coverUrl?: string;
+  description: string;
+  isbn?: string;
+  category: string;
+  tags?: string[];
+  status: 'draft' | 'published';
+  variants: BookVariant[];
+  purchaseLinks: BookPurchaseLink[];
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+// ─── Reading Plans ───────────────────────────────────────────────────────────
+
+export interface ReadingPlanItem {
+  day: number;           // Day 1, 2, 3, etc. in the plan
+  title: string;
+  description?: string;
+  bookId?: string;       // Reference to a Book
+  bookTitle?: string;    // Denormalized for display
+  chapters?: string;     // e.g., "Genesis 1-3" or "Chapter 1-2"
+  contentHtml?: string;  // Direct HTML content for non-book passages
+  durationMinutes?: number;
+}
+
+export interface ReadingPlan {
+  id: string;
+  title: string;
+  description: string;
+  coverUrl?: string;
+  category: string;       // e.g., 'Bible Study', 'Book Club', 'Devotional'
+  totalDays: number;
+  isPremium: boolean;
+  isFree: boolean;
+  status: 'draft' | 'published';
+  items: ReadingPlanItem[];
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export * from './types/pricing';

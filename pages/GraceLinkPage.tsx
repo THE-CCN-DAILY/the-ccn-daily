@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
+import { Gift, Link2 } from 'lucide-react';
 import Card from '../components/Card';
-import { GiftIcon, ReaderIcon, SpeakerWaveIcon, SendIcon, CheckIcon, CloseIcon, SpinnerIcon, SparklesIcon, CommunityIcon } from '../components/icons';
+import { GiftIcon, ReaderIcon, SpeakerWaveIcon, SendIcon, CheckIcon, CloseIcon, SpinnerIcon, CommunityIcon } from '../components/icons';
 import { sendGiftEmail } from '../services/emailService';
 
 interface GiftableItem {
@@ -73,7 +74,7 @@ const GraceLinkModal: React.FC<{
                 <div className="flex justify-between items-start mb-6">
                     <div>
                         <h2 className="text-2xl font-bold text-brand-text-primary mb-1 flex items-center gap-2">
-                            <SparklesIcon className="w-6 h-6 text-brand-accent"/>
+                            <Gift className="w-6 h-6" style={{ color: 'var(--amber-ds, #E87A2C)' }}/>
                             Create Grace Link
                         </h2>
                         <p className="text-sm text-brand-text-secondary">Frictionless sharing for "{item.title}"</p>
@@ -98,7 +99,7 @@ const GraceLinkModal: React.FC<{
                             disabled={isGenerating}
                             className="w-full py-3 rounded-xl bg-brand-accent hover:bg-opacity-90 text-white font-bold shadow-md disabled:bg-opacity-50 flex items-center justify-center gap-2 transition-all"
                         >
-                            {isGenerating ? <><SpinnerIcon className="w-5 h-5"/> Generating Secure Link...</> : <><SparklesIcon className="w-5 h-5"/> Generate Grace Link</>}
+                            {isGenerating ? <><SpinnerIcon className="w-5 h-5"/> Generating Secure Link...</> : <><Gift className="w-5 h-5"/> Generate Grace Link</>}
                         </button>
                     </div>
                 ) : (
@@ -156,19 +157,19 @@ const GraceLinkPage: React.FC = () => {
                                 Premium Gift
                             </div>
                         )}
-                        <div className="flex-shrink-0 w-16 h-16 rounded-xl flex items-center justify-center bg-brand-secondary border border-brand-border mb-4">
-                            <item.icon className="w-8 h-8 text-brand-accent" />
+                        <div className="w-12 h-12 rounded-full flex items-center justify-center mb-4" style={{ background: 'var(--amber-ds, #E87A2C)1A', border: '1px solid var(--amber-ds, #E87A2C)33' }}>
+                            <Gift className="w-6 h-6" style={{ color: 'var(--amber-ds, #E87A2C)' }} />
                         </div>
                         <div className="flex-grow">
                             <h3 className="text-xl font-bold text-brand-text-primary">{item.title}</h3>
                             <p className="text-sm text-brand-text-secondary mt-1">{item.description}</p>
                         </div>
                         <div className="mt-6">
-                            <button 
+                            <button
                                 onClick={() => setSelectedItem(item)}
                                 className="w-full px-4 py-3 rounded-xl bg-brand-secondary border border-brand-border text-brand-text-primary font-bold hover:bg-brand-accent hover:text-white hover:border-brand-accent transition-all flex items-center justify-center gap-2"
                             >
-                                <SparklesIcon className="w-5 h-5"/>
+                                <Link2 className="w-5 h-5"/>
                                 {item.isPremium ? 'Purchase & Share Link' : 'Generate Share Link'}
                             </button>
                         </div>

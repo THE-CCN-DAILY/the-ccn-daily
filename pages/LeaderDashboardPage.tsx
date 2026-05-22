@@ -95,8 +95,8 @@ const LeaderDashboardPage: React.FC = () => {
         transition={{ duration: 0.5, ease: EASE }}
       >
         <div>
-          <p className="text-xs font-bold uppercase tracking-widest text-brand-accent mb-2">Account</p>
-          <h1 className="text-4xl font-black text-brand-text-primary mb-2" style={{ fontFamily: 'var(--font-display)' }}>
+          <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ fontFamily: 'var(--sans-ui)', color: 'var(--gold-ds, #B7892E)' }}>Account</p>
+          <h1 className="text-4xl font-black text-brand-text-primary mb-2" style={{ fontFamily: 'var(--serif-display)' }}>
             Leader Dashboard
           </h1>
           <p className="text-brand-text-secondary">Manage your group, assign content, and track member engagement.</p>
@@ -278,6 +278,41 @@ const LeaderDashboardPage: React.FC = () => {
                 </tbody>
               </table>
             </div>
+          </Card>
+        </div>
+      </div>
+
+      {/* Church / Corporate Section */}
+      <div className="mt-10">
+        <div className="mb-6">
+          <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ fontFamily: 'var(--sans-ui)', color: 'var(--gold-ds, #B7892E)' }}>Church &amp; Corporate</p>
+          <h2 className="text-2xl font-bold text-brand-text-primary" style={{ fontFamily: 'var(--serif-display)' }}>Bulk Access &amp; Cohort Management</h2>
+          <p className="text-brand-text-secondary text-sm mt-1">Manage multi-seat church or corporate licenses, assign content to cohorts, and track group progress.</p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <Card className="border-brand-border bg-brand-dark/30">
+            <div className="w-10 h-10 rounded-full bg-brand-accent/15 flex items-center justify-center mb-4">
+              <UserIcon className="w-5 h-5 text-brand-accent" />
+            </div>
+            <h3 className="font-bold text-brand-text-primary mb-1">Manage Groups</h3>
+            <p className="text-xs text-brand-text-secondary mb-4">Create sub-groups within your church or organization and assign leaders to each cohort.</p>
+            <span className="inline-block text-[11px] font-bold uppercase tracking-wider px-3 py-1 rounded-full bg-brand-secondary text-brand-text-secondary border border-brand-border">Coming Soon</span>
+          </Card>
+          <Card className="border-brand-border bg-brand-dark/30">
+            <div className="w-10 h-10 rounded-full bg-brand-accent/15 flex items-center justify-center mb-4">
+              <SparklesIcon className="w-5 h-5 text-brand-accent" />
+            </div>
+            <h3 className="font-bold text-brand-text-primary mb-1">Assign Content</h3>
+            <p className="text-xs text-brand-text-secondary mb-4">Push devotionals, courses, and challenges to your entire organization or specific cohorts.</p>
+            <span className="inline-block text-[11px] font-bold uppercase tracking-wider px-3 py-1 rounded-full bg-brand-secondary text-brand-text-secondary border border-brand-border">Coming Soon</span>
+          </Card>
+          <Card className="border-brand-border bg-brand-dark/30">
+            <div className="w-10 h-10 rounded-full bg-brand-accent/15 flex items-center justify-center mb-4">
+              <ChartBarIcon className="w-5 h-5 text-brand-accent" />
+            </div>
+            <h3 className="font-bold text-brand-text-primary mb-1">Track Cohort Progress</h3>
+            <p className="text-xs text-brand-text-secondary mb-4">View completion rates, engagement scores, and spiritual growth metrics across your full organization.</p>
+            <span className="inline-block text-[11px] font-bold uppercase tracking-wider px-3 py-1 rounded-full bg-brand-secondary text-brand-text-secondary border border-brand-border">Coming Soon</span>
           </Card>
         </div>
       </div>

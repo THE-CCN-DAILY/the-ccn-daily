@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import type { PodcastEpisode, SearchResult } from '../types';
@@ -9,6 +9,10 @@ import { fetchRSSFeed } from '../services/rssService';
 import { cleanFeedText, excerptFeedText } from '../utils/feedText';
 
 const PODCAST_FEED_URL = 'https://anchor.fm/s/f7311ecc/podcast/rss';
+
+// Update these with actual CCN Daily podcast URLs once confirmed
+const SPOTIFY_PODCAST_URL = 'https://open.spotify.com/show/REPLACE_WITH_ACTUAL';
+const APPLE_PODCASTS_URL = 'https://podcasts.apple.com/REPLACE_WITH_ACTUAL';
 
 const EASE = [0.22, 1, 0.36, 1] as [number, number, number, number];
 const fadeUp = { hidden: { opacity: 0, y: 24 }, visible: { opacity: 1, y: 0 } };
@@ -38,10 +42,14 @@ const PodcastPage: React.FC = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [searchResults, setSearchResults] = useState<SearchResult[] | null>(null);
 
+  const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   useEffect(() => {
-    const loadEpisodes = async () => {
-      setLoading(true);
-      setError('');
+    const loadEpisodes = async (isRetry = false) => {
+      if (!isRetry) {
+        setLoading(true);
+        setError('');
+      }
 
       try {
         const feed = await fetchRSSFeed(PODCAST_FEED_URL);
@@ -61,14 +69,24 @@ const PodcastPage: React.FC = () => {
           }));
 
         setEpisodes(podcastItems as PodcastEpisode[]);
-      } catch {
-        setError('The podcast feed could not be loaded. Please try again shortly.');
-      } finally {
+        setError('');
         setLoading(false);
+      } catch {
+        if (!isRetry) {
+          // Show fallback UI immediately, then retry once after 2 s
+          setError('feed-unavailable');
+          setLoading(false);
+          retryTimerRef.current = setTimeout(() => loadEpisodes(true), 2000);
+        }
+        // Retry also failed — keep the fallback error state, loading already false
       }
     };
 
     loadEpisodes();
+
+    return () => {
+      if (retryTimerRef.current) clearTimeout(retryTimerRef.current);
+    };
   }, []);
 
   const featuredEpisode = useMemo(() => episodes.find((ep) => ep.isFeatured), [episodes]);
@@ -286,10 +304,36 @@ const PodcastPage: React.FC = () => {
         )}
       </AnimatePresence>
 
-      {/* Error */}
+      {/* Error / feed fallback */}
       {!loading && error && (
-        <div className="rounded-xl border border-status-warning/40 bg-status-warning/10 p-5 text-sm text-brand-text-secondary">
-          {error}
+        <div className="py-16 text-center space-y-4">
+          <div className="w-16 h-16 rounded-full bg-brand-secondary flex items-center justify-center mx-auto mb-4">
+            <svg className="w-8 h-8 text-brand-accent" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 18.75a6 6 0 0 0 6-6v-1.5m-6 7.5a6 6 0 0 1-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 0 1-3-3V4.5a3 3 0 1 1 6 0v8.25a3 3 0 0 1-3 3Z" />
+            </svg>
+          </div>
+          <p className="font-semibold text-brand-text-primary">Episodes loading…</p>
+          <p className="text-sm text-brand-text-secondary">
+            If episodes don&apos;t appear, listen directly on your podcast app:
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
+            <a
+              href={SPOTIFY_PODCAST_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-full bg-[#1DB954] text-white font-semibold text-sm hover:opacity-90 transition-opacity"
+            >
+              Listen on Spotify
+            </a>
+            <a
+              href={APPLE_PODCASTS_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-full bg-[#FC3C44] text-white font-semibold text-sm hover:opacity-90 transition-opacity"
+            >
+              Listen on Apple Podcasts
+            </a>
+          </div>
         </div>
       )}
 

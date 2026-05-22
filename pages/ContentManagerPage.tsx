@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { BookOpen, BookMarked, Calendar, Pencil, Plus, Trash2 } from 'lucide-react';
 import Card from '../components/Card';
 import { useNotifications } from '../contexts/NotificationContext';
 import {
@@ -10,22 +11,825 @@ import {
   saveCatalogContent,
   uploadCatalogMedia,
 } from '../services/contentService';
+import {
+  listBooks,
+  saveBook,
+  updateBook,
+  deleteBook,
+  listReadingPlans,
+  saveReadingPlan,
+  updateReadingPlan,
+  deleteReadingPlan,
+} from '../services/booksService';
 import { CloseIcon, GamificationIcon, ReaderIcon, SparklesIcon, SpeakerWaveIcon } from '../components/icons';
+import type {
+  Book,
+  BookVariant,
+  BookVariantType,
+  BookPurchaseLink,
+  PodPlatformId,
+  ReadingPlan,
+  ReadingPlanItem,
+} from '../types';
 
 type UploadRole = 'file' | 'cover' | 'audio';
 
-const TABS: Array<{ id: ContentType; label: string; icon: React.FC<React.SVGProps<SVGSVGElement>> }> = [
+type TabId = ContentType | 'written-devotionals' | 'books-library' | 'reading-plans';
+
+const TABS: Array<{ id: TabId; label: string; icon: React.FC<React.SVGProps<SVGSVGElement>> }> = [
+  { id: 'written-devotionals', label: 'Devotionals', icon: (props) => <BookOpen {...props} /> },
   { id: 'devotionals', label: 'Daily Devotionals', icon: SparklesIcon },
   { id: 'audiobooks', label: 'Audiobooks', icon: SpeakerWaveIcon },
   { id: 'books', label: 'Books (EPUB/PDF)', icon: ReaderIcon },
   { id: 'challenges', label: 'Challenges', icon: GamificationIcon },
   { id: 'courses', label: 'Courses', icon: SparklesIcon },
+  { id: 'books-library', label: 'Books Library', icon: (props) => <BookMarked {...props} /> },
+  { id: 'reading-plans', label: 'Reading Plans', icon: (props) => <Calendar {...props} /> },
 ];
+
+// ─── Devotionals Tab ────────────────────────────────────────────────────────
+
+interface DevotionalDoc {
+  id: string;
+  title: string;
+  scriptureRef: string;
+  scriptureText: string;
+  body: string;
+  author: string;
+  status: 'draft' | 'published';
+  date: string;
+}
+
+const emptyForm = () => ({
+  title: '',
+  scriptureRef: '',
+  scriptureText: '',
+  body: '',
+  author: 'Pastor Eryeza Kalalu',
+  status: 'draft' as 'draft' | 'published',
+  date: new Date().toISOString().split('T')[0],
+});
+
+const DevotionalsTab: React.FC = () => {
+  const [devotionals, setDevotionals] = useState<DevotionalDoc[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [form, setForm] = useState(emptyForm());
+
+  const loadDevotionals = async () => {
+    setLoading(true);
+    try {
+      const { collection, getDocs, orderBy, query } = await import('firebase/firestore');
+      const { db } = await import('../firebase');
+      const q = query(collection(db, 'devotionals'), orderBy('date', 'desc'));
+      const snap = await getDocs(q);
+      setDevotionals(snap.docs.map(d => ({ id: d.id, ...d.data() } as DevotionalDoc)));
+    } catch {
+      // Firestore may not be set up yet — show empty state
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => { loadDevotionals(); }, []);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const { collection, addDoc, doc, updateDoc, serverTimestamp } = await import('firebase/firestore');
+      const { db } = await import('../firebase');
+      if (editingId) {
+        await updateDoc(doc(db, 'devotionals', editingId), {
+          ...form,
+          updatedAt: serverTimestamp(),
+        });
+      } else {
+        await addDoc(collection(db, 'devotionals'), {
+          ...form,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        });
+      }
+      setShowForm(false);
+      setEditingId(null);
+      setForm(emptyForm());
+      await loadDevotionals();
+    } catch {
+      // Save error — form stays open
+    }
+    setSaving(false);
+  };
+
+  const handleEdit = (dev: DevotionalDoc) => {
+    setForm({
+      title: dev.title,
+      scriptureRef: dev.scriptureRef,
+      scriptureText: dev.scriptureText,
+      body: dev.body,
+      author: dev.author,
+      status: dev.status,
+      date: dev.date,
+    });
+    setEditingId(dev.id);
+    setShowForm(true);
+  };
+
+  const handleDelete = async (dev: DevotionalDoc) => {
+    if (!window.confirm(`Delete "${dev.title}"?`)) return;
+    try {
+      const { doc, deleteDoc } = await import('firebase/firestore');
+      const { db } = await import('../firebase');
+      await deleteDoc(doc(db, 'devotionals', dev.id));
+      await loadDevotionals();
+    } catch {
+      // Delete error
+    }
+  };
+
+  const handleCancel = () => {
+    setShowForm(false);
+    setEditingId(null);
+    setForm(emptyForm());
+  };
+
+  const field = (label: string, el: React.ReactNode) => (
+    <div>
+      <label className="block text-sm font-bold text-brand-text-primary mb-2">{label}</label>
+      {el}
+    </div>
+  );
+
+  const inputCls = "w-full bg-brand-dark border border-brand-border rounded-lg px-4 py-3 text-brand-text-primary focus:outline-none focus:border-brand-accent";
+
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      {/* Left: form */}
+      <div className="lg:col-span-1">
+        <Card className="border-brand-border bg-brand-dark/30 sticky top-24">
+          {showForm ? (
+            <>
+              <h2 className="text-xl font-bold text-brand-text-primary mb-6 border-b border-brand-border pb-4">
+                {editingId ? 'Edit Devotional' : 'New Devotional'}
+              </h2>
+              <div className="space-y-5">
+                {field('Title', <input type="text" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} className={inputCls} placeholder="Devotional title..." />)}
+                {field('Scripture Reference', <input type="text" value={form.scriptureRef} onChange={e => setForm(f => ({ ...f, scriptureRef: e.target.value }))} className={inputCls} placeholder="e.g. John 3:16" />)}
+                {field('Scripture Text', <textarea value={form.scriptureText} onChange={e => setForm(f => ({ ...f, scriptureText: e.target.value }))} rows={3} className={`${inputCls} resize-none`} placeholder="The scripture passage..." />)}
+                {field('Body', <textarea value={form.body} onChange={e => setForm(f => ({ ...f, body: e.target.value }))} rows={6} className={`${inputCls} resize-none`} placeholder="The devotional content..." />)}
+                {field('Author', <input type="text" value={form.author} onChange={e => setForm(f => ({ ...f, author: e.target.value }))} className={inputCls} />)}
+                {field('Date', <input type="date" value={form.date} onChange={e => setForm(f => ({ ...f, date: e.target.value }))} className={inputCls} />)}
+                {field('Status', (
+                  <select value={form.status} onChange={e => setForm(f => ({ ...f, status: e.target.value as 'draft' | 'published' }))} className={inputCls}>
+                    <option value="draft">Draft</option>
+                    <option value="published">Published</option>
+                  </select>
+                ))}
+                <div className="flex gap-3 pt-2">
+                  <button onClick={handleSave} disabled={saving || !form.title} className="flex-1 py-3 rounded-xl font-bold bg-brand-accent text-white hover:bg-opacity-90 disabled:opacity-50 disabled:cursor-wait transition-colors">
+                    {saving ? 'Saving…' : editingId ? 'Update' : 'Save'}
+                  </button>
+                  <button onClick={handleCancel} className="px-5 py-3 rounded-xl font-bold bg-brand-dark border border-brand-border text-brand-text-secondary hover:text-brand-text-primary transition-colors">
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="text-center py-8">
+              <BookOpen className="w-10 h-10 mx-auto mb-4 text-brand-text-secondary/40" />
+              <p className="text-brand-text-secondary mb-6 text-sm">Create human-written devotionals for the community.</p>
+              <button onClick={() => setShowForm(true)} className="px-6 py-3 rounded-xl font-bold bg-brand-accent text-white hover:bg-opacity-90 transition-colors">
+                + New Devotional
+              </button>
+            </div>
+          )}
+        </Card>
+      </div>
+
+      {/* Right: list */}
+      <div className="lg:col-span-2">
+        <Card className="border-brand-border bg-brand-dark/30 min-h-[600px]">
+          <h2 className="text-xl font-bold text-brand-text-primary mb-6 border-b border-brand-border pb-4 flex justify-between items-center">
+            <span>Devotionals</span>
+            <span className="text-sm font-normal text-brand-text-secondary bg-brand-secondary px-3 py-1 rounded-full">
+              {devotionals.length} items
+            </span>
+          </h2>
+
+          {loading ? (
+            <div className="flex justify-center py-20">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-accent" />
+            </div>
+          ) : devotionals.length > 0 ? (
+            <div className="space-y-3">
+              {devotionals.map(dev => (
+                <div key={dev.id} className="flex items-center justify-between p-4 rounded-xl border border-brand-border bg-brand-dark/50 hover:border-brand-accent/50 transition-colors">
+                  <div className="flex items-center gap-4 overflow-hidden min-w-0">
+                    <div className="w-10 h-10 rounded-lg bg-brand-secondary flex-shrink-0 flex items-center justify-center">
+                      <BookOpen className="w-5 h-5 text-brand-text-secondary/50" />
+                    </div>
+                    <div className="min-w-0">
+                      <h4 className="text-brand-text-primary font-bold truncate">{dev.title}</h4>
+                      <p className="text-xs text-brand-text-secondary truncate">{dev.scriptureRef} · {dev.date}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 flex-shrink-0 ml-4">
+                    <span className={`px-2 py-0.5 text-[11px] font-bold rounded-full whitespace-nowrap ${dev.status === 'published' ? 'bg-green-500/15 text-green-400' : 'bg-brand-secondary text-brand-text-secondary'}`}>
+                      {dev.status}
+                    </span>
+                    <button onClick={() => handleEdit(dev)} className="p-2 text-brand-text-secondary hover:text-brand-accent hover:bg-brand-accent/10 rounded-lg transition-colors" title="Edit">
+                      <Pencil className="w-4 h-4" />
+                    </button>
+                    <button onClick={() => handleDelete(dev)} className="p-2 text-brand-text-secondary hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors" title="Delete">
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-20 text-brand-text-secondary">
+              <BookOpen className="w-12 h-12 mx-auto mb-4 opacity-30" />
+              <p>No devotionals yet.</p>
+              <p className="text-sm mt-2">Use the form to create the first one.</p>
+            </div>
+          )}
+        </Card>
+      </div>
+    </div>
+  );
+};
 
 const singular = (type: ContentType) => type === 'audiobooks' ? 'audiobook' : type.slice(0, -1);
 
+// ─── POD Platforms ───────────────────────────────────────────────────────────
+
+const POD_PLATFORM_OPTIONS: Array<{ value: PodPlatformId; label: string }> = [
+  { value: 'amazon_kdp',    label: 'Amazon KDP' },
+  { value: 'apple_books',   label: 'Apple Books' },
+  { value: 'google_play',   label: 'Google Play' },
+  { value: 'kobo',          label: 'Kobo' },
+  { value: 'barnes_noble',  label: 'Barnes & Noble' },
+  { value: 'draft2digital', label: 'Draft2Digital' },
+  { value: 'smashwords',    label: 'Smashwords' },
+  { value: 'lulu',          label: 'Lulu' },
+  { value: 'ingramspark',   label: 'IngramSpark' },
+  { value: 'bookbaby',      label: 'BookBaby' },
+  { value: 'custom',        label: 'Other / Custom' },
+];
+
+const INPUT_CLS = "w-full bg-brand-dark border border-brand-border rounded-lg px-4 py-3 text-brand-text-primary focus:outline-none focus:border-brand-accent";
+
+const emptyVariant = (): BookVariant => ({
+  id: Date.now().toString(),
+  type: 'ebook',
+  isFree: true,
+});
+
+const emptyLink = (): BookPurchaseLink => ({
+  id: Date.now().toString(),
+  platform: 'amazon_kdp',
+  name: '',
+  url: '',
+});
+
+const emptyBook = (): Omit<Book, 'id' | 'createdAt' | 'updatedAt'> => ({
+  title: '',
+  subtitle: '',
+  author: 'Pastor Eryeza Kalalu',
+  description: '',
+  isbn: '',
+  category: '',
+  coverUrl: '',
+  status: 'draft',
+  variants: [],
+  purchaseLinks: [],
+});
+
+// ─── Books Manager Tab ───────────────────────────────────────────────────────
+
+const BooksManagerTab: React.FC = () => {
+  const [books, setBooks] = useState<Book[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [form, setForm] = useState(emptyBook());
+
+  const load = async () => {
+    setLoading(true);
+    listBooks(false).then(setBooks).finally(() => setLoading(false));
+  };
+
+  useEffect(() => { load(); }, []);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      if (editingId) {
+        await updateBook(editingId, form);
+      } else {
+        await saveBook(form);
+      }
+      setShowForm(false);
+      setEditingId(null);
+      setForm(emptyBook());
+      await load();
+    } catch {
+      // save error — form stays open
+    }
+    setSaving(false);
+  };
+
+  const handleEdit = (book: Book) => {
+    setForm({
+      title: book.title,
+      subtitle: book.subtitle ?? '',
+      author: book.author,
+      description: book.description,
+      isbn: book.isbn ?? '',
+      category: book.category,
+      coverUrl: book.coverUrl ?? '',
+      status: book.status,
+      variants: book.variants,
+      purchaseLinks: book.purchaseLinks,
+    });
+    setEditingId(book.id);
+    setShowForm(true);
+  };
+
+  const handleDelete = async (book: Book) => {
+    if (!window.confirm(`Delete "${book.title}"?`)) return;
+    await deleteBook(book.id);
+    await load();
+  };
+
+  const handleCancel = () => {
+    setShowForm(false);
+    setEditingId(null);
+    setForm(emptyBook());
+  };
+
+  // Variant helpers
+  const addVariant = () => setForm(f => ({ ...f, variants: [...f.variants, emptyVariant()] }));
+  const updateVariant = (idx: number, patch: Partial<BookVariant>) =>
+    setForm(f => ({ ...f, variants: f.variants.map((v, i) => i === idx ? { ...v, ...patch } : v) }));
+  const removeVariant = (idx: number) =>
+    setForm(f => ({ ...f, variants: f.variants.filter((_, i) => i !== idx) }));
+
+  // Purchase link helpers
+  const addLink = () => setForm(f => ({ ...f, purchaseLinks: [...f.purchaseLinks, emptyLink()] }));
+  const updateLink = (idx: number, patch: Partial<BookPurchaseLink>) =>
+    setForm(f => ({ ...f, purchaseLinks: f.purchaseLinks.map((l, i) => i === idx ? { ...l, ...patch } : l) }));
+  const removeLink = (idx: number) =>
+    setForm(f => ({ ...f, purchaseLinks: f.purchaseLinks.filter((_, i) => i !== idx) }));
+
+  const field = (label: string, el: React.ReactNode) => (
+    <div>
+      <label className="block text-sm font-bold text-brand-text-primary mb-2">{label}</label>
+      {el}
+    </div>
+  );
+
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      {/* Form */}
+      <div className="lg:col-span-1">
+        <Card className="border-brand-border bg-brand-dark/30 sticky top-24">
+          {showForm ? (
+            <>
+              <h2 className="text-xl font-bold text-brand-text-primary mb-6 border-b border-brand-border pb-4">
+                {editingId ? 'Edit Book' : 'New Book'}
+              </h2>
+              <div className="space-y-5 max-h-[75vh] overflow-y-auto pr-1 custom-scrollbar">
+                {field('Title *', <input type="text" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} className={INPUT_CLS} placeholder="Book title…" />)}
+                {field('Subtitle', <input type="text" value={form.subtitle} onChange={e => setForm(f => ({ ...f, subtitle: e.target.value }))} className={INPUT_CLS} placeholder="Optional subtitle…" />)}
+                {field('Author *', <input type="text" value={form.author} onChange={e => setForm(f => ({ ...f, author: e.target.value }))} className={INPUT_CLS} />)}
+                {field('Category *', <input type="text" value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value }))} className={INPUT_CLS} placeholder="e.g. Devotional, Leadership…" />)}
+                {field('Description *', <textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} rows={3} className={`${INPUT_CLS} resize-none`} placeholder="Short description…" />)}
+                {field('Cover URL', <input type="url" value={form.coverUrl} onChange={e => setForm(f => ({ ...f, coverUrl: e.target.value }))} className={INPUT_CLS} placeholder="https://…/cover.jpg" />)}
+                {field('ISBN', <input type="text" value={form.isbn} onChange={e => setForm(f => ({ ...f, isbn: e.target.value }))} className={INPUT_CLS} placeholder="978-…" />)}
+                {field('Status', (
+                  <select value={form.status} onChange={e => setForm(f => ({ ...f, status: e.target.value as 'draft' | 'published' }))} className={INPUT_CLS}>
+                    <option value="draft">Draft</option>
+                    <option value="published">Published</option>
+                  </select>
+                ))}
+
+                {/* Variants */}
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <label className="text-sm font-bold text-brand-text-primary">Variants</label>
+                    <button onClick={addVariant} type="button" className="flex items-center gap-1 text-xs font-bold text-brand-accent hover:underline">
+                      <Plus className="w-3 h-3" /> Add
+                    </button>
+                  </div>
+                  <div className="space-y-4">
+                    {form.variants.map((v, idx) => (
+                      <div key={v.id} className="border border-brand-border rounded-xl p-3 bg-brand-dark/50 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <select value={v.type} onChange={e => updateVariant(idx, { type: e.target.value as BookVariantType })} className={`${INPUT_CLS} text-sm py-1.5`}>
+                            <option value="ebook">Ebook</option>
+                            <option value="audiobook">Audiobook</option>
+                            <option value="print">Print</option>
+                            <option value="translation">Translation</option>
+                          </select>
+                          <button onClick={() => removeVariant(idx)} type="button" className="ml-2 p-1 text-brand-text-secondary hover:text-red-500 transition-colors">
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                        {(v.type === 'ebook' || v.type === 'audiobook') && (
+                          <input type="url" value={v.fileUrl ?? ''} onChange={e => updateVariant(idx, { fileUrl: e.target.value })} className={`${INPUT_CLS} text-sm py-1.5`} placeholder="File URL (epub, pdf, mp3)…" />
+                        )}
+                        {v.type === 'ebook' && (
+                          <select value={v.format ?? ''} onChange={e => updateVariant(idx, { format: e.target.value as 'epub' | 'pdf' })} className={`${INPUT_CLS} text-sm py-1.5`}>
+                            <option value="">Format…</option>
+                            <option value="epub">EPUB</option>
+                            <option value="pdf">PDF</option>
+                          </select>
+                        )}
+                        {v.type === 'translation' && (
+                          <>
+                            <input type="text" value={v.language ?? ''} onChange={e => updateVariant(idx, { language: e.target.value })} className={`${INPUT_CLS} text-sm py-1.5`} placeholder="ISO code (sw, fr, lg…)" />
+                            <input type="text" value={v.languageName ?? ''} onChange={e => updateVariant(idx, { languageName: e.target.value })} className={`${INPUT_CLS} text-sm py-1.5`} placeholder="Language name (Swahili…)" />
+                            <input type="url" value={v.fileUrl ?? ''} onChange={e => updateVariant(idx, { fileUrl: e.target.value })} className={`${INPUT_CLS} text-sm py-1.5`} placeholder="File URL…" />
+                          </>
+                        )}
+                        {v.type === 'print' && (
+                          <>
+                            <select value={v.printFormat ?? ''} onChange={e => updateVariant(idx, { printFormat: e.target.value as 'paperback' | 'hardcover' })} className={`${INPUT_CLS} text-sm py-1.5`}>
+                              <option value="">Format…</option>
+                              <option value="paperback">Paperback</option>
+                              <option value="hardcover">Hardcover</option>
+                            </select>
+                            <input type="text" value={v.region ?? ''} onChange={e => updateVariant(idx, { region: e.target.value })} className={`${INPUT_CLS} text-sm py-1.5`} placeholder="Region (Global, Africa…)" />
+                            <input type="url" value={v.purchaseUrl ?? ''} onChange={e => updateVariant(idx, { purchaseUrl: e.target.value })} className={`${INPUT_CLS} text-sm py-1.5`} placeholder="Direct purchase URL…" />
+                          </>
+                        )}
+                        <div className="flex gap-2">
+                          <input type="number" min={0} step={0.01} value={v.price ?? ''} onChange={e => updateVariant(idx, { price: e.target.value === '' ? undefined : Number(e.target.value) })} className={`${INPUT_CLS} text-sm py-1.5 flex-1`} placeholder="Price" />
+                          <input type="text" value={v.currency ?? 'USD'} onChange={e => updateVariant(idx, { currency: e.target.value })} className={`${INPUT_CLS} text-sm py-1.5 w-20`} placeholder="USD" />
+                        </div>
+                        <label className="flex items-center gap-2 text-sm text-brand-text-secondary cursor-pointer">
+                          <input type="checkbox" checked={v.isFree} onChange={e => updateVariant(idx, { isFree: e.target.checked })} className="rounded" />
+                          Free
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Purchase Links */}
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <label className="text-sm font-bold text-brand-text-primary">Purchase Links</label>
+                    <button onClick={addLink} type="button" className="flex items-center gap-1 text-xs font-bold text-brand-accent hover:underline">
+                      <Plus className="w-3 h-3" /> Add
+                    </button>
+                  </div>
+                  <div className="space-y-3">
+                    {form.purchaseLinks.map((link, idx) => (
+                      <div key={link.id} className="border border-brand-border rounded-xl p-3 bg-brand-dark/50 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <select value={link.platform} onChange={e => updateLink(idx, { platform: e.target.value as PodPlatformId })} className={`${INPUT_CLS} text-sm py-1.5`}>
+                            {POD_PLATFORM_OPTIONS.map(opt => (
+                              <option key={opt.value} value={opt.value}>{opt.label}</option>
+                            ))}
+                          </select>
+                          <button onClick={() => removeLink(idx)} type="button" className="ml-2 p-1 text-brand-text-secondary hover:text-red-500 transition-colors">
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                        {link.platform === 'custom' && (
+                          <input type="text" value={link.name} onChange={e => updateLink(idx, { name: e.target.value })} className={`${INPUT_CLS} text-sm py-1.5`} placeholder="Platform name…" />
+                        )}
+                        <input type="url" value={link.url} onChange={e => updateLink(idx, { url: e.target.value })} className={`${INPUT_CLS} text-sm py-1.5`} placeholder="https://…" />
+                        <input type="text" value={link.region ?? ''} onChange={e => updateLink(idx, { region: e.target.value })} className={`${INPUT_CLS} text-sm py-1.5`} placeholder="Region (Global, Africa…)" />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="flex gap-3 pt-2">
+                  <button onClick={handleSave} disabled={saving || !form.title || !form.author || !form.description || !form.category} className="flex-1 py-3 rounded-xl font-bold bg-brand-accent text-white hover:bg-opacity-90 disabled:opacity-50 disabled:cursor-wait transition-colors">
+                    {saving ? 'Saving…' : editingId ? 'Update' : 'Save'}
+                  </button>
+                  <button onClick={handleCancel} className="px-5 py-3 rounded-xl font-bold bg-brand-dark border border-brand-border text-brand-text-secondary hover:text-brand-text-primary transition-colors">
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="text-center py-8">
+              <BookMarked className="w-10 h-10 mx-auto mb-4 text-brand-text-secondary/40" />
+              <p className="text-brand-text-secondary mb-6 text-sm">Manage books, ebooks, audiobooks and print editions.</p>
+              <button onClick={() => setShowForm(true)} className="px-6 py-3 rounded-xl font-bold bg-brand-accent text-white hover:bg-opacity-90 transition-colors">
+                + New Book
+              </button>
+            </div>
+          )}
+        </Card>
+      </div>
+
+      {/* List */}
+      <div className="lg:col-span-2">
+        <Card className="border-brand-border bg-brand-dark/30 min-h-[600px]">
+          <h2 className="text-xl font-bold text-brand-text-primary mb-6 border-b border-brand-border pb-4 flex justify-between items-center">
+            <span>Books Library</span>
+            <span className="text-sm font-normal text-brand-text-secondary bg-brand-secondary px-3 py-1 rounded-full">
+              {books.length} items
+            </span>
+          </h2>
+          {loading ? (
+            <div className="flex justify-center py-20">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-accent" />
+            </div>
+          ) : books.length > 0 ? (
+            <div className="space-y-3">
+              {books.map(book => (
+                <div key={book.id} className="flex items-center justify-between p-4 rounded-xl border border-brand-border bg-brand-dark/50 hover:border-brand-accent/50 transition-colors">
+                  <div className="flex items-center gap-4 overflow-hidden min-w-0">
+                    <div className="w-10 h-10 rounded-lg bg-brand-secondary flex-shrink-0 overflow-hidden flex items-center justify-center">
+                      {book.coverUrl ? (
+                        <img src={book.coverUrl} alt={book.title} className="w-full h-full object-cover" />
+                      ) : (
+                        <BookMarked className="w-5 h-5 text-brand-text-secondary/50" />
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <h4 className="text-brand-text-primary font-bold truncate">{book.title}</h4>
+                      <p className="text-xs text-brand-text-secondary truncate">
+                        {book.author} · {book.variants.length} variant{book.variants.length !== 1 ? 's' : ''}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 flex-shrink-0 ml-4">
+                    <span className={`px-2 py-0.5 text-[11px] font-bold rounded-full whitespace-nowrap ${book.status === 'published' ? 'bg-green-500/15 text-green-400' : 'bg-brand-secondary text-brand-text-secondary'}`}>
+                      {book.status}
+                    </span>
+                    <button onClick={() => handleEdit(book)} className="p-2 text-brand-text-secondary hover:text-brand-accent hover:bg-brand-accent/10 rounded-lg transition-colors" title="Edit">
+                      <Pencil className="w-4 h-4" />
+                    </button>
+                    <button onClick={() => handleDelete(book)} className="p-2 text-brand-text-secondary hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors" title="Delete">
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-20 text-brand-text-secondary">
+              <BookMarked className="w-12 h-12 mx-auto mb-4 opacity-30" />
+              <p>No books yet.</p>
+              <p className="text-sm mt-2">Use the form to add the first one.</p>
+            </div>
+          )}
+        </Card>
+      </div>
+    </div>
+  );
+};
+
+// ─── Reading Plans Manager Tab ───────────────────────────────────────────────
+
+const emptyPlanItem = (): ReadingPlanItem => ({
+  day: 1,
+  title: '',
+});
+
+const emptyPlan = (): Omit<ReadingPlan, 'id' | 'createdAt' | 'updatedAt'> => ({
+  title: '',
+  description: '',
+  category: '',
+  coverUrl: '',
+  totalDays: 7,
+  isFree: true,
+  isPremium: false,
+  status: 'draft',
+  items: [],
+});
+
+const ReadingPlansManagerTab: React.FC = () => {
+  const [plans, setPlans] = useState<ReadingPlan[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [form, setForm] = useState(emptyPlan());
+
+  const load = async () => {
+    setLoading(true);
+    listReadingPlans(false).then(setPlans).finally(() => setLoading(false));
+  };
+
+  useEffect(() => { load(); }, []);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      if (editingId) {
+        await updateReadingPlan(editingId, form);
+      } else {
+        await saveReadingPlan(form);
+      }
+      setShowForm(false);
+      setEditingId(null);
+      setForm(emptyPlan());
+      await load();
+    } catch {
+      // save error — form stays open
+    }
+    setSaving(false);
+  };
+
+  const handleEdit = (plan: ReadingPlan) => {
+    setForm({
+      title: plan.title,
+      description: plan.description,
+      category: plan.category,
+      coverUrl: plan.coverUrl ?? '',
+      totalDays: plan.totalDays,
+      isFree: plan.isFree,
+      isPremium: plan.isPremium,
+      status: plan.status,
+      items: plan.items,
+    });
+    setEditingId(plan.id);
+    setShowForm(true);
+  };
+
+  const handleDelete = async (plan: ReadingPlan) => {
+    if (!window.confirm(`Delete "${plan.title}"?`)) return;
+    await deleteReadingPlan(plan.id);
+    await load();
+  };
+
+  const handleCancel = () => {
+    setShowForm(false);
+    setEditingId(null);
+    setForm(emptyPlan());
+  };
+
+  const addItem = () => {
+    const nextDay = form.items.length > 0 ? Math.max(...form.items.map(i => i.day)) + 1 : 1;
+    setForm(f => ({ ...f, items: [...f.items, { ...emptyPlanItem(), day: nextDay }] }));
+  };
+
+  const updateItem = (idx: number, patch: Partial<ReadingPlanItem>) =>
+    setForm(f => ({ ...f, items: f.items.map((item, i) => i === idx ? { ...item, ...patch } : item) }));
+
+  const removeItem = (idx: number) =>
+    setForm(f => ({ ...f, items: f.items.filter((_, i) => i !== idx) }));
+
+  const field = (label: string, el: React.ReactNode) => (
+    <div>
+      <label className="block text-sm font-bold text-brand-text-primary mb-2">{label}</label>
+      {el}
+    </div>
+  );
+
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      {/* Form */}
+      <div className="lg:col-span-1">
+        <Card className="border-brand-border bg-brand-dark/30 sticky top-24">
+          {showForm ? (
+            <>
+              <h2 className="text-xl font-bold text-brand-text-primary mb-6 border-b border-brand-border pb-4">
+                {editingId ? 'Edit Plan' : 'New Reading Plan'}
+              </h2>
+              <div className="space-y-5 max-h-[75vh] overflow-y-auto pr-1 custom-scrollbar">
+                {field('Title *', <input type="text" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} className={INPUT_CLS} placeholder="Plan title…" />)}
+                {field('Description *', <textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} rows={3} className={`${INPUT_CLS} resize-none`} placeholder="What readers will gain…" />)}
+                {field('Category *', <input type="text" value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value }))} className={INPUT_CLS} placeholder="e.g. Bible Study, Book Club…" />)}
+                {field('Cover URL', <input type="url" value={form.coverUrl} onChange={e => setForm(f => ({ ...f, coverUrl: e.target.value }))} className={INPUT_CLS} placeholder="https://…/cover.jpg" />)}
+                {field('Total Days', <input type="number" min={1} value={form.totalDays} onChange={e => setForm(f => ({ ...f, totalDays: Number(e.target.value) }))} className={INPUT_CLS} />)}
+                {field('Status', (
+                  <select value={form.status} onChange={e => setForm(f => ({ ...f, status: e.target.value as 'draft' | 'published' }))} className={INPUT_CLS}>
+                    <option value="draft">Draft</option>
+                    <option value="published">Published</option>
+                  </select>
+                ))}
+                <div className="flex gap-4">
+                  <label className="flex items-center gap-2 text-sm text-brand-text-secondary cursor-pointer">
+                    <input type="checkbox" checked={form.isFree} onChange={e => setForm(f => ({ ...f, isFree: e.target.checked }))} className="rounded" />
+                    Free
+                  </label>
+                  <label className="flex items-center gap-2 text-sm text-brand-text-secondary cursor-pointer">
+                    <input type="checkbox" checked={form.isPremium} onChange={e => setForm(f => ({ ...f, isPremium: e.target.checked }))} className="rounded" />
+                    Premium
+                  </label>
+                </div>
+
+                {/* Items */}
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <label className="text-sm font-bold text-brand-text-primary">Days / Items</label>
+                    <button onClick={addItem} type="button" className="flex items-center gap-1 text-xs font-bold text-brand-accent hover:underline">
+                      <Plus className="w-3 h-3" /> Add Day
+                    </button>
+                  </div>
+                  <div className="space-y-4">
+                    {form.items.map((item, idx) => (
+                      <div key={idx} className="border border-brand-border rounded-xl p-3 bg-brand-dark/50 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-bold text-brand-text-secondary uppercase">Day {item.day}</span>
+                          <button onClick={() => removeItem(idx)} type="button" className="p-1 text-brand-text-secondary hover:text-red-500 transition-colors">
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                        <input type="number" min={1} value={item.day} onChange={e => updateItem(idx, { day: Number(e.target.value) })} className={`${INPUT_CLS} text-sm py-1.5`} placeholder="Day number" />
+                        <input type="text" value={item.title} onChange={e => updateItem(idx, { title: e.target.value })} className={`${INPUT_CLS} text-sm py-1.5`} placeholder="Day title…" />
+                        <input type="text" value={item.description ?? ''} onChange={e => updateItem(idx, { description: e.target.value })} className={`${INPUT_CLS} text-sm py-1.5`} placeholder="Description…" />
+                        <input type="text" value={item.chapters ?? ''} onChange={e => updateItem(idx, { chapters: e.target.value })} className={`${INPUT_CLS} text-sm py-1.5`} placeholder="Chapters (e.g. Gen 1-3)…" />
+                        <input type="text" value={item.bookId ?? ''} onChange={e => updateItem(idx, { bookId: e.target.value })} className={`${INPUT_CLS} text-sm py-1.5`} placeholder="Book ID (from Books Library)…" />
+                        <input type="number" min={1} value={item.durationMinutes ?? ''} onChange={e => updateItem(idx, { durationMinutes: e.target.value === '' ? undefined : Number(e.target.value) })} className={`${INPUT_CLS} text-sm py-1.5`} placeholder="Duration (minutes)…" />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="flex gap-3 pt-2">
+                  <button onClick={handleSave} disabled={saving || !form.title || !form.description || !form.category} className="flex-1 py-3 rounded-xl font-bold bg-brand-accent text-white hover:bg-opacity-90 disabled:opacity-50 disabled:cursor-wait transition-colors">
+                    {saving ? 'Saving…' : editingId ? 'Update' : 'Save'}
+                  </button>
+                  <button onClick={handleCancel} className="px-5 py-3 rounded-xl font-bold bg-brand-dark border border-brand-border text-brand-text-secondary hover:text-brand-text-primary transition-colors">
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="text-center py-8">
+              <Calendar className="w-10 h-10 mx-auto mb-4 text-brand-text-secondary/40" />
+              <p className="text-brand-text-secondary mb-6 text-sm">Create structured multi-day reading journeys.</p>
+              <button onClick={() => setShowForm(true)} className="px-6 py-3 rounded-xl font-bold bg-brand-accent text-white hover:bg-opacity-90 transition-colors">
+                + New Plan
+              </button>
+            </div>
+          )}
+        </Card>
+      </div>
+
+      {/* List */}
+      <div className="lg:col-span-2">
+        <Card className="border-brand-border bg-brand-dark/30 min-h-[600px]">
+          <h2 className="text-xl font-bold text-brand-text-primary mb-6 border-b border-brand-border pb-4 flex justify-between items-center">
+            <span>Reading Plans</span>
+            <span className="text-sm font-normal text-brand-text-secondary bg-brand-secondary px-3 py-1 rounded-full">
+              {plans.length} items
+            </span>
+          </h2>
+          {loading ? (
+            <div className="flex justify-center py-20">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-accent" />
+            </div>
+          ) : plans.length > 0 ? (
+            <div className="space-y-3">
+              {plans.map(plan => (
+                <div key={plan.id} className="flex items-center justify-between p-4 rounded-xl border border-brand-border bg-brand-dark/50 hover:border-brand-accent/50 transition-colors">
+                  <div className="flex items-center gap-4 overflow-hidden min-w-0">
+                    <div className="w-10 h-10 rounded-lg bg-brand-secondary flex-shrink-0 flex items-center justify-center">
+                      <Calendar className="w-5 h-5 text-brand-text-secondary/50" />
+                    </div>
+                    <div className="min-w-0">
+                      <h4 className="text-brand-text-primary font-bold truncate">{plan.title}</h4>
+                      <p className="text-xs text-brand-text-secondary truncate">
+                        {plan.category} · {plan.totalDays} days · {plan.items.length} item{plan.items.length !== 1 ? 's' : ''}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 flex-shrink-0 ml-4">
+                    <span className={`px-2 py-0.5 text-[11px] font-bold rounded-full whitespace-nowrap ${plan.status === 'published' ? 'bg-green-500/15 text-green-400' : 'bg-brand-secondary text-brand-text-secondary'}`}>
+                      {plan.status}
+                    </span>
+                    <button onClick={() => handleEdit(plan)} className="p-2 text-brand-text-secondary hover:text-brand-accent hover:bg-brand-accent/10 rounded-lg transition-colors" title="Edit">
+                      <Pencil className="w-4 h-4" />
+                    </button>
+                    <button onClick={() => handleDelete(plan)} className="p-2 text-brand-text-secondary hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors" title="Delete">
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-20 text-brand-text-secondary">
+              <Calendar className="w-12 h-12 mx-auto mb-4 opacity-30" />
+              <p>No reading plans yet.</p>
+              <p className="text-sm mt-2">Use the form to create the first one.</p>
+            </div>
+          )}
+        </Card>
+      </div>
+    </div>
+  );
+};
+
 const ContentManagerPage: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<ContentType>('devotionals');
+  const [activeTab, setActiveTab] = useState<TabId>('written-devotionals');
   const navigate = useNavigate();
   const { notify } = useNotifications();
   const [isSaving, setIsSaving] = useState(false);
@@ -45,13 +849,16 @@ const ContentManagerPage: React.FC = () => {
   const [items, setItems] = useState<CatalogContentItem[]>([]);
   const [loadingItems, setLoadingItems] = useState(false);
 
-  const requiresAuthor = activeTab === 'audiobooks' || activeTab === 'books' || activeTab === 'courses';
-  const usesDate = activeTab === 'devotionals' || activeTab === 'challenges';
-  const usesCover = activeTab === 'audiobooks' || activeTab === 'books' || activeTab === 'challenges' || activeTab === 'courses';
-  const usesPrimaryFile = activeTab !== 'challenges' && activeTab !== 'courses';
-  const primaryFileRole: UploadRole = activeTab === 'books' ? 'file' : 'audio';
+  const isCatalogTab = activeTab !== 'written-devotionals' && activeTab !== 'books-library' && activeTab !== 'reading-plans';
+  const catalogTab = isCatalogTab ? (activeTab as ContentType) : 'devotionals';
 
-  const heading = useMemo(() => singular(activeTab), [activeTab]);
+  const requiresAuthor = catalogTab === 'audiobooks' || catalogTab === 'books' || catalogTab === 'courses';
+  const usesDate = catalogTab === 'devotionals' || catalogTab === 'challenges';
+  const usesCover = catalogTab === 'audiobooks' || catalogTab === 'books' || catalogTab === 'challenges' || catalogTab === 'courses';
+  const usesPrimaryFile = catalogTab !== 'challenges' && catalogTab !== 'courses';
+  const primaryFileRole: UploadRole = catalogTab === 'books' ? 'file' : 'audio';
+
+  const heading = useMemo(() => isCatalogTab ? singular(catalogTab) : 'devotional', [activeTab]);
 
   const resetForm = () => {
     setTitle('');
@@ -67,11 +874,12 @@ const ContentManagerPage: React.FC = () => {
   };
 
   const fetchItems = async () => {
+    if (!isCatalogTab) return;
     setLoadingItems(true);
     try {
-      setItems(await listCatalogContent(activeTab));
+      setItems(await listCatalogContent(catalogTab));
     } catch (error) {
-      notify(error instanceof Error ? error.message : `Failed to load ${activeTab}.`, 'error');
+      notify(error instanceof Error ? error.message : `Failed to load ${catalogTab}.`, 'error');
     } finally {
       setLoadingItems(false);
     }
@@ -92,7 +900,7 @@ const ContentManagerPage: React.FC = () => {
   const uploadIfNeeded = async (selectedFile: File | null, role: UploadRole, existingUrl: string) => {
     if (existingUrl.trim()) return existingUrl.trim();
     if (!selectedFile) return '';
-    return uploadCatalogMedia(activeTab, role, selectedFile, setUploadProgress);
+    return uploadCatalogMedia(catalogTab, role, selectedFile, setUploadProgress);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -108,16 +916,16 @@ const ContentManagerPage: React.FC = () => {
         ? await uploadIfNeeded(coverImage, 'cover', coverUrl)
         : '';
 
-      await saveCatalogContent(activeTab, {
+      await saveCatalogContent(catalogTab, {
         title,
         description,
-        content: activeTab === 'devotionals' ? description : undefined,
-        author: activeTab === 'courses' ? undefined : author,
-        instructor: activeTab === 'courses' ? author : undefined,
-        date: activeTab === 'devotionals' ? date : undefined,
-        startDate: activeTab === 'challenges' ? date : undefined,
-        audioUrl: activeTab === 'devotionals' || activeTab === 'audiobooks' ? uploadedFileUrl : undefined,
-        fileUrl: activeTab === 'books' ? uploadedFileUrl : undefined,
+        content: catalogTab === 'devotionals' ? description : undefined,
+        author: catalogTab === 'courses' ? undefined : author,
+        instructor: catalogTab === 'courses' ? author : undefined,
+        date: catalogTab === 'devotionals' ? date : undefined,
+        startDate: catalogTab === 'challenges' ? date : undefined,
+        audioUrl: catalogTab === 'devotionals' || catalogTab === 'audiobooks' ? uploadedFileUrl : undefined,
+        fileUrl: catalogTab === 'books' ? uploadedFileUrl : undefined,
         coverUrl: uploadedCoverUrl || undefined,
         status: 'published',
         isPremium,
@@ -139,7 +947,7 @@ const ContentManagerPage: React.FC = () => {
     if (!window.confirm(`Are you sure you want to delete "${item.title}"?`)) return;
 
     try {
-      await deleteCatalogContent(activeTab, item.id);
+      await deleteCatalogContent(catalogTab, item.id);
       notify(`${heading} deleted successfully.`, 'success');
       await fetchItems();
     } catch (error) {
@@ -171,234 +979,242 @@ const ContentManagerPage: React.FC = () => {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-1">
-          <Card className="border-brand-border bg-brand-dark/30 sticky top-24">
-            <h2 className="text-xl font-bold text-brand-text-primary mb-6 border-b border-brand-border pb-4">
-              Add New {heading}
-            </h2>
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div>
-                <label className="block text-sm font-bold text-brand-text-primary mb-2">Title</label>
-                <input
-                  type="text"
-                  required
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  className="w-full bg-brand-dark border border-brand-border rounded-lg px-4 py-3 text-brand-text-primary focus:outline-none focus:border-brand-accent"
-                  placeholder={`Enter ${heading} title...`}
-                />
-              </div>
-
-              {requiresAuthor && (
+      {activeTab === 'written-devotionals' ? (
+        <DevotionalsTab />
+      ) : activeTab === 'books-library' ? (
+        <BooksManagerTab />
+      ) : activeTab === 'reading-plans' ? (
+        <ReadingPlansManagerTab />
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-1">
+            <Card className="border-brand-border bg-brand-dark/30 sticky top-24">
+              <h2 className="text-xl font-bold text-brand-text-primary mb-6 border-b border-brand-border pb-4">
+                Add New {heading}
+              </h2>
+              <form onSubmit={handleSubmit} className="space-y-6">
                 <div>
-                  <label className="block text-sm font-bold text-brand-text-primary mb-2">
-                    {activeTab === 'courses' ? 'Instructor' : 'Author'}
-                  </label>
+                  <label className="block text-sm font-bold text-brand-text-primary mb-2">Title</label>
                   <input
                     type="text"
                     required
-                    value={author}
-                    onChange={(e) => setAuthor(e.target.value)}
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
                     className="w-full bg-brand-dark border border-brand-border rounded-lg px-4 py-3 text-brand-text-primary focus:outline-none focus:border-brand-accent"
-                    placeholder={activeTab === 'courses' ? 'Instructor name...' : 'Author name...'}
+                    placeholder={`Enter ${heading} title...`}
                   />
                 </div>
-              )}
 
-              {usesDate && (
-                <div>
-                  <label className="block text-sm font-bold text-brand-text-primary mb-2">
-                    {activeTab === 'devotionals' ? 'Date' : 'Start Date'}
-                  </label>
-                  <input
-                    type="date"
-                    required
-                    value={date}
-                    onChange={(e) => setDate(e.target.value)}
-                    className="w-full bg-brand-dark border border-brand-border rounded-lg px-4 py-3 text-brand-text-primary focus:outline-none focus:border-brand-accent"
-                  />
-                </div>
-              )}
-
-              <div>
-                <label className="block text-sm font-bold text-brand-text-primary mb-2">
-                  {activeTab === 'devotionals' ? 'Devotional Content' : 'Description'}
-                </label>
-                <textarea
-                  required
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  rows={4}
-                  className="w-full bg-brand-dark border border-brand-border rounded-lg px-4 py-3 text-brand-text-primary focus:outline-none focus:border-brand-accent resize-none"
-                  placeholder={`Enter ${activeTab === 'devotionals' ? 'content' : 'description'}...`}
-                />
-              </div>
-
-              {usesCover && (
-                <div className="space-y-3">
-                  <label className="block text-sm font-bold text-brand-text-primary">Cover Image</label>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => handleFileChange(e, setCoverImage)}
-                    className="w-full text-brand-text-secondary file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-bold file:bg-brand-accent/10 file:text-brand-accent hover:file:bg-brand-accent/20"
-                  />
-                  <input
-                    type="url"
-                    value={coverUrl}
-                    onChange={(e) => setCoverUrl(e.target.value)}
-                    className="w-full bg-brand-dark border border-brand-border rounded-lg px-4 py-3 text-brand-text-primary focus:outline-none focus:border-brand-accent"
-                    placeholder="https://.../cover.jpg"
-                  />
-                </div>
-              )}
-
-              <div className="flex flex-col gap-4 border border-brand-border rounded-xl p-4 bg-brand-dark/50">
-                <div className="flex items-center gap-3">
-                  <input
-                    type="checkbox"
-                    id="isPremium"
-                    checked={isPremium}
-                    onChange={(e) => setIsPremium(e.target.checked)}
-                    className="w-5 h-5 rounded border-brand-border bg-brand-dark text-brand-accent focus:ring-brand-accent focus:ring-offset-brand-dark"
-                  />
-                  <label htmlFor="isPremium" className="text-sm font-bold text-brand-text-primary">
-                    Premium Content
-                  </label>
-                </div>
-
-                {isPremium && (
+                {requiresAuthor && (
                   <div>
                     <label className="block text-sm font-bold text-brand-text-primary mb-2">
-                      Price ($)
+                      {catalogTab === 'courses' ? 'Instructor' : 'Author'}
                     </label>
                     <input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={price}
-                      onChange={(e) => setPrice(e.target.value === '' ? '' : Number(e.target.value))}
+                      type="text"
+                      required
+                      value={author}
+                      onChange={(e) => setAuthor(e.target.value)}
                       className="w-full bg-brand-dark border border-brand-border rounded-lg px-4 py-3 text-brand-text-primary focus:outline-none focus:border-brand-accent"
-                      placeholder="0"
+                      placeholder={catalogTab === 'courses' ? 'Instructor name...' : 'Author name...'}
                     />
                   </div>
                 )}
-              </div>
 
-              {usesPrimaryFile && (
-                <div className="space-y-3">
-                  <label className="block text-sm font-bold text-brand-text-primary">
-                    {activeTab === 'devotionals' ? 'Audio File' : activeTab === 'audiobooks' ? 'Audio File' : 'Book File'}
+                {usesDate && (
+                  <div>
+                    <label className="block text-sm font-bold text-brand-text-primary mb-2">
+                      {catalogTab === 'devotionals' ? 'Date' : 'Start Date'}
+                    </label>
+                    <input
+                      type="date"
+                      required
+                      value={date}
+                      onChange={(e) => setDate(e.target.value)}
+                      className="w-full bg-brand-dark border border-brand-border rounded-lg px-4 py-3 text-brand-text-primary focus:outline-none focus:border-brand-accent"
+                    />
+                  </div>
+                )}
+
+                <div>
+                  <label className="block text-sm font-bold text-brand-text-primary mb-2">
+                    {catalogTab === 'devotionals' ? 'Devotional Content' : 'Description'}
                   </label>
-                  <input
-                    type="file"
-                    required={activeTab !== 'devotionals' && !fileUrl}
-                    accept={activeTab === 'books' ? '.epub,.pdf' : 'audio/*'}
-                    onChange={(e) => handleFileChange(e, setFile)}
-                    className="w-full text-brand-text-secondary file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-bold file:bg-brand-accent/10 file:text-brand-accent hover:file:bg-brand-accent/20"
-                  />
-                  <input
-                    type="url"
-                    required={activeTab !== 'devotionals' && !file}
-                    value={fileUrl}
-                    onChange={(e) => setFileUrl(e.target.value)}
-                    className="w-full bg-brand-dark border border-brand-border rounded-lg px-4 py-3 text-brand-text-primary focus:outline-none focus:border-brand-accent"
-                    placeholder={activeTab === 'books' ? 'https://.../book.pdf' : 'https://.../audio.mp3'}
+                  <textarea
+                    required
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    rows={4}
+                    className="w-full bg-brand-dark border border-brand-border rounded-lg px-4 py-3 text-brand-text-primary focus:outline-none focus:border-brand-accent resize-none"
+                    placeholder={`Enter ${catalogTab === 'devotionals' ? 'content' : 'description'}...`}
                   />
                 </div>
-              )}
 
-              {isSaving && uploadProgress > 0 && (
-                <div className="w-full bg-brand-dark rounded-full h-2.5 mb-4 overflow-hidden">
-                  <div className="bg-brand-accent h-2.5 rounded-full transition-all duration-300" style={{ width: `${uploadProgress}%` }} />
+                {usesCover && (
+                  <div className="space-y-3">
+                    <label className="block text-sm font-bold text-brand-text-primary">Cover Image</label>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => handleFileChange(e, setCoverImage)}
+                      className="w-full text-brand-text-secondary file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-bold file:bg-brand-accent/10 file:text-brand-accent hover:file:bg-brand-accent/20"
+                    />
+                    <input
+                      type="url"
+                      value={coverUrl}
+                      onChange={(e) => setCoverUrl(e.target.value)}
+                      className="w-full bg-brand-dark border border-brand-border rounded-lg px-4 py-3 text-brand-text-primary focus:outline-none focus:border-brand-accent"
+                      placeholder="https://.../cover.jpg"
+                    />
+                  </div>
+                )}
+
+                <div className="flex flex-col gap-4 border border-brand-border rounded-xl p-4 bg-brand-dark/50">
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="checkbox"
+                      id="isPremium"
+                      checked={isPremium}
+                      onChange={(e) => setIsPremium(e.target.checked)}
+                      className="w-5 h-5 rounded border-brand-border bg-brand-dark text-brand-accent focus:ring-brand-accent focus:ring-offset-brand-dark"
+                    />
+                    <label htmlFor="isPremium" className="text-sm font-bold text-brand-text-primary">
+                      Premium Content
+                    </label>
+                  </div>
+
+                  {isPremium && (
+                    <div>
+                      <label className="block text-sm font-bold text-brand-text-primary mb-2">
+                        Price ($)
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={price}
+                        onChange={(e) => setPrice(e.target.value === '' ? '' : Number(e.target.value))}
+                        className="w-full bg-brand-dark border border-brand-border rounded-lg px-4 py-3 text-brand-text-primary focus:outline-none focus:border-brand-accent"
+                        placeholder="0"
+                      />
+                    </div>
+                  )}
                 </div>
-              )}
 
-              <button
-                type="submit"
-                disabled={isSaving}
-                className={`w-full py-4 rounded-xl font-bold transition-colors flex items-center justify-center gap-2 ${
-                  isSaving ? 'bg-brand-secondary text-brand-text-secondary cursor-wait' : 'bg-brand-accent text-white hover:bg-opacity-90'
-                }`}
-              >
-                {isSaving ? 'Saving...' : `Save ${heading}`}
-              </button>
-            </form>
-          </Card>
-        </div>
+                {usesPrimaryFile && (
+                  <div className="space-y-3">
+                    <label className="block text-sm font-bold text-brand-text-primary">
+                      {catalogTab === 'devotionals' ? 'Audio File' : catalogTab === 'audiobooks' ? 'Audio File' : 'Book File'}
+                    </label>
+                    <input
+                      type="file"
+                      required={catalogTab !== 'devotionals' && !fileUrl}
+                      accept={catalogTab === 'books' ? '.epub,.pdf' : 'audio/*'}
+                      onChange={(e) => handleFileChange(e, setFile)}
+                      className="w-full text-brand-text-secondary file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-bold file:bg-brand-accent/10 file:text-brand-accent hover:file:bg-brand-accent/20"
+                    />
+                    <input
+                      type="url"
+                      required={catalogTab !== 'devotionals' && !file}
+                      value={fileUrl}
+                      onChange={(e) => setFileUrl(e.target.value)}
+                      className="w-full bg-brand-dark border border-brand-border rounded-lg px-4 py-3 text-brand-text-primary focus:outline-none focus:border-brand-accent"
+                      placeholder={catalogTab === 'books' ? 'https://.../book.pdf' : 'https://.../audio.mp3'}
+                    />
+                  </div>
+                )}
 
-        <div className="lg:col-span-2">
-          <Card className="border-brand-border bg-brand-dark/30 h-full min-h-[600px]">
-            <h2 className="text-xl font-bold text-brand-text-primary mb-6 border-b border-brand-border pb-4 flex justify-between items-center">
-              <span>Manage {activeTab}</span>
-              <span className="text-sm font-normal text-brand-text-secondary bg-brand-secondary px-3 py-1 rounded-full">
-                {items.length} items
-              </span>
-            </h2>
+                {isSaving && uploadProgress > 0 && (
+                  <div className="w-full bg-brand-dark rounded-full h-2.5 mb-4 overflow-hidden">
+                    <div className="bg-brand-accent h-2.5 rounded-full transition-all duration-300" style={{ width: `${uploadProgress}%` }} />
+                  </div>
+                )}
 
-            {loadingItems ? (
-              <div className="flex justify-center py-20">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-accent" />
-              </div>
-            ) : items.length > 0 ? (
-              <div className="space-y-4">
-                {items.map((item) => (
-                  <div key={item.id} className="flex items-center justify-between p-4 rounded-xl border border-brand-border bg-brand-dark/50 hover:border-brand-accent/50 transition-colors">
-                    <div className="flex items-center gap-4 overflow-hidden">
-                      {(item.coverUrl || activeTab === 'devotionals') && (
-                        <div className="w-12 h-12 rounded bg-brand-secondary flex-shrink-0 overflow-hidden flex items-center justify-center">
-                          {item.coverUrl ? (
-                            <img src={item.coverUrl} alt={item.title} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                          ) : (
-                            <SparklesIcon className="w-6 h-6 text-brand-text-secondary/50" />
-                          )}
+                <button
+                  type="submit"
+                  disabled={isSaving}
+                  className={`w-full py-4 rounded-xl font-bold transition-colors flex items-center justify-center gap-2 ${
+                    isSaving ? 'bg-brand-secondary text-brand-text-secondary cursor-wait' : 'bg-brand-accent text-white hover:bg-opacity-90'
+                  }`}
+                >
+                  {isSaving ? 'Saving...' : `Save ${heading}`}
+                </button>
+              </form>
+            </Card>
+          </div>
+
+          <div className="lg:col-span-2">
+            <Card className="border-brand-border bg-brand-dark/30 h-full min-h-[600px]">
+              <h2 className="text-xl font-bold text-brand-text-primary mb-6 border-b border-brand-border pb-4 flex justify-between items-center">
+                <span>Manage {catalogTab}</span>
+                <span className="text-sm font-normal text-brand-text-secondary bg-brand-secondary px-3 py-1 rounded-full">
+                  {items.length} items
+                </span>
+              </h2>
+
+              {loadingItems ? (
+                <div className="flex justify-center py-20">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-accent" />
+                </div>
+              ) : items.length > 0 ? (
+                <div className="space-y-4">
+                  {items.map((item) => (
+                    <div key={item.id} className="flex items-center justify-between p-4 rounded-xl border border-brand-border bg-brand-dark/50 hover:border-brand-accent/50 transition-colors">
+                      <div className="flex items-center gap-4 overflow-hidden">
+                        {(item.coverUrl || catalogTab === 'devotionals') && (
+                          <div className="w-12 h-12 rounded bg-brand-secondary flex-shrink-0 overflow-hidden flex items-center justify-center">
+                            {item.coverUrl ? (
+                              <img src={item.coverUrl} alt={item.title} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                            ) : (
+                              <SparklesIcon className="w-6 h-6 text-brand-text-secondary/50" />
+                            )}
+                          </div>
+                        )}
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2">
+                            <h4 className="text-brand-text-primary font-bold truncate">{item.title}</h4>
+                            {item.isPremium && (
+                              <span className="px-2 py-0.5 text-[12px] font-bold bg-brand-accent/20 text-brand-accent rounded-full whitespace-nowrap">
+                                Premium {item.price ? `($${item.price})` : ''}
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-xs text-brand-text-secondary truncate">
+                            {(item.author || item.instructor) && `By ${item.author || item.instructor} - `}
+                            {item.date || item.startDate || item.createdAt || 'undated'}
+                          </p>
                         </div>
-                      )}
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2">
-                          <h4 className="text-brand-text-primary font-bold truncate">{item.title}</h4>
-                          {item.isPremium && (
-                            <span className="px-2 py-0.5 text-[12px] font-bold bg-brand-accent/20 text-brand-accent rounded-full whitespace-nowrap">
-                              Premium {item.price ? `($${item.price})` : ''}
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-xs text-brand-text-secondary truncate">
-                          {(item.author || item.instructor) && `By ${item.author || item.instructor} - `}
-                          {item.date || item.startDate || item.createdAt || 'undated'}
-                        </p>
+                      </div>
+                      <div className="flex items-center gap-2 flex-shrink-0 ml-4">
+                        {(catalogTab === 'challenges' || catalogTab === 'courses') && (
+                          <button
+                            onClick={() => navigate(`/studio/${catalogTab}/${item.id}/modules`)}
+                            className="px-3 py-1.5 text-xs font-bold bg-brand-accent/10 text-brand-accent hover:bg-brand-accent hover:text-white rounded-lg transition-colors"
+                          >
+                            Manage Modules
+                          </button>
+                        )}
+                        <button
+                          onClick={() => handleDelete(item)}
+                          className="p-2 text-brand-text-secondary hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
+                          title="Delete"
+                        >
+                          <CloseIcon className="w-5 h-5" />
+                        </button>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2 flex-shrink-0 ml-4">
-                      {(activeTab === 'challenges' || activeTab === 'courses') && (
-                        <button
-                          onClick={() => navigate(`/studio/${activeTab}/${item.id}/modules`)}
-                          className="px-3 py-1.5 text-xs font-bold bg-brand-accent/10 text-brand-accent hover:bg-brand-accent hover:text-white rounded-lg transition-colors"
-                        >
-                          Manage Modules
-                        </button>
-                      )}
-                      <button
-                        onClick={() => handleDelete(item)}
-                        className="p-2 text-brand-text-secondary hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
-                        title="Delete"
-                      >
-                        <CloseIcon className="w-5 h-5" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-20 text-brand-text-secondary">
-                <p>No {activeTab} found.</p>
-                <p className="text-sm mt-2">Use the form to add the first one.</p>
-              </div>
-            )}
-          </Card>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-20 text-brand-text-secondary">
+                  <p>No {catalogTab} found.</p>
+                  <p className="text-sm mt-2">Use the form to add the first one.</p>
+                </div>
+              )}
+            </Card>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

@@ -56,12 +56,16 @@ import ChallengeDetailPage from './pages/ChallengeDetailPage';
 import ChallengeModuleViewerPage from './pages/ChallengeModuleViewerPage';
 import JournalingPage from './pages/JournalingPage';
 import CommunityRoomsPage from './pages/CommunityRoomsPage';
+import DashboardPage from './pages/DashboardPage';
 import FamilyDashboardPage from './pages/FamilyDashboardPage';
 import LeaderDashboardPage from './pages/LeaderDashboardPage';
 
 import ContentManagerPage from './pages/ContentManagerPage';
 import ChallengeModuleManagerPage from './pages/ChallengeModuleManagerPage';
 import CourseModuleManagerPage from './pages/CourseModuleManagerPage';
+import BooksLibraryPage from './pages/BooksLibraryPage';
+import BookReaderPage from './pages/BookReaderPage';
+import ReadingPlansPage from './pages/ReadingPlansPage';
 
 import ErrorBoundary from './components/ErrorBoundary';
 
@@ -93,7 +97,8 @@ const App: React.FC = () => {
                           
                           {/* Member Sanctuary Routes */}
                           <Route path="/app/*">
-                            <Route index element={<Navigate to="guided-journey" replace />} />
+                            <Route index element={<Navigate to="dashboard" replace />} />
+                            <Route path="dashboard" element={<RequireAuth><DashboardPage /></RequireAuth>} />
                             <Route path="guided-journey" element={<RequireAuth><GuidedJourneyPage /></RequireAuth>} />
                             <Route path="bible" element={<RequireAuth><BibleReaderPage /></RequireAuth>} />
                             <Route path="podcasts" element={<RequireAuth><PodcastPage /></RequireAuth>} />
@@ -115,6 +120,10 @@ const App: React.FC = () => {
                             <Route path="challenges" element={<RequireAuth><ChallengesPage /></RequireAuth>} />
                             <Route path="challenges/:challengeId" element={<RequireAuth><ChallengeDetailPage /></RequireAuth>} />
                             <Route path="challenges/:challengeId/modules/:moduleId" element={<RequireAuth><ChallengeModuleViewerPage /></RequireAuth>} />
+                            <Route path="books" element={<RequireAuth><BooksLibraryPage /></RequireAuth>} />
+                            <Route path="book/:bookId" element={<RequireAuth><BookReaderPage /></RequireAuth>} />
+                            <Route path="reading-plans" element={<RequireAuth><ReadingPlansPage /></RequireAuth>} />
+                            <Route path="reading-plans/:planId" element={<RequireAuth><ReadingPlansPage /></RequireAuth>} />
                             <Route path="journaling" element={<RequireAuth><JournalingPage /></RequireAuth>} />
                             <Route path="community-rooms" element={<RequireAuth><CommunityRoomsPage /></RequireAuth>} />
                             <Route path="family-dashboard" element={<RequireRole allowedRoles={['admin', 'family_lead']}><FamilyDashboardPage /></RequireRole>} />

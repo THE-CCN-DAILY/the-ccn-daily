@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { BookOpenCheck } from 'lucide-react';
+import { BookOpenCheck, ArrowLeft } from 'lucide-react';
 import Card from '../components/Card';
 import ContentDisplay from '../components/reader/ContentDisplay';
 import BibleStudyGuide from '../components/BibleStudyGuide';
@@ -93,6 +94,14 @@ const BibleReaderPage: React.FC = () => {
     <div className="h-full flex flex-col">
       {/* Header */}
       <div className="flex-shrink-0 mb-6">
+        <div className="mb-2">
+          <Link
+            to="/app/guided-journey"
+            className="inline-flex items-center gap-1.5 text-sm text-brand-text-secondary hover:text-brand-accent transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" /> Daily Journey
+          </Link>
+        </div>
         <motion.p
           className="text-xs font-bold uppercase tracking-widest text-brand-accent mb-2"
           initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
@@ -150,7 +159,7 @@ const BibleReaderPage: React.FC = () => {
           {sidebarOpen && (
             <motion.div
               key="sidebar"
-              className="lg:col-span-1"
+              className="lg:col-span-1 lg:self-start"
               initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
               transition={{ duration: 0.3, ease: EASE }}
             >
@@ -260,7 +269,7 @@ const BibleReaderPage: React.FC = () => {
         >
           {/* Bible text column */}
           <motion.div
-            className={studyGuideOpen ? 'lg:w-3/5 w-full' : 'w-full'}
+            className={`${studyGuideOpen ? 'lg:w-3/5' : 'w-full'} w-full min-w-0`}
             variants={fadeUp} initial="hidden" animate="visible"
             transition={{ duration: 0.4, ease: EASE, delay: 0.1 }}
           >
@@ -357,7 +366,7 @@ const BibleReaderPage: React.FC = () => {
           <AnimatePresence>
             {studyGuideOpen && (
               <motion.div
-                className="lg:w-2/5 w-full"
+                className="lg:w-2/5 w-full lg:sticky lg:top-8 lg:self-start lg:h-[calc(100vh-4rem)]"
                 initial={{ opacity: 0, x: 40 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 40 }}

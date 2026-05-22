@@ -86,7 +86,7 @@ const NewsletterPage: React.FC = () => {
           <img
             src={thumb}
             alt={post.title ?? ''}
-            className="w-full aspect-video object-cover rounded-t-md"
+            className="w-full h-40 object-cover rounded-t-md"
             loading="lazy"
           />
         )}
@@ -265,31 +265,33 @@ const NewsletterPage: React.FC = () => {
               {/* Scrollable content */}
               <div className="flex-1 overflow-y-auto px-6 py-6">
                 <div className="max-w-2xl mx-auto">
-                  <div
-                    className="ds-reading-body"
-                    style={{ fontFamily: 'var(--serif-body)' }}
-                  >
+                  {expandedPost.content ? (
+                    <div
+                      className="ds-reading-body prose-newsletter"
+                      style={{ fontFamily: 'var(--serif-body)', color: 'var(--fg-1)' }}
+                      dangerouslySetInnerHTML={{ __html: expandedPost.content }}
+                    />
+                  ) : (
                     <p className="text-brand-text-primary leading-8 text-[1.0625rem] whitespace-pre-line">
                       {cleanFeedText(getPostText(expandedPost))}
                     </p>
-                  </div>
+                  )}
                 </div>
               </div>
 
-              {/* Drawer footer */}
+              {/* Drawer footer — Substack as secondary action only */}
               <div className="flex-shrink-0 px-6 py-4 border-t border-brand-border">
-                <div className="flex flex-col gap-3 mt-0">
-                  <p style={{ fontFamily: 'var(--sans-ui)', fontSize: '12px', color: 'var(--fg-3)' }}>
-                    This is a preview. Read the full issue on Substack.
-                  </p>
+                <div className="flex items-center justify-between gap-3">
+                  <span style={{ fontFamily: 'var(--sans-ui)', fontSize: '12px', color: 'var(--fg-3)' }}>
+                    Also available on Substack
+                  </span>
                   <a
                     href={expandedPost.link ?? SUBSTACK_URL}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="ds-subscribe-btn"
-                    style={{ justifyContent: 'center' }}
+                    className="text-sm font-semibold text-brand-accent hover:underline flex-shrink-0"
                   >
-                    Read Full Issue on Substack ↗
+                    Open on Substack ↗
                   </a>
                 </div>
               </div>

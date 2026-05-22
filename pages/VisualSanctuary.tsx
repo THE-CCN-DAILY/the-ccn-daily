@@ -38,11 +38,11 @@ const VisualSanctuary: React.FC = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
             >
-                <p className="text-xs font-bold uppercase tracking-widest text-brand-accent mb-2">SANCTUARY</p>
-                <h1 className="text-4xl font-black text-brand-text-primary mb-2" style={{ fontFamily: 'var(--font-display)' }}>
-                    Cinematic Sanctuary
+                <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ fontFamily: 'var(--sans-ui)', color: 'var(--crimson, #8E1B1B)' }}>Pray</p>
+                <h1 className="text-4xl font-black text-brand-text-primary mb-2" style={{ fontFamily: 'var(--serif-display)' }}>
+                    Visual Sanctuary
                 </h1>
-                <p className="text-brand-text-secondary">A visual prayer space for quiet reflection, sacred ambience, and cinematic meditation.</p>
+                <p className="text-brand-text-secondary">A space for meditation, sacred imagery, and visual prayer.</p>
             </motion.div>
 
             <div className="flex-1 grid grid-cols-1 lg:grid-cols-4 gap-6 min-h-0">

@@ -105,12 +105,15 @@ const CommunityRoomsPage: React.FC = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: EASE }}
       >
-        <p className="text-xs font-bold uppercase tracking-widest text-brand-accent mb-2">
+        <p
+          className="text-xs font-bold uppercase tracking-widest mb-2"
+          style={{ fontFamily: 'var(--sans-ui)', color: 'var(--amber-ds, #E87A2C)' }}
+        >
           Community
         </p>
         <h1
           className="text-4xl font-black text-brand-text-primary mb-2"
-          style={{ fontFamily: 'var(--font-display)' }}
+          style={{ fontFamily: 'var(--serif-display)' }}
         >
           The Sanctuary Room
         </h1>

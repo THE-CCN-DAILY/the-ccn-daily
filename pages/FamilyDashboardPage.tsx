@@ -89,8 +89,8 @@ const FamilyDashboardPage: React.FC = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: EASE }}
       >
-        <p className="text-xs font-bold uppercase tracking-widest text-brand-accent mb-2">Account</p>
-        <h1 className="text-4xl font-black text-brand-text-primary mb-2" style={{ fontFamily: 'var(--font-display)' }}>
+        <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ fontFamily: 'var(--sans-ui)', color: 'var(--gold-ds, #B7892E)' }}>Account</p>
+        <h1 className="text-4xl font-black text-brand-text-primary mb-2" style={{ fontFamily: 'var(--serif-display)' }}>
           Family Dashboard
         </h1>
         <p className="text-brand-text-secondary">Invite family members to your shared plan and grow together in faith.</p>

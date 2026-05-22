@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import Card from '../components/Card';
 import { PaintBrushIcon, PlusCircleIcon } from '../components/icons';
+import RichTextJournal from '../components/RichTextJournal';
 
 const EASE = [0.2, 0.6, 0.2, 1] as [number, number, number, number];
 const fadeUp = { hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } };
@@ -148,12 +149,11 @@ const JournalingPage: React.FC = () => {
                 ))}
               </div>
             </div>
-            <textarea
+            <RichTextJournal
               value={newEntryText}
-              onChange={(e) => setNewEntryText(e.target.value)}
+              onChange={setNewEntryText}
               placeholder="What is on your heart today?"
-              className="w-full h-40 border border-brand-border rounded-xl p-4 text-brand-text-primary focus:outline-none focus:border-brand-accent focus:ring-1 focus:ring-brand-accent/30 resize-none mb-5 placeholder-brand-text-secondary/60"
-              style={{ fontFamily: 'var(--serif-body)', lineHeight: 1.65, background: 'var(--bg-paper, #F6EFE1)' }}
+              className="mb-5"
             />
             <div className="flex justify-between items-center">
               <span className="text-xs text-brand-text-secondary/60">

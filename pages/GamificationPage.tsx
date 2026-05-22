@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import { Zap, Star, Trophy as LucideTrophy, TrendingUp } from 'lucide-react';
 import Card from '../components/Card';
 import type { Achievement, RewardItem } from '../types';
-import { FireIcon, SparklesIcon, TrophyIcon, GamificationIcon, PlusCircleIcon, CheckIcon } from '../components/icons';
+import { FireIcon, TrophyIcon, GamificationIcon, PlusCircleIcon, CheckIcon } from '../components/icons';
 import { useGamification } from '../contexts/GamificationContext';
 import { useAuth } from '../contexts/AuthContext';
 import { mockAchievements, mockRewards, mockEarningActions } from '../data/gamificationData';
@@ -41,7 +42,7 @@ const AchievementItem: React.FC<{ achievement: Achievement, isUnlocked: boolean 
             ) : (
                 <div className="text-sm font-semibold text-brand-accent flex items-center gap-1">
                     <span>{achievement.points}</span>
-                    <SparklesIcon className="w-4 h-4" />
+                    <Zap className="w-4 h-4" />
                 </div>
             )}
         </div>
@@ -65,12 +66,12 @@ const RewardItemCard: React.FC<{ reward: RewardItem; userPoints: number; isUnloc
                         <CheckIcon className="w-5 h-5 mr-2"/> Unlocked
                     </button>
                 ) : (
-                    <button 
+                    <button
                         onClick={() => onRedeem(reward.cost)}
                         disabled={!canAfford}
                         className="w-full px-4 py-2 rounded-lg bg-brand-accent text-white font-semibold flex items-center justify-center disabled:bg-brand-secondary disabled:text-brand-text-secondary disabled:cursor-not-allowed"
                     >
-                        <SparklesIcon className="w-5 h-5 mr-2"/>
+                        <Zap className="w-5 h-5 mr-2"/>
                         <span>{reward.cost.toLocaleString()}</span>
                     </button>
                 )}
@@ -90,7 +91,7 @@ const EarningActionItem: React.FC<{ action: typeof mockEarningActions[0] }> = ({
         </div>
         <div className="text-right ml-4 text-lg font-semibold text-brand-accent flex items-center gap-1">
             <span>+{action.points}</span>
-            <SparklesIcon className="w-5 h-5" />
+            <Zap className="w-5 h-5" />
         </div>
     </div>
 );
@@ -163,7 +164,9 @@ const GamificationPage: React.FC = () => {
                     </div>
                 </Card>
                  <Card className="flex items-center p-6">
-                    <SparklesIcon className="w-16 h-16 text-brand-accent mr-6"/>
+                    <div className="w-16 h-16 rounded-full flex items-center justify-center bg-brand-accent/15 mr-6 flex-shrink-0">
+                      <Zap className="w-8 h-8 text-brand-accent" />
+                    </div>
                     <div>
                         <h2 className="text-4xl font-bold text-brand-text-primary">{stats.points.toLocaleString()}</h2>
                         <p className="text-brand-text-secondary">Total Points Balance</p>

@@ -2,6 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import Card from '../components/Card';
 import { SparklesIcon, CheckIcon } from '../components/icons';
+import {
+  BookOpen as LucideBookOpen,
+  Flame as LucideFlameIcon,
+  Users as LucideUsers,
+  ShieldCheck as LucideShieldCheck,
+} from 'lucide-react';
 
 const EASE = [0.22, 1, 0.36, 1] as [number, number, number, number];
 const fadeUp = { hidden: { opacity: 0, y: 24 }, visible: { opacity: 1, y: 0 } };
@@ -40,7 +46,7 @@ const PLAN_UI = {
     tagline: 'Build depth and consistency.',
     bullets: [
       'Premium courses (core set)',
-      'Standard audiobook library (rotating)',
+      'Curated audiobooks for your season',
       'Premium challenge archive',
       'Journaling templates',
       'Community rooms',
@@ -75,6 +81,7 @@ const PLAN_UI = {
   },
 } as const;
 
+// Kept for potential future use — not rendered on page
 const OWNERSHIP_NOTES = [
   'Included with subscription: rotating course/audiobook library, premium discussions, challenge archives.',
   'Own forever: selected books, flagship courses, premium audiobooks.',
@@ -164,7 +171,7 @@ const PricingPage: React.FC = () => {
     let basePrice = proPrice.discountedPriceUSD;
     if (tier === 'max') basePrice = maxPrice.discountedPriceUSD;
     if (tier === 'partner') basePrice = partnerPrice.discountedPriceUSD;
-    
+
     let finalPrice = basePrice;
 
     if (billingCycle === 'yearly') {
@@ -194,7 +201,7 @@ const PricingPage: React.FC = () => {
     if (tier === 'pro') yearlyTotal = 59.99;
     else if (tier === 'max') yearlyTotal = 129.99;
     else if (tier === 'partner') yearlyTotal = 199.99;
-    
+
     const monthlyAnnualized = (tier === 'pro' ? 8.99 : tier === 'max' ? 14.99 : 24.99) * 12;
     const savings = ((monthlyAnnualized - yearlyTotal) / monthlyAnnualized) * 100;
     return Math.round(savings);
@@ -372,207 +379,200 @@ const PricingPage: React.FC = () => {
 
       {/* ── Pricing cards ──────────────────────────────────────────── */}
       <motion.div
-        className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4"
+        className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4 items-stretch"
         variants={stagger}
         initial="hidden"
         whileInView="visible"
         viewport={{ once: true, margin: '-60px' }}
       >
-        {/* Foundation */}
-        <motion.div variants={fadeUp} transition={{ duration: 0.5, ease: EASE }}>
-        <Card className="flex flex-col border-brand-border bg-brand-dark/30 h-full">
-          <div className="mb-8">
-            <h3 className="text-2xl font-bold text-brand-text-primary mb-2">{PLAN_UI.free.label}</h3>
-            <p className="text-brand-text-secondary text-sm h-10">{PLAN_UI.free.tagline}</p>
-            <div className="mt-6 flex items-baseline">
-              <span className="text-4xl font-black text-brand-text-primary">$0</span>
-              <span className="text-brand-text-secondary ml-2">/forever</span>
+        {/* Foundation — Free */}
+        <motion.div variants={fadeUp} transition={{ duration: 0.5, ease: EASE }} className="flex">
+          <Card className="flex flex-col border-brand-border bg-brand-dark/30 w-full" style={{ borderTopColor: 'var(--fg-3)', borderTopWidth: '3px' }}>
+            <div className="mb-6">
+              <LucideBookOpen className="w-6 h-6 mb-3" style={{ color: 'var(--fg-3)' }} />
+              <h3 className="text-2xl font-bold text-brand-text-primary mb-2">{PLAN_UI.free.label}</h3>
+              <p className="text-brand-text-secondary text-sm h-10">{PLAN_UI.free.tagline}</p>
+              <div className="mt-6 flex items-baseline">
+                <span className="text-4xl font-black text-brand-text-primary">$0</span>
+                <span className="text-brand-text-secondary ml-2">/forever</span>
+              </div>
             </div>
-          </div>
 
-          <ul className="space-y-4 mb-8 flex-1">
-            {PLAN_UI.free.bullets.map((item) => (
-              <li key={item} className="flex items-start gap-3 text-sm text-brand-text-secondary">
-                <CheckIcon className="w-5 h-5 text-brand-text-primary flex-shrink-0" />
-                <span>{item}</span>
-              </li>
-            ))}
-          </ul>
+            <ul className="space-y-4 mb-8 flex-1">
+              {PLAN_UI.free.bullets.map((item) => (
+                <li key={item} className="flex items-start gap-3 text-sm text-brand-text-secondary">
+                  <CheckIcon className="w-5 h-5 flex-shrink-0" style={{ color: 'var(--fg-3)' }} />
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
 
-          <p className="text-xs text-brand-text-secondary mb-4">{PLAN_UI.free.support}</p>
+            <p className="text-xs text-brand-text-secondary mb-4">{PLAN_UI.free.support}</p>
 
-          <button
-            disabled
-            className="w-full py-3 rounded-xl bg-brand-secondary text-brand-text-secondary font-bold border border-brand-border cursor-not-allowed"
-          >
-            {PLAN_UI.free.cta}
-          </button>
-        </Card>
+            <button
+              disabled
+              className="w-full py-3 rounded-xl bg-brand-secondary text-brand-text-secondary font-bold border border-brand-border cursor-not-allowed"
+            >
+              {PLAN_UI.free.cta}
+            </button>
+          </Card>
         </motion.div>
 
-        {/* Growth */}
-        <motion.div variants={fadeUp} transition={{ duration: 0.5, ease: EASE }}>
-        <Card className="flex flex-col border-brand-accent relative transform md:-translate-y-4 shadow-2xl shadow-brand-accent/10 h-full">
-          {!!PLAN_UI.pro.badge && (
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-brand-accent text-white text-xs font-bold px-4 py-1 rounded-full uppercase tracking-wider">
-              {PLAN_UI.pro.badge}
-            </div>
-          )}
-
-          <div className="mb-8">
-            <h3 className="text-2xl font-bold text-brand-text-primary mb-2">{PLAN_UI.pro.label}</h3>
-            <p className="text-brand-text-secondary text-sm h-10">{PLAN_UI.pro.tagline}</p>
-            <div className="mt-6 flex items-baseline">
-              <span className="text-4xl font-black text-brand-text-primary">{formatPrice('pro')}</span>
-              <span className="text-brand-text-secondary ml-2">/{billingCycle === 'monthly' ? 'mo' : 'yr'}</span>
-            </div>
-            {billingCycle === 'yearly' && (
-              <p className="text-xs text-status-success mt-1 font-semibold">Save {getSavingsPercentage('pro')}% vs monthly</p>
+        {/* Growth — Pro (Most Popular) */}
+        <motion.div variants={fadeUp} transition={{ duration: 0.5, ease: EASE }} className="flex">
+          <Card className="flex flex-col relative transform md:-translate-y-4 shadow-2xl w-full" style={{ borderColor: 'var(--crimson)', borderTopColor: 'var(--crimson)', borderTopWidth: '3px', boxShadow: '0 25px 50px -12px color-mix(in srgb, var(--crimson) 15%, transparent)' }}>
+            {!!PLAN_UI.pro.badge && (
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white text-xs font-bold px-4 py-1 rounded-full uppercase tracking-wider" style={{ backgroundColor: 'var(--crimson)' }}>
+                {PLAN_UI.pro.badge}
+              </div>
             )}
-          </div>
 
-          <ul className="space-y-4 mb-8 flex-1">
-            {PLAN_UI.pro.bullets.map((item) => (
-              <li key={item} className="flex items-start gap-3 text-sm text-brand-text-secondary">
-                <CheckIcon className="w-5 h-5 text-brand-accent flex-shrink-0" />
-                <span className={item.includes('Premium') ? 'font-semibold text-brand-text-primary' : ''}>{item}</span>
-              </li>
-            ))}
-          </ul>
+            <div className="mb-6">
+              <LucideFlameIcon className="w-6 h-6 mb-3" style={{ color: 'var(--crimson)' }} />
+              <h3 className="text-2xl font-bold text-brand-text-primary mb-2">{PLAN_UI.pro.label}</h3>
+              <p className="text-brand-text-secondary text-sm h-10">{PLAN_UI.pro.tagline}</p>
+              <div className="mt-6 flex items-baseline">
+                <span className="text-4xl font-black text-brand-text-primary">{formatPrice('pro')}</span>
+                <span className="text-brand-text-secondary ml-2">/{billingCycle === 'monthly' ? 'mo' : 'yr'}</span>
+              </div>
+              {billingCycle === 'yearly' && (
+                <p className="text-xs text-status-success mt-1 font-semibold">Save {getSavingsPercentage('pro')}% vs monthly</p>
+              )}
+            </div>
 
-          <p className="text-xs text-brand-text-secondary mb-4">{PLAN_UI.pro.support}</p>
+            <ul className="space-y-4 mb-8 flex-1">
+              {PLAN_UI.pro.bullets.map((item) => (
+                <li key={item} className="flex items-start gap-3 text-sm text-brand-text-secondary">
+                  <CheckIcon className="w-5 h-5 flex-shrink-0" style={{ color: 'var(--crimson)' }} />
+                  <span className={item.includes('audiobook') || item.includes('courses') ? 'font-semibold text-brand-text-primary' : ''}>{item}</span>
+                </li>
+              ))}
+            </ul>
 
-          <button
-            onClick={() => handleSubscribe('pro')}
-            disabled={isProcessing}
-            className={`w-full py-3 rounded-xl font-bold transition-colors shadow-lg shadow-brand-accent/20 ${
-              isProcessing && selectedTier === 'pro'
-                ? 'bg-brand-secondary text-brand-text-secondary cursor-wait'
-                : 'bg-brand-accent text-white hover:bg-opacity-90'
-            }`}
-          >
-            {isProcessing && selectedTier === 'pro' ? 'Processing...' : PLAN_UI.pro.cta}
-          </button>
-        </Card>
+            <p className="text-xs text-brand-text-secondary mb-4">{PLAN_UI.pro.support}</p>
+
+            <button
+              onClick={() => handleSubscribe('pro')}
+              disabled={isProcessing}
+              className={`w-full py-3 rounded-xl font-bold transition-colors ${
+                isProcessing && selectedTier === 'pro'
+                  ? 'bg-brand-secondary text-brand-text-secondary cursor-wait'
+                  : 'text-white hover:opacity-90'
+              }`}
+              style={!(isProcessing && selectedTier === 'pro') ? { backgroundColor: 'var(--crimson)' } : {}}
+            >
+              {isProcessing && selectedTier === 'pro' ? 'Processing...' : PLAN_UI.pro.cta}
+            </button>
+          </Card>
         </motion.div>
 
-        {/* Family */}
-        <motion.div variants={fadeUp} transition={{ duration: 0.5, ease: EASE }}>
-        <Card className="flex flex-col border-secondary-purple bg-secondary-purple/5 h-full">
-          <div className="mb-8">
-            <h3 className="text-2xl font-bold text-brand-text-primary mb-2 flex items-center gap-2">
-              {PLAN_UI.max.label} <SparklesIcon className="w-6 h-6 text-secondary-purple" />
-            </h3>
-            <p className="text-brand-text-secondary text-sm h-10">{PLAN_UI.max.tagline}</p>
-            <div className="mt-6 flex items-baseline">
-              <span className="text-4xl font-black text-brand-text-primary">{formatPrice('max')}</span>
-              <span className="text-brand-text-secondary ml-2">/{billingCycle === 'monthly' ? 'mo' : 'yr'}</span>
+        {/* Family — Max */}
+        <motion.div variants={fadeUp} transition={{ duration: 0.5, ease: EASE }} className="flex">
+          <Card className="flex flex-col w-full" style={{ borderColor: 'var(--ember)', borderTopColor: 'var(--ember)', borderTopWidth: '3px', backgroundColor: 'color-mix(in srgb, var(--ember) 5%, transparent)' }}>
+            <div className="mb-6">
+              <LucideUsers className="w-6 h-6 mb-3" style={{ color: 'var(--ember)' }} />
+              <h3 className="text-2xl font-bold text-brand-text-primary mb-2">
+                {PLAN_UI.max.label}
+              </h3>
+              <p className="text-brand-text-secondary text-sm h-10">{PLAN_UI.max.tagline}</p>
+              <div className="mt-6 flex items-baseline">
+                <span className="text-4xl font-black text-brand-text-primary">{formatPrice('max')}</span>
+                <span className="text-brand-text-secondary ml-2">/{billingCycle === 'monthly' ? 'mo' : 'yr'}</span>
+              </div>
+              {billingCycle === 'yearly' && (
+                <p className="text-xs text-status-success mt-1 font-semibold">Save {getSavingsPercentage('max')}% vs monthly</p>
+              )}
             </div>
-            {billingCycle === 'yearly' && (
-              <p className="text-xs text-status-success mt-1 font-semibold">Save {getSavingsPercentage('max')}% vs monthly</p>
-            )}
-          </div>
 
-          <ul className="space-y-4 mb-8 flex-1">
-            {PLAN_UI.max.bullets.map((item) => (
-              <li key={item} className="flex items-start gap-3 text-sm text-brand-text-secondary">
-                <CheckIcon className="w-5 h-5 text-secondary-purple flex-shrink-0" />
-                <span className={item === 'Everything in Growth' ? 'font-semibold text-brand-text-primary' : ''}>{item}</span>
-              </li>
-            ))}
-          </ul>
+            <ul className="space-y-4 mb-8 flex-1">
+              {PLAN_UI.max.bullets.map((item) => (
+                <li key={item} className="flex items-start gap-3 text-sm text-brand-text-secondary">
+                  <CheckIcon className="w-5 h-5 flex-shrink-0" style={{ color: 'var(--ember)' }} />
+                  <span className={item === 'Everything in Growth' ? 'font-semibold text-brand-text-primary' : ''}>{item}</span>
+                </li>
+              ))}
+            </ul>
 
-          <p className="text-xs text-brand-text-secondary mb-4">{PLAN_UI.max.support}</p>
+            <p className="text-xs text-brand-text-secondary mb-4">{PLAN_UI.max.support}</p>
 
-          <button
-            onClick={() => handleSubscribe('max')}
-            disabled={isProcessing}
-            className={`w-full py-3 rounded-xl font-bold transition-colors shadow-lg shadow-secondary-purple/20 ${
-              isProcessing && selectedTier === 'max'
-                ? 'bg-brand-secondary text-brand-text-secondary cursor-wait'
-                : 'bg-secondary-purple text-white hover:bg-opacity-90'
-            }`}
-          >
-            {isProcessing && selectedTier === 'max' ? 'Processing...' : PLAN_UI.max.cta}
-          </button>
-        </Card>
+            <button
+              onClick={() => handleSubscribe('max')}
+              disabled={isProcessing}
+              className={`w-full py-3 rounded-xl font-bold transition-colors ${
+                isProcessing && selectedTier === 'max'
+                  ? 'bg-brand-secondary text-brand-text-secondary cursor-wait'
+                  : 'text-white hover:opacity-90'
+              }`}
+              style={!(isProcessing && selectedTier === 'max') ? { backgroundColor: 'var(--ember)' } : {}}
+            >
+              {isProcessing && selectedTier === 'max' ? 'Processing...' : PLAN_UI.max.cta}
+            </button>
+          </Card>
         </motion.div>
 
-        {/* Leader */}
-        <motion.div variants={fadeUp} transition={{ duration: 0.5, ease: EASE }}>
-        <Card className="flex flex-col border-brand-border bg-brand-dark/30 h-full">
-          <div className="mb-8">
-            <h3 className="text-2xl font-bold text-brand-text-primary mb-2 flex items-center gap-2">
-              {PLAN_UI.partner.label}
-            </h3>
-            <p className="text-brand-text-secondary text-sm h-10">{PLAN_UI.partner.tagline}</p>
-            <div className="mt-6 flex items-baseline">
-              <span className="text-4xl font-black text-brand-text-primary">{formatPrice('partner')}</span>
-              <span className="text-brand-text-secondary ml-2">/{billingCycle === 'monthly' ? 'mo' : 'yr'}</span>
+        {/* Leader — Partner */}
+        <motion.div variants={fadeUp} transition={{ duration: 0.5, ease: EASE }} className="flex">
+          <Card className="flex flex-col w-full" style={{ borderColor: 'var(--gold-ds)', borderTopColor: 'var(--gold-ds)', borderTopWidth: '3px', backgroundColor: 'color-mix(in srgb, var(--gold-ds) 5%, transparent)' }}>
+            <div className="mb-6">
+              <LucideShieldCheck className="w-6 h-6 mb-3" style={{ color: 'var(--gold-ds)' }} />
+              <h3 className="text-2xl font-bold text-brand-text-primary mb-2">
+                {PLAN_UI.partner.label}
+              </h3>
+              <p className="text-brand-text-secondary text-sm h-10">{PLAN_UI.partner.tagline}</p>
+              <div className="mt-6 flex items-baseline">
+                <span className="text-4xl font-black text-brand-text-primary">{formatPrice('partner')}</span>
+                <span className="text-brand-text-secondary ml-2">/{billingCycle === 'monthly' ? 'mo' : 'yr'}</span>
+              </div>
+              {billingCycle === 'yearly' && (
+                <p className="text-xs text-status-success mt-1 font-semibold">Save {getSavingsPercentage('partner')}% vs monthly</p>
+              )}
             </div>
-            {billingCycle === 'yearly' && (
-              <p className="text-xs text-status-success mt-1 font-semibold">Save {getSavingsPercentage('partner')}% vs monthly</p>
-            )}
-          </div>
 
-          <ul className="space-y-4 mb-8 flex-1">
-            {PLAN_UI.partner.bullets.map((item) => (
-              <li key={item} className="flex items-start gap-3 text-sm text-brand-text-secondary">
-                <CheckIcon className="w-5 h-5 text-brand-text-primary flex-shrink-0" />
-                <span className={item === 'Everything in Family' ? 'font-semibold text-brand-text-primary' : ''}>{item}</span>
-              </li>
-            ))}
-          </ul>
+            <ul className="space-y-4 mb-8 flex-1">
+              {PLAN_UI.partner.bullets.map((item) => (
+                <li key={item} className="flex items-start gap-3 text-sm text-brand-text-secondary">
+                  <CheckIcon className="w-5 h-5 flex-shrink-0" style={{ color: 'var(--gold-ds)' }} />
+                  <span className={item === 'Everything in Family' ? 'font-semibold text-brand-text-primary' : ''}>{item}</span>
+                </li>
+              ))}
+            </ul>
 
-          <p className="text-xs text-brand-text-secondary mb-4">{PLAN_UI.partner.support}</p>
+            <p className="text-xs text-brand-text-secondary mb-4">{PLAN_UI.partner.support}</p>
 
-          <button
-            onClick={() => handleSubscribe('partner')}
-            disabled={isProcessing}
-            className={`w-full py-3 rounded-xl font-bold transition-colors border border-brand-border ${
-              isProcessing && selectedTier === 'partner'
-                ? 'bg-brand-secondary text-brand-text-secondary cursor-wait'
-                : 'bg-brand-dark text-brand-text-primary hover:bg-brand-secondary'
-            }`}
-          >
-            {isProcessing && selectedTier === 'partner' ? 'Processing...' : PLAN_UI.partner.cta}
-          </button>
-        </Card>
+            <button
+              onClick={() => handleSubscribe('partner')}
+              disabled={isProcessing}
+              className={`w-full py-3 rounded-xl font-bold transition-colors border ${
+                isProcessing && selectedTier === 'partner'
+                  ? 'bg-brand-secondary text-brand-text-secondary cursor-wait border-brand-border'
+                  : 'bg-brand-dark text-brand-text-primary hover:bg-brand-secondary'
+              }`}
+              style={!(isProcessing && selectedTier === 'partner') ? { borderColor: 'var(--gold-ds)' } : {}}
+            >
+              {isProcessing && selectedTier === 'partner' ? 'Processing...' : PLAN_UI.partner.cta}
+            </button>
+          </Card>
         </motion.div>
       </motion.div>
 
-      <motion.div
-        className="mt-10 p-5 rounded-2xl border border-brand-border bg-brand-secondary/30"
-        variants={fadeUp} initial="hidden" whileInView="visible"
-        viewport={{ once: true }} transition={{ duration: 0.5, ease: EASE }}
-      >
-        <h4 className="text-lg font-bold text-brand-text-primary mb-3">Ownership & Access Clarity</h4>
-        <ul className="space-y-2">
-          {OWNERSHIP_NOTES.map((note) => (
-            <li key={note} className="text-sm text-brand-text-secondary flex items-start gap-2">
-              <span className="mt-1 w-1.5 h-1.5 rounded-full bg-brand-accent" />
-              <span>{note}</span>
-            </li>
-          ))}
-        </ul>
-      </motion.div>
-
+      {/* ── Add-Ons ──────────────────────────────────────────────────── */}
       <motion.div
         className="mt-10 grid grid-cols-1 lg:grid-cols-2 gap-6"
         variants={stagger} initial="hidden" whileInView="visible"
         viewport={{ once: true, margin: '-40px' }}
       >
         <motion.div variants={fadeUp} transition={{ duration: 0.5, ease: EASE }}>
-        <Card className="border-brand-border bg-brand-dark/20 h-full">
-          <h3 className="text-xl font-bold text-brand-text-primary mb-2">Add-ons (Simple & Non-conflicting)</h3>
-          <ul className="space-y-2 text-sm text-brand-text-secondary">
-            <li>• Books (Own Forever): single purchase, yours to keep</li>
-            <li>• Flagship Courses (Own Forever): single purchase with subscriber savings</li>
-            <li>• Premium Audiobooks (Own Forever): single purchase, no subscription required</li>
-            <li>• Mentorship Session: subscriber discount available at checkout</li>
-            <li>• Premium Event Ticket: dynamic pricing, with 10–20% subscriber discount</li>
-          </ul>
-        </Card>
+          <div className="h-full rounded-2xl border-2 border-dashed border-brand-border bg-brand-dark/20 p-6 flex flex-col">
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-brand-accent mb-3">Add-Ons</p>
+            <h3 className="text-xl font-bold text-brand-text-primary mb-4">Own It Forever</h3>
+            <ul className="space-y-2 text-sm text-brand-text-secondary flex-1">
+              <li>• Books: single purchase, yours to keep</li>
+              <li>• Flagship Courses: single purchase with subscriber savings</li>
+              <li>• Full audiobook library — yours to keep as you grow</li>
+              <li>• Mentorship Session: subscriber discount at checkout</li>
+              <li>• Premium Event Ticket: 10–20% subscriber discount</li>
+            </ul>
+          </div>
         </motion.div>
 
         <motion.div variants={fadeUp} transition={{ duration: 0.5, ease: EASE }}>

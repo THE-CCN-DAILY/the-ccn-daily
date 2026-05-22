@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { motion } from 'motion/react';
 import Card from '../components/Card';
 import { SpeakerWaveIcon, ChatIcon, UserCircleIcon } from '../components/icons';
 import { useAuth } from '../contexts/AuthContext';
@@ -9,6 +10,8 @@ import {
   listLiveStreamMessages,
   sendLiveStreamMessage,
 } from '../services/liveStreamService';
+
+const EASE = [0.22, 1, 0.36, 1] as [number, number, number, number];
 
 const LiveStreamPage: React.FC = () => {
   const [isLive, setIsLive] = useState(false);
@@ -110,20 +113,34 @@ const LiveStreamPage: React.FC = () => {
 
   return (
     <div className="max-w-7xl mx-auto pb-20">
-      <div className="mb-8 flex justify-between items-center">
+      <motion.div
+        className="mb-8 flex justify-between items-start"
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: EASE }}
+      >
         <div>
-          <h1 className="text-4xl font-black text-brand-text-primary flex items-center gap-4">
-            <SpeakerWaveIcon className="w-10 h-10 text-brand-accent"/>
+          <p
+            className="text-xs font-bold uppercase tracking-widest mb-2"
+            style={{ fontFamily: 'var(--sans-ui)', color: 'var(--amber-ds, #E87A2C)' }}
+          >
+            Live
+          </p>
+          <h1
+            className="text-4xl font-black text-brand-text-primary mb-2"
+            style={{ fontFamily: 'var(--serif-display)' }}
+          >
             Global Broadcast
           </h1>
-          <p className="text-brand-text-secondary mt-2">
+          <p className="text-brand-text-secondary">
             Join us live — worship, teaching, and community broadcast in real time.
           </p>
         </div>
         {isLive && (
-          <span className="status-live">On Air</span>
+          <span className="status-live mt-2">On Air</span>
         )}
-      </div>
+      </motion.div>
+
       {streamError && (
         <Card className="mb-6 border-status-warning/40 bg-status-warning/10">
           <p className="text-sm text-brand-text-secondary">{streamError}</p>
@@ -157,6 +174,25 @@ const LiveStreamPage: React.FC = () => {
             </div>
           </Card>
 
+          {/* Next Live placeholder when offline */}
+          {!isLive && !playbackId && (
+            <motion.div
+              className="mt-6 p-5 rounded-2xl border border-brand-border bg-brand-secondary/30 flex items-center gap-4"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, ease: EASE, delay: 0.2 }}
+            >
+              <div className="w-12 h-12 rounded-full bg-amber-500/10 flex items-center justify-center flex-shrink-0">
+                <SpeakerWaveIcon className="w-6 h-6 text-amber-500" />
+              </div>
+              <div>
+                <p className="text-xs font-bold uppercase tracking-widest text-amber-500 mb-1">Next Live</p>
+                <p className="text-sm font-bold text-brand-text-primary">Stay tuned for the next live broadcast.</p>
+                <p className="text-xs text-brand-text-secondary mt-0.5">Check announcements and events for the schedule.</p>
+              </div>
+            </motion.div>
+          )}
+
           <div className="mt-6">
             <h3 className="text-2xl font-bold text-brand-text-primary mb-2">Gathering Together</h3>
             <p className="text-brand-text-secondary">A global moment of worship and teaching, live from our community. Watch here, pray alongside thousands, and join the chat below.</p>
@@ -172,7 +208,7 @@ const LiveStreamPage: React.FC = () => {
               </h3>
               <span className="text-xs font-bold text-brand-text-secondary bg-brand-secondary px-2 py-1 rounded-full">{viewerCount.toLocaleString()} watching</span>
             </div>
-            
+
             <div className="flex-1 overflow-y-auto space-y-4 mb-4 pr-2 custom-scrollbar">
               {chatError && (
                 <Card className="border-status-warning/40 bg-status-warning/10">
@@ -204,15 +240,15 @@ const LiveStreamPage: React.FC = () => {
             </div>
 
             <form onSubmit={handleSendMessage} className="relative mt-auto">
-              <input 
-                type="text" 
+              <input
+                type="text"
                 value={chatMessage}
                 onChange={(e) => setChatMessage(e.target.value)}
-                placeholder={user ? "Say something..." : "Sign in to chat"} 
+                placeholder={user ? "Say something..." : "Sign in to chat"}
                 disabled={!user}
                 className="w-full bg-brand-dark border border-brand-border rounded-xl py-3 pl-4 pr-12 text-brand-text-primary focus:outline-none focus:border-brand-accent disabled:opacity-50"
               />
-              <button 
+              <button
                 type="submit"
                 disabled={!user || !chatMessage.trim()}
                 className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-brand-accent rounded-lg text-white hover:bg-opacity-90 transition-colors disabled:opacity-50"

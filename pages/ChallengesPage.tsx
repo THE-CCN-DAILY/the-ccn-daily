@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
+import { Target, Flame } from 'lucide-react';
 import Card from '../components/Card';
-import { SparklesIcon, TeamIcon } from '../components/icons';
+import { TeamIcon } from '../components/icons';
 import { listChallenges, type Challenge } from '../services/challengeService';
 
 const EASE = [0.2, 0.6, 0.2, 1] as [number, number, number, number];
@@ -106,7 +107,9 @@ const ChallengesPage: React.FC = () => {
                 {challenge.coverUrl ? (
                   <img src={challenge.coverUrl} alt={challenge.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" referrerPolicy="no-referrer" />
                 ) : (
-                  <SparklesIcon className="w-12 h-12 text-brand-text-secondary/50" />
+                  <div className="w-16 h-16 rounded-full flex items-center justify-center" style={{ background: 'var(--crimson, #8E1B1B)18', border: '1px solid var(--crimson, #8E1B1B)33' }}>
+                    <Target className="w-8 h-8" style={{ color: 'var(--crimson, #8E1B1B)' }} />
+                  </div>
                 )}
               </div>
               <div className="p-6 flex flex-col flex-1">
@@ -133,7 +136,9 @@ const ChallengesPage: React.FC = () => {
         </AnimatePresence>
       ) : (
         <Card className="text-center py-20 border-brand-border border-dashed bg-transparent">
-          <SparklesIcon className="w-12 h-12 text-brand-text-secondary mx-auto mb-4" />
+          <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style={{ background: 'var(--crimson, #8E1B1B)18', border: '1px solid var(--crimson, #8E1B1B)33' }}>
+            <Flame className="w-8 h-8" style={{ color: 'var(--crimson, #8E1B1B)' }} />
+          </div>
           <h3 className="text-xl mb-2" style={{ fontFamily: 'var(--serif-display, var(--font-display))', fontWeight: 600, color: 'var(--fg-1, #2A1C15)' }}>No {activeTab} challenges</h3>
           <p style={{ fontFamily: 'var(--serif-body)', lineHeight: 1.65, color: 'var(--fg-2, #5B4A3C)' }}>
             {activeTab === 'active'

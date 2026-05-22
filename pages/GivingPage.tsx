@@ -149,7 +149,7 @@ const GivingPage: React.FC = () => {
                 key={val}
                 onClick={() => setAmount(val)}
                 className={`py-4 rounded-xl border transition-all ${amount === val ? 'bg-brand-accent/20 border-brand-accent' : 'bg-brand-dark border-brand-border hover:border-brand-accent/50'}`}
-                style={{ fontFamily: 'var(--serif-display, var(--font-display))', fontWeight: 600, color: amount === val ? '#B7892E' : 'var(--fg-1, #2A1C15)' }}
+                style={{ fontFamily: 'var(--serif-display, var(--font-display))', fontWeight: 600, fontSize: '1.25rem', color: amount === val ? '#B7892E' : 'var(--fg-1, #2A1C15)' }}
                 variants={fadeUp} transition={{ duration: 0.24, ease: EASE }}
                 whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
               >

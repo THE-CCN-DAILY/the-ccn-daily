@@ -84,6 +84,7 @@ const ScriptureSnippetModal: React.FC<{
 const StepContent: React.FC<{ stepIndex: number; onComplete: () => void; devotional: Devotional | null; onOpenVoice: (ctx: string) => void }> = ({ stepIndex, onComplete, devotional, onOpenVoice }) => {
     const [isPrayerComplete, setIsPrayerComplete] = useState(false);
     const [activeSnippet, setActiveSnippet] = useState<string | null>(null);
+    const [journalText, setJournalText] = useState('');
     const isPrayerStep = stepIndex === 4;
     const { playTrack, currentTrack, isPlaying, togglePlayPause } = useAudioPlayer();
 
@@ -179,7 +180,11 @@ const StepContent: React.FC<{ stepIndex: number; onComplete: () => void; devotio
                         <p style={{ fontFamily: 'var(--sans-ui, "Inter Tight", -apple-system, sans-serif)', fontSize: '12px', fontWeight: 700, letterSpacing: '0.10em', textTransform: 'uppercase', color: 'var(--crimson, #8E1B1B)', marginBottom: '0.5rem' }}>Step 3</p>
                         <h2 style={{ fontFamily: 'var(--serif-display, "Cormorant Garamond", "Didot", Georgia, serif)', fontWeight: 600, fontSize: '1.75rem', lineHeight: 1.2, color: 'var(--fg-1, #2A1C15)', marginBottom: '1rem' }}>Journal Your Response</h2>
                         <p style={{ fontFamily: 'var(--serif-body, "EB Garamond", "Garamond", Georgia, serif)', fontSize: '18px', lineHeight: 1.75, color: 'var(--fg-2, #5B4A3C)', marginBottom: '1.5rem' }}>Where in your life do you need God's strength today? Type it out—the act of writing is an act of release.</p>
-                        <RichTextJournal />
+                        <RichTextJournal
+                            value={journalText}
+                            onChange={setJournalText}
+                            placeholder="Where in your life do you need God's strength today?"
+                        />
                     </div>
                 );
             case 4:
