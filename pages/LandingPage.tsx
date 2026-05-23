@@ -1,7 +1,8 @@
 import React, { useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { motion, useInView } from 'motion/react';
+import { motion, useInView, useScroll, useTransform } from 'motion/react';
 import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
 import CcnLogo from '../components/CcnLogo';
 import {
   BookOpen,
@@ -204,10 +205,78 @@ const SunriseEmblem: React.FC<{ className?: string }> = ({ className }) => (
 
 /* ─── Component ───────────────────────────────────────────────────────────── */
 
+/* ─── Theme-aware CTA section gradient config ─────────────────────────────── */
+
+const CTA_COLORS = {
+  dark: {
+    skyFrom: '#0D0B09', skyTo: '#1C0F08',
+    dawnOpacity: 0.50, dawnMidOpacity: 0.20, dawnMidColor: '#7B3200',
+    centerOpacity: 0.06,
+    overlayBg: 'rgba(15,13,11,0.65)',
+    glowColor: 'rgba(242,125,38,0.30)',
+    arcColor: '#F27D26',
+    arcOpacities: [0.20, 0.14, 0.10, 0.07, 0.05, 0.03] as number[],
+    rayColor: '#F8A060', rayOpacity: 0.055,
+    starColor: '#F8C090', starOpacity: 0.40,
+    horizonColor: '#F27D26', horizonOpacity: 0.07,
+    headingColor: 'white', bodyColor: 'rgba(255,255,255,0.72)',
+    btnBorderColor: 'rgba(255,255,255,0.25)', btnTextColor: 'rgba(255,255,255,0.80)',
+  },
+  light: {
+    skyFrom: '#FDF8F0', skyTo: '#FFF4E0',
+    dawnOpacity: 0.32, dawnMidOpacity: 0.12, dawnMidColor: '#D4813C',
+    centerOpacity: 0.04,
+    overlayBg: 'rgba(253,248,240,0.20)',
+    glowColor: 'rgba(242,125,38,0.18)',
+    arcColor: '#C23B1E',
+    arcOpacities: [0.22, 0.16, 0.12, 0.09, 0.06, 0.04] as number[],
+    rayColor: '#E87A2C', rayOpacity: 0.07,
+    starColor: '#8E1B1B', starOpacity: 0.18,
+    horizonColor: '#E87A2C', horizonOpacity: 0.10,
+    headingColor: '#2A1C15', bodyColor: 'rgba(42,28,21,0.65)',
+    btnBorderColor: 'rgba(42,28,21,0.30)', btnTextColor: 'rgba(42,28,21,0.70)',
+  },
+  sepia: {
+    skyFrom: '#F5EDD8', skyTo: '#EDE0C4',
+    dawnOpacity: 0.38, dawnMidOpacity: 0.14, dawnMidColor: '#A8521E',
+    centerOpacity: 0.05,
+    overlayBg: 'rgba(245,237,216,0.18)',
+    glowColor: 'rgba(180,100,20,0.18)',
+    arcColor: '#8E1B1B',
+    arcOpacities: [0.22, 0.16, 0.12, 0.09, 0.06, 0.04] as number[],
+    rayColor: '#C23B1E', rayOpacity: 0.07,
+    starColor: '#8E1B1B', starOpacity: 0.16,
+    horizonColor: '#C23B1E', horizonOpacity: 0.09,
+    headingColor: '#2A1C15', bodyColor: 'rgba(42,28,21,0.62)',
+    btnBorderColor: 'rgba(42,28,21,0.28)', btnTextColor: 'rgba(42,28,21,0.68)',
+  },
+} as const;
+
 const LandingPage: React.FC = () => {
   const { user, signIn } = useAuth();
+  const { theme } = useTheme();
   const featuresRef = useRef(null);
   const featuresInView = useInView(featuresRef, { once: true, margin: '-60px 0px' });
+
+  // ── Parallax scroll values ─────────────────────────────────────────────
+  const { scrollY } = useScroll();
+  const emblemY       = useTransform(scrollY, [0, 700], [0, 110]);
+  const emblemScale   = useTransform(scrollY, [0, 700], [1, 0.86]);
+  const ambientGlowY  = useTransform(scrollY, [0, 500], [0, -55]);
+
+  // ── Theme-aware CTA colors ─────────────────────────────────────────────
+  const cta = CTA_COLORS[theme] ?? CTA_COLORS.dark;
+
+  // ── Hero ambient glow color (theme-aware) ──────────────────────────────
+  const heroAmbient = theme === 'dark'
+    ? 'radial-gradient(ellipse 80% 60% at 50% 0%, rgba(242,125,38,0.28) 0%, transparent 70%)'
+    : theme === 'sepia'
+      ? 'radial-gradient(ellipse 80% 60% at 50% 0%, rgba(180,100,20,0.18) 0%, transparent 70%)'
+      : 'radial-gradient(ellipse 80% 60% at 50% 0%, rgba(242,125,38,0.15) 0%, transparent 70%)';
+
+  const cardInnerGlow = theme === 'dark'
+    ? 'radial-gradient(ellipse 80% 60% at 50% 0%, rgba(242,125,38,0.10) 0%, transparent 70%)'
+    : 'radial-gradient(ellipse 80% 60% at 50% 0%, rgba(242,125,38,0.06) 0%, transparent 70%)';
 
   return (
     <div className="min-h-screen bg-brand-secondary text-brand-text-primary">
@@ -252,19 +321,22 @@ const LandingPage: React.FC = () => {
         {/* ── Hero ───────────────────────────────────────────────────────────── */}
         <section className="grain relative overflow-hidden">
           {/* Ambient glow */}
-          <div
+          {/* Ambient glow — theme-aware, parallaxes upward on scroll */}
+          <motion.div
             className="pointer-events-none absolute inset-x-0 -top-40 h-[600px] opacity-30"
             aria-hidden
-            style={{
-              background: 'radial-gradient(ellipse 80% 60% at 50% 0%, rgb(242 125 38 / 0.35) 0%, transparent 70%)',
-            }}
+            style={{ background: heroAmbient, y: ambientGlowY }}
           />
-          {/* Large decorative emblem — faint, behind content */}
+          {/* Large decorative emblem — parallax layer, moves at 40% scroll rate */}
           <motion.div
-            className="pointer-events-none absolute -right-16 -top-16 h-[520px] w-[520px] opacity-[0.07] lg:opacity-[0.12]"
+            className="pointer-events-none absolute -right-16 -top-16 h-[520px] w-[520px]"
             aria-hidden
+            style={{ y: emblemY, scale: emblemScale, opacity: theme === 'dark' ? 0.12 : 0.07 }}
             initial={{ opacity: 0, scale: 0.92, rotate: -4 }}
-            animate={{ opacity: 0.12, scale: 1, rotate: 0 }}
+            animate={{
+              opacity: theme === 'dark' ? 0.12 : 0.07,
+              scale: 1, rotate: 0,
+            }}
             transition={{ duration: 1.4, ease: [0.22, 1, 0.36, 1] }}
           >
             <SunriseEmblem className="h-full w-full" />
@@ -304,19 +376,31 @@ const LandingPage: React.FC = () => {
                 variants={fadeUp}
                 className="mt-10 flex flex-col gap-3 sm:flex-row"
               >
-                <Link
-                  to="/app/guided-journey"
-                  className="group flex items-center justify-center gap-2 bg-brand-accent px-7 py-3.5 text-sm font-semibold text-white transition-all hover:bg-brand-cta-light hover:shadow-[0_0_24px_rgb(242_125_38_/_0.35)]"
+                <motion.div
+                  whileHover={{ scale: 1.03, boxShadow: '0 0 28px rgba(242,125,38,0.40)' }}
+                  whileTap={{ scale: 0.97 }}
+                  transition={{ type: 'spring', stiffness: 380, damping: 24 }}
                 >
-                  Begin your daily formation
-                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-                </Link>
-                <Link
-                  to="/newsletter"
-                  className="flex items-center justify-center border border-brand-border px-7 py-3.5 text-sm font-semibold text-brand-text-primary transition-colors hover:bg-brand-dark"
+                  <Link
+                    to="/app/guided-journey"
+                    className="group flex items-center justify-center gap-2 bg-brand-accent px-7 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-brand-cta-light"
+                  >
+                    Begin your daily formation
+                    <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                  </Link>
+                </motion.div>
+                <motion.div
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  transition={{ type: 'spring', stiffness: 380, damping: 28 }}
                 >
-                  Read latest letter
-                </Link>
+                  <Link
+                    to="/newsletter"
+                    className="flex items-center justify-center border border-brand-border px-7 py-3.5 text-sm font-semibold text-brand-text-primary transition-colors hover:bg-brand-dark"
+                  >
+                    Read latest letter
+                  </Link>
+                </motion.div>
               </motion.div>
 
               {/* Stats row */}
@@ -391,6 +475,8 @@ const LandingPage: React.FC = () => {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.85 }}
+                whileHover={{ scale: 1.02, transition: { type: 'spring', stiffness: 380, damping: 26 } }}
+                whileTap={{ scale: 0.97 }}
                 className="relative mt-7"
               >
                 <Link
@@ -447,7 +533,8 @@ const LandingPage: React.FC = () => {
               <motion.article
                 key={label}
                 variants={fadeUp}
-                className="group bg-brand-secondary p-8 transition-colors hover:bg-brand-dark"
+                whileHover={{ y: -4, transition: { type: 'spring', stiffness: 340, damping: 22 } }}
+                className="group bg-brand-secondary p-8 transition-colors hover:bg-brand-dark cursor-pointer"
               >
                 <div className="mb-5 flex h-10 w-10 items-center justify-center rounded-lg border border-brand-border bg-brand-dark transition-colors group-hover:border-brand-accent/40 group-hover:bg-brand-accent/10">
                   <Icon className="h-5 w-5 text-brand-accent" />
@@ -462,8 +549,8 @@ const LandingPage: React.FC = () => {
         {/* ── Closing CTA ───────────────────────────────────────────────────── */}
         <Reveal>
           <section className="relative overflow-hidden border-t border-brand-border">
-            {/* Custom abstract dawn illustration — "new mercies, every morning" motif.
-                Concentric arcs + radiant light rays suggest sunrise without using stock photography. */}
+            {/* Theme-aware abstract dawn illustration — concentric arcs + radiant rays.
+                All colours are derived from CTA_COLORS so the section responds to dark / light / sepia. */}
             <svg
               viewBox="0 0 1920 800"
               xmlns="http://www.w3.org/2000/svg"
@@ -473,48 +560,48 @@ const LandingPage: React.FC = () => {
             >
               <defs>
                 <radialGradient id="rg-dawn" cx="50%" cy="100%" r="75%">
-                  <stop offset="0%" stopColor="#F27D26" stopOpacity="0.5" />
-                  <stop offset="45%" stopColor="#7B3200" stopOpacity="0.2" />
-                  <stop offset="100%" stopColor="#0C0A08" stopOpacity="0" />
+                  <stop offset="0%"   stopColor={cta.arcColor}     stopOpacity={cta.dawnOpacity} />
+                  <stop offset="45%"  stopColor={cta.dawnMidColor} stopOpacity={cta.dawnMidOpacity} />
+                  <stop offset="100%" stopColor={cta.skyFrom}      stopOpacity={0} />
                 </radialGradient>
                 <radialGradient id="rg-center" cx="50%" cy="55%" r="45%">
-                  <stop offset="0%" stopColor="#F27D26" stopOpacity="0.06" />
-                  <stop offset="100%" stopColor="#0C0A08" stopOpacity="0" />
+                  <stop offset="0%"   stopColor={cta.arcColor} stopOpacity={cta.centerOpacity} />
+                  <stop offset="100%" stopColor={cta.skyFrom}  stopOpacity={0} />
                 </radialGradient>
                 <linearGradient id="lg-sky" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#0D0B09" />
-                  <stop offset="100%" stopColor="#1C0F08" />
+                  <stop offset="0%"   stopColor={cta.skyFrom} />
+                  <stop offset="100%" stopColor={cta.skyTo} />
                 </linearGradient>
               </defs>
+
               {/* Base sky */}
               <rect width="1920" height="800" fill="url(#lg-sky)" />
               {/* Dawn horizon glow */}
               <rect width="1920" height="800" fill="url(#rg-dawn)" />
               {/* Subtle centre atmosphere */}
               <rect width="1920" height="800" fill="url(#rg-center)" />
+
               {/* Concentric arcs — sunrise ripples */}
-              <g fill="none" stroke="#F27D26">
-                <circle cx="960" cy="960" r="380" strokeWidth="1.5" strokeOpacity="0.2" />
-                <circle cx="960" cy="960" r="560" strokeWidth="1" strokeOpacity="0.14" />
-                <circle cx="960" cy="960" r="750" strokeWidth="0.8" strokeOpacity="0.1" />
-                <circle cx="960" cy="960" r="950" strokeWidth="0.6" strokeOpacity="0.07" />
-                <circle cx="960" cy="960" r="1160" strokeWidth="0.4" strokeOpacity="0.05" />
-                <circle cx="960" cy="960" r="1400" strokeWidth="0.3" strokeOpacity="0.03" />
+              <g fill="none" stroke={cta.arcColor}>
+                {([380, 560, 750, 950, 1160, 1400] as const).map((r, i) => (
+                  <circle
+                    key={r}
+                    cx="960" cy="960" r={r}
+                    strokeWidth={[1.5, 1, 0.8, 0.6, 0.4, 0.3][i]}
+                    strokeOpacity={cta.arcOpacities[i]}
+                  />
+                ))}
               </g>
+
               {/* Light rays radiating upward */}
-              <g stroke="#F8A060" strokeOpacity="0.055" strokeWidth="2">
-                <line x1="960" y1="960" x2="80"  y2="0" />
-                <line x1="960" y1="960" x2="340" y2="0" />
-                <line x1="960" y1="960" x2="560" y2="0" />
-                <line x1="960" y1="960" x2="760" y2="0" />
-                <line x1="960" y1="960" x2="960" y2="0" />
-                <line x1="960" y1="960" x2="1160" y2="0" />
-                <line x1="960" y1="960" x2="1380" y2="0" />
-                <line x1="960" y1="960" x2="1600" y2="0" />
-                <line x1="960" y1="960" x2="1840" y2="0" />
+              <g stroke={cta.rayColor} strokeOpacity={cta.rayOpacity} strokeWidth="2">
+                {[80, 340, 560, 760, 960, 1160, 1380, 1600, 1840].map((x2) => (
+                  <line key={x2} x1="960" y1="960" x2={x2} y2="0" />
+                ))}
               </g>
+
               {/* Stars — scattered light particles */}
-              <g fill="#F8C090" fillOpacity="0.4">
+              <g fill={cta.starColor} fillOpacity={cta.starOpacity}>
                 <circle cx="185"  cy="135" r="1"   />
                 <circle cx="490"  cy="90"  r="1.5" />
                 <circle cx="730"  cy="165" r="1"   />
@@ -530,40 +617,68 @@ const LandingPage: React.FC = () => {
                 <circle cx="420"  cy="400" r="1"   />
                 <circle cx="1500" cy="380" r="1"   />
               </g>
+
               {/* Warm horizon brightspot */}
-              <ellipse cx="960" cy="800" rx="500" ry="120" fill="#F27D26" fillOpacity="0.07" />
+              <ellipse
+                cx="960" cy="800" rx="500" ry="120"
+                fill={cta.horizonColor} fillOpacity={cta.horizonOpacity}
+              />
             </svg>
-            <div className="absolute inset-0 bg-[#0F0D0B]/65" aria-hidden />
+
+            {/* Theme-aware overlay — darkens in dark mode, barely visible in light/sepia */}
+            <div className="absolute inset-0" style={{ background: cta.overlayBg }} aria-hidden />
+
+            {/* Bottom glow pulse */}
             <div
               className="pointer-events-none absolute inset-x-0 bottom-0 h-72 opacity-30"
               aria-hidden
-              style={{ background: 'radial-gradient(ellipse 70% 80% at 50% 100%, rgb(242 125 38) 0%, transparent 70%)' }}
+              style={{
+                background: `radial-gradient(ellipse 70% 80% at 50% 100%, ${cta.arcColor} 0%, transparent 70%)`,
+              }}
             />
+
             <div className="relative mx-auto max-w-6xl px-6 py-24 text-center md:py-36">
               <p className="mb-4 text-xs font-semibold uppercase tracking-[0.14em] text-brand-accent">
                 Begin for free
               </p>
-              <h2 className="font-display text-4xl font-bold leading-tight text-white md:text-5xl lg:text-6xl">
+              <h2
+                className="font-display text-4xl font-bold leading-tight md:text-5xl lg:text-6xl"
+                style={{ color: cta.headingColor }}
+              >
                 New mercies.<br className="hidden sm:block" /> Every morning.
               </h2>
-              <p className="mx-auto mt-6 max-w-xl text-lg leading-relaxed text-white/70">
+              <p
+                className="mx-auto mt-6 max-w-xl text-lg leading-relaxed"
+                style={{ color: cta.bodyColor }}
+              >
                 No noise. No performance. Just ten minutes with God before the day begins.
                 Start free — upgrade when you're ready.
               </p>
               <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
-                <Link
-                  to="/app/guided-journey"
-                  className="group flex items-center gap-2 bg-brand-accent px-8 py-4 text-sm font-semibold text-white transition-all hover:bg-[#FFAF50] hover:shadow-[0_0_40px_rgb(242_125_38_/_0.5)]"
+                <motion.div
+                  whileHover={{ scale: 1.04, transition: { type: 'spring', stiffness: 360, damping: 22 } }}
+                  whileTap={{ scale: 0.97 }}
                 >
-                  Start your morning rhythm
-                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-                </Link>
-                <Link
-                  to="/pricing"
-                  className="flex items-center gap-2 border border-white/25 px-8 py-4 text-sm font-semibold text-white/80 transition-colors hover:border-white/50 hover:text-white"
+                  <Link
+                    to="/app/guided-journey"
+                    className="group flex items-center gap-2 bg-brand-accent px-8 py-4 text-sm font-semibold text-white transition-all hover:opacity-90 hover:shadow-[0_0_40px_rgba(242,125,38,0.5)]"
+                  >
+                    Start your morning rhythm
+                    <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                  </Link>
+                </motion.div>
+                <motion.div
+                  whileHover={{ scale: 1.02, transition: { type: 'spring', stiffness: 360, damping: 26 } }}
+                  whileTap={{ scale: 0.98 }}
                 >
-                  View plans
-                </Link>
+                  <Link
+                    to="/pricing"
+                    className="flex items-center gap-2 border px-8 py-4 text-sm font-semibold transition-colors"
+                    style={{ borderColor: cta.btnBorderColor, color: cta.btnTextColor }}
+                  >
+                    View plans
+                  </Link>
+                </motion.div>
               </div>
             </div>
           </section>
