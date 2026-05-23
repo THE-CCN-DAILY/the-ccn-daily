@@ -17,6 +17,7 @@ import {
   GraduationCap,
   Headphones,
   HeartHandshake,
+  HelpCircle,
   Image,
   ImagePlus,
   Inbox,
@@ -82,6 +83,7 @@ const sanctuaryItems = [
   { to: '/app/live', text: 'Live Broadcast', icon: Radio, group: 'Live' },
   { to: '/app/giving', text: 'Giving & Support', icon: HeartHandshake, group: 'Account' },
   { to: '/pricing', text: 'Upgrade Plan', icon: Crown, group: 'Account' },
+  { to: '/app/help', text: 'Help & Contact', icon: HelpCircle, group: 'Account' },
 ];
 
 const commandCenterItems = [

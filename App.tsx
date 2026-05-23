@@ -73,6 +73,7 @@ import RequireAuth from './components/auth/RequireAuth';
 import RequireRole from './components/auth/RequireRole';
 
 import NewsletterPage from './pages/NewsletterPage';
+import HelpPage from './pages/HelpPage';
 
 const App: React.FC = () => {
   return (
@@ -114,6 +115,7 @@ const App: React.FC = () => {
                             <Route path="events" element={<RequireAuth><EventsPage /></RequireAuth>} />
                             <Route path="live" element={<RequireAuth><LiveStreamPage /></RequireAuth>} />
                             <Route path="giving" element={<RequireAuth><GivingPage /></RequireAuth>} />
+                            <Route path="help" element={<HelpPage />} />
                             <Route path="courses" element={<RequireAuth><CoursesPage /></RequireAuth>} />
                             <Route path="courses/:courseId" element={<RequireAuth><CoursePlayerPage /></RequireAuth>} />
                             <Route path="audiobook-library" element={<RequireAuth><AudiobookLibraryPage /></RequireAuth>} />

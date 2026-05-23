@@ -289,15 +289,15 @@ const LandingPage: React.FC = () => {
                 variants={fadeUp}
                 className="font-display text-5xl font-bold leading-[1.15] text-brand-text-primary md:text-6xl lg:text-[3.75rem]"
               >
-                A quiet daily rhythm for Scripture, prayer, and spiritual steadiness.
+                A quiet daily rhythm for Scripture, prayer, and formation.
               </motion.h1>
 
               <motion.p
                 variants={fadeUp}
                 className="mt-7 max-w-xl text-[1.125rem] leading-[1.8] text-brand-text-secondary"
               >
-                THE CCN DAILY helps you begin again with God — read, listen, reflect,
-                journal, and lead with a formed inner life. Ten minutes. Every morning.
+                Begin again with God. Read, listen, reflect, journal, and lead with a
+                formed inner life. Every morning.
               </motion.p>
 
               <motion.div
@@ -579,6 +579,7 @@ const LandingPage: React.FC = () => {
               <Link to="/blog" className="hover:text-brand-text-primary">Blog</Link>
               <Link to="/pricing" className="hover:text-brand-text-primary">Pricing</Link>
               <Link to="/app/giving" className="hover:text-brand-text-primary">Support</Link>
+              <Link to="/app/help" className="hover:text-brand-text-primary">Help</Link>
             </nav>
             <span>© {new Date().getFullYear()} THE CCN DAILY</span>
           </div>

@@ -141,7 +141,7 @@ const NewsletterPage: React.FC = () => {
               style={{ fontFamily: 'var(--serif-display)' }}
             >
               <ReaderIcon className="h-10 w-10 text-brand-accent" />
-              The CCN Daily
+              Newsletter
             </h1>
           </div>
           <a
