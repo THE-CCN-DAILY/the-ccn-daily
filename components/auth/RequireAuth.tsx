@@ -1,6 +1,6 @@
 import React from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { LogoIcon } from '../icons';
+import CcnLogo from '../CcnLogo';
 
 interface RequireAuthProps {
   children: React.ReactNode;
@@ -21,13 +21,16 @@ const RequireAuth: React.FC<RequireAuthProps> = ({ children }) => {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-brand-secondary px-6">
         <div className="w-full max-w-sm text-center">
-          <LogoIcon className="mx-auto mb-6 h-12 w-12 text-brand-accent" />
+          {/* Real brand logo */}
+          <div className="flex justify-center mb-8">
+            <CcnLogo size="lg" />
+          </div>
           <h1 className="font-display text-2xl font-bold text-brand-text-primary">
             Sign in to continue
           </h1>
           <p className="mt-3 text-sm leading-relaxed text-brand-text-secondary">
-            This section of THE CCN DAILY is for members. Sign in with Google to access
-            your devotional, journal, courses, and community.
+            This section is for members. Sign in with Google to access your devotional,
+            journal, courses, and community.
           </p>
           <button
             onClick={signIn}

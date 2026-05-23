@@ -5,6 +5,7 @@ import { ArrowLeft, CalendarDays, PenLine } from 'lucide-react';
 import { getPublishedBlogPost, type BlogPost } from '../services/blogService';
 import { useAudioPlayer } from '../contexts/AudioPlayerContext';
 import { PlayIcon, PauseIcon } from '../components/icons';
+import CcnLogo from '../components/CcnLogo';
 
 const formatDate = (value?: string) => {
   if (!value) return 'Unscheduled';
@@ -49,8 +50,8 @@ const BlogPostPage: React.FC = () => {
     <div className="min-h-screen bg-brand-secondary text-brand-text-primary">
       <header className="border-b border-brand-border bg-brand-secondary/95">
         <div className="mx-auto flex max-w-4xl items-center justify-between px-6 py-5">
-          <Link to="/" className="font-display text-xl font-bold">
-            THE CCN DAILY
+          <Link to="/" aria-label="THE CCN DAILY — home">
+            <CcnLogo size="sm" />
           </Link>
           <Link to="/blog" className="inline-flex items-center gap-2 text-sm font-semibold text-brand-text-secondary hover:text-brand-accent">
             <ArrowLeft className="h-4 w-4" /> Blog archive

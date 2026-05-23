@@ -1,0 +1,74 @@
+- generic [ref=e2]:
+  - region "Notifications alt+T"
+  - generic [ref=e193]:
+    - banner [ref=e194]:
+      - generic [ref=e195]:
+        - link "THE CCN DAILY — home" [ref=e196] [cursor=pointer]:
+          - /url: "#/"
+          - img "THE CCN DAILY" [ref=e197]:
+            - generic [ref=e201]: THE
+            - generic [ref=e202]: CCN
+            - generic [ref=e203]: DAILY
+        - navigation [ref=e204]:
+          - link "Newsletter" [ref=e205] [cursor=pointer]:
+            - /url: "#/newsletter"
+          - link "Podcasts" [ref=e206] [cursor=pointer]:
+            - /url: "#/podcasts"
+          - link "Enter app" [ref=e207] [cursor=pointer]:
+            - /url: "#/app/guided-journey"
+    - main [ref=e208]:
+      - generic [ref=e209]:
+        - generic [ref=e210]:
+          - paragraph [ref=e211]:
+            - img [ref=e212]
+            - text: Blog
+          - heading "Essays for faith, work, leadership, endurance, and the inner life." [level=1] [ref=e214]
+        - generic [ref=e215]:
+          - paragraph [ref=e216]: "Thoughtful devotional writing for believers carrying real responsibilities: work, family, leadership, grief, calling, habits, Scripture, and prayer."
+          - generic [ref=e217]:
+            - button "Work and devotion" [ref=e218]
+            - button "Spiritual formation" [ref=e219]
+            - button "Leadership" [ref=e220]
+      - generic [ref=e221]:
+        - generic [ref=e222]:
+          - img
+          - textbox [ref=e223]:
+            - /placeholder: Search essays, topics, or themes
+        - button "Refresh" [ref=e224]:
+          - img [ref=e225]
+          - text: Refresh
+      - generic [ref=e230]:
+        - link "Featured essay May 15, 2026 Faith that can survive Monday morning The point of a devotional life is not escape from responsibility. It is to become the kind of person who can carry responsibility without losing the soul. Read essay" [ref=e232] [cursor=pointer]:
+          - /url: "#/blog/faith-that-can-survive-monday-morning"
+          - generic [ref=e233]:
+            - paragraph [ref=e234]: Featured essay
+            - paragraph [ref=e235]: May 15, 2026
+          - generic [ref=e236]:
+            - heading "Faith that can survive Monday morning" [level=2] [ref=e237]
+            - paragraph [ref=e238]: The point of a devotional life is not escape from responsibility. It is to become the kind of person who can carry responsibility without losing the soul.
+            - generic [ref=e239]:
+              - text: Read essay
+              - img [ref=e240]
+        - generic [ref=e242]:
+          - 'link "Spiritual formation May 14, 2026 Why quiet is not weakness A quiet heart is not an inactive heart. It is a governed heart: alert, receptive, and less easily ruled by noise. Read" [ref=e244] [cursor=pointer]':
+            - /url: "#/blog/why-quiet-is-not-weakness"
+            - generic [ref=e245]:
+              - paragraph [ref=e246]: Spiritual formation
+              - paragraph [ref=e247]: May 14, 2026
+            - generic [ref=e248]:
+              - heading "Why quiet is not weakness" [level=2] [ref=e249]
+              - paragraph [ref=e250]: "A quiet heart is not an inactive heart. It is a governed heart: alert, receptive, and less easily ruled by noise."
+              - generic [ref=e251]:
+                - img [ref=e252]
+                - text: Read
+          - link "Leadership May 13, 2026 A better rhythm for working believers The working believer needs more than motivation. We need Scripture, prayer, reflection, and a way to return to God in the middle of pressure. Read" [ref=e255] [cursor=pointer]:
+            - /url: "#/blog/a-better-rhythm-for-christian-professionals"
+            - generic [ref=e256]:
+              - paragraph [ref=e257]: Leadership
+              - paragraph [ref=e258]: May 13, 2026
+            - generic [ref=e259]:
+              - heading "A better rhythm for working believers" [level=2] [ref=e260]
+              - paragraph [ref=e261]: The working believer needs more than motivation. We need Scripture, prayer, reflection, and a way to return to God in the middle of pressure.
+              - generic [ref=e262]:
+                - img [ref=e263]
+                - text: Read

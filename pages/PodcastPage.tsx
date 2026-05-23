@@ -5,6 +5,7 @@ import type { PodcastEpisode, SearchResult } from '../types';
 import { useAudioPlayer } from '../contexts/AudioPlayerContext';
 import { HeartIcon, PauseIcon, PlayIcon, SparklesIcon, SpinnerIcon } from '../components/icons';
 import Card from '../components/Card';
+import CcnLogo from '../components/CcnLogo';
 import { fetchRSSFeed } from '../services/rssService';
 import { cleanFeedText, excerptFeedText } from '../utils/feedText';
 
@@ -252,7 +253,7 @@ const PodcastPage: React.FC = () => {
       {/* Header */}
       <header className="mb-8 border-b border-brand-border pb-6">
         <div className="mb-4 flex items-center justify-between text-xs font-semibold uppercase tracking-widest text-brand-text-secondary">
-          <Link to="/" className="hover:text-brand-accent transition-colors">THE CCN DAILY</Link>
+          <Link to="/" aria-label="THE CCN DAILY — home"><CcnLogo size="sm" /></Link>
           <Link to="/newsletter" className="hover:text-brand-accent transition-colors">Newsletter</Link>
         </div>
         <p className="text-xs font-bold uppercase tracking-widest text-brand-accent mb-2">Listen</p>

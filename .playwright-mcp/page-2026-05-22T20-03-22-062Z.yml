@@ -1,0 +1,147 @@
+- generic [ref=e2]:
+  - region "Notifications alt+T"
+  - generic [ref=e266]:
+    - complementary [ref=e267]:
+      - generic [ref=e268]:
+        - img "THE CCN DAILY" [ref=e269]:
+          - generic [ref=e273]: THE
+          - generic [ref=e274]: CCN
+          - generic [ref=e275]: DAILY
+        - paragraph [ref=e276]: Sanctuary
+      - button "Sanctuary Strategy" [ref=e278]:
+        - generic [ref=e279]: Sanctuary
+        - generic [ref=e280]: Strategy
+      - navigation [ref=e281]:
+        - generic [ref=e282]:
+          - paragraph [ref=e284]: Read
+          - list [ref=e285]:
+            - listitem [ref=e286]:
+              - link "Bible Reader" [ref=e287] [cursor=pointer]:
+                - /url: "#/app/bible"
+                - img [ref=e288]
+                - generic "Bible Reader" [ref=e290]
+            - listitem [ref=e291]:
+              - link "News" [ref=e292] [cursor=pointer]:
+                - /url: "#/app/newsletters"
+                - img [ref=e293]
+                - generic "News" [ref=e296]
+            - listitem [ref=e297]:
+              - link "Podcast Library" [ref=e298] [cursor=pointer]:
+                - /url: "#/app/podcasts"
+                - img [ref=e299]
+                - generic "Podcast Library" [ref=e304]
+            - listitem [ref=e305]:
+              - link "Courses" [ref=e306] [cursor=pointer]:
+                - /url: "#/app/courses"
+                - img [ref=e307]
+                - generic "Courses" [ref=e310]
+            - listitem [ref=e311]:
+              - link "Audiobook Library" [ref=e312] [cursor=pointer]:
+                - /url: "#/app/audiobook-library"
+                - img [ref=e313]
+                - generic "Audiobook Library" [ref=e315]
+        - generic [ref=e316]:
+          - paragraph [ref=e318]: Pray
+          - list [ref=e319]:
+            - listitem [ref=e320]:
+              - link "Guided Daily Journey" [ref=e321] [cursor=pointer]:
+                - /url: "#/app/guided-journey"
+                - img [ref=e322]
+                - generic "Guided Daily Journey" [ref=e326]
+            - listitem [ref=e327]:
+              - link "Journaling" [ref=e328] [cursor=pointer]:
+                - /url: "#/app/journaling"
+                - img [ref=e329]
+                - generic "Journaling" [ref=e332]
+            - listitem [ref=e333]:
+              - link "Visual Sanctuary" [ref=e334] [cursor=pointer]:
+                - /url: "#/app/visual-sanctuary"
+                - img [ref=e335]
+                - generic "Visual Sanctuary" [ref=e339]
+        - generic [ref=e340]:
+          - paragraph [ref=e342]: Community
+          - list [ref=e343]:
+            - listitem [ref=e344]:
+              - link "Challenges" [ref=e345] [cursor=pointer]:
+                - /url: "#/app/challenges"
+                - img [ref=e346]
+                - generic "Challenges" [ref=e350]
+            - listitem [ref=e351]:
+              - link "Community Rooms" [ref=e352] [cursor=pointer]:
+                - /url: "#/app/community-rooms"
+                - img [ref=e353]
+                - generic "Community Rooms" [ref=e355]
+            - listitem [ref=e356]:
+              - link "The Community" [ref=e357] [cursor=pointer]:
+                - /url: "#/app/the-community"
+                - img [ref=e358]
+                - generic "The Community" [ref=e361]
+            - listitem [ref=e362]:
+              - link "Testimonies" [ref=e363] [cursor=pointer]:
+                - /url: "#/app/testimonies"
+                - img [ref=e364]
+                - generic "Testimonies" [ref=e367]
+            - listitem [ref=e368]:
+              - link "Grace Links" [ref=e369] [cursor=pointer]:
+                - /url: "#/app/grace-link"
+                - img [ref=e370]
+                - generic "Grace Links" [ref=e374]
+        - generic [ref=e375]:
+          - paragraph [ref=e377]: Live
+          - list [ref=e378]:
+            - listitem [ref=e379]:
+              - link "Live Events" [ref=e380] [cursor=pointer]:
+                - /url: "#/app/events"
+                - img [ref=e381]
+                - generic "Live Events" [ref=e383]
+            - listitem [ref=e384]:
+              - link "Live Broadcast" [ref=e385] [cursor=pointer]:
+                - /url: "#/app/live"
+                - img [ref=e386]
+                - generic "Live Broadcast" [ref=e392]
+        - generic [ref=e393]:
+          - paragraph [ref=e395]: Account
+          - list [ref=e396]:
+            - listitem [ref=e397]:
+              - link "Your Journey" [ref=e398] [cursor=pointer]:
+                - /url: "#/app/gamification"
+                - img [ref=e399]
+                - generic "Your Journey" [ref=e405]
+            - listitem [ref=e406]:
+              - link "Inbox & Updates" [ref=e407] [cursor=pointer]:
+                - /url: "#/app/inbox"
+                - img [ref=e408]
+                - generic "Inbox & Updates" [ref=e411]
+            - listitem [ref=e412]:
+              - link "Giving & Support" [ref=e413] [cursor=pointer]:
+                - /url: "#/app/giving"
+                - img [ref=e414]
+                - generic "Giving & Support" [ref=e416]
+            - listitem [ref=e417]:
+              - link "Upgrade Plan" [ref=e418] [cursor=pointer]:
+                - /url: "#/pricing"
+                - img [ref=e419]
+                - generic "Upgrade Plan" [ref=e421]
+      - generic [ref=e422]:
+        - button "Sign In" [ref=e424]
+        - generic [ref=e425]:
+          - paragraph [ref=e426]: THEME
+          - generic [ref=e427]:
+            - button "Switch to dark theme" [ref=e428]:
+              - img [ref=e429]
+            - button "Switch to light theme" [ref=e431]:
+              - img [ref=e432]
+            - button "Switch to sepia theme" [ref=e434]:
+              - img [ref=e435]
+        - paragraph [ref=e438]: © theccndaily 2026
+    - main [ref=e439]:
+      - generic [ref=e440]:
+        - link [ref=e442] [cursor=pointer]:
+          - /url: "#/app/inbox"
+          - img [ref=e443]
+        - generic [ref=e447]:
+          - img [ref=e448]
+          - heading "Sign in to continue" [level=1] [ref=e450]
+          - paragraph [ref=e451]: This section of THE CCN DAILY is for members. Sign in with Google to access your devotional, journal, courses, and community.
+          - button "Sign in with Google" [ref=e452]
+          - paragraph [ref=e453]: No account needed — sign in once and your profile is created automatically.

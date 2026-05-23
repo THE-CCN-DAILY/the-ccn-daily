@@ -1,0 +1,135 @@
+- generic [ref=e2]:
+  - region "Notifications alt+T"
+  - generic [ref=e4]:
+    - banner [ref=e5]:
+      - generic [ref=e6]:
+        - link "THE CCN DAILY" [ref=e7] [cursor=pointer]:
+          - /url: "#/"
+        - navigation [ref=e8]:
+          - link "Newsletter" [ref=e9] [cursor=pointer]:
+            - /url: "#/newsletter"
+          - link "Podcasts" [ref=e10] [cursor=pointer]:
+            - /url: "#/podcasts"
+          - link "Blog" [ref=e11] [cursor=pointer]:
+            - /url: "#/blog"
+          - link "Pricing" [ref=e12] [cursor=pointer]:
+            - /url: "#/pricing"
+        - button "Sign in" [ref=e13]:
+          - text: Sign in
+          - img [ref=e14]
+    - main [ref=e16]:
+      - generic [ref=e17]:
+        - generic:
+          - img
+        - generic [ref=e18]:
+          - generic [ref=e19]:
+            - paragraph [ref=e20]: Faith for the workday soul
+            - heading "A quiet daily rhythm for Scripture, prayer, and spiritual steadiness." [level=1] [ref=e21]
+            - paragraph [ref=e22]: THE CCN DAILY helps busy professionals begin again with God — read, listen, reflect, journal, and lead with a formed inner life. Ten minutes. Every morning.
+            - generic [ref=e23]:
+              - link "Begin your daily formation" [ref=e24] [cursor=pointer]:
+                - /url: "#/app/guided-journey"
+                - text: Begin your daily formation
+                - img [ref=e25]
+              - link "Read latest letter" [ref=e27] [cursor=pointer]:
+                - /url: "#/newsletter"
+            - generic [ref=e28]:
+              - generic [ref=e29]:
+                - img [ref=e30]
+                - generic [ref=e33]:
+                  - strong [ref=e34]: 40+
+                  - text: Countries
+              - generic [ref=e35]:
+                - img [ref=e36]
+                - generic [ref=e38]:
+                  - strong [ref=e39]: Daily
+                  - text: New devotionals
+              - generic [ref=e40]:
+                - img [ref=e41]
+                - generic [ref=e44]:
+                  - strong [ref=e45]: 10 min
+                  - text: Morning rhythm
+          - complementary [ref=e46]:
+            - paragraph [ref=e47]: Today inside the sanctuary
+            - blockquote [ref=e48]:
+              - paragraph [ref=e49]: "\"But those who hope in the Lord will renew their strength. They will soar on wings like eagles.\""
+              - generic [ref=e50]: Isaiah 40:31
+            - heading "Prepare your heart before the day takes your attention." [level=2] [ref=e51]
+            - generic [ref=e52]:
+              - generic [ref=e53]:
+                - img [ref=e55]
+                - generic [ref=e57]: Scripture & guided devotional
+              - generic [ref=e58]:
+                - img [ref=e60]
+                - generic [ref=e63]: Journal response prompt
+              - generic [ref=e64]:
+                - img [ref=e66]
+                - generic [ref=e68]: Audio reflection (8 min)
+              - generic [ref=e69]:
+                - img [ref=e71]
+                - generic [ref=e76]: Community prayer wall
+            - link "Enter sanctuary →" [ref=e78] [cursor=pointer]:
+              - /url: "#/app/guided-journey"
+      - generic [ref=e81]:
+        - generic [ref=e82]:
+          - img [ref=e83]
+          - heading "Newsletter" [level=3] [ref=e86]
+          - paragraph [ref=e87]: Essays and devotionals for faith, work, leadership, and endurance — direct to your inbox.
+        - generic [ref=e88]:
+          - img [ref=e89]
+          - heading "Podcast" [level=3] [ref=e95]
+          - paragraph [ref=e96]: Audio formation for commutes, quiet rooms, and workday resets. Press play anywhere.
+        - generic [ref=e97]:
+          - img [ref=e98]
+          - heading "Events" [level=3] [ref=e100]
+          - paragraph [ref=e101]: Live moments, gatherings, and ministry rhythms as they come online.
+      - generic [ref=e102]:
+        - generic [ref=e103]:
+          - paragraph [ref=e104]: A real app, not only a website
+          - heading "Built for formation, content, community, leadership, and administration." [level=2] [ref=e105]
+        - generic [ref=e106]:
+          - article [ref=e107]:
+            - img [ref=e109]
+            - heading "Bible & devotional reading" [level=3] [ref=e111]
+            - paragraph [ref=e112]: Start with Scripture, then move into a guided reflection that respects your working life — not a performance, just presence.
+          - article [ref=e113]:
+            - img [ref=e115]
+            - heading "Podcast & audio formation" [level=3] [ref=e117]
+            - paragraph [ref=e118]: Listen while commuting, walking, or closing the day. Formation shouldn't require a desk.
+          - article [ref=e119]:
+            - img [ref=e121]
+            - heading "Private journaling" [level=3] [ref=e124]
+            - paragraph [ref=e125]: Capture prayers, convictions, and decisions without turning devotion into another noisy feed. Your words stay yours.
+          - article [ref=e126]:
+            - img [ref=e128]
+            - heading "Community & leadership" [level=3] [ref=e133]
+            - paragraph [ref=e134]: Support families, small groups, testimonies, and prayer rooms. Built for leaders who carry others.
+      - generic [ref=e136]:
+        - img [ref=e137]
+        - generic [ref=e139]:
+          - paragraph [ref=e140]: Begin for free
+          - heading "New mercies. Every morning." [level=2] [ref=e141]:
+            - text: New mercies.
+            - text: Every morning.
+          - paragraph [ref=e142]: No noise. No performance. Just ten minutes with God before the day begins. Start free — upgrade when you're ready.
+          - generic [ref=e143]:
+            - link "Start your morning rhythm" [ref=e144] [cursor=pointer]:
+              - /url: "#/app/guided-journey"
+              - text: Start your morning rhythm
+              - img [ref=e145]
+            - link "View plans" [ref=e147] [cursor=pointer]:
+              - /url: "#/pricing"
+      - generic [ref=e149]:
+        - generic [ref=e150]: THE CCN DAILY
+        - navigation [ref=e151]:
+          - link "Newsletter" [ref=e152] [cursor=pointer]:
+            - /url: "#/newsletter"
+          - link "Podcasts" [ref=e153] [cursor=pointer]:
+            - /url: "#/podcasts"
+          - link "Blog" [ref=e154] [cursor=pointer]:
+            - /url: "#/blog"
+          - link "Pricing" [ref=e155] [cursor=pointer]:
+            - /url: "#/pricing"
+          - link "Support" [ref=e156] [cursor=pointer]:
+            - /url: "#/app/giving"
+        - generic [ref=e157]: © 2026 THE CCN DAILY

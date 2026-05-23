@@ -91,7 +91,7 @@ const channels = [
 const stats = [
   { icon: Globe, value: '40+', label: 'Countries' },
   { icon: Flame, value: 'Daily', label: 'New devotionals' },
-  { icon: Clock, value: '10 min', label: 'Morning rhythm' },
+  { icon: Clock, value: 'Your pace', label: 'Morning rhythm' },
 ];
 
 const todayItems = [
@@ -524,7 +524,7 @@ const LandingPage: React.FC = () => {
         <section className="mx-auto max-w-6xl px-6 py-20 md:py-28" ref={featuresRef}>
           <Reveal className="mb-14 max-w-2xl">
             <p className="mb-4 text-xs font-semibold uppercase tracking-[0.12em] text-brand-accent">
-              Everything your church needs in one place
+              Kickstart your spiritual flow
             </p>
             <h2 className="font-display text-4xl font-bold leading-tight">
               Built for formation, content, community, leadership, and administration.
@@ -659,7 +659,7 @@ const LandingPage: React.FC = () => {
                 className="mx-auto mt-6 max-w-xl text-lg leading-relaxed"
                 style={{ color: cta.bodyColor }}
               >
-                No noise. No performance. Just ten minutes with God before the day begins.
+                No noise. No performance. Just a quiet moment with God before the day begins.
                 Start free — upgrade when you're ready.
               </p>
               <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
@@ -695,7 +695,7 @@ const LandingPage: React.FC = () => {
         {/* ── Footer ────────────────────────────────────────────────────────── */}
         <footer className="border-t border-brand-border bg-brand-secondary">
           <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-6 py-10 text-xs text-brand-text-secondary sm:flex-row">
-            <span className="font-display font-bold text-brand-text-primary">THE CCN DAILY</span>
+            <CcnLogo size="sm" />
             <nav className="flex flex-wrap justify-center gap-5">
               <Link to="/newsletter" className="hover:text-brand-text-primary">Newsletter</Link>
               <Link to="/podcasts" className="hover:text-brand-text-primary">Podcasts</Link>

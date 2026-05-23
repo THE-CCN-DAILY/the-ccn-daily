@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import Card from '../components/Card';
+import CcnLogo from '../components/CcnLogo';
 import { FeedItem, fetchRSSFeed } from '../services/rssService';
 import { ReaderIcon, SparklesIcon, SpinnerIcon } from '../components/icons';
 import { cleanFeedText, excerptFeedText } from '../utils/feedText';
@@ -64,8 +65,8 @@ const NewsletterPage: React.FC = () => {
 
   const publicNav = (
     <nav className="mb-8 flex items-center justify-between border-b border-brand-border pb-5">
-      <Link to="/" className="font-display text-xl font-bold text-brand-text-primary">
-        THE CCN DAILY
+      <Link to="/" aria-label="THE CCN DAILY — home">
+        <CcnLogo size="sm" />
       </Link>
       <div className="flex items-center gap-5 text-sm font-semibold text-brand-text-secondary">
         <Link to="/blog" className="hover:text-brand-accent transition-colors">Blog</Link>
