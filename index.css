@@ -169,6 +169,14 @@
     font-family: var(--font-display);
   }
 
+  /* Tight heading rhythm — editorial, not web-default 1.2 */
+  h1 { line-height: 1.05; }
+  h2 { line-height: 1.1;  }
+  h3 { line-height: 1.15; }
+
+  /* Slightly larger base — 17px instead of 16px for comfortable desktop reading */
+  body { font-size: 1.0625rem; }
+
   code, pre, kbd {
     font-family: var(--font-mono);
   }
@@ -232,8 +240,9 @@
     padding-left: 1rem;
     font-family: var(--font-display);
     font-style: italic;
+    font-size: 1.05rem;
     color: rgb(var(--text-secondary-raw));
-    line-height: 1.85;
+    line-height: 1.75;
   }
   .scripture-quote cite {
     display: block;

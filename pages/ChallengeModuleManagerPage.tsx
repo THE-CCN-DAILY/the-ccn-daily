@@ -257,8 +257,8 @@ const ChallengeModuleManagerPage: React.FC = () => {
                           {module.description}
                         </p>
                         <div className="flex gap-2 mt-1">
-                          {module.videoUrl && <span className="text-[10px] bg-brand-accent/20 text-brand-accent px-2 py-0.5 rounded-full">Video</span>}
-                          {module.audioUrl && <span className="text-[10px] bg-brand-accent/20 text-brand-accent px-2 py-0.5 rounded-full">Audio</span>}
+                          {module.videoUrl && <span className="text-[12px] bg-brand-accent/20 text-brand-accent px-2 py-0.5 rounded-full">Video</span>}
+                          {module.audioUrl && <span className="text-[12px] bg-brand-accent/20 text-brand-accent px-2 py-0.5 rounded-full">Audio</span>}
                         </div>
                       </div>
                     </div>

@@ -65,7 +65,7 @@ const RoadmapEvolution: React.FC = () => {
             <Card key={i} className="border-l-4 border-brand-accent">
               <div className="flex justify-between items-start mb-4">
                 <h3 className="text-xl font-bold text-brand-text-primary">{audit.featureId}</h3>
-                <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase tracking-widest ${
+                <span className={`px-2 py-1 rounded text-[12px] font-bold uppercase tracking-widest ${
                   audit.affordabilityGain === 'Higher' ? 'bg-status-success/20 text-status-success' : 'bg-brand-secondary text-brand-text-secondary'
                 }`}>
                   Affordability: {audit.affordabilityGain}

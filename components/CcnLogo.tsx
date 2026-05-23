@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface CcnLogoProps {
   theme?: 'light' | 'dark' | 'auto';
@@ -6,52 +7,49 @@ interface CcnLogoProps {
   size?: 'sm' | 'md' | 'lg';
 }
 
-// Flame icon sizes per variant
-const FLAME_SIZES = {
-  sm: { container: 32, svg: 32 },
-  md: { container: 44, svg: 44 },
-  lg: { container: 64, svg: 64 },
+// Flame height → wordmark height (wordmark is roughly 1:1.1 aspect ratio)
+const SIZES = {
+  sm: { flame: 28, wordmark: 28 },
+  md: { flame: 40, wordmark: 40 },
+  lg: { flame: 58, wordmark: 58 },
 };
 
-const TEXT_SIZES = {
-  sm: { eyebrow: '9px', main: '20px', sub: '11px', gap: '6px' },
-  md: { eyebrow: '11px', main: '26px', sub: '14px', gap: '8px' },
-  lg: { eyebrow: '14px', main: '38px', sub: '20px', gap: '10px' },
-};
+const GAP = { sm: 6, md: 8, lg: 12 };
 
 /**
- * CCN Daily logo — hybrid approach:
- * - Flame is pure SVG paths (font-free, renders perfectly anywhere)
- * - Wordmark is HTML text so web fonts load reliably via CSS
+ * CCN Daily logo — actual brand assets:
+ * - Flame: SVG gradient paths matching the app icon
+ * - Wordmark: real PNG extracted from the official brand kit
+ *   white version on dark/default backgrounds, black on light/sepia
  */
 const CcnLogo: React.FC<CcnLogoProps> = ({
   theme = 'auto',
   className = '',
   size = 'md',
 }) => {
-  const { container, svg } = FLAME_SIZES[size];
-  const { eyebrow, main, sub, gap } = TEXT_SIZES[size];
+  const { flame, wordmark } = SIZES[size];
+  const { theme: appTheme } = useTheme();
 
-  let textColor: string;
-  if (theme === 'light') {
-    textColor = '#3D1A0A';
-  } else if (theme === 'dark') {
-    textColor = '#F0E8D8';
-  } else {
-    textColor = 'currentColor';
+  // Resolve which wordmark variant to use
+  let resolvedTheme = theme;
+  if (theme === 'auto') {
+    resolvedTheme = appTheme === 'dark' ? 'dark' : 'light';
   }
+  const wordmarkSrc = resolvedTheme === 'dark'
+    ? '/logo-wordmark-white.webp'
+    : '/logo-wordmark-black.webp';
 
   return (
     <div
       className={`ccn-logo inline-flex items-center${className ? ' ' + className : ''}`}
-      style={{ gap }}
+      style={{ gap: GAP[size] }}
       aria-label="THE CCN DAILY"
       role="img"
     >
-      {/* ── Flame ── pure SVG paths, no fonts */}
+      {/* ── Flame ── matches the brand app icon gradient */}
       <svg
-        width={svg}
-        height={container}
+        width={flame}
+        height={flame}
         viewBox="0 0 54 80"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
@@ -61,8 +59,8 @@ const CcnLogo: React.FC<CcnLogoProps> = ({
         <defs>
           <linearGradient id="ccnFlameG" x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%"   stopColor="#5E0F0F" />
-            <stop offset="35%"  stopColor="#8E1B1B" />
-            <stop offset="65%"  stopColor="#C23B1E" />
+            <stop offset="30%"  stopColor="#8E1B1B" />
+            <stop offset="62%"  stopColor="#C23B1E" />
             <stop offset="100%" stopColor="#E87A2C" />
           </linearGradient>
         </defs>
@@ -79,45 +77,21 @@ const CcnLogo: React.FC<CcnLogoProps> = ({
         />
       </svg>
 
-      {/* ── Wordmark ── HTML text, inherits CSS web fonts reliably */}
-      <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1, color: textColor }}>
-        <span
-          style={{
-            fontFamily: 'var(--serif-display, "Cormorant Garamond", Georgia, serif)',
-            fontSize: eyebrow,
-            fontWeight: 400,
-            letterSpacing: '0.22em',
-            textTransform: 'uppercase',
-            opacity: 0.75,
-            marginBottom: '1px',
-          }}
-        >
-          THE
-        </span>
-        <span
-          style={{
-            fontFamily: 'var(--serif-display, "Cormorant Garamond", Georgia, serif)',
-            fontSize: main,
-            fontWeight: 700,
-            letterSpacing: '0.05em',
-            lineHeight: 1,
-          }}
-        >
-          CCN
-        </span>
-        <span
-          style={{
-            fontFamily: 'var(--serif-display, "Cormorant Garamond", Georgia, serif)',
-            fontSize: sub,
-            fontWeight: 700,
-            letterSpacing: '0.22em',
-            textTransform: 'uppercase',
-            marginTop: '1px',
-          }}
-        >
-          DAILY
-        </span>
-      </div>
+      {/* ── Wordmark ── official brand PNG, theme-aware */}
+      <img
+        src={wordmarkSrc}
+        alt="THE CCN DAILY"
+        height={wordmark}
+        style={{
+          height: wordmark,
+          width: 'auto',
+          display: 'block',
+          objectFit: 'contain',
+          flexShrink: 0,
+        }}
+        loading="eager"
+        decoding="async"
+      />
     </div>
   );
 };

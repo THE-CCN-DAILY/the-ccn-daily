@@ -393,7 +393,7 @@ const PricingPage: React.FC = () => {
               <h3 className="text-2xl font-bold text-brand-text-primary mb-2">{PLAN_UI.free.label}</h3>
               <p className="text-brand-text-secondary text-sm h-10">{PLAN_UI.free.tagline}</p>
               <div className="mt-6 flex items-baseline">
-                <span className="text-4xl font-black text-brand-text-primary">$0</span>
+                <span className="font-display text-4xl font-black text-brand-text-primary">$0</span>
                 <span className="text-brand-text-secondary ml-2">/forever</span>
               </div>
             </div>
@@ -432,7 +432,7 @@ const PricingPage: React.FC = () => {
               <h3 className="text-2xl font-bold text-brand-text-primary mb-2">{PLAN_UI.pro.label}</h3>
               <p className="text-brand-text-secondary text-sm h-10">{PLAN_UI.pro.tagline}</p>
               <div className="mt-6 flex items-baseline">
-                <span className="text-4xl font-black text-brand-text-primary">{formatPrice('pro')}</span>
+                <span className="font-display text-4xl font-black text-brand-text-primary">{formatPrice('pro')}</span>
                 <span className="text-brand-text-secondary ml-2">/{billingCycle === 'monthly' ? 'mo' : 'yr'}</span>
               </div>
               {billingCycle === 'yearly' && (
@@ -476,7 +476,7 @@ const PricingPage: React.FC = () => {
               </h3>
               <p className="text-brand-text-secondary text-sm h-10">{PLAN_UI.max.tagline}</p>
               <div className="mt-6 flex items-baseline">
-                <span className="text-4xl font-black text-brand-text-primary">{formatPrice('max')}</span>
+                <span className="font-display text-4xl font-black text-brand-text-primary">{formatPrice('max')}</span>
                 <span className="text-brand-text-secondary ml-2">/{billingCycle === 'monthly' ? 'mo' : 'yr'}</span>
               </div>
               {billingCycle === 'yearly' && (
@@ -520,7 +520,7 @@ const PricingPage: React.FC = () => {
               </h3>
               <p className="text-brand-text-secondary text-sm h-10">{PLAN_UI.partner.tagline}</p>
               <div className="mt-6 flex items-baseline">
-                <span className="text-4xl font-black text-brand-text-primary">{formatPrice('partner')}</span>
+                <span className="font-display text-4xl font-black text-brand-text-primary">{formatPrice('partner')}</span>
                 <span className="text-brand-text-secondary ml-2">/{billingCycle === 'monthly' ? 'mo' : 'yr'}</span>
               </div>
               {billingCycle === 'yearly' && (

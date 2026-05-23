@@ -106,7 +106,7 @@ const VisionaryLab: React.FC = () => {
               <div key={i} className="p-3 bg-brand-secondary/50 rounded-lg border border-brand-border animate-fade-in-up">
                 <p className="text-sm font-bold text-brand-text-primary">{topic.title}</p>
                 <p className="text-xs text-brand-text-secondary mt-1 line-clamp-2">{topic.snippet}</p>
-                <a href={topic.uri} target="_blank" rel="noreferrer" className="text-[10px] text-brand-accent underline block mt-2">Source Link</a>
+                <a href={topic.uri} target="_blank" rel="noreferrer" className="text-[12px] text-brand-accent underline block mt-2">Source Link</a>
               </div>
             ))}
           </div>
@@ -144,7 +144,7 @@ const VisionaryLab: React.FC = () => {
                     <video src={videoUrl} controls autoPlay loop className="w-full h-full object-cover" />
                 )}
                 {!videoUrl && !isVideoLoading && (
-                    <p className="text-[10px] text-brand-text-secondary italic">Enter prompt to architect motion sanctuary.</p>
+                    <p className="text-[12px] text-brand-text-secondary italic">Enter prompt to architect motion sanctuary.</p>
                 )}
             </div>
         </Card>

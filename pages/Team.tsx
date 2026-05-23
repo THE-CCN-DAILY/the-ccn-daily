@@ -116,7 +116,7 @@ const Team: React.FC = () => {
                                 <brief.icon className="w-6 h-6 text-brand-accent"/>
                             </div>
                             <div className="text-right">
-                                <p className="text-[10px] font-black uppercase text-brand-text-secondary tracking-widest">Progress</p>
+                                <p className="text-[12px] font-black uppercase text-brand-text-secondary tracking-widest">Progress</p>
                                 <p className="text-xl font-black text-brand-accent">{brief.status}</p>
                             </div>
                         </div>
@@ -135,10 +135,10 @@ const Team: React.FC = () => {
                         </div>
                         
                         <div className="mt-6 pt-4 border-t border-brand-border flex justify-between items-center">
-                            <span className="text-[10px] font-bold text-status-success flex items-center">
+                            <span className="text-[12px] font-bold text-status-success flex items-center">
                                 <CheckIcon className="w-3 h-3 mr-1"/> Architect Approved
                             </span>
-                            <button className="text-[10px] font-bold text-brand-accent hover:underline uppercase tracking-widest">Deploy Logic</button>
+                            <button className="text-[12px] font-bold text-brand-accent hover:underline uppercase tracking-widest">Deploy Logic</button>
                         </div>
                     </Card>
                 ))}

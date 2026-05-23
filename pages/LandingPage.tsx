@@ -72,16 +72,19 @@ const channels = [
     icon: Mail,
     title: 'Newsletter',
     text: 'Essays and devotionals for faith, work, leadership, and endurance — direct to your inbox.',
+    to: '/newsletter',
   },
   {
     icon: Radio,
     title: 'Podcast',
     text: 'Audio formation for commutes, quiet rooms, and workday resets. Press play anywhere.',
+    to: '/podcasts',
   },
   {
     icon: CalendarDays,
     title: 'Events',
     text: 'Live moments, gatherings, and ministry rhythms as they come online.',
+    to: '/app/events',
   },
 ];
 
@@ -359,7 +362,7 @@ const LandingPage: React.FC = () => {
 
               <motion.h1
                 variants={fadeUp}
-                className="font-display text-5xl font-bold leading-[1.15] text-brand-text-primary md:text-6xl lg:text-[3.75rem]"
+                className="font-display text-5xl font-bold leading-[1.05] text-brand-text-primary md:text-6xl lg:text-[4rem]"
               >
                 A quiet daily rhythm for Scripture, prayer, and formation.
               </motion.h1>
@@ -494,19 +497,24 @@ const LandingPage: React.FC = () => {
         <Reveal>
           <section className="border-y border-brand-border bg-brand-dark">
             <div className="mx-auto grid max-w-6xl divide-y divide-brand-border px-6 md:grid-cols-3 md:divide-x md:divide-y-0">
-              {channels.map(({ icon: Icon, title, text }, i) => (
-                <motion.div
-                  key={title}
-                  initial={{ opacity: 0, y: 12 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: i * 0.1, duration: 0.5 }}
-                  className="group py-10 md:px-8"
-                >
-                  <Icon className="mb-5 h-5 w-5 text-brand-accent transition-transform group-hover:scale-110" />
-                  <h3 className="font-display text-xl font-bold">{title}</h3>
-                  <p className="mt-3 text-sm leading-7 text-brand-text-secondary">{text}</p>
-                </motion.div>
+              {channels.map(({ icon: Icon, title, text, to }, i) => (
+                <Link key={title} to={to} className="block">
+                  <motion.div
+                    initial={{ opacity: 0, y: 12 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: i * 0.1, duration: 0.5 }}
+                    whileHover={{ y: -3, transition: { type: 'spring', stiffness: 340, damping: 22 } }}
+                    className="group cursor-pointer py-10 md:px-8"
+                  >
+                    <Icon className="mb-5 h-5 w-5 text-brand-accent transition-transform group-hover:scale-110" />
+                    <h3 className="font-display text-xl font-bold">{title}</h3>
+                    <p className="mt-3 text-base leading-7 text-brand-text-secondary">{text}</p>
+                    <span className="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold text-brand-accent opacity-0 transition-opacity group-hover:opacity-100">
+                      Explore <ArrowRight className="h-3 w-3" />
+                    </span>
+                  </motion.div>
+                </Link>
               ))}
             </div>
           </section>
@@ -516,7 +524,7 @@ const LandingPage: React.FC = () => {
         <section className="mx-auto max-w-6xl px-6 py-20 md:py-28" ref={featuresRef}>
           <Reveal className="mb-14 max-w-2xl">
             <p className="mb-4 text-xs font-semibold uppercase tracking-[0.12em] text-brand-accent">
-              A real app, not only a website
+              Everything your church needs in one place
             </p>
             <h2 className="font-display text-4xl font-bold leading-tight">
               Built for formation, content, community, leadership, and administration.
