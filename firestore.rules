@@ -370,6 +370,10 @@ service cloud.firestore {
       allow read: if isOwner(userId) || isAdmin();
       allow create: if isOwner(userId) && isValidUser(request.resource.data) && (request.resource.data.role == 'user' || isAdmin());
       allow update: if isOwner(userId) && isValidUser(request.resource.data) && (request.resource.data.role == resource.data.role || isAdmin());
+      // Allow users to register/refresh their own FCM push token only
+      allow update: if isOwner(userId) &&
+                       request.resource.data.diff(resource.data).affectedKeys()
+                         .hasOnly(['fcmToken', 'fcmTokenUpdatedAt']);
 
       match /courseProgress/{courseId} {
         allow read: if isOwner(userId) || isAdmin();
