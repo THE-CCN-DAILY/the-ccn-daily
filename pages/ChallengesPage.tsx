@@ -85,8 +85,9 @@ const ChallengesPage: React.FC = () => {
       </div>
 
       {loading ? (
-        <div className="flex justify-center py-20">
+        <div className="flex flex-col items-center justify-center py-20 gap-4">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-accent"></div>
+          <p className="text-sm text-brand-text-secondary" style={{ fontFamily: 'var(--serif-body)' }}>Loading the path ahead...</p>
         </div>
       ) : displayChallenges.length > 0 ? (
         <AnimatePresence mode="wait">
@@ -142,7 +143,7 @@ const ChallengesPage: React.FC = () => {
           <h3 className="text-xl mb-2" style={{ fontFamily: 'var(--serif-display, var(--font-display))', fontWeight: 600, color: 'var(--fg-1, #2A1C15)' }}>No {activeTab} challenges</h3>
           <p style={{ fontFamily: 'var(--serif-body)', lineHeight: 1.65, color: 'var(--fg-2, #5B4A3C)' }}>
             {activeTab === 'active'
-              ? "There are no active challenges at the moment. Check back soon!"
+              ? "No active challenges — a new one is on the way."
               : "No past challenges found in the archive."}
           </p>
         </Card>

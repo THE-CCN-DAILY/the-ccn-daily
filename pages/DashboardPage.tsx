@@ -1,328 +1,646 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
 import {
-  BookOpen,
-  Headphones,
-  Newspaper,
-  Route,
-  Trophy,
-  CalendarDays,
-  NotebookPen,
   Flame,
-  ChevronRight,
+  BookOpen,
+  NotebookPen,
+  Headphones,
   GraduationCap,
-  Target,
   Users,
-  MessageCircle,
-  Gift,
+  CalendarDays,
+  Library,
+  Star,
+  Newspaper,
+  ArrowRight,
+  Target,
 } from 'lucide-react';
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  query,
+  orderBy,
+  limit,
+} from 'firebase/firestore';
+import { db } from '../firebase';
 import { useAuth } from '../contexts/AuthContext';
-import Card from '../components/Card';
+
+// ─── Constants ────────────────────────────────────────────────────────────────
+
+const PRAYER_PROMPTS: string[] = [
+  'Be still in a world that celebrates hustle. Seek counsel in a culture that worships independence.',
+  'Prayer is not preparation for the battle. Prayer is the battle.',
+  'God meets you where your faith and your daily life feel most sharply divided.',
+  'Relationship creates recognition. Draw near to God and He will draw near to you.',
+  'You have nothing left to prove. God already knows the gap. He meets you in the gap, not after it closes.',
+  'Faithfulness matters more than flash. Your knees hitting the floor matters more than your eloquence.',
+  "God's voice is not a reward for perfect behaviour. It is a promise to His children.",
+];
 
 const EASE = [0.22, 1, 0.36, 1] as [number, number, number, number];
-const fadeUp = { hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } };
-const stagger = {
-  hidden: {},
-  visible: { transition: { staggerChildren: 0.07, delayChildren: 0.05 } },
+
+const fadeUp = {
+  hidden: { opacity: 0, y: 22 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.52, ease: EASE } },
 };
 
-interface FeatureCard {
+const stagger = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.09, delayChildren: 0.05 } },
+};
+
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+interface Devotional {
+  id: string;
   title: string;
-  description: string;
-  route: string;
-  icon: React.ElementType;
-  accentColor: string;
+  body: string;
+  publishedAt: { seconds: number } | null;
 }
 
-const PRIORITY_FEATURES: FeatureCard[] = [
-  {
-    title: 'Daily Journey',
-    description: 'Start your guided devotional for today',
-    route: '/app/guided-journey',
-    icon: Route,
-    accentColor: 'var(--crimson, #8E1B1B)',
-  },
-  {
-    title: 'Bible Reader',
-    description: 'Read and study Scripture',
-    route: '/app/bible',
-    icon: BookOpen,
-    accentColor: 'var(--ember, #C23B1E)',
-  },
-  {
-    title: 'Newsletter',
-    description: 'Latest devotionals and updates',
-    route: '/app/newsletters',
-    icon: Newspaper,
-    accentColor: 'var(--gold-ds, #B7892E)',
-  },
-  {
-    title: 'Podcast',
-    description: 'Listen to messages and teachings',
-    route: '/app/podcasts',
-    icon: Headphones,
-    accentColor: 'var(--amber-ds, #E87A2C)',
-  },
-  {
-    title: 'Journaling',
-    description: 'Write what God is speaking to you',
-    route: '/app/journaling',
-    icon: NotebookPen,
-    accentColor: 'var(--crimson, #8E1B1B)',
-  },
-  {
-    title: 'Live Events',
-    description: 'Join live broadcasts and services',
-    route: '/app/events',
-    icon: CalendarDays,
-    accentColor: 'var(--ember, #C23B1E)',
-  },
-];
-
-interface MoreLink {
-  label: string;
-  route: string;
-  icon: React.ElementType;
+interface PodcastEpisode {
+  id: string;
+  title: string;
+  duration?: string;
+  publishedAt: { seconds: number } | null;
 }
 
-const MORE_LINKS: MoreLink[] = [
-  { label: 'Courses', route: '/app/courses', icon: GraduationCap },
-  { label: 'Audiobook Library', route: '/app/audiobook-library', icon: Headphones },
-  { label: 'Challenges', route: '/app/challenges', icon: Target },
-  { label: 'Community', route: '/app/the-community', icon: Users },
-  { label: 'Community Rooms', route: '/app/community-rooms', icon: MessageCircle },
-  { label: 'Testimonies', route: '/app/testimonies', icon: Trophy },
-  { label: 'Grace Links', route: '/app/grace-link', icon: Gift },
-];
+// ─── Skeleton ─────────────────────────────────────────────────────────────────
 
-interface StatCardProps {
-  label: string;
-  value: number | string;
-  icon: React.ElementType;
-  color: string;
-}
-
-const StatCard: React.FC<StatCardProps> = ({ label, value, icon: Icon, color }) => (
+const Skeleton: React.FC<{ className?: string }> = ({ className = '' }) => (
   <div
-    className="flex items-center gap-3 p-3 rounded-xl"
-    style={{ background: `${color}12`, border: `1px solid ${color}25` }}
-  >
-    <div
-      className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-      style={{ background: `${color}20` }}
-    >
-      <Icon className="w-4 h-4" style={{ color }} />
-    </div>
-    <div>
-      <p className="text-lg font-black text-brand-text-primary leading-none">{value}</p>
-      <p className="text-[11px] text-brand-text-secondary mt-0.5">{label}</p>
-    </div>
-  </div>
+    className={`rounded-lg bg-brand-border/50 animate-pulse ${className}`}
+  />
 );
 
-const DashboardPage: React.FC = () => {
-  const { user } = useAuth();
+// ─── Featured Devotional Card ─────────────────────────────────────────────────
 
-  const displayName = user?.displayName?.split(' ')[0] ?? 'Friend';
+interface DevotionalCardProps {
+  devotional: Devotional | null;
+  loading: boolean;
+  dateLabel: string;
+}
 
-  const today = new Date();
-  const dayLabel = today.toLocaleDateString('en-US', {
-    weekday: 'long',
-    month: 'long',
-    day: 'numeric',
-  });
+const DevotionalCard: React.FC<DevotionalCardProps> = ({ devotional, loading, dateLabel }) => {
+  const excerpt = devotional?.body
+    ? devotional.body.replace(/\n+/g, ' ').trim().slice(0, 160) + '…'
+    : null;
 
   return (
-    <div className="flex gap-8 max-w-7xl mx-auto pb-20">
-      {/* Left Sidebar — desktop only */}
-      <aside className="hidden lg:flex flex-col gap-5 w-56 flex-shrink-0">
-        <motion.div
-          initial={{ opacity: 0, x: -16 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.45, ease: EASE }}
-        >
-          <Card className="p-5 flex flex-col gap-4">
-            {/* Greeting */}
-            <div>
-              <p
-                style={{
-                  fontFamily: 'var(--sans-ui)',
-                  fontSize: '11px',
-                  fontWeight: 700,
-                  letterSpacing: '0.10em',
-                  textTransform: 'uppercase',
-                  color: 'var(--gold-ds, #B7892E)',
-                }}
-                className="mb-1"
-              >
-                Welcome back
-              </p>
-              <h2
-                className="text-xl font-black text-brand-text-primary leading-tight"
-                style={{ fontFamily: 'var(--serif-display)' }}
-              >
-                {displayName}
-              </h2>
-              <p className="text-xs text-brand-text-secondary mt-1">{dayLabel}</p>
-            </div>
-
-            {/* Divider */}
-            <div className="border-t border-brand-border" />
-
-            {/* Quick stats */}
-            <div className="flex flex-col gap-2.5">
-              <StatCard
-                label="Day Streak"
-                value={1}
-                icon={Flame}
-                color="var(--ember, #C23B1E)"
-              />
-              <StatCard
-                label="Chapters Read"
-                value={0}
-                icon={BookOpen}
-                color="var(--crimson, #8E1B1B)"
-              />
-              <StatCard
-                label="Prayers Journaled"
-                value={0}
-                icon={NotebookPen}
-                color="var(--gold-ds, #B7892E)"
-              />
-            </div>
-
-            {/* Progress placeholder */}
-            <div className="border-t border-brand-border pt-3">
-              <div className="flex justify-between items-center mb-1.5">
-                <p className="text-[11px] font-semibold text-brand-text-secondary">Your Journey</p>
-                <p className="text-[11px] font-bold text-brand-text-primary">0%</p>
-              </div>
-              <div className="h-1.5 w-full rounded-full bg-brand-border overflow-hidden">
-                <div
-                  className="h-full rounded-full"
-                  style={{ width: '2%', background: 'var(--crimson, #8E1B1B)' }}
-                />
-              </div>
-              <p className="text-[10px] text-brand-text-secondary/60 mt-1.5">Keep going — every day matters.</p>
-            </div>
-          </Card>
-        </motion.div>
-      </aside>
-
-      {/* Main content */}
-      <div className="flex-1 min-w-0">
-        {/* Page header */}
-        <motion.div
-          className="mb-8"
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.42, ease: EASE }}
-        >
-          <p
-            style={{
-              fontFamily: 'var(--sans-ui)',
-              fontSize: '12px',
-              fontWeight: 700,
-              letterSpacing: '0.10em',
-              textTransform: 'uppercase',
-              color: 'var(--crimson, #8E1B1B)',
-            }}
-            className="mb-2"
-          >
-            Sanctuary
-          </p>
-          <h1
-            className="text-4xl font-black text-brand-text-primary mb-2"
-            style={{ fontFamily: 'var(--serif-display)', fontWeight: 600, lineHeight: 1.2 }}
-          >
-            Today
-          </h1>
-          <p
-            style={{
-              fontFamily: 'var(--serif-body)',
-              fontSize: '18px',
-              lineHeight: 1.65,
-              color: 'var(--fg-2, #5B4A3C)',
-            }}
-          >
-            {dayLabel} — begin where you left off.
-          </p>
-        </motion.div>
-
-        {/* Priority feature grid */}
-        <motion.div
-          className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-10"
-          variants={stagger}
-          initial="hidden"
-          animate="visible"
-        >
-          {PRIORITY_FEATURES.map((feat) => (
-            <motion.div
-              key={feat.route}
-              variants={fadeUp}
-              transition={{ duration: 0.4, ease: EASE }}
-            >
-              <Link to={feat.route} className="block h-full">
-                <Card
-                  className="group p-5 hover:shadow-lg transition-all cursor-pointer border-t-2 h-full"
-                  style={{ borderTopColor: feat.accentColor }}
-                >
-                  <div className="flex items-start justify-between mb-3">
-                    <div
-                      className="w-10 h-10 rounded-xl flex items-center justify-center"
-                      style={{ background: `${feat.accentColor}18` }}
-                    >
-                      <feat.icon className="w-5 h-5" style={{ color: feat.accentColor }} />
-                    </div>
-                    <ChevronRight className="w-4 h-4 text-brand-text-secondary opacity-0 group-hover:opacity-100 transition-opacity" />
-                  </div>
-                  <h3
-                    className="font-bold text-brand-text-primary mb-1"
-                    style={{ fontFamily: 'var(--serif-display)' }}
-                  >
-                    {feat.title}
-                  </h3>
-                  <p className="text-xs text-brand-text-secondary">{feat.description}</p>
-                </Card>
-              </Link>
-            </motion.div>
-          ))}
-        </motion.div>
-
-        {/* More features */}
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.42, ease: EASE, delay: 0.35 }}
-        >
+    <div
+      className="w-full rounded-2xl overflow-hidden"
+      style={{
+        background: 'var(--bg-deep)',
+        boxShadow: '0 2px 6px rgba(0,0,0,.12), 0 20px 60px rgba(0,0,0,.18)',
+      }}
+    >
+      {loading ? (
+        <div className="p-8 md:p-12 flex flex-col gap-4">
+          <Skeleton className="h-3 w-48" />
+          <Skeleton className="h-8 w-3/4" />
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-5/6" />
+          <Skeleton className="h-9 w-36 mt-2" />
+        </div>
+      ) : (
+        <div className="p-8 md:p-12">
+          {/* Eyebrow */}
           <p
             style={{
               fontFamily: 'var(--sans-ui)',
               fontSize: '11px',
               fontWeight: 700,
-              letterSpacing: '0.10em',
+              letterSpacing: '0.14em',
               textTransform: 'uppercase',
-              color: 'var(--gold-ds, #B7892E)',
+              color: 'var(--ember)',
             }}
-            className="mb-3"
+            className="mb-4"
           >
-            More Features
+            Today&apos;s Devotional &middot; {dateLabel}
           </p>
-          <div className="flex flex-wrap gap-2">
-            {MORE_LINKS.map((link) => (
+
+          {/* Title */}
+          <h2
+            style={{
+              fontFamily: 'var(--serif-display)',
+              fontSize: 'clamp(1.75rem, 4vw, 2.75rem)',
+              fontWeight: 600,
+              lineHeight: 1.1,
+              color: 'var(--bg-paper)',
+            }}
+            className="mb-4"
+          >
+            {devotional?.title ?? 'Your next devotional is being prepared.'}
+          </h2>
+
+          {/* Excerpt */}
+          {excerpt ? (
+            <p
+              style={{
+                fontFamily: 'var(--serif-body)',
+                fontSize: '1.0625rem',
+                lineHeight: 1.7,
+                color: 'var(--fg-3)',
+              }}
+              className="mb-8 max-w-2xl"
+            >
+              {excerpt}
+            </p>
+          ) : (
+            <p
+              style={{
+                fontFamily: 'var(--serif-body)',
+                fontSize: '1.0625rem',
+                lineHeight: 1.7,
+                color: 'var(--fg-3)',
+              }}
+              className="mb-8"
+            >
+              Begin with the Guided Journey. A path is already waiting for you.
+            </p>
+          )}
+
+          {/* CTA */}
+          <Link
+            to="/app/guided-journey"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold transition-all hover:gap-3"
+            style={{
+              fontFamily: 'var(--sans-ui)',
+              background: 'var(--ember)',
+              color: '#fff',
+            }}
+          >
+            Begin your journey
+            <ArrowRight className="w-4 h-4" />
+          </Link>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ─── Continue Strip Cards ─────────────────────────────────────────────────────
+
+const CONTINUE_CARDS = [
+  {
+    icon: Target,
+    title: 'Planner',
+    desc: 'Set your intention for today',
+    route: '/app/planner',
+  },
+  {
+    icon: BookOpen,
+    title: 'Bible',
+    desc: 'Continue reading',
+    route: '/app/bible',
+  },
+  {
+    icon: NotebookPen,
+    title: 'Journaling',
+    desc: 'Write a reflection',
+    route: '/app/journaling',
+  },
+] as const;
+
+// ─── Quick Links ──────────────────────────────────────────────────────────────
+
+const QUICK_LINKS = [
+  { label: 'Courses', route: '/app/courses', icon: GraduationCap },
+  { label: 'Community', route: '/app/community-rooms', icon: Users },
+  { label: 'Events', route: '/app/events', icon: CalendarDays },
+  { label: 'Books', route: '/app/books', icon: Library },
+  { label: 'Testimonies', route: '/app/testimonies', icon: Star },
+  { label: 'Newsletter', route: '/app/newsletters', icon: Newspaper },
+] as const;
+
+// ─── Main Component ───────────────────────────────────────────────────────────
+
+const DashboardPage: React.FC = () => {
+  const { user } = useAuth();
+
+  // ── Time-aware greeting ──────────────────────────────────────────────────
+  const now = new Date();
+  const hour = now.getHours();
+  const greeting =
+    hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+  const firstName = user?.displayName?.split(' ')[0] ?? 'Friend';
+
+  // ── Date labels ──────────────────────────────────────────────────────────
+  const dayLabel = now.toLocaleDateString('en-US', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
+
+  const shortDateLabel = now.toLocaleDateString('en-US', {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  });
+
+  // ── Prayer prompt — one per day of week ─────────────────────────────────
+  const prayerPrompt = PRAYER_PROMPTS[now.getDay()];
+
+  // ── Firestore data ───────────────────────────────────────────────────────
+  const [devotional, setDevotional] = useState<Devotional | null>(null);
+  const [devotionalLoading, setDevotionalLoading] = useState(true);
+
+  const [streak, setStreak] = useState(0);
+
+  const [podcast, setPodcast] = useState<PodcastEpisode | null>(null);
+  const [podcastLoading, setPodcastLoading] = useState(true);
+
+  useEffect(() => {
+    // Fetch latest devotional
+    const fetchDevotional = async () => {
+      try {
+        const q = query(
+          collection(db, 'devotionals'),
+          orderBy('publishedAt', 'desc'),
+          limit(1),
+        );
+        const snap = await getDocs(q);
+        if (!snap.empty) {
+          const d = snap.docs[0];
+          setDevotional({ id: d.id, ...(d.data() as Omit<Devotional, 'id'>) });
+        }
+      } catch {
+        // Firestore unavailable — show placeholder
+      } finally {
+        setDevotionalLoading(false);
+      }
+    };
+
+    // Fetch streak
+    const fetchStreak = async () => {
+      if (!user?.uid) return;
+      try {
+        const userDoc = await getDoc(doc(db, 'users', user.uid));
+        if (userDoc.exists()) {
+          const data = userDoc.data();
+          setStreak(typeof data?.currentStreak === 'number' ? data.currentStreak : 0);
+        }
+      } catch {
+        // Default 0 — safe fallback
+      }
+    };
+
+    // Fetch latest podcast episode
+    const fetchPodcast = async () => {
+      try {
+        const q = query(
+          collection(db, 'podcastEpisodes'),
+          orderBy('publishedAt', 'desc'),
+          limit(1),
+        );
+        const snap = await getDocs(q);
+        if (!snap.empty) {
+          const d = snap.docs[0];
+          setPodcast({ id: d.id, ...(d.data() as Omit<PodcastEpisode, 'id'>) });
+        }
+      } catch {
+        // Show placeholder
+      } finally {
+        setPodcastLoading(false);
+      }
+    };
+
+    fetchDevotional();
+    fetchStreak();
+    fetchPodcast();
+  }, [user?.uid]);
+
+  // ────────────────────────────────────────────────────────────────────────
+  return (
+    <div className="max-w-4xl mx-auto pb-24 px-0">
+
+      {/* ── 1. Greeting Header ─────────────────────────────────────────────── */}
+      <motion.section
+        className="mb-12 pt-2"
+        initial={{ opacity: 0, y: 18 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: EASE }}
+      >
+        {/* Prayer prompt — pull quote eyebrow */}
+        <p
+          style={{
+            fontFamily: 'var(--serif-body)',
+            fontStyle: 'italic',
+            fontSize: '0.9375rem',
+            lineHeight: 1.6,
+            color: 'var(--fg-3)',
+          }}
+          className="mb-4 max-w-xl"
+        >
+          &ldquo;{prayerPrompt}&rdquo;
+        </p>
+
+        {/* Main greeting */}
+        <h1
+          style={{
+            fontFamily: 'var(--serif-display)',
+            fontSize: 'clamp(2rem, 5vw, 3.25rem)',
+            fontWeight: 600,
+            lineHeight: 1.05,
+            color: 'var(--fg-1)',
+          }}
+          className="mb-2"
+        >
+          {greeting}, {firstName}.
+        </h1>
+
+        {/* Date */}
+        <p
+          style={{
+            fontFamily: 'var(--sans-ui)',
+            fontSize: '0.8125rem',
+            fontWeight: 500,
+            letterSpacing: '0.04em',
+            color: 'var(--fg-3)',
+          }}
+        >
+          {dayLabel}
+        </p>
+      </motion.section>
+
+      {/* ── 2. Today's Featured Devotional ────────────────────────────────── */}
+      <motion.section
+        className="mb-12"
+        initial={{ opacity: 0, y: 22 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.55, ease: EASE, delay: 0.08 }}
+      >
+        <DevotionalCard
+          devotional={devotional}
+          loading={devotionalLoading}
+          dateLabel={shortDateLabel}
+        />
+      </motion.section>
+
+      {/* ── 3. Continue Where You Left Off ────────────────────────────────── */}
+      <motion.section
+        className="mb-12"
+        initial={{ opacity: 0, y: 18 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: EASE, delay: 0.18 }}
+      >
+        <p
+          style={{
+            fontFamily: 'var(--sans-ui)',
+            fontSize: '11px',
+            fontWeight: 700,
+            letterSpacing: '0.12em',
+            textTransform: 'uppercase',
+            color: 'var(--fg-3)',
+          }}
+          className="mb-4"
+        >
+          Continue
+        </p>
+
+        {/* Horizontal scroll strip */}
+        <div
+          className="flex gap-3 overflow-x-auto pb-1"
+          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+        >
+          {CONTINUE_CARDS.map((card) => (
+            <motion.div
+              key={card.route}
+              whileHover={{ scale: 1.02 }}
+              transition={{ duration: 0.2, ease: EASE }}
+              className="flex-shrink-0"
+            >
               <Link
-                key={link.route}
-                to={link.route}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-brand-border text-xs font-medium text-brand-text-secondary hover:text-brand-text-primary hover:border-brand-accent/40 hover:bg-brand-secondary transition-all"
+                to={card.route}
+                className="flex flex-col gap-3 p-5 rounded-xl border border-brand-border bg-brand-dark hover:border-brand-border-strong hover:shadow-md transition-all w-48"
               >
-                <link.icon className="w-3.5 h-3.5" />
-                {link.label}
+                <div
+                  className="w-9 h-9 rounded-lg flex items-center justify-center"
+                  style={{ background: 'rgba(var(--cta-raw), 0.12)' }}
+                >
+                  <card.icon
+                    className="w-4.5 h-4.5"
+                    style={{ color: 'rgb(var(--cta-raw))' }}
+                  />
+                </div>
+                <div>
+                  <p
+                    className="font-semibold text-brand-text-primary text-sm mb-0.5"
+                    style={{ fontFamily: 'var(--sans-ui)' }}
+                  >
+                    {card.title}
+                  </p>
+                  <p
+                    className="text-xs text-brand-text-secondary leading-snug"
+                    style={{ fontFamily: 'var(--sans-ui)' }}
+                  >
+                    {card.desc}
+                  </p>
+                </div>
               </Link>
-            ))}
+            </motion.div>
+          ))}
+        </div>
+      </motion.section>
+
+      {/* ── 4. Community & Momentum ───────────────────────────────────────── */}
+      <motion.section
+        className="mb-12 grid grid-cols-1 md:grid-cols-2 gap-5"
+        variants={stagger}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, margin: '-60px' }}
+      >
+        {/* Streak counter */}
+        <motion.div variants={fadeUp}>
+          <div
+            className="h-full rounded-2xl border border-brand-border p-6 flex flex-col justify-between"
+            style={{ background: 'rgb(var(--surface-raw))' }}
+          >
+            <div className="flex items-start justify-between mb-4">
+              <div>
+                <p
+                  style={{
+                    fontFamily: 'var(--sans-ui)',
+                    fontSize: '11px',
+                    fontWeight: 700,
+                    letterSpacing: '0.12em',
+                    textTransform: 'uppercase',
+                    color: 'var(--fg-3)',
+                  }}
+                  className="mb-1"
+                >
+                  Streak
+                </p>
+                <div className="flex items-baseline gap-2">
+                  <span
+                    style={{
+                      fontFamily: 'var(--serif-display)',
+                      fontSize: '3.5rem',
+                      fontWeight: 700,
+                      lineHeight: 1,
+                      color: 'var(--fg-1)',
+                    }}
+                  >
+                    {streak}
+                  </span>
+                  <span
+                    style={{
+                      fontFamily: 'var(--sans-ui)',
+                      fontSize: '0.875rem',
+                      color: 'var(--fg-3)',
+                    }}
+                  >
+                    day{streak !== 1 ? 's' : ''}
+                  </span>
+                </div>
+              </div>
+              <Flame
+                className="w-8 h-8 mt-1"
+                style={{ color: 'var(--ember)' }}
+              />
+            </div>
+            <p
+              style={{
+                fontFamily: 'var(--serif-body)',
+                fontStyle: 'italic',
+                fontSize: '0.9375rem',
+                lineHeight: 1.55,
+                color: 'var(--fg-3)',
+              }}
+            >
+              Every day you show up is a seed sown.
+            </p>
           </div>
         </motion.div>
-      </div>
+
+        {/* Latest podcast */}
+        <motion.div variants={fadeUp}>
+          <div
+            className="h-full rounded-2xl border border-brand-border p-6 flex flex-col justify-between"
+            style={{ background: 'rgb(var(--surface-raw))' }}
+          >
+            <div className="mb-4">
+              <p
+                style={{
+                  fontFamily: 'var(--sans-ui)',
+                  fontSize: '11px',
+                  fontWeight: 700,
+                  letterSpacing: '0.12em',
+                  textTransform: 'uppercase',
+                  color: 'var(--fg-3)',
+                }}
+                className="mb-3"
+              >
+                Latest Episode
+              </p>
+
+              {podcastLoading ? (
+                <div className="flex flex-col gap-2">
+                  <Skeleton className="h-4 w-3/4" />
+                  <Skeleton className="h-3 w-20" />
+                </div>
+              ) : podcast ? (
+                <>
+                  <p
+                    style={{
+                      fontFamily: 'var(--serif-display)',
+                      fontSize: '1.125rem',
+                      fontWeight: 600,
+                      lineHeight: 1.25,
+                      color: 'var(--fg-1)',
+                    }}
+                    className="mb-1"
+                  >
+                    {podcast.title}
+                  </p>
+                  {podcast.duration && (
+                    <p
+                      style={{
+                        fontFamily: 'var(--sans-ui)',
+                        fontSize: '0.8125rem',
+                        color: 'var(--fg-3)',
+                      }}
+                    >
+                      {podcast.duration}
+                    </p>
+                  )}
+                </>
+              ) : (
+                <p
+                  style={{
+                    fontFamily: 'var(--serif-body)',
+                    fontStyle: 'italic',
+                    fontSize: '0.9375rem',
+                    color: 'var(--fg-3)',
+                  }}
+                >
+                  Latest episode coming soon.
+                </p>
+              )}
+            </div>
+
+            <Link
+              to="/app/podcasts"
+              className="inline-flex items-center gap-1.5 text-sm font-semibold transition-colors hover:opacity-80"
+              style={{
+                fontFamily: 'var(--sans-ui)',
+                color: 'rgb(var(--cta-raw))',
+              }}
+            >
+              <Headphones className="w-4 h-4" />
+              Listen now
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+        </motion.div>
+      </motion.section>
+
+      {/* ── 5. Quick Links Grid ───────────────────────────────────────────── */}
+      <motion.section
+        initial={{ opacity: 0, y: 14 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: '-40px' }}
+        transition={{ duration: 0.45, ease: EASE }}
+      >
+        <p
+          style={{
+            fontFamily: 'var(--sans-ui)',
+            fontSize: '11px',
+            fontWeight: 700,
+            letterSpacing: '0.12em',
+            textTransform: 'uppercase',
+            color: 'var(--fg-3)',
+          }}
+          className="mb-4"
+        >
+          Explore
+        </p>
+
+        <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+          {QUICK_LINKS.map((link) => (
+            <Link
+              key={link.route}
+              to={link.route}
+              className="flex flex-col items-center gap-2 py-4 px-2 rounded-xl border border-brand-border bg-brand-dark hover:border-brand-border-strong hover:bg-brand-secondary transition-all group"
+            >
+              <link.icon
+                className="w-5 h-5 text-brand-text-secondary group-hover:text-brand-text-primary transition-colors"
+              />
+              <span
+                className="text-[11px] font-medium text-brand-text-secondary group-hover:text-brand-text-primary transition-colors text-center leading-tight"
+                style={{ fontFamily: 'var(--sans-ui)' }}
+              >
+                {link.label}
+              </span>
+            </Link>
+          ))}
+        </div>
+      </motion.section>
     </div>
   );
 };

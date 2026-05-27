@@ -76,10 +76,13 @@ const ShareStoryModal: React.FC<{
 }> = ({ onClose, onSave }) => {
   const [title, setTitle] = useState('');
   const [text, setText] = useState('');
+  const [saved, setSaved] = useState(false);
 
   const handleSave = () => {
     if (title.trim() && text.trim()) {
       onSave({ id: Date.now(), author: 'You', title, text });
+      setSaved(true);
+      setTimeout(onClose, 1800);
     }
   };
 
@@ -107,41 +110,50 @@ const ShareStoryModal: React.FC<{
           Share Your Story
         </h2>
 
-        <div className="space-y-4">
-          <input
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="A title for your testimony"
-            className="w-full bg-brand-dark border border-brand-border rounded-xl py-2.5 px-3 text-brand-text-primary placeholder-brand-text-secondary focus:outline-none focus:ring-2 focus:ring-brand-accent"
-          />
-          <textarea
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            rows={6}
-            className="w-full p-3 bg-brand-dark border border-brand-border rounded-xl text-brand-text-primary placeholder-brand-text-secondary focus:outline-none focus:ring-2 focus:ring-brand-accent resize-none"
-            placeholder="Share your story of faith, gratitude, or a moment of God's goodness..."
-          />
-        </div>
+        {saved ? (
+          <div className="py-8 text-center">
+            <p className="text-brand-text-primary font-bold text-lg mb-1" style={{ fontFamily: 'var(--serif-display, var(--font-display))' }}>Your testimony has been received.</p>
+            <p className="text-sm text-brand-text-secondary" style={{ fontFamily: 'var(--serif-body)' }}>Thank you for declaring what God has done.</p>
+          </div>
+        ) : (
+          <>
+            <div className="space-y-4">
+              <input
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="A title for your testimony"
+                className="w-full bg-brand-dark border border-brand-border rounded-xl py-2.5 px-3 text-brand-text-primary placeholder-brand-text-secondary focus:outline-none focus:ring-2 focus:ring-brand-accent"
+              />
+              <textarea
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+                rows={6}
+                className="w-full p-3 bg-brand-dark border border-brand-border rounded-xl text-brand-text-primary placeholder-brand-text-secondary focus:outline-none focus:ring-2 focus:ring-brand-accent resize-none"
+                placeholder="Share your story of faith, gratitude, or a moment of God's goodness..."
+              />
+            </div>
 
-        <div className="flex justify-end gap-3 mt-5">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 text-sm rounded-xl text-brand-text-secondary hover:bg-brand-border transition-colors"
-          >
-            Cancel
-          </button>
-          <motion.button
-            onClick={handleSave}
-            disabled={!title.trim() || !text.trim()}
-            className="px-6 py-2.5 rounded-xl bg-brand-accent text-white font-semibold shadow-md disabled:opacity-40"
-            whileHover={{ scale: 1.03 }}
-            whileTap={{ scale: 0.97 }}
-            transition={{ type: 'spring', stiffness: 400, damping: 20 }}
-          >
-            Share Story
-          </motion.button>
-        </div>
+            <div className="flex justify-end gap-3 mt-5">
+              <button
+                onClick={onClose}
+                className="px-4 py-2 text-sm rounded-xl text-brand-text-secondary hover:bg-brand-border transition-colors"
+              >
+                Cancel
+              </button>
+              <motion.button
+                onClick={handleSave}
+                disabled={!title.trim() || !text.trim()}
+                className="px-6 py-2.5 rounded-xl bg-brand-accent text-white font-semibold shadow-md disabled:opacity-40"
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
+                transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+              >
+                Share Story
+              </motion.button>
+            </div>
+          </>
+        )}
       </motion.div>
     </motion.div>
   );
@@ -255,16 +267,25 @@ const TestimoniesPage: React.FC = () => {
       </motion.div>
 
       {/* Cards grid */}
-      <motion.div
-        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-        variants={stagger}
-        initial="hidden"
-        animate="visible"
-      >
-        {unifiedTestimonies.map((item) => (
-          <TestimonyCard key={item.id} testimony={item} />
-        ))}
-      </motion.div>
+      {unifiedTestimonies.length === 0 ? (
+        <div className="text-center py-20">
+          <SparklesIcon className="w-12 h-12 text-brand-text-secondary/40 mx-auto mb-4" />
+          <p className="text-brand-text-secondary" style={{ fontFamily: 'var(--serif-body)', lineHeight: 1.65 }}>
+            No testimonies yet — yours could be the first. What has God done?
+          </p>
+        </div>
+      ) : (
+        <motion.div
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+          variants={stagger}
+          initial="hidden"
+          animate="visible"
+        >
+          {unifiedTestimonies.map((item) => (
+            <TestimonyCard key={item.id} testimony={item} />
+          ))}
+        </motion.div>
+      )}
 
       {/* Modal */}
       <AnimatePresence>

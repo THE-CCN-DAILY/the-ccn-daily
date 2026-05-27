@@ -140,8 +140,9 @@ const CommunityRoomsPage: React.FC = () => {
           </AnimatePresence>
 
           {loading ? (
-            <div className="flex justify-center py-10">
+            <div className="flex flex-col items-center justify-center py-10 gap-3">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-accent" />
+              <p className="text-xs text-brand-text-secondary" style={{ fontFamily: 'var(--serif-body)' }}>Looking for open rooms...</p>
             </div>
           ) : messages.length > 0 ? (
             <AnimatePresence initial={false}>
@@ -194,7 +195,7 @@ const CommunityRoomsPage: React.FC = () => {
           ) : (
             <div className="h-full flex flex-col items-center justify-center text-brand-text-secondary py-12">
               <ChatBubbleLeftRightIcon className="w-12 h-12 mb-4 opacity-40" />
-              <p className="text-sm">No messages yet — be the first to say hello!</p>
+              <p className="text-sm" style={{ fontFamily: 'var(--serif-body)' }}>Community forms where we show up. Be the first.</p>
             </div>
           )}
 

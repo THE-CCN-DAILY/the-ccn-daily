@@ -65,8 +65,9 @@ const EventsPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex min-h-[400px] items-center justify-center">
+      <div className="flex min-h-[400px] flex-col items-center justify-center gap-4">
         <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-t-2 border-brand-accent"></div>
+        <p className="text-sm text-brand-text-secondary" style={{ fontFamily: 'var(--serif-body)' }}>Loading upcoming gatherings...</p>
       </div>
     );
   }
@@ -100,7 +101,7 @@ const EventsPage: React.FC = () => {
           <motion.div variants={fadeUp} transition={{ duration: 0.42, ease: EASE }}>
           <Card className="p-12 text-center">
             <CalendarIcon className="mx-auto mb-4 h-16 w-16 text-brand-text-secondary opacity-20" />
-            <p className="text-brand-text-secondary">No upcoming events at the moment. Check back soon!</p>
+            <p className="text-brand-text-secondary" style={{ fontFamily: 'var(--serif-body)', lineHeight: 1.65 }}>No events scheduled yet — something is coming. Stay watchful.</p>
           </Card>
           </motion.div>
         ) : (

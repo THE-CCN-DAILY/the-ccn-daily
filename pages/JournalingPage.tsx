@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import Card from '../components/Card';
 import { PaintBrushIcon, PlusCircleIcon } from '../components/icons';
 import RichTextJournal from '../components/RichTextJournal';
+import ManuscriptQuote from '../components/ManuscriptQuote';
 
 const EASE = [0.2, 0.6, 0.2, 1] as [number, number, number, number];
 const fadeUp = { hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } };
@@ -188,8 +189,9 @@ const JournalingPage: React.FC = () => {
       )}
 
       {loading ? (
-        <div className="flex justify-center py-20">
+        <div className="flex flex-col items-center justify-center py-20 gap-4">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-accent"></div>
+          <p className="text-sm text-brand-text-secondary" style={{ fontFamily: 'var(--serif-body)' }}>Gathering your reflections...</p>
         </div>
       ) : entries.length > 0 ? (
         <motion.div
@@ -226,10 +228,16 @@ const JournalingPage: React.FC = () => {
         !isWriting && (
           <Card className="text-center py-20 border-brand-border border-dashed bg-transparent">
             <PaintBrushIcon className="w-12 h-12 text-brand-text-secondary/50 mx-auto mb-5" />
-            <h3 className="text-xl font-bold text-brand-text-primary mb-2" style={{ fontFamily: 'var(--serif-display, var(--font-display))', fontWeight: 600 }}>Your journal is empty</h3>
-            <p className="mb-8 max-w-sm mx-auto" style={{ fontFamily: 'var(--serif-body)', lineHeight: 1.65, color: 'var(--fg-2, #5B4A3C)' }}>
-              Write what God is speaking to you. Every word matters here.
+            <h3 className="text-xl font-bold text-brand-text-primary mb-2" style={{ fontFamily: 'var(--serif-display, var(--font-display))', fontWeight: 600 }}>Your journal is waiting</h3>
+            <p className="mb-6 max-w-sm mx-auto" style={{ fontFamily: 'var(--serif-body)', lineHeight: 1.65, color: 'var(--fg-2, #5B4A3C)' }}>
+              Begin with one honest sentence.
             </p>
+            <div className="max-w-xs mx-auto mb-8">
+              <ManuscriptQuote
+                quote="Turn the page. He is already present."
+                source="PrayerCraft"
+              />
+            </div>
             <button
               onClick={() => setIsWriting(true)}
               className="px-6 py-2.5 bg-brand-accent text-white font-bold rounded-xl border border-brand-accent hover:bg-opacity-90 transition-colors"

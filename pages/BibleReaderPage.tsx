@@ -1,18 +1,32 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { BookOpenCheck, ArrowLeft } from 'lucide-react';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import Card from '../components/Card';
 import ContentDisplay from '../components/reader/ContentDisplay';
 import BibleStudyGuide from '../components/BibleStudyGuide';
+import ScriptureStudyCompanion from '../components/ScriptureStudyCompanion';
 import { getBibleBooks, getChapterText, searchBible, type TranslationCode } from '../services/bibleService';
 import type { BibleBook, BibleSearchResult } from '../types';
 import { ChevronDownIcon, SpinnerIcon, SearchIcon, SparklesIcon, CloseIcon } from '../components/icons';
+import { db } from '../firebase';
+import { useAuth } from '../contexts/AuthContext';
 
 const EASE = [0.22, 1, 0.36, 1] as [number, number, number, number];
 const fadeUp = { hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0 } };
 
+type FontSize = 'small' | 'medium' | 'large';
+const FONT_SIZE_CLASSES: Record<FontSize, string> = {
+  small: 'text-sm',
+  medium: 'text-base',
+  large: 'text-lg',
+};
+const FONT_SIZE_STORAGE_KEY = 'bibleFontSize';
+
 const BibleReaderPage: React.FC = () => {
+  const { user } = useAuth();
+
   const [books, setBooks] = useState<BibleBook[]>([]);
   const [selectedBook, setSelectedBook] = useState<BibleBook | null>(null);
   const [selectedChapter, setSelectedChapter] = useState<number>(1);
@@ -20,13 +34,27 @@ const BibleReaderPage: React.FC = () => {
   const [chapterContent, setChapterContent] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(true);
-
   const [studyGuideOpen, setStudyGuideOpen] = useState(false);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [searchScope, setSearchScope] = useState<'all' | 'OT' | 'NT' | string>('all');
   const [searchResults, setSearchResults] = useState<BibleSearchResult[] | null>(null);
   const [isSearching, setIsSearching] = useState(false);
+
+  // Verse selection → quick study
+  const [selectedVerse, setSelectedVerse] = useState<string | null>(null);
+  const [studyOpen, setStudyOpen] = useState(false);
+
+  // Reading progress
+  const [readProgress, setReadProgress] = useState(0);
+  const contentScrollRef = useRef<HTMLDivElement>(null);
+
+  // Font size
+  const [fontSize, setFontSize] = useState<FontSize>(() => {
+    const stored = localStorage.getItem(FONT_SIZE_STORAGE_KEY);
+    if (stored === 'small' || stored === 'medium' || stored === 'large') return stored;
+    return 'medium';
+  });
 
   const currentPassageString = selectedBook
     ? `${selectedBook.name} ${selectedChapter}`
@@ -48,6 +76,7 @@ const BibleReaderPage: React.FC = () => {
     if (!selectedBook) return;
     (async () => {
       setIsLoading(true);
+      setReadProgress(0);
       try {
         const chapterData = await getChapterText(selectedBook.name, selectedChapter, translation);
         setChapterContent(chapterData.content);
@@ -58,6 +87,22 @@ const BibleReaderPage: React.FC = () => {
       }
     })();
   }, [selectedBook, selectedChapter, translation]);
+
+  // Reading progress handler
+  const handleScroll = useCallback(() => {
+    const el = contentScrollRef.current;
+    if (!el) return;
+    const scrolled = el.scrollTop;
+    const total = el.scrollHeight - el.clientHeight;
+    setReadProgress(total > 0 ? Math.round((scrolled / total) * 100) : 0);
+  }, []);
+
+  useEffect(() => {
+    const el = contentScrollRef.current;
+    if (!el) return;
+    el.addEventListener('scroll', handleScroll, { passive: true });
+    return () => el.removeEventListener('scroll', handleScroll);
+  }, [handleScroll, currentChapterKey]);
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -79,8 +124,28 @@ const BibleReaderPage: React.FC = () => {
     setSelectedChapter(result.chapter);
     setSearchResults(null);
     setSearchQuery('');
-    // On mobile collapse sidebar after navigation
     if (window.innerWidth < 1024) setSidebarOpen(false);
+  };
+
+  const handleHighlight = async () => {
+    if (!selectedVerse || !user) return;
+    const verseRef = `${currentPassageString}`;
+    try {
+      await addDoc(collection(db, 'users', user.uid, 'highlights'), {
+        verseRef,
+        text: selectedVerse,
+        color: 'amber',
+        timestamp: serverTimestamp(),
+      });
+    } catch {
+      // Silently fail if offline — highlight is a nice-to-have
+    }
+    setSelectedVerse(null);
+  };
+
+  const handleFontSize = (size: FontSize) => {
+    setFontSize(size);
+    localStorage.setItem(FONT_SIZE_STORAGE_KEY, size);
   };
 
   const chapterNumbers = selectedBook
@@ -89,6 +154,13 @@ const BibleReaderPage: React.FC = () => {
 
   const selectClass =
     'w-full appearance-none bg-brand-secondary border border-brand-border rounded-xl py-2.5 px-3 text-sm text-brand-text-primary focus:outline-none focus:ring-2 focus:ring-brand-accent transition-colors';
+
+  const fontSizeButtonClass = (size: FontSize) =>
+    `px-2 py-1 rounded font-bold transition-colors ${
+      fontSize === size
+        ? 'bg-brand-accent text-white'
+        : 'bg-brand-secondary text-brand-text-secondary hover:text-brand-text-primary border border-brand-border'
+    }`;
 
   return (
     <div className="h-full flex flex-col">
@@ -119,6 +191,34 @@ const BibleReaderPage: React.FC = () => {
             Bible Reader
           </motion.h1>
           <div className="flex items-center gap-2">
+            {/* Font size toggle */}
+            <div className="hidden sm:flex items-center gap-1" aria-label="Font size">
+              <button
+                onClick={() => handleFontSize('small')}
+                className={`${fontSizeButtonClass('small')} text-xs`}
+                aria-pressed={fontSize === 'small'}
+                title="Small text"
+              >
+                A
+              </button>
+              <button
+                onClick={() => handleFontSize('medium')}
+                className={`${fontSizeButtonClass('medium')} text-sm`}
+                aria-pressed={fontSize === 'medium'}
+                title="Medium text"
+              >
+                A
+              </button>
+              <button
+                onClick={() => handleFontSize('large')}
+                className={`${fontSizeButtonClass('large')} text-base`}
+                aria-pressed={fontSize === 'large'}
+                title="Large text"
+              >
+                A
+              </button>
+            </div>
+
             {/* Study with a Guide toggle */}
             <button
               onClick={() => setStudyGuideOpen(o => !o)}
@@ -151,6 +251,19 @@ const BibleReaderPage: React.FC = () => {
             {selectedBook.name} {selectedChapter} · {translation.toUpperCase()}
           </motion.p>
         )}
+
+        {/* Reading progress bar */}
+        <div className="mt-3 h-0.5 w-full bg-brand-border rounded-full overflow-hidden">
+          <div
+            className="h-0.5 bg-brand-accent transition-all duration-150 rounded-full"
+            style={{ width: `${readProgress}%` }}
+            aria-valuenow={readProgress}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            role="progressbar"
+            aria-label="Reading progress"
+          />
+        </div>
       </div>
 
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-4 gap-6 min-h-0">
@@ -350,12 +463,34 @@ const BibleReaderPage: React.FC = () => {
                     key={currentChapterKey}
                     initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.4, ease: EASE }}
+                    className="h-full"
                   >
-                    <ContentDisplay
-                      contentId={currentChapterKey}
-                      initialContent={chapterContent}
-                      title={`${selectedBook?.name} ${selectedChapter} (${translation.toUpperCase()})`}
-                    />
+                    {/* Scrollable chapter content wrapper for reading progress */}
+                    <div
+                      ref={contentScrollRef}
+                      className="overflow-y-auto h-full"
+                      onScroll={handleScroll}
+                    >
+                      {/* Font-size wrapper — user can click a verse to get the quick-study popover */}
+                      <div
+                        className={FONT_SIZE_CLASSES[fontSize]}
+                        onClick={(e) => {
+                          const target = e.target as HTMLElement;
+                          // Only trigger on verse-like text nodes (p, span, li containing text)
+                          const verseEl = target.closest('p, span, li');
+                          if (verseEl && verseEl.textContent?.trim()) {
+                            const text = verseEl.textContent.trim().slice(0, 300);
+                            setSelectedVerse(text);
+                          }
+                        }}
+                      >
+                        <ContentDisplay
+                          contentId={currentChapterKey}
+                          initialContent={chapterContent}
+                          title={`${selectedBook?.name} ${selectedChapter} (${translation.toUpperCase()})`}
+                        />
+                      </div>
+                    </div>
                   </motion.div>
                 )
               )}
@@ -382,6 +517,48 @@ const BibleReaderPage: React.FC = () => {
           </AnimatePresence>
         </div>
       </div>
+
+      {/* Verse quick-action bar */}
+      <AnimatePresence>
+        {selectedVerse && (
+          <motion.div
+            className="fixed bottom-24 left-1/2 -translate-x-1/2 z-40 flex gap-2 bg-brand-dark border border-brand-border rounded-full px-4 py-2 shadow-xl"
+            initial={{ opacity: 0, y: 12, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 8, scale: 0.95 }}
+            transition={{ duration: 0.2, ease: EASE }}
+          >
+            <button
+              onClick={handleHighlight}
+              className="text-sm text-brand-accent font-semibold hover:opacity-80 transition-opacity"
+            >
+              ✦ Highlight
+            </button>
+            <span className="text-brand-border select-none">|</span>
+            <button
+              onClick={() => setStudyOpen(true)}
+              className="text-sm text-brand-text-primary font-semibold hover:text-brand-accent transition-colors"
+            >
+              Study this →
+            </button>
+            <button
+              onClick={() => setSelectedVerse(null)}
+              className="text-sm text-brand-text-secondary ml-2 hover:text-brand-text-primary transition-colors"
+              aria-label="Dismiss"
+            >
+              ✕
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Scripture Study Companion */}
+      <ScriptureStudyCompanion
+        passage={currentPassageString}
+        passageText={selectedVerse ?? ''}
+        isOpen={studyOpen}
+        onClose={() => { setStudyOpen(false); setSelectedVerse(null); }}
+      />
     </div>
   );
 };

@@ -2,8 +2,21 @@ import React from 'react';
 import { useAudioPlayer } from '../../contexts/AudioPlayerContext';
 import { PlayIcon, PauseIcon, SpinnerIcon, CloseIcon } from '../icons';
 
+const SPEED_CYCLE: number[] = [0.75, 1, 1.25, 1.5, 2];
+
 const MiniPlayer: React.FC = () => {
-    const { currentTrack, isPlaying, togglePlayPause, openDetailedPlayer, progress, isLoading, closePlayer } = useAudioPlayer();
+    const { currentTrack, isPlaying, togglePlayPause, openDetailedPlayer, progress, isLoading, closePlayer, playbackRate, setPlaybackRate } = useAudioPlayer();
+
+    const cycleSpeed = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        const currentIndex = SPEED_CYCLE.indexOf(playbackRate);
+        const nextIndex = (currentIndex + 1) % SPEED_CYCLE.length;
+        setPlaybackRate(SPEED_CYCLE[nextIndex]);
+    };
+
+    const formatRate = (rate: number) => {
+        return rate === 1 ? '1×' : `${rate}×`;
+    };
 
     if (!currentTrack) return null;
 
@@ -25,8 +38,15 @@ const MiniPlayer: React.FC = () => {
                         <p className="text-sm text-gray-400 truncate">{currentTrack.author}</p>
                     </div>
                 </div>
-                <div className="flex items-center flex-shrink-0">
-                    <button 
+                <div className="flex items-center flex-shrink-0 gap-1">
+                    <button
+                        onClick={cycleSpeed}
+                        className="px-2 py-1 text-xs font-bold text-gray-300 hover:text-white bg-white/10 hover:bg-white/20 rounded-full transition-colors"
+                        aria-label={`Playback speed: ${formatRate(playbackRate)}. Click to change.`}
+                    >
+                        {formatRate(playbackRate)}
+                    </button>
+                    <button
                         onClick={(e) => {
                             e.stopPropagation(); // Prevent opening detailed view
                             togglePlayPause();
@@ -37,7 +57,7 @@ const MiniPlayer: React.FC = () => {
                     >
                         {isLoading ? <SpinnerIcon className="w-8 h-8"/> : isPlaying ? <PauseIcon className="w-8 h-8"/> : <PlayIcon className="w-8 h-8"/>}
                     </button>
-                     <button 
+                     <button
                         onClick={(e) => {
                             e.stopPropagation();
                             closePlayer();

@@ -39,7 +39,8 @@ const InboxPage: React.FC = () => {
         {notifications.length === 0 ? (
           <div className="p-12 text-center">
             <BellIcon className="w-12 h-12 text-brand-text-secondary opacity-20 mx-auto mb-4" />
-            <p className="text-brand-text-secondary">You have no new updates.</p>
+            <p className="text-brand-text-secondary mb-4" style={{ fontFamily: 'var(--serif-body)', lineHeight: 1.65 }}>Nothing here yet. Quietness is not absence.</p>
+            <p className="text-sm italic text-brand-text-secondary opacity-60" style={{ fontFamily: 'var(--serif-body)' }}>Be still, and know that I am God. — Ps. 46:10</p>
           </div>
         ) : (
           <div className="divide-y divide-brand-border">

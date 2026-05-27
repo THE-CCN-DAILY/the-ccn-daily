@@ -44,8 +44,9 @@ const CoursesPage: React.FC = () => {
       </motion.div>
 
       {loading ? (
-        <div className="flex justify-center py-20">
+        <div className="flex flex-col items-center justify-center py-20 gap-4">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-accent"></div>
+          <p className="text-sm text-brand-text-secondary" style={{ fontFamily: 'var(--serif-body)' }}>Preparing the way...</p>
         </div>
       ) : courses.length > 0 ? (
         <motion.div
@@ -95,8 +96,8 @@ const CoursesPage: React.FC = () => {
         <Card className="text-center py-20 border-brand-border border-dashed bg-transparent">
           <SparklesIcon className="w-12 h-12 text-brand-text-secondary mx-auto mb-4" />
           <h3 className="text-xl font-bold text-brand-text-primary mb-2">No courses available yet</h3>
-          <p className="text-brand-text-secondary">
-            We are currently preparing our course catalog. Check back soon!
+          <p className="text-brand-text-secondary" style={{ fontFamily: 'var(--serif-body)', lineHeight: 1.65 }}>
+            Formation takes time. More is coming.
           </p>
         </Card>
       )}

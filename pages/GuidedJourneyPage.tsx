@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import Card from '../components/Card';
+import ManuscriptQuote from '../components/ManuscriptQuote';
 import { CheckIcon, FlagIcon, PencilIcon, PrayingHandsIcon, ReaderIcon, SparklesIcon, CloseIcon, ChevronLeftIcon, SoundWaveIcon, PlayIcon, PauseIcon, MicrophoneIcon } from '../components/icons';
 import RichTextJournal from '../components/RichTextJournal';
 import PrayerTimer from '../components/PrayerTimer';
@@ -55,7 +56,7 @@ const ScriptureSnippetModal: React.FC<{
                 </button>
                 
                 {loading ? (
-                    <div className="py-12 text-center text-brand-text-secondary animate-pulse">Summoning Scripture...</div>
+                    <div className="py-12 text-center text-brand-text-secondary animate-pulse">Preparing your encounter...</div>
                 ) : (
                     <div className="animate-fade-in-up">
                         <h3 style={{ fontFamily: 'var(--sans-ui, "Inter Tight", -apple-system, sans-serif)', fontSize: '11px', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--crimson, #8E1B1B)', marginBottom: '1rem' }}>{snippet?.ref}</h3>
@@ -278,8 +279,14 @@ const StepContent: React.FC<{ stepIndex: number; onComplete: () => void; devotio
                             <CheckIcon className="w-20 h-20 text-status-success"/>
                             <div className="absolute inset-0 bg-status-success/20 rounded-full animate-ping"></div>
                         </div>
-                        <h2 style={{ fontFamily: 'var(--serif-display, "Cormorant Garamond", "Didot", Georgia, serif)', fontWeight: 600, fontSize: '1.75rem', lineHeight: 1.2, color: 'var(--fg-1, #2A1C15)', marginBottom: '0.5rem' }}>Journey Fulfilled</h2>
-                        <p style={{ fontFamily: 'var(--serif-body, "EB Garamond", "Garamond", Georgia, serif)', fontSize: '18px', lineHeight: 1.75, color: 'var(--fg-2, #5B4A3C)' }}>You have set a firm foundation for your day. Go in peace and power.</p>
+                        <h2 style={{ fontFamily: 'var(--serif-display, "Cormorant Garamond", "Didot", Georgia, serif)', fontWeight: 600, fontSize: '1.75rem', lineHeight: 1.2, color: 'var(--fg-1, #2A1C15)', marginBottom: '0.5rem' }}>Well done. You showed up.</h2>
+                        <p style={{ fontFamily: 'var(--serif-body, "EB Garamond", "Garamond", Georgia, serif)', fontSize: '18px', lineHeight: 1.75, color: 'var(--fg-2, #5B4A3C)', marginBottom: '1.5rem' }}>You have set a firm foundation for your day. Go in peace and power.</p>
+                        <div className="max-w-xs mx-auto">
+                            <ManuscriptQuote
+                                quote="Faithfulness matters more than flash."
+                                source="The Passion Path"
+                            />
+                        </div>
                     </div>
                 );
             default:
