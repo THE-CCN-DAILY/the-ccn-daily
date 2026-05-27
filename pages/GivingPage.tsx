@@ -110,7 +110,7 @@ const GivingPage: React.FC = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.42, ease: EASE }}
       >
-        <p style={{ fontFamily: 'var(--sans-ui)', fontSize: '12px', fontWeight: 700, letterSpacing: '0.10em', textTransform: 'uppercase', color: '#B7892E' }} className="mb-2">Give</p>
+        <p className="text-xs font-bold uppercase tracking-widest text-brand-accent mb-2" style={{ fontFamily: 'var(--sans-ui)' }}>Give</p>
         <h1 className="text-4xl text-brand-text-primary mb-2" style={{ fontFamily: 'var(--serif-display, var(--font-display))', fontWeight: 600, lineHeight: 1.2 }}>
           Giving &amp; Support
         </h1>

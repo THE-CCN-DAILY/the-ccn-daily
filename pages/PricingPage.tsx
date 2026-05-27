@@ -601,6 +601,23 @@ const PricingPage: React.FC = () => {
           Gift a Subscription
         </button>
       </motion.div>
+
+      {/* Student access */}
+      <motion.div
+        className="mt-8 text-center"
+        variants={fadeUp} initial="hidden" whileInView="visible"
+        viewport={{ once: true }} transition={{ duration: 0.5, ease: EASE }}
+      >
+        <p className="text-sm text-brand-text-secondary">
+          Are you a university student?{' '}
+          <a
+            href="#/app/student-verify"
+            className="text-brand-accent font-semibold hover:underline"
+          >
+            Apply for 6 months free Premium →
+          </a>
+        </p>
+      </motion.div>
     </div>
   );
 };

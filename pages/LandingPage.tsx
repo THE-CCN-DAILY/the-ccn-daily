@@ -16,6 +16,9 @@ import {
   Flame,
   Globe,
   Clock,
+  BookOpenCheck,
+  GraduationCap,
+  Sparkles,
 } from 'lucide-react';
 
 /* ─── Animation Variants ──────────────────────────────────────────────────── */
@@ -105,6 +108,65 @@ const dailyVerse = {
   text: 'But those who hope in the Lord will renew their strength. They will soar on wings like eagles.',
   ref: 'Isaiah 40:31',
 };
+
+const appFeatures = [
+  {
+    icon: BookOpen,
+    title: 'Daily Devotionals',
+    description: 'Scripture-anchored, written and audio. Arrive every morning without fail.',
+  },
+  {
+    icon: BookOpenCheck,
+    title: 'Bible Reader',
+    description: 'Multiple translations. Guided study. Reading plans that go somewhere.',
+  },
+  {
+    icon: Headphones,
+    title: 'Podcasts & Audiobooks',
+    description: 'Pastoral conversations and ministry books — listen anywhere.',
+  },
+  {
+    icon: Users,
+    title: 'Community',
+    description: 'Live prayer rooms, testimonies, and people who take faith seriously.',
+  },
+  {
+    icon: GraduationCap,
+    title: 'Courses & Events',
+    description: 'Structured discipleship, live gatherings, and continuing formation.',
+  },
+  {
+    icon: Sparkles,
+    title: 'AI Study Companion',
+    description: 'Ask questions. Get answers grounded in Scripture, not speculation.',
+  },
+];
+
+const testimonials = [
+  {
+    quote: "I've been receiving these devotionals for three years. They don't feel like content — they feel like someone who knows Scripture and knows you.",
+    name: 'Grace M.',
+    location: 'Nairobi',
+  },
+  {
+    quote: "The podcast changed how I read the Bible. Pastor Eryeza preaches from the text, not around it.",
+    name: 'Samuel A.',
+    location: 'Lagos',
+  },
+  {
+    quote: "My whole family uses the app now. The courses section has become our family discipleship plan.",
+    name: 'Ruth N.',
+    location: 'Kampala',
+  },
+];
+
+const scriptureVerses = [
+  { text: '"Do not be anxious about anything..."', ref: 'Phil. 4:6' },
+  { text: '"Trust in the Lord with all your heart..."', ref: 'Prov. 3:5' },
+  { text: '"Be still, and know that I am God."', ref: 'Ps. 46:10' },
+  { text: '"The Lord is my shepherd; I shall not want."', ref: 'Ps. 23:1' },
+  { text: '"I can do all this through him who gives me strength."', ref: 'Phil. 4:13' },
+];
 
 /* ─── Scroll-reveal wrapper ───────────────────────────────────────────────── */
 
@@ -553,6 +615,238 @@ const LandingPage: React.FC = () => {
             ))}
           </motion.div>
         </section>
+
+        {/* ── Origin Story ──────────────────────────────────────────────────── */}
+        <section className="w-full bg-brand-dark py-20 px-6 md:py-28">
+          <style>{`
+            @keyframes scrollLeft {
+              0% { transform: translateX(0); }
+              100% { transform: translateX(-50%); }
+            }
+          `}</style>
+          <div className="mx-auto max-w-6xl">
+            <div className="grid gap-14 lg:grid-cols-2 lg:gap-20 items-center">
+
+              {/* Mobile: photo first; Desktop: text left, photo right */}
+              {/* Photo column — shown first on mobile via order */}
+              <motion.div
+                className="order-first lg:order-last"
+                initial={{ opacity: 0, x: 24 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+              >
+                <div className="relative">
+                  <img
+                    src="/pr-eryeza.jpg"
+                    alt="Pastor Eryeza Kalalu"
+                    className="w-full rounded-2xl object-cover aspect-[3/4] max-h-[560px]"
+                    style={{
+                      boxShadow: '0 8px 48px rgba(242,125,38,0.18), 0 2px 12px rgba(0,0,0,0.40)',
+                    }}
+                  />
+                  <p className="mt-4 text-center text-xs text-brand-text-secondary tracking-wide">
+                    Pastor Eryeza Kalalu — Kampala, Uganda
+                  </p>
+                </div>
+              </motion.div>
+
+              {/* Text column */}
+              <motion.div
+                className="order-last lg:order-first"
+                initial={{ opacity: 0, y: 32 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
+              >
+                <p className="text-xs font-bold uppercase tracking-widest text-brand-accent mb-4">
+                  How It Began
+                </p>
+                <h2 className="font-display text-3xl font-bold leading-tight text-brand-text-primary md:text-4xl mb-7">
+                  From an SMS in 2017 to a home for thousands
+                </h2>
+                <p className="text-base leading-[1.85] text-brand-text-secondary mb-8">
+                  What began as a simple commitment — a devotional sent each morning to a handful
+                  of believers in Uganda — became something none of us planned. The WhatsApp groups
+                  grew. People forwarded the messages. Churches asked to share them. Books were written.
+                  A podcast followed. A newsletter reached thousands. And now, this: one home for every
+                  piece of the ministry, built so you never have to look anywhere else.
+                </p>
+                <blockquote
+                  className="italic text-brand-text-primary text-lg leading-relaxed pl-5"
+                  style={{ borderLeft: '3px solid var(--color-brand-accent, #F27D26)' }}
+                >
+                  <p className="mb-3 font-serif">
+                    "Every morning, without fail. That was the commitment from day one."
+                  </p>
+                  <cite className="not-italic text-xs font-semibold uppercase tracking-widest text-brand-text-secondary">
+                    — Pastor Eryeza Kalalu
+                  </cite>
+                </blockquote>
+              </motion.div>
+
+            </div>
+          </div>
+        </section>
+
+        {/* ── What's Inside (Feature Grid) ──────────────────────────────────── */}
+        <section className="bg-brand-secondary py-20 px-6 md:py-28">
+          <div className="mx-auto max-w-6xl">
+            <Reveal className="mb-14 text-center">
+              <p className="text-xs font-bold uppercase tracking-widest text-brand-accent mb-4">
+                Everything You Need
+              </p>
+              <h2 className="font-display text-3xl font-bold leading-tight text-brand-text-primary md:text-4xl max-w-2xl mx-auto">
+                One app. Every dimension of your faith.
+              </h2>
+            </Reveal>
+
+            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {appFeatures.map(({ icon: Icon, title, description }, i) => (
+                <motion.div
+                  key={title}
+                  initial={{ opacity: 0, y: 28 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.55, delay: i * 0.07, ease: [0.22, 1, 0.36, 1] }}
+                  whileHover={{ y: -4, transition: { type: 'spring', stiffness: 340, damping: 22 } }}
+                  className="group rounded-xl border border-brand-border bg-brand-dark p-7 cursor-default"
+                  style={{ borderTop: '2px solid var(--color-brand-accent, #F27D26)' }}
+                >
+                  <div className="mb-5 flex h-10 w-10 items-center justify-center rounded-lg border border-brand-border bg-brand-secondary transition-colors group-hover:border-brand-accent/40 group-hover:bg-brand-accent/10">
+                    <Icon className="h-5 w-5 text-brand-accent" />
+                  </div>
+                  <h3 className="font-display text-lg font-bold text-brand-text-primary mb-3">
+                    {title}
+                  </h3>
+                  <p className="text-sm leading-[1.8] text-brand-text-secondary font-serif">
+                    {description}
+                  </p>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ── Scripture Ticker Strip ─────────────────────────────────────────── */}
+        <div
+          className="w-full overflow-hidden py-4"
+          style={{ backgroundColor: '#5E0F0F' }}
+          aria-label="Scripture verses"
+        >
+          <div
+            style={{
+              display: 'flex',
+              width: 'fit-content',
+              animation: 'scrollLeft 32s linear infinite',
+            }}
+          >
+            {[...scriptureVerses, ...scriptureVerses].map((verse, i) => (
+              <span
+                key={i}
+                className="inline-flex items-center gap-3 whitespace-nowrap px-8 text-sm font-serif text-amber-50/90"
+              >
+                <span className="text-amber-200/50 text-base">🔥</span>
+                <em>{verse.text}</em>
+                <span className="text-amber-200/60 text-xs not-italic font-sans tracking-wide">
+                  {verse.ref}
+                </span>
+              </span>
+            ))}
+          </div>
+        </div>
+
+        {/* ── Testimonials ──────────────────────────────────────────────────── */}
+        <section className="bg-brand-dark py-20 px-6 md:py-28">
+          <div className="mx-auto max-w-6xl">
+            <Reveal className="mb-14 text-center">
+              <p className="text-xs font-bold uppercase tracking-widest text-brand-accent mb-4">
+                What People Say
+              </p>
+              <h2 className="font-display text-3xl font-bold leading-tight text-brand-text-primary md:text-4xl max-w-2xl mx-auto">
+                Trusted by believers across East Africa and beyond.
+              </h2>
+            </Reveal>
+
+            <div className="grid gap-8 md:grid-cols-3">
+              {testimonials.map(({ quote, name, location }, i) => (
+                <motion.div
+                  key={name}
+                  initial={{ opacity: 0, y: 28 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.55, delay: i * 0.1, ease: [0.22, 1, 0.36, 1] }}
+                  className="rounded-2xl border border-brand-border bg-brand-secondary p-8"
+                >
+                  <div
+                    className="font-display text-5xl leading-none text-brand-accent mb-4 select-none"
+                    aria-hidden
+                  >
+                    "
+                  </div>
+                  <blockquote className="italic font-serif text-base leading-[1.85] text-brand-text-primary mb-6">
+                    {quote}
+                  </blockquote>
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-widest text-brand-text-primary" style={{ fontVariant: 'small-caps' }}>
+                      {name}
+                    </p>
+                    <p className="text-xs text-brand-text-secondary mt-0.5">{location}</p>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ── Final CTA ─────────────────────────────────────────────────────── */}
+        <Reveal>
+          <section className="bg-brand-secondary border-t border-brand-border py-20 px-6 md:py-28">
+            <div className="mx-auto max-w-3xl text-center">
+              <motion.div
+                initial={{ opacity: 0, y: 32 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
+              >
+                <p className="text-xs font-bold uppercase tracking-widest text-brand-accent mb-5">
+                  Begin For Free
+                </p>
+                <h2 className="font-display text-4xl font-bold leading-tight text-brand-text-primary md:text-5xl mb-6">
+                  Your daily encounter starts here.
+                </h2>
+                <p className="text-lg leading-relaxed text-brand-text-secondary mb-10">
+                  Free to begin. Deeper for those who go further.
+                </p>
+                <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
+                  <motion.div
+                    whileHover={{ scale: 1.04, boxShadow: '0 0 36px rgba(242,125,38,0.42)', transition: { type: 'spring', stiffness: 360, damping: 22 } }}
+                    whileTap={{ scale: 0.97 }}
+                  >
+                    <Link
+                      to="/app/guided-journey"
+                      className="group flex items-center gap-2 bg-brand-accent px-8 py-4 text-sm font-semibold text-white transition-all hover:opacity-90"
+                    >
+                      Begin Your Journey
+                      <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                    </Link>
+                  </motion.div>
+                  <motion.div
+                    whileHover={{ scale: 1.02, transition: { type: 'spring', stiffness: 360, damping: 26 } }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <Link
+                      to="/app/guided-journey"
+                      className="flex items-center gap-2 border border-brand-border px-8 py-4 text-sm font-semibold text-brand-text-primary transition-colors hover:bg-brand-dark"
+                    >
+                      Explore the App
+                    </Link>
+                  </motion.div>
+                </div>
+              </motion.div>
+            </div>
+          </section>
+        </Reveal>
 
         {/* ── Closing CTA ───────────────────────────────────────────────────── */}
         <Reveal>

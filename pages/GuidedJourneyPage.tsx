@@ -7,6 +7,7 @@ import { CheckIcon, FlagIcon, PencilIcon, PrayingHandsIcon, ReaderIcon, Sparkles
 import RichTextJournal from '../components/RichTextJournal';
 import PrayerTimer from '../components/PrayerTimer';
 import VoiceCompanionDrawer from '../components/VoiceCompanionDrawer';
+import ScriptureStudyCompanion from '../components/ScriptureStudyCompanion';
 import { getScriptureSnippet } from '../services/bibleService';
 import { getTodayDevotional } from '../services/contentService';
 import { useAudioPlayer } from '../contexts/AudioPlayerContext';
@@ -81,12 +82,29 @@ const ScriptureSnippetModal: React.FC<{
     );
 };
 
+const FURTHER_STUDY_REFS = ['Joshua 1:9', 'Deuteronomy 31:6', '2 Timothy 1:7'];
+
+const FURTHER_STUDY_TEXTS: Record<string, string> = {
+    'Joshua 1:9': 'Have I not commanded you? Be strong and courageous. Do not be afraid; do not be discouraged, for the Lord your God will be with you wherever you go.',
+    'Deuteronomy 31:6': 'Be strong and courageous. Do not be afraid or terrified because of them, for the Lord your God goes with you; he will never leave you nor forsake you.',
+    '2 Timothy 1:7': 'For the Spirit God gave us does not make us timid, but gives us power, love and self-discipline.',
+};
+
 const StepContent: React.FC<{ stepIndex: number; onComplete: () => void; devotional: Devotional | null; onOpenVoice: (ctx: string) => void }> = ({ stepIndex, onComplete, devotional, onOpenVoice }) => {
     const [isPrayerComplete, setIsPrayerComplete] = useState(false);
     const [activeSnippet, setActiveSnippet] = useState<string | null>(null);
     const [journalText, setJournalText] = useState('');
+    const [isStudyOpen, setIsStudyOpen] = useState(false);
+    const [studyPassage, setStudyPassage] = useState('');
+    const [studyText, setStudyText] = useState('');
     const isPrayerStep = stepIndex === 4;
     const { playTrack, currentTrack, isPlaying, togglePlayPause } = useAudioPlayer();
+
+    const openStudy = (passage: string, text: string) => {
+        setStudyPassage(passage);
+        setStudyText(text);
+        setIsStudyOpen(true);
+    };
 
     const renderContent = () => {
         switch (stepIndex) {
@@ -123,6 +141,17 @@ const StepContent: React.FC<{ stepIndex: number; onComplete: () => void; devotio
                         {devotional ? (
                             <div className="text-left max-w-2xl mx-auto">
                                 <h3 style={{ fontFamily: 'var(--serif-display, "Cormorant Garamond", "Didot", Georgia, serif)', fontWeight: 600, fontSize: '1.4rem', color: 'var(--crimson, #8E1B1B)', marginBottom: '1rem', textAlign: 'center' }}>{devotional.title}</h3>
+                                {/* Study passage button for today's devotional */}
+                                <div className="mb-5 flex justify-center">
+                                    <button
+                                        onClick={() => openStudy(devotional.title, devotional.content.slice(0, 300))}
+                                        className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-brand-accent/40 text-brand-accent text-sm font-bold hover:bg-brand-accent/10 transition-all"
+                                        style={{ fontFamily: 'var(--sans-ui, "Inter Tight", -apple-system, sans-serif)' }}
+                                    >
+                                        <ReaderIcon className="w-4 h-4" />
+                                        Study this passage
+                                    </button>
+                                </div>
                                 {devotional.audioUrl && (() => {
                                     const isThisTrack = currentTrack?.id === devotional.id;
                                     const isThisPlaying = isThisTrack && isPlaying;
@@ -213,17 +242,30 @@ const StepContent: React.FC<{ stepIndex: number; onComplete: () => void; devotio
                      <div>
                         <p style={{ fontFamily: 'var(--sans-ui, "Inter Tight", -apple-system, sans-serif)', fontSize: '12px', fontWeight: 700, letterSpacing: '0.10em', textTransform: 'uppercase', color: 'var(--crimson, #8E1B1B)', marginBottom: '0.5rem' }}>Step 6</p>
                         <h2 style={{ fontFamily: 'var(--serif-display, "Cormorant Garamond", "Didot", Georgia, serif)', fontWeight: 600, fontSize: '1.75rem', lineHeight: 1.2, color: 'var(--fg-1, #2A1C15)', marginBottom: '1.5rem' }}>For Further Study</h2>
-                        <p style={{ fontFamily: 'var(--serif-body, "EB Garamond", "Garamond", Georgia, serif)', fontSize: '18px', lineHeight: 1.75, color: 'var(--fg-2, #5B4A3C)', marginBottom: '1.5rem' }}>Click a verse to read it instantly in your sanctuary.</p>
+                        <p style={{ fontFamily: 'var(--serif-body, "EB Garamond", "Garamond", Georgia, serif)', fontSize: '18px', lineHeight: 1.75, color: 'var(--fg-2, #5B4A3C)', marginBottom: '1.5rem' }}>Click a verse to read it instantly in your sanctuary. Tap "Study" to go deeper.</p>
                          <div className="grid gap-3">
-                            {['Joshua 1:9', 'Deuteronomy 31:6', '2 Timothy 1:7'].map(ref => (
-                                <button 
+                            {FURTHER_STUDY_REFS.map(ref => (
+                                <div
                                     key={ref}
-                                    onClick={() => setActiveSnippet(ref)}
-                                    className="p-5 bg-brand-secondary/50 rounded-2xl border border-brand-border flex items-center justify-between group hover:border-brand-accent transition-all"
+                                    className="p-5 bg-brand-secondary/50 rounded-2xl border border-brand-border flex items-center justify-between gap-4 group hover:border-brand-accent transition-all"
                                 >
-                                    <span className="font-bold text-brand-text-primary group-hover:text-brand-accent transition-colors">{ref}</span>
-                                    <ReaderIcon className="w-5 h-5 text-brand-text-secondary opacity-30 group-hover:opacity-100 group-hover:scale-110 transition-all"/>
-                                </button>
+                                    <button
+                                        onClick={() => setActiveSnippet(ref)}
+                                        className="flex-1 text-left"
+                                    >
+                                        <span className="font-bold text-brand-text-primary group-hover:text-brand-accent transition-colors">{ref}</span>
+                                    </button>
+                                    <div className="flex items-center gap-2 flex-shrink-0">
+                                        <button
+                                            onClick={() => openStudy(ref, FURTHER_STUDY_TEXTS[ref] ?? '')}
+                                            className="px-3 py-1.5 rounded-lg border border-brand-accent/40 text-brand-accent text-xs font-bold hover:bg-brand-accent/10 transition-all"
+                                            style={{ fontFamily: 'var(--sans-ui, "Inter Tight", -apple-system, sans-serif)' }}
+                                        >
+                                            Study
+                                        </button>
+                                        <ReaderIcon className="w-5 h-5 text-brand-text-secondary opacity-30 group-hover:opacity-100 group-hover:scale-110 transition-all"/>
+                                    </div>
+                                </div>
                             ))}
                         </div>
                         {activeSnippet && <ScriptureSnippetModal reference={activeSnippet} onClose={() => setActiveSnippet(null)} />}
@@ -246,39 +288,48 @@ const StepContent: React.FC<{ stepIndex: number; onComplete: () => void; devotio
     };
     
     return (
-        <Card className="relative flex flex-col items-center justify-center overflow-hidden p-10 min-h-[35rem]" style={{ background: 'var(--bg-card, #FBF6EA)', boxShadow: 'var(--sh-card, 0 1px 2px rgba(42,28,21,.06), 0 8px 24px rgba(42,28,21,.05))' }}>
-            {/* Ambient inner glow */}
-            <div
-                className="pointer-events-none absolute inset-x-0 -top-24 h-64 opacity-10"
-                aria-hidden
-                style={{ background: 'radial-gradient(ellipse 70% 60% at 50% 0%, rgb(242 125 38) 0%, transparent 70%)' }}
-            />
-            <div className="relative z-10 w-full max-w-xl">
-                {renderContent()}
-                <div className="mt-12 flex flex-col items-center gap-4">
-                    <motion.button
-                        onClick={onComplete}
-                        disabled={isPrayerStep && !isPrayerComplete}
-                        className="group relative px-10 py-4 rounded-full bg-brand-accent text-white font-black text-lg shadow-2xl disabled:opacity-40"
-                        whileHover={{ scale: 1.04 }}
-                        whileTap={{ scale: 0.96 }}
-                        transition={{ type: 'spring', stiffness: 400, damping: 20 }}
-                    >
-                        <span className="flex items-center gap-2">
-                            {stepIndex === 0 ? "Step Inside" : stepIndex === journeySteps.length - 1 ? "Carry the Light" : "I've Finished This Step"}
-                            <ChevronLeftIcon className="w-5 h-5 rotate-180 group-hover:translate-x-1 transition-transform" />
-                        </span>
-                    </motion.button>
-                    <button
-                        onClick={() => onOpenVoice(journeySteps[stepIndex]?.name || 'Daily Journey')}
-                        className="flex items-center gap-2 text-xs font-bold text-brand-text-secondary hover:text-brand-accent transition-colors"
-                    >
-                        <MicrophoneIcon className="w-3.5 h-3.5" />
-                        Pray Aloud
-                    </button>
+        <>
+            <Card className="relative flex flex-col items-center justify-center overflow-hidden p-10 min-h-[35rem]" style={{ background: 'var(--bg-card, #FBF6EA)', boxShadow: 'var(--sh-card, 0 1px 2px rgba(42,28,21,.06), 0 8px 24px rgba(42,28,21,.05))' }}>
+                {/* Ambient inner glow */}
+                <div
+                    className="pointer-events-none absolute inset-x-0 -top-24 h-64 opacity-10"
+                    aria-hidden
+                    style={{ background: 'radial-gradient(ellipse 70% 60% at 50% 0%, rgb(242 125 38) 0%, transparent 70%)' }}
+                />
+                <div className="relative z-10 w-full max-w-xl">
+                    {renderContent()}
+                    <div className="mt-12 flex flex-col items-center gap-4">
+                        <motion.button
+                            onClick={onComplete}
+                            disabled={isPrayerStep && !isPrayerComplete}
+                            className="group relative px-10 py-4 rounded-full bg-brand-accent text-white font-black text-lg shadow-2xl disabled:opacity-40"
+                            whileHover={{ scale: 1.04 }}
+                            whileTap={{ scale: 0.96 }}
+                            transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+                        >
+                            <span className="flex items-center gap-2">
+                                {stepIndex === 0 ? "Step Inside" : stepIndex === journeySteps.length - 1 ? "Carry the Light" : "I've Finished This Step"}
+                                <ChevronLeftIcon className="w-5 h-5 rotate-180 group-hover:translate-x-1 transition-transform" />
+                            </span>
+                        </motion.button>
+                        <button
+                            onClick={() => onOpenVoice(journeySteps[stepIndex]?.name || 'Daily Journey')}
+                            className="flex items-center gap-2 text-xs font-bold text-brand-text-secondary hover:text-brand-accent transition-colors"
+                        >
+                            <MicrophoneIcon className="w-3.5 h-3.5" />
+                            Pray Aloud
+                        </button>
+                    </div>
                 </div>
-            </div>
-        </Card>
+            </Card>
+
+            <ScriptureStudyCompanion
+                passage={studyPassage}
+                passageText={studyText}
+                isOpen={isStudyOpen}
+                onClose={() => setIsStudyOpen(false)}
+            />
+        </>
     );
 }
 

@@ -8,6 +8,7 @@ import {
   BookOpen,
   BookPlus,
   Calendar,
+  CalendarCheck,
   CalendarDays,
   Crown,
   FilePenLine,
@@ -15,6 +16,7 @@ import {
   Gift,
   Globe,
   GraduationCap,
+  Handshake,
   Headphones,
   HeartHandshake,
   HelpCircle,
@@ -61,6 +63,7 @@ declare global {
 const sanctuaryItems = [
   { to: '/app/dashboard', text: 'Dashboard', icon: LayoutDashboard, group: 'Account' },
   { to: '/app/guided-journey', text: 'Guided Daily Journey', icon: Route, group: 'Pray' },
+  { to: '/app/planner', text: 'Daily Planner', icon: CalendarCheck, group: 'Pray' },
   { to: '/app/bible', text: 'Bible Reader', icon: BookOpen, group: 'Read' },
   { to: '/app/books', text: 'Books', icon: BookMarked, group: 'Read' },
   { to: '/app/reading-plans', text: 'Reading Plans', icon: Calendar, group: 'Read' },
@@ -77,10 +80,12 @@ const sanctuaryItems = [
   { to: '/app/testimonies', text: 'Testimonies', icon: Quote, group: 'Community' },
   { to: '/app/gamification', text: 'Your Journey', icon: Trophy, group: 'Account' },
   { to: '/app/grace-link', text: 'Grace Links', icon: Gift, group: 'Community' },
+  { to: '/app/sponsor', text: 'Partner With Us', icon: Handshake, group: 'Community' },
   { to: '/app/visual-sanctuary', text: 'Visual Sanctuary', icon: Image, group: 'Pray' },
   { to: '/app/inbox', text: 'Inbox & Updates', icon: Inbox, group: 'Account' },
   { to: '/app/events', text: 'Live Events', icon: CalendarDays, group: 'Live' },
   { to: '/app/live', text: 'Live Broadcast', icon: Radio, group: 'Live' },
+  { to: '/give', text: 'Give', icon: HeartHandshake, group: 'Account' },
   { to: '/app/giving', text: 'Giving & Support', icon: HeartHandshake, group: 'Account' },
   { to: '/pricing', text: 'Upgrade Plan', icon: Crown, group: 'Account' },
   { to: '/app/help', text: 'Help & Contact', icon: HelpCircle, group: 'Account' },
@@ -282,7 +287,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { unreadCount } = useNotifications();
   const [isMobileNavOpen, setIsMobileNavOpen] = React.useState(false);
   const isPublicRoute =
-    ['/', '/blog', '/newsletter', '/podcasts', '/pricing'].includes(location.pathname) ||
+    ['/', '/blog', '/newsletter', '/podcasts', '/pricing', '/give', '/onboarding'].includes(location.pathname) ||
     location.pathname.startsWith('/blog/');
 
   if (isPublicRoute) {

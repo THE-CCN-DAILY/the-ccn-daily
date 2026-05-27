@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import Card from '../components/Card';
 import { SparklesIcon, ChatIcon } from '../components/icons';
 import { generateCloudflareText } from '../services/geminiService';
+import { Info } from 'lucide-react';
 
 const EASE = [0.22, 1, 0.36, 1] as [number, number, number, number];
 
@@ -39,55 +40,55 @@ interface Expert {
 const experts: Expert[] = [
   {
     id: '1',
-    name: 'Dr. Sarah Jenkins',
-    role: 'Biblical Scholar',
+    name: 'Dr. Sarah Chen',
+    role: 'Systematic Theology Perspective',
     specialty: 'Old Testament Context',
-    avatar: 'SJ',
+    avatar: 'SC',
     avatarBg: 'bg-amber-500/15',
     avatarText: 'text-amber-500',
     badge: 'bg-amber-500/10 text-amber-500',
     tagline: 'Ancient text, living word',
     prompt:
-      'You are Dr. Sarah Jenkins, an expert Biblical Scholar specializing in Old Testament context. You provide deep, historically accurate, and spiritually enriching insights into scripture. Keep answers concise but profound.',
+      'You are an AI reflection offering a systematic theology perspective, drawing on Old Testament context and biblical scholarship. You provide historically grounded, spiritually enriching insights into scripture. Keep answers concise but profound. Always clarify when you are uncertain. Never present theological opinion as settled fact. Recommend the user discuss important matters with their pastor.',
   },
   {
     id: '2',
-    name: 'Rev. Marcus Cole',
-    role: 'Pastoral Counselor',
+    name: 'Rev. Marcus Thompson',
+    role: 'Pastoral Care Perspective',
     specialty: 'Grief & Loss',
-    avatar: 'MC',
+    avatar: 'MT',
     avatarBg: 'bg-sky-500/15',
     avatarText: 'text-sky-500',
     badge: 'bg-sky-500/10 text-sky-500',
     tagline: 'Walking with you through pain',
     prompt:
-      'You are Rev. Marcus Cole, a compassionate Pastoral Counselor specializing in grief, loss, and emotional healing. You offer gentle, empathetic, and faith-based comfort. Do not give medical advice.',
+      'You are an AI reflection offering a pastoral care perspective on grief, loss, and emotional healing. You offer gentle, empathetic, and faith-based comfort. Do not give medical advice. Always clarify when you are uncertain. Never present theological opinion as settled fact. Recommend the user discuss important matters with their pastor.',
   },
   {
     id: '3',
-    name: 'Dr. Emily Chen',
-    role: 'Mental Health Professional',
+    name: 'Dr. Emily Rodriguez',
+    role: 'Biblical Languages Perspective',
     specialty: 'Anxiety & Faith',
-    avatar: 'EC',
+    avatar: 'ER',
     avatarBg: 'bg-emerald-500/15',
     avatarText: 'text-emerald-500',
     badge: 'bg-emerald-500/10 text-emerald-500',
-    tagline: 'Where psychology meets faith',
+    tagline: 'Where the text speaks its own language',
     prompt:
-      'You are Dr. Emily Chen, a Christian Mental Health Professional. You help people navigate anxiety and stress by combining psychological principles with faith-based encouragement. Do not diagnose or prescribe.',
+      'You are an AI reflection offering a biblical languages perspective, examining scripture through the lens of the original Hebrew and Greek texts. You help people understand the depth of scripture by exploring word meanings and literary context. Do not diagnose or prescribe. Always clarify when you are uncertain. Never present theological opinion as settled fact. Recommend the user discuss important matters with their pastor.',
   },
   {
     id: '4',
-    name: 'Prof. David Alistair',
-    role: 'Theologian',
+    name: 'Prof. David Kim',
+    role: 'Church History Perspective',
     specialty: 'Early Church History',
-    avatar: 'DA',
+    avatar: 'DK',
     avatarBg: 'bg-purple-500/15',
     avatarText: 'text-purple-500',
     badge: 'bg-purple-500/10 text-purple-500',
     tagline: 'Roots that shape the present',
     prompt:
-      'You are Prof. David Alistair, a renowned Theologian specializing in Early Church History. You love explaining how early Christians lived and what we can learn from them today. You are academic yet accessible.',
+      'You are an AI reflection offering a church history perspective, drawing on how early Christians lived and what we can learn from them today. You are academic yet accessible. Always clarify when you are uncertain. Never present theological opinion as settled fact. Recommend the user discuss important matters with their pastor.',
   },
 ];
 
@@ -195,18 +196,26 @@ const ExpertCouncilPage: React.FC = () => {
         transition={{ duration: 0.5, ease: EASE }}
       >
         <p className="text-xs font-bold uppercase tracking-widest text-brand-accent mb-2">
-          Sanctuary
+          Guided Study
         </p>
         <h1
           className="text-4xl font-black text-brand-text-primary mb-2"
           style={{ fontFamily: 'var(--font-display)' }}
         >
-          Expert Council
+          Seek Counsel
         </h1>
-        <p className="text-brand-text-secondary">
-          Four voices, one purpose — biblical depth, pastoral care, mental-health wisdom, and
-          theological grounding. Ask any of them anything.
+        <p className="text-brand-text-secondary mb-5">
+          Bring your question. Receive perspective from multiple angles — Scripture, theology, and pastoral care.
         </p>
+
+        {/* Disclaimer banner */}
+        <div className="flex items-start gap-3 rounded-xl bg-amber-500/10 border border-amber-500/30 px-4 py-3 max-w-2xl">
+          <Info className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+          <p className="text-sm text-amber-700 leading-relaxed">
+            These responses are AI-generated reflections grounded in Scripture and theology.
+            They are not real people and do not replace pastoral counsel.
+          </p>
+        </div>
       </motion.div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -242,14 +251,14 @@ const ExpertCouncilPage: React.FC = () => {
                       <h3 className="font-bold text-brand-text-primary text-sm truncate">
                         {expert.name}
                       </h3>
-                      <span
-                        className={`inline-block text-[12px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full mt-0.5 ${expert.badge}`}
-                      >
-                        {expert.role}
-                      </span>
-                      <p className="text-xs text-brand-text-secondary mt-1 leading-snug">
-                        {expert.tagline}
+                      <p className="text-xs text-brand-text-secondary leading-snug">
+                        AI reflection · {expert.role}
                       </p>
+                      <span
+                        className={`inline-block text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full mt-0.5 ${expert.badge}`}
+                      >
+                        {expert.specialty}
+                      </span>
                     </div>
                   </div>
                 </Card>
@@ -283,7 +292,10 @@ const ExpertCouncilPage: React.FC = () => {
                           {selectedExpert.name}
                         </h3>
                         <p className={`text-xs font-semibold ${selectedExpert.avatarText}`}>
-                          {selectedExpert.specialty}
+                          {selectedExpert.role}
+                        </p>
+                        <p className="text-xs text-brand-text-secondary">
+                          AI reflection
                         </p>
                       </div>
                     </div>
@@ -296,7 +308,7 @@ const ExpertCouncilPage: React.FC = () => {
                     <div className="flex justify-start">
                       <div className="bg-brand-secondary px-4 py-3 rounded-2xl rounded-tl-none max-w-[82%]">
                         <p className="text-sm text-brand-text-primary leading-relaxed">
-                          Hello! I am {selectedExpert.name}. How can I help you today?
+                          Hello! I'm an AI reflection offering a {selectedExpert.role.toLowerCase().replace(' perspective', '')} perspective. What question can I help you explore today?
                         </p>
                       </div>
                     </div>

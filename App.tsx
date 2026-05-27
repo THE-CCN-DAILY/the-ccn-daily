@@ -74,6 +74,11 @@ import RequireRole from './components/auth/RequireRole';
 
 import NewsletterPage from './pages/NewsletterPage';
 import HelpPage from './pages/HelpPage';
+import OnboardingPage from './pages/OnboardingPage';
+import DonationPage from './pages/DonationPage';
+import StudentVerificationPage from './pages/StudentVerificationPage';
+import SponsorshipPage from './pages/SponsorshipPage';
+import PlannerPage from './pages/PlannerPage';
 
 const App: React.FC = () => {
   return (
@@ -95,6 +100,8 @@ const App: React.FC = () => {
                           <Route path="/newsletter" element={<NewsletterPage />} />
                           <Route path="/podcasts" element={<PodcastPage />} />
                           <Route path="/pricing" element={<PricingPage />} />
+                          <Route path="/give" element={<DonationPage />} />
+                          <Route path="/onboarding" element={<OnboardingPage />} />
                           
                           {/* Member Sanctuary Routes */}
                           <Route path="/app/*">
@@ -116,6 +123,8 @@ const App: React.FC = () => {
                             <Route path="live" element={<RequireAuth><LiveStreamPage /></RequireAuth>} />
                             <Route path="giving" element={<RequireAuth><GivingPage /></RequireAuth>} />
                             <Route path="help" element={<HelpPage />} />
+                            <Route path="student-verify" element={<RequireAuth><StudentVerificationPage /></RequireAuth>} />
+                            <Route path="sponsor" element={<RequireAuth><SponsorshipPage /></RequireAuth>} />
                             <Route path="courses" element={<RequireAuth><CoursesPage /></RequireAuth>} />
                             <Route path="courses/:courseId" element={<RequireAuth><CoursePlayerPage /></RequireAuth>} />
                             <Route path="audiobook-library" element={<RequireAuth><AudiobookLibraryPage /></RequireAuth>} />
@@ -127,6 +136,7 @@ const App: React.FC = () => {
                             <Route path="reading-plans" element={<RequireAuth><ReadingPlansPage /></RequireAuth>} />
                             <Route path="reading-plans/:planId" element={<RequireAuth><ReadingPlansPage /></RequireAuth>} />
                             <Route path="journaling" element={<RequireAuth><JournalingPage /></RequireAuth>} />
+                            <Route path="planner" element={<RequireAuth><PlannerPage /></RequireAuth>} />
                             <Route path="community-rooms" element={<RequireAuth><CommunityRoomsPage /></RequireAuth>} />
                             <Route path="family-dashboard" element={<RequireRole allowedRoles={['admin', 'family_lead']}><FamilyDashboardPage /></RequireRole>} />
                             <Route path="leader-dashboard" element={<RequireRole allowedRoles={['admin', 'group_lead']}><LeaderDashboardPage /></RequireRole>} />
