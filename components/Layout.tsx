@@ -67,7 +67,7 @@ const sanctuaryItems = [
   { to: '/app/bible', text: 'Bible Reader', icon: BookOpen, group: 'Read' },
   { to: '/app/books', text: 'Books', icon: BookMarked, group: 'Read' },
   { to: '/app/reading-plans', text: 'Reading Plans', icon: Calendar, group: 'Read' },
-  { to: '/app/newsletters', text: 'Newsletter', icon: Newspaper, group: 'Read' },
+  { to: '/app/newsletters', text: 'News', icon: Newspaper, group: 'Read' },
   { to: '/app/podcasts', text: 'Podcast Library', icon: Podcast, group: 'Read' },
   { to: '/app/courses', text: 'Courses', icon: GraduationCap, group: 'Read' },
   { to: '/app/audiobook-library', text: 'Audiobook Library', icon: Headphones, group: 'Read' },

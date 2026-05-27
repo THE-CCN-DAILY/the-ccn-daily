@@ -30,54 +30,64 @@ type PaidTier = 'pro' | 'max' | 'partner';
 const PLAN_UI = {
   free: {
     label: getTierLabel('free'),
-    tagline: 'Start your daily spiritual rhythm.',
+    tagline: 'Begin your daily encounter with Scripture.',
     bullets: [
-      'Daily devotional',
-      'Weekly newsletter/podcast',
-      'Basic Bible reader',
-      'Open challenges',
-      'Basic notes/comments',
+      'Daily devotional + guided reflection',
+      'Bible reader (all books and chapters)',
+      'Weekly newsletter and podcast',
+      'Standard audiobook library',
+      'Journaling and prayer wall',
+      'One active challenge',
     ],
-    support: 'Basic tools included.',
+    support: 'Free forever. No card required.',
+    howItWorks: 'No card needed. Create an account and everything here is yours — immediately, indefinitely. When you\'re ready to go deeper, Growth is one step away.',
     cta: 'Current Plan',
   },
   pro: {
     label: getTierLabel('pro'),
-    tagline: 'Build depth and consistency.',
+    tagline: 'Go deeper — every day.',
     bullets: [
-      'Premium courses (core set)',
-      'Curated audiobooks for your season',
-      'Premium challenge archive',
-      'Journaling templates',
-      'Community rooms',
+      'Everything in Foundation, plus:',
+      'Premium courses (growing library)',
+      'Full audiobook library — curated for your season',
+      'Deeper study tools (Scripture-anchored, AI-assisted)',
+      'Personalised daily devotionals',
+      'Unlimited journaling with templates',
+      'Community rooms — up to 3 active challenges',
     ],
-    support: '7-day trial on annual plan.',
+    support: '7-day free trial on annual plan.',
+    howItWorks: 'One account, one person. Everything in Foundation stays with you — Growth adds the deeper tools above. Billed monthly or annually. The annual plan saves 44% and includes a 7-day trial before you\'re charged.',
     cta: 'Choose Growth',
     badge: 'Most Popular',
   },
   max: {
     label: getTierLabel('max'),
-    tagline: 'Grow together at home.',
+    tagline: 'Full access for your whole household.',
     bullets: [
-      'Everything in Growth',
-      'Up to 5 seats',
-      'Shared challenge board',
-      'Family progress dashboard',
+      'Everything in Growth, plus:',
+      '5 household seats — one subscription',
+      'Exclusive masterclasses',
+      'Voice prayer companion',
+      'Visual Sanctuary + cinematic backgrounds',
+      'Shared challenge board and family dashboard',
     ],
-    support: '14-day trial on annual plan.',
+    support: '14-day free trial on annual plan.',
+    howItWorks: 'You subscribe once, then invite up to 4 people in your household. Each person gets their own profile, their own devotional journey, their own formation path — all under one subscription. No separate billing for family members. The person who subscribes manages the household seats.',
     cta: 'Choose Family',
   },
   partner: {
     label: getTierLabel('partner'),
-    tagline: 'Guide groups with structure and insight.',
+    tagline: 'Your personal premium plan + tools to lead a group.',
     bullets: [
-      'Everything in Family',
-      'Cohort facilitation tools',
-      'Assignment workflows',
-      'Group analytics',
+      'Everything in Growth, for you personally',
+      'Group dashboard — manage up to 30 members',
+      'Assignment workflows and cohort challenges',
+      'Group progress analytics',
+      'Invite link with discount for your members',
     ],
     support: '30-day pilot for approved cohorts.',
-    cta: 'Choose Leader',
+    howItWorks: 'This is your personal Growth account — everything in Growth applies to you, for your own formation. On top of that, you get a group dashboard to shepherd up to 30 people: shared challenges, assignment tools, and a discount invite link to share with your group. Your members subscribe independently through your link. You are not buying seats for others. You lead; they walk their own walk.',
+    cta: 'Apply for Leader',
   },
 } as const;
 
@@ -99,7 +109,6 @@ const PricingPage: React.FC = () => {
   const [selectedTier, setSelectedTier] = useState<PaidTier | null>(null);
   const [activeDiscount, setActiveDiscount] = useState<{ name: string; percentage: number; targetTier: string; targetBilling: string } | null>(null);
   const [flutterwaveKey, setFlutterwaveKey] = useState(DEFAULT_FLUTTERWAVE_KEY);
-
   const paywallVariant = useExperiment(user?.uid, 'paywall_layout_v1');
 
   useEffect(() => {
@@ -407,7 +416,8 @@ const PricingPage: React.FC = () => {
               ))}
             </ul>
 
-            <p className="text-xs text-brand-text-secondary mb-4">{PLAN_UI.free.support}</p>
+            <p className="text-xs text-brand-text-secondary mb-2">{PLAN_UI.free.support}</p>
+            <p className="text-xs leading-relaxed text-brand-text-secondary mb-4">{PLAN_UI.free.howItWorks}</p>
 
             <button
               disabled
@@ -441,15 +451,20 @@ const PricingPage: React.FC = () => {
             </div>
 
             <ul className="space-y-4 mb-8 flex-1">
-              {PLAN_UI.pro.bullets.map((item) => (
+              {PLAN_UI.pro.bullets.map((item) => item.endsWith('plus:') ? (
+                <li key={item} className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest pb-1 border-b border-brand-border" style={{ color: 'var(--crimson)' }}>
+                  {item}
+                </li>
+              ) : (
                 <li key={item} className="flex items-start gap-3 text-sm text-brand-text-secondary">
-                  <CheckIcon className="w-5 h-5 flex-shrink-0" style={{ color: 'var(--crimson)' }} />
-                  <span className={item.includes('audiobook') || item.includes('courses') ? 'font-semibold text-brand-text-primary' : ''}>{item}</span>
+                  <CheckIcon className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: 'var(--crimson)' }} />
+                  <span>{item}</span>
                 </li>
               ))}
             </ul>
 
-            <p className="text-xs text-brand-text-secondary mb-4">{PLAN_UI.pro.support}</p>
+            <p className="text-xs text-brand-text-secondary mb-2">{PLAN_UI.pro.support}</p>
+            <p className="text-xs leading-relaxed text-brand-text-secondary mb-4">{PLAN_UI.pro.howItWorks}</p>
 
             <button
               onClick={() => handleSubscribe('pro')}
@@ -485,15 +500,20 @@ const PricingPage: React.FC = () => {
             </div>
 
             <ul className="space-y-4 mb-8 flex-1">
-              {PLAN_UI.max.bullets.map((item) => (
+              {PLAN_UI.max.bullets.map((item) => item.endsWith('plus:') ? (
+                <li key={item} className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest pb-1 border-b border-brand-border" style={{ color: 'var(--ember)' }}>
+                  {item}
+                </li>
+              ) : (
                 <li key={item} className="flex items-start gap-3 text-sm text-brand-text-secondary">
-                  <CheckIcon className="w-5 h-5 flex-shrink-0" style={{ color: 'var(--ember)' }} />
-                  <span className={item === 'Everything in Growth' ? 'font-semibold text-brand-text-primary' : ''}>{item}</span>
+                  <CheckIcon className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: 'var(--ember)' }} />
+                  <span>{item}</span>
                 </li>
               ))}
             </ul>
 
-            <p className="text-xs text-brand-text-secondary mb-4">{PLAN_UI.max.support}</p>
+            <p className="text-xs text-brand-text-secondary mb-2">{PLAN_UI.max.support}</p>
+            <p className="text-xs leading-relaxed text-brand-text-secondary mb-4">{PLAN_UI.max.howItWorks}</p>
 
             <button
               onClick={() => handleSubscribe('max')}
@@ -531,13 +551,14 @@ const PricingPage: React.FC = () => {
             <ul className="space-y-4 mb-8 flex-1">
               {PLAN_UI.partner.bullets.map((item) => (
                 <li key={item} className="flex items-start gap-3 text-sm text-brand-text-secondary">
-                  <CheckIcon className="w-5 h-5 flex-shrink-0" style={{ color: 'var(--gold-ds)' }} />
-                  <span className={item === 'Everything in Family' ? 'font-semibold text-brand-text-primary' : ''}>{item}</span>
+                  <CheckIcon className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: 'var(--gold-ds)' }} />
+                  <span className={item.includes('personally') ? 'font-semibold text-brand-text-primary' : ''}>{item}</span>
                 </li>
               ))}
             </ul>
 
-            <p className="text-xs text-brand-text-secondary mb-4">{PLAN_UI.partner.support}</p>
+            <p className="text-xs text-brand-text-secondary mb-2">{PLAN_UI.partner.support}</p>
+            <p className="text-xs leading-relaxed text-brand-text-secondary mb-4">{PLAN_UI.partner.howItWorks}</p>
 
             <button
               onClick={() => handleSubscribe('partner')}

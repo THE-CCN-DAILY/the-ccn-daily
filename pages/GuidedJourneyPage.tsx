@@ -215,6 +215,10 @@ const StepContent: React.FC<{ stepIndex: number; onComplete: () => void; devotio
                             onChange={setJournalText}
                             placeholder="Where in your life do you need God's strength today?"
                         />
+                        <p style={{ marginTop: '0.5rem', fontSize: '12px', color: 'var(--fg-3, #9B8E87)', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                            <span aria-hidden="true">🎙</span>
+                            Type or use your phone's microphone to speak.
+                        </p>
                     </div>
                 );
             case 4:

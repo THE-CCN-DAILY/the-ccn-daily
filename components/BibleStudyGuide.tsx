@@ -217,6 +217,14 @@ const BibleStudyGuide: React.FC<BibleStudyGuideProps> = ({ currentPassage, onClo
         </button>
       </div>
 
+      {/* AI disclosure */}
+      <div className="flex-shrink-0 px-3 py-2 bg-brand-dark/60 border-b border-brand-border">
+        <p className="text-[11px] text-brand-text-secondary/70 leading-snug">
+          <span className="font-semibold text-brand-text-secondary">AI-assisted study guides.</span>{' '}
+          Dr. Sarah, Rev. Marcus, Dr. Emily, and Prof. David are AI personas trained to explore Scripture from different angles — not real people. Always test responses against the Bible.
+        </p>
+      </div>
+
       {/* Expert pills */}
       <div className="flex-shrink-0 flex gap-1.5 px-3 py-2.5 border-b border-brand-border overflow-x-auto">
         {EXPERTS.map((e) => (

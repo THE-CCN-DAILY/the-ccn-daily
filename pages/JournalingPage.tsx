@@ -154,8 +154,12 @@ const JournalingPage: React.FC = () => {
               value={newEntryText}
               onChange={setNewEntryText}
               placeholder="What is on your heart today?"
-              className="mb-5"
+              className="mb-2"
             />
+            <p className="mb-4 text-xs text-brand-text-secondary/60 flex items-center gap-1.5">
+              <span aria-hidden>🎙</span>
+              Type or use your phone's microphone to speak.
+            </p>
             <div className="flex justify-between items-center">
               <span className="text-xs text-brand-text-secondary/60">
                 {newEntryText.trim() ? `${newEntryText.trim().split(/\s+/).filter(Boolean).length} words` : 'Start writing…'}

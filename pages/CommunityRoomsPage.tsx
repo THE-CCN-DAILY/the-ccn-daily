@@ -204,6 +204,10 @@ const CommunityRoomsPage: React.FC = () => {
 
         {/* Input area */}
         <div className="p-4 bg-brand-dark border-t border-brand-border flex-shrink-0">
+          <p className="text-[11px] text-brand-text-secondary/50 flex items-center gap-1 mb-2">
+            <span aria-hidden>🎙</span>
+            Type or use your phone's microphone to speak.
+          </p>
           <form onSubmit={handleSendMessage} className="flex gap-3">
             <input
               type="text"

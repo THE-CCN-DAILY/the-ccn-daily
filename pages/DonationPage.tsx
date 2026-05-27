@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, setDoc, collection, query, where, getDocs, orderBy, limit } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuth } from '../contexts/AuthContext';
 import { useNotifications } from '../contexts/NotificationContext';
@@ -152,6 +152,30 @@ const DonationPage: React.FC = () => {
   const [customAmount, setCustomAmount] = useState<string>('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [showThankYou, setShowThankYou] = useState(false);
+  const [previousDonation, setPreviousDonation] = useState<{ amount: number; tier: string } | null>(null);
+
+  useEffect(() => {
+    if (!user?.uid) return;
+    const fetchPrevious = async () => {
+      try {
+        const q = query(
+          collection(db, 'donations'),
+          where('uid', '==', user.uid),
+          where('status', '==', 'successful'),
+          orderBy('timestamp', 'desc'),
+          limit(1),
+        );
+        const snap = await getDocs(q);
+        if (!snap.empty) {
+          const d = snap.docs[0].data();
+          setPreviousDonation({ amount: d.amount as number, tier: d.tier as string });
+        }
+      } catch {
+        // Non-critical — silently skip if query fails
+      }
+    };
+    fetchPrevious();
+  }, [user?.uid]);
 
   const selectedTier = TIERS.find((t) => t.id === selectedTierId);
   const effectiveAmount = customAmount
@@ -239,6 +263,30 @@ const DonationPage: React.FC = () => {
       </AnimatePresence>
 
       <div className="min-h-screen bg-brand-dark">
+
+        {/* ── Return donor recognition banner ── */}
+        <AnimatePresence>
+          {previousDonation && (
+            <motion.div
+              className="w-full px-4 py-3 flex items-center justify-center gap-2 border-b border-brand-accent/30 text-center"
+              style={{ background: 'rgba(242,125,38,0.08)' }}
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.4, ease: EASE }}
+            >
+              <span className="text-base" role="img" aria-label="heart">🕊️</span>
+              <p
+                className="text-sm text-brand-text-primary"
+                style={{ fontFamily: 'var(--serif-body)' }}
+              >
+                Welcome back, {donorName}. You gave ${previousDonation.amount} last time —
+                your faithfulness is keeping this ministry alive.{' '}
+                <span className="font-semibold text-brand-accent">Thank you.</span>
+              </p>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* ── Header ── */}
         <motion.section

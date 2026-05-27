@@ -291,6 +291,10 @@ const TheCommunity: React.FC = () => {
                                         className="w-full h-24 p-3 bg-brand-secondary border border-brand-border rounded-xl text-sm text-brand-text-primary focus:outline-none focus:ring-2 focus:ring-brand-accent resize-none"
                                         placeholder="What's on your heart today?"
                                     />
+                                    <p className="text-[11px] text-brand-text-secondary/50 flex items-center gap-1 mt-1.5">
+                                        <span aria-hidden>🎙</span>
+                                        Type or use your phone's microphone to speak.
+                                    </p>
                                     <div className="flex items-center gap-4 mt-4">
                                         <label className="flex items-center gap-2 cursor-pointer">
                                             <input

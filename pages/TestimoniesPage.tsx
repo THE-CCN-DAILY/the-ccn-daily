@@ -132,6 +132,10 @@ const ShareStoryModal: React.FC<{
                 className="w-full p-3 bg-brand-dark border border-brand-border rounded-xl text-brand-text-primary placeholder-brand-text-secondary focus:outline-none focus:ring-2 focus:ring-brand-accent resize-none"
                 placeholder="Share your story of faith, gratitude, or a moment of God's goodness..."
               />
+              <p className="text-xs text-brand-text-secondary/60 flex items-center gap-1.5">
+                <span aria-hidden>🎙</span>
+                Type or use your phone's microphone to speak.
+              </p>
             </div>
 
             <div className="flex justify-end gap-3 mt-5">

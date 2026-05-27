@@ -332,6 +332,10 @@ const DailyView: React.FC<{ uid: string }> = ({ uid }) => {
             placeholder="Write your morning intention..."
             rows={4}
           />
+          <p style={{ marginTop: '0.4rem', fontSize: '11px', color: 'var(--fg-3, #9B8E87)', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+            <span aria-hidden="true">🎙</span>
+            Type or use your phone's microphone to speak.
+          </p>
         </>
       )}
 

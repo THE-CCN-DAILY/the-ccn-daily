@@ -160,6 +160,29 @@ const testimonials = [
   },
 ];
 
+const bookQuotes = [
+  {
+    quote: 'Prayer is not preparation for the battle. Prayer is the battle.',
+    book: 'PrayerCraft',
+    subtitle: 'A Complete Guide to a Life of Prayer',
+  },
+  {
+    quote: 'Hearing God is not a privilege reserved for the spiritual elite. It is the inheritance of every child of the Father.',
+    book: "Discerning God's Whisper",
+    subtitle: 'A Field Manual for Hearing God in the 21st Century',
+  },
+  {
+    quote: 'God meets you where your faith and your daily life feel most sharply divided.',
+    book: 'The Passion Path',
+    subtitle: 'How Holy Week Shapes Every Week',
+  },
+  {
+    quote: 'Spiritual health is the daily habit of making the right choice when no one is looking.',
+    book: 'The Spiritual Health Solution',
+    subtitle: '',
+  },
+];
+
 const scriptureVerses = [
   { text: '"Do not be anxious about anything..."', ref: 'Phil. 4:6' },
   { text: '"Trust in the Lord with all your heart..."', ref: 'Prov. 3:5' },
@@ -794,6 +817,54 @@ const LandingPage: React.FC = () => {
                     <p className="text-xs text-brand-text-secondary mt-0.5">{location}</p>
                   </div>
                 </motion.div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ── From the Books ────────────────────────────────────────────────── */}
+        <section className="bg-brand-secondary border-t border-brand-border py-20 px-6 md:py-28">
+          <div className="mx-auto max-w-6xl">
+            <Reveal className="mb-14 text-center">
+              <p className="text-xs font-bold uppercase tracking-widest text-brand-accent mb-4">
+                From the Author
+              </p>
+              <h2 className="font-display text-3xl font-bold leading-tight text-brand-text-primary md:text-4xl max-w-2xl mx-auto">
+                Words written to meet you where you are.
+              </h2>
+            </Reveal>
+
+            <div className="grid gap-6 md:grid-cols-2">
+              {bookQuotes.map(({ quote, book, subtitle }, i) => (
+                <motion.blockquote
+                  key={book}
+                  initial={{ opacity: 0, y: 24 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.55, delay: i * 0.09, ease: [0.22, 1, 0.36, 1] }}
+                  className="rounded-2xl border border-brand-border bg-brand-dark p-8"
+                >
+                  <div
+                    className="font-display text-4xl leading-none text-brand-accent mb-4 select-none"
+                    aria-hidden
+                  >
+                    "
+                  </div>
+                  <p className="font-serif text-lg leading-[1.85] text-brand-text-primary mb-6 italic">
+                    {quote}
+                  </p>
+                  <footer>
+                    <p className="text-xs font-bold uppercase tracking-widest text-brand-accent">
+                      {book}
+                    </p>
+                    {subtitle && (
+                      <p className="text-xs text-brand-text-secondary mt-0.5">{subtitle}</p>
+                    )}
+                    <p className="text-xs text-brand-text-secondary mt-1">
+                      — Pastor Eryeza Kalalu
+                    </p>
+                  </footer>
+                </motion.blockquote>
               ))}
             </div>
           </div>

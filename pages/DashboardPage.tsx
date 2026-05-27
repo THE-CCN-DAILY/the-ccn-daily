@@ -172,7 +172,7 @@ const DevotionalCard: React.FC<DevotionalCardProps> = ({ devotional, loading, da
               color: '#fff',
             }}
           >
-            Begin your journey
+            Open Daily Journey
             <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
