@@ -60,8 +60,8 @@ export function useEffectiveAccess(user: UserLike, resource: Resource): Effectiv
         setSubscription(s);
         setEntitlements(e);
         setPurchases(p);
-      } catch (error) {
-        console.error("Failed to fetch access data", error);
+      } catch {
+        // Access data unavailable — component renders with defaults
       } finally {
         if (mounted) setLoading(false);
       }

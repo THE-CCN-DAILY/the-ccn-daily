@@ -35,8 +35,8 @@ export const trackAiUsage = async (
       method: 'POST',
       body: JSON.stringify({ userId, feature, model, tokens }),
     });
-  } catch (error) {
-    console.error('Error tracking AI usage:', error);
+  } catch {
+    // Usage tracking is non-critical — silent failure is acceptable
   }
 };
 

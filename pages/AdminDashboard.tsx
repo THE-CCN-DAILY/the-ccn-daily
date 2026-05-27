@@ -12,6 +12,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { AdminUserStats, listAdminUsers } from '../services/adminService';
 import { createAdminEvent } from '../services/eventService';
 import { createMuxLiveStream } from '../services/liveStreamService';
+import LandscapeTab from '../components/admin/LandscapeTab';
 
 interface AppUser {
   id: string;
@@ -36,7 +37,7 @@ const StatCard: React.FC<{ title: string; value: string | number; change: string
 
 const AdminDashboard: React.FC = () => {
     const { user } = useAuth();
-    const [activeTab, setActiveTab] = useState<'users' | 'challenges' | 'broadcasts' | 'events' | 'payments' | 'discounts' | 'tenancy' | 'resources' | 'inbox' | 'budget'>('users');
+    const [activeTab, setActiveTab] = useState<'users' | 'challenges' | 'broadcasts' | 'events' | 'payments' | 'discounts' | 'tenancy' | 'resources' | 'inbox' | 'budget' | 'landscape'>('users');
     const { addNotification, notify } = useNotifications();
     const [usageStats, setUsageStats] = useState<any>(null);
     const [loadingBudget, setLoadingBudget] = useState(false);
@@ -532,13 +533,13 @@ const AdminDashboard: React.FC = () => {
             </div>
 
             <div className="flex flex-wrap gap-4 mb-6">
-                {(['users', 'inbox', 'challenges', 'broadcasts', 'events', 'payments', 'discounts', 'tenancy', 'resources', 'budget'] as const).map((tab) => (
-                    <button 
+                {(['users', 'inbox', 'challenges', 'broadcasts', 'events', 'payments', 'discounts', 'tenancy', 'resources', 'budget', 'landscape'] as const).map((tab) => (
+                    <button
                         key={tab}
                         onClick={() => setActiveTab(tab)}
                         className={`px-6 py-2 rounded-full text-sm font-bold border transition-all ${activeTab === tab ? 'bg-brand-accent text-white' : 'bg-brand-secondary text-brand-text-secondary border-brand-border'}`}
                     >
-                        {tab === 'challenges' ? 'AI Course Studio' : tab === 'tenancy' ? 'Multi-Tenant (P7)' : tab === 'budget' ? 'AI Budget' : tab.charAt(0).toUpperCase() + tab.slice(1)}
+                        {tab === 'challenges' ? 'AI Course Studio' : tab === 'tenancy' ? 'Multi-Tenant (P7)' : tab === 'budget' ? 'AI Budget' : tab === 'landscape' ? 'Landscape' : tab.charAt(0).toUpperCase() + tab.slice(1)}
                     </button>
                 ))}
             </div>
@@ -1187,7 +1188,7 @@ const AdminDashboard: React.FC = () => {
                                 </div>
                             </div>
                         </Card>
-                    ) : (
+                    ) : activeTab === 'tenancy' ? (
                         <div className="space-y-6 animate-fade-in">
                             <Card className="border-l-4 border-brand-accent">
                                 <div className="flex justify-between items-center">
@@ -1205,7 +1206,9 @@ const AdminDashboard: React.FC = () => {
                                 + Provision New Community Tenant
                             </button>
                         </div>
-                    )}
+                    ) : activeTab === 'landscape' ? (
+                        <LandscapeTab />
+                    ) : null}
                 </div>
 
                 <Card>

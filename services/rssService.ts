@@ -36,7 +36,6 @@ export async function fetchRSSFeed(url: string): Promise<RSSFeed> {
     }
     return await response.json();
   } catch (error) {
-    console.error(`Error fetching RSS feed from ${url}:`, error);
     throw error;
   }
 }

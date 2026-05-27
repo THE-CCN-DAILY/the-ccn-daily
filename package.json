@@ -20,7 +20,6 @@
     "@mux/mux-node": "^12.8.1",
     "@mux/mux-player-react": "^3.11.6",
     "@remotion/player": "^4.0.464",
-    "@sendgrid/mail": "^8.1.6",
     "@tailwindcss/vite": "^4.2.2",
     "express": "^5.2.1",
     "express-rate-limit": "^8.3.1",

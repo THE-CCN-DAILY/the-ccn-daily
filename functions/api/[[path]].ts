@@ -46,6 +46,7 @@ type Env = {
   GOOGLE_CLIENT_ID?: string;
   GOOGLE_CLIENT_SECRET?: string;
   AUTH_SECRET?: string;
+  RESEND_API_KEY?: string;
 };
 
 const app = new Hono<{ Bindings: Env }>();
@@ -3033,6 +3034,75 @@ app.post('/api/contact', async (c) => {
   }
 
   return c.json({ success: true });
+});
+
+// ── Email: gift notification ───────────────────────────────────────────────
+app.post('/api/email/gift', async (c) => {
+  const origin = c.req.header('origin') || '';
+  const production = c.env.PRODUCTION_ORIGIN || 'https://theccndaily.com';
+  const isLocal = origin.startsWith('http://localhost') || origin.startsWith('http://127.0.0.1');
+  if (!isLocal && origin !== production) {
+    return c.json({ error: 'Forbidden' }, 403);
+  }
+
+  let body: Record<string, unknown>;
+  try {
+    body = await c.req.json();
+  } catch {
+    return c.json({ error: 'Invalid request body' }, 400);
+  }
+
+  const recipientEmail = typeof body.recipientEmail === 'string' ? body.recipientEmail.trim() : '';
+  const senderName     = typeof body.senderName     === 'string' ? body.senderName.trim()     : 'THE CCN DAILY Team';
+  const giftedItem     = typeof body.giftedItemTitle === 'string' ? body.giftedItemTitle.trim() : 'a gift';
+  const personalMsg    = typeof body.personalMessage === 'string' ? body.personalMessage.trim() : '';
+
+  if (!recipientEmail || !isValidEmail(recipientEmail)) {
+    return c.json({ error: 'Valid recipient email is required' }, 422);
+  }
+
+  // Graceful fallback: if Resend is not configured, acknowledge without sending
+  if (!c.env.RESEND_API_KEY) {
+    return c.json({ success: true, source: 'no-op', reason: 'RESEND_API_KEY not configured' });
+  }
+
+  const html = `
+    <div style="font-family:Georgia,serif;max-width:600px;margin:0 auto;background:#1a1210;color:#f0ebe4;padding:40px 32px;border-radius:12px">
+      <h2 style="color:#F27D26;font-size:22px;margin-bottom:8px">You have received a gift.</h2>
+      <p style="margin:0 0 16px"><strong>${sanitizeInput(senderName)}</strong> has shared <strong>${sanitizeInput(giftedItem)}</strong> with you through THE CCN DAILY.</p>
+      ${personalMsg ? `<blockquote style="border-left:3px solid #F27D26;padding-left:16px;margin:20px 0;font-style:italic;color:#c8b89a">${sanitizeInput(personalMsg)}</blockquote>` : ''}
+      <p>Log in to your account to access your content.</p>
+      <p style="margin-top:32px;font-size:12px;color:#7a6a60">THE CCN DAILY — theccndaily.com</p>
+    </div>`;
+
+  const text = `${senderName} has shared ${giftedItem} with you through THE CCN DAILY.${personalMsg ? '\n\n"' + personalMsg + '"' : ''}\n\nLog in to your account to access your content.`;
+
+  try {
+    const res = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${c.env.RESEND_API_KEY}`,
+      },
+      body: JSON.stringify({
+        from: 'gifts@theccndaily.com',
+        to: [recipientEmail],
+        subject: `You've received a gift: ${giftedItem}`,
+        html,
+        text,
+      }),
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({})) as Record<string, unknown>;
+      return c.json({ success: false, error: String(err.message || 'Email send failed') }, 502);
+    }
+
+    const data = await res.json() as Record<string, unknown>;
+    return c.json({ success: true, messageId: data.id || undefined, source: 'resend' });
+  } catch {
+    return c.json({ success: false, error: 'Email delivery failed' }, 500);
+  }
 });
 
 export const onRequest = (context: any) =>

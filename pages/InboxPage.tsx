@@ -2,12 +2,19 @@ import React from 'react';
 import { motion } from 'motion/react';
 import Card from '../components/Card';
 import { useNotifications } from '../contexts/NotificationContext';
+import { useAuth } from '../contexts/AuthContext';
+import { usePushNotifications } from '../hooks/usePushNotifications';
 import { BellIcon, CheckIcon } from '../components/icons';
 
 const EASE = [0.22, 1, 0.36, 1] as [number, number, number, number];
 
 const InboxPage: React.FC = () => {
   const { notifications, markAsRead, markAllAsRead, unreadCount } = useNotifications();
+  const { user } = useAuth();
+  const { status: pushStatus, loading: pushLoading, enable: enablePush } = usePushNotifications({
+    uid: user?.uid ?? null,
+    autoRefresh: true,
+  });
 
   return (
     <div className="max-w-4xl mx-auto pb-20">
@@ -34,6 +41,42 @@ const InboxPage: React.FC = () => {
           </button>
         )}
       </motion.div>
+
+      {/* ── Push notification opt-in ───────────────────────────────── */}
+      {pushStatus !== 'unsupported' && pushStatus !== 'denied' && (
+        <motion.div
+          className="mb-6 rounded-xl border border-brand-border bg-brand-secondary p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, ease: EASE, delay: 0.1 }}
+        >
+          <div className="flex items-start gap-3">
+            <BellIcon className="w-5 h-5 text-brand-accent mt-0.5 flex-shrink-0" />
+            <div>
+              <p className="text-sm font-bold text-brand-text-primary mb-0.5">Device Notifications</p>
+              <p className="text-xs text-brand-text-secondary leading-snug">
+                {pushStatus === 'granted'
+                  ? 'Push notifications are active on this device.'
+                  : 'Receive daily devotionals and ministry updates even when the app is closed.'}
+              </p>
+            </div>
+          </div>
+          {pushStatus !== 'granted' && (
+            <button
+              onClick={enablePush}
+              disabled={pushLoading}
+              className="flex-shrink-0 px-5 py-2 rounded-full bg-brand-accent text-white text-sm font-bold disabled:opacity-50 transition-opacity"
+            >
+              {pushLoading ? 'Enabling…' : 'Enable'}
+            </button>
+          )}
+          {pushStatus === 'granted' && (
+            <span className="flex-shrink-0 text-xs font-bold text-brand-accent px-3 py-1 rounded-full border border-brand-accent/40">
+              ✓ Active
+            </span>
+          )}
+        </motion.div>
+      )}
 
       <Card className="p-0 overflow-hidden">
         {notifications.length === 0 ? (
