@@ -477,31 +477,6 @@ const DonationPage: React.FC = () => {
                 : `Give $${effectiveAmount} →`}
             </button>
 
-            {/* External links */}
-            <p
-              className="text-center text-xs text-brand-text-secondary"
-              style={{ fontFamily: 'var(--sans-ui)' }}
-            >
-              Also give via:{' '}
-              <a
-                href="https://theccndaily.gumroad.com/l/nytfjo"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-brand-accent hover:underline"
-              >
-                Gumroad ↗
-              </a>
-              {' · '}
-              <a
-                href="https://theccndaily.com/give"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-brand-accent hover:underline"
-              >
-                theccndaily.com/give ↗
-              </a>
-            </p>
-
             {/* Share link */}
             <div className="text-center pt-2">
               <button
