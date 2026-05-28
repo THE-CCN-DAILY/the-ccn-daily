@@ -52,21 +52,29 @@ const features = [
     icon: BookOpen,
     label: 'Bible & devotional reading',
     text: 'Start with Scripture, then move into a guided reflection that respects your working life — not a performance, just presence.',
+    to: '/app/guided-journey',
+    cta: "Open today's devotional",
   },
   {
     icon: Headphones,
     label: 'Podcast & audio formation',
     text: 'Listen while commuting, walking, or closing the day. Formation shouldn\'t require a desk.',
+    to: '/app/podcasts',
+    cta: 'Browse episodes',
   },
   {
     icon: NotebookPen,
     label: 'Private journaling',
     text: 'Capture prayers, convictions, and decisions without turning devotion into another noisy feed. Your words stay yours.',
+    to: '/app/journaling',
+    cta: 'Start journaling',
   },
   {
     icon: Users,
     label: 'Community & leadership',
     text: 'Support families, small groups, testimonies, and prayer rooms. Built for leaders who carry others.',
+    to: '/app/the-community',
+    cta: 'Join the community',
   },
 ];
 
@@ -94,13 +102,13 @@ const channels = [
 const stats = [
   { icon: Globe, value: '40+', label: 'Countries' },
   { icon: Flame, value: 'Daily', label: 'New devotionals' },
-  { icon: Clock, value: 'Your pace', label: 'Morning rhythm' },
+  { icon: Clock, value: 'Your pace', label: 'Your rhythm' },
 ];
 
 const todayItems = [
   [BookOpen, 'Scripture & guided devotional'],
   [NotebookPen, 'Journal response prompt'],
-  [Headphones, 'Audio reflection (8 min)'],
+  [Headphones, 'Audio devotional'],
   [Users, 'Community prayer wall'],
 ];
 
@@ -113,7 +121,7 @@ const appFeatures = [
   {
     icon: BookOpen,
     title: 'Daily Devotionals',
-    description: 'Scripture-anchored, written and audio. Arrive every morning without fail.',
+    description: 'Scripture-anchored, written and audio. Arrive daily — without fail.',
   },
   {
     icon: BookOpenCheck,
@@ -163,23 +171,19 @@ const testimonials = [
 const bookQuotes = [
   {
     quote: 'Prayer is not preparation for the battle. Prayer is the battle.',
-    book: 'PrayerCraft',
-    subtitle: 'A Complete Guide to a Life of Prayer',
+    scripture: 'Ephesians 6:18',
   },
   {
     quote: 'Hearing God is not a privilege reserved for the spiritual elite. It is the inheritance of every child of the Father.',
-    book: "Discerning God's Whisper",
-    subtitle: 'A Field Manual for Hearing God in the 21st Century',
+    scripture: 'John 10:27',
   },
   {
     quote: 'God meets you where your faith and your daily life feel most sharply divided.',
-    book: 'The Passion Path',
-    subtitle: 'How Holy Week Shapes Every Week',
+    scripture: 'Isaiah 41:10',
   },
   {
     quote: 'Spiritual health is the daily habit of making the right choice when no one is looking.',
-    book: 'The Spiritual Health Solution',
-    subtitle: '',
+    scripture: 'Proverbs 4:23',
   },
 ];
 
@@ -621,7 +625,7 @@ const LandingPage: React.FC = () => {
             animate={featuresInView ? 'visible' : 'hidden'}
             className="grid gap-px border border-brand-border bg-brand-border md:grid-cols-2"
           >
-            {features.map(({ icon: Icon, label, text }) => (
+            {features.map(({ icon: Icon, label, text, to, cta }) => (
               <motion.article
                 key={label}
                 variants={fadeUp}
@@ -633,6 +637,12 @@ const LandingPage: React.FC = () => {
                 </div>
                 <h3 className="font-display text-base font-bold">{label}</h3>
                 <p className="mt-3 text-sm leading-7 text-brand-text-secondary">{text}</p>
+                <Link
+                  to={to}
+                  className="mt-4 inline-flex items-center gap-1 text-xs font-semibold text-brand-accent opacity-0 transition-opacity group-hover:opacity-100"
+                >
+                  {cta} <ArrowRight className="h-3 w-3" />
+                </Link>
               </motion.article>
             ))}
           </motion.div>
@@ -658,18 +668,25 @@ const LandingPage: React.FC = () => {
                 viewport={{ once: true }}
                 transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
               >
-                <div className="relative">
+                <div className="relative overflow-hidden rounded-2xl aspect-[3/4] max-h-[560px]">
                   <img
                     src="/pr-eryeza.jpg"
-                    alt="Pastor Eryeza Kalalu"
-                    className="w-full rounded-2xl object-cover aspect-[3/4] max-h-[560px]"
-                    style={{
-                      boxShadow: '0 8px 48px rgba(242,125,38,0.18), 0 2px 12px rgba(0,0,0,0.40)',
-                    }}
+                    alt="Eliezer Kalalu"
+                    className="w-full h-full object-cover object-top"
                   />
-                  <p className="mt-4 text-center text-xs text-brand-text-secondary tracking-wide">
-                    Pastor Eryeza Kalalu — Kampala, Uganda
-                  </p>
+                  {/* dark editorial gradient overlay */}
+                  <div
+                    className="absolute inset-0"
+                    style={{
+                      background: 'linear-gradient(to top, rgba(13,11,9,0.92) 0%, rgba(13,11,9,0.50) 40%, rgba(13,11,9,0.10) 70%, transparent 100%)',
+                    }}
+                    aria-hidden
+                  />
+                  {/* Name & title pinned to bottom */}
+                  <div className="absolute bottom-0 inset-x-0 p-7">
+                    <p className="text-white font-display text-xl font-bold leading-tight">Eliezer Kalalu</p>
+                    <p className="text-brand-accent text-xs font-semibold uppercase tracking-widest mt-1">Pastor, Author &amp; Founder</p>
+                  </div>
                 </div>
               </motion.div>
 
@@ -702,7 +719,7 @@ const LandingPage: React.FC = () => {
                     "Every morning, without fail. That was the commitment from day one."
                   </p>
                   <cite className="not-italic text-xs font-semibold uppercase tracking-widest text-brand-text-secondary">
-                    — Pastor Eryeza Kalalu
+                    — Eliezer Kalalu
                   </cite>
                 </blockquote>
               </motion.div>
@@ -826,17 +843,17 @@ const LandingPage: React.FC = () => {
           <div className="mx-auto max-w-6xl">
             <Reveal className="mb-14 text-center">
               <p className="text-xs font-bold uppercase tracking-widest text-brand-accent mb-4">
-                From the Author
+                From the Founder
               </p>
               <h2 className="font-display text-3xl font-bold leading-tight text-brand-text-primary md:text-4xl max-w-2xl mx-auto">
-                Words written to meet you where you are.
+                Faithful words to meet you where you are.
               </h2>
             </Reveal>
 
             <div className="grid gap-6 md:grid-cols-2">
-              {bookQuotes.map(({ quote, book, subtitle }, i) => (
+              {bookQuotes.map(({ quote, scripture }, i) => (
                 <motion.blockquote
-                  key={book}
+                  key={scripture}
                   initial={{ opacity: 0, y: 24 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
@@ -854,13 +871,10 @@ const LandingPage: React.FC = () => {
                   </p>
                   <footer>
                     <p className="text-xs font-bold uppercase tracking-widest text-brand-accent">
-                      {book}
+                      {scripture}
                     </p>
-                    {subtitle && (
-                      <p className="text-xs text-brand-text-secondary mt-0.5">{subtitle}</p>
-                    )}
                     <p className="text-xs text-brand-text-secondary mt-1">
-                      — Pastor Eryeza Kalalu
+                      — Eliezer Kalalu
                     </p>
                   </footer>
                 </motion.blockquote>
@@ -1017,14 +1031,14 @@ const LandingPage: React.FC = () => {
                 className="font-display text-4xl font-bold leading-tight md:text-5xl lg:text-6xl"
                 style={{ color: cta.headingColor }}
               >
-                New mercies.<br className="hidden sm:block" /> Every morning.
+                New mercies.<br className="hidden sm:block" /> Every day.
               </h2>
               <p
                 className="mx-auto mt-6 max-w-xl text-lg leading-relaxed"
                 style={{ color: cta.bodyColor }}
               >
-                No noise. No performance. Just a quiet moment with God before the day begins.
-                Start free — upgrade when you're ready.
+                Scripture-anchored. Distraction-free. A space to meet God before the world makes its demands.
+                Start free — go deeper when you're ready.
               </p>
               <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
                 <motion.div
@@ -1035,7 +1049,7 @@ const LandingPage: React.FC = () => {
                     to="/app/guided-journey"
                     className="group flex items-center gap-2 bg-brand-accent px-8 py-4 text-sm font-semibold text-white transition-all hover:opacity-90 hover:shadow-[0_0_40px_rgba(242,125,38,0.5)]"
                   >
-                    Start your morning rhythm
+                    Begin your daily formation
                     <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
                   </Link>
                 </motion.div>

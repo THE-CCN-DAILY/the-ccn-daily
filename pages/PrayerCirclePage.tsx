@@ -396,8 +396,7 @@ const PrayerCirclePage: React.FC = () => {
       >
         <p className="mb-2 text-xs font-bold uppercase tracking-widest text-primary-brand">Pray</p>
         <h1
-          className="mb-2 text-4xl font-black text-on-surface"
-          style={{ fontFamily: 'var(--font-display)' }}
+          className="mb-2 text-4xl font-black text-on-surface font-display"
         >
           Prayer Circle
         </h1>
@@ -518,7 +517,7 @@ const PrayerCirclePage: React.FC = () => {
         animate={{ opacity: 1 }}
         transition={{ delay: 0.2 }}
       >
-        <p className="font-body text-sm italic text-on-surface/60">
+        <p className="font-serif text-sm italic text-on-surface/60">
           "Therefore confess your sins to each other and pray for each other so that you may be healed.
           The prayer of a righteous person is powerful and effective."
         </p>

@@ -196,7 +196,7 @@ const DonationPage: React.FC = () => {
     customizations: {
       title: 'Stewards of Hope — THE CCN DAILY',
       description: `${giftType === 'monthly' ? 'Monthly' : 'One-time'} gift of $${effectiveAmount}`,
-      logo: 'https://theccndaily.com/logo.png',
+      logo: 'https://theccndaily.com/brand/the-ccn-daily-app-icon-concept-1024.png',
     },
   };
 
