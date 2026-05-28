@@ -341,7 +341,7 @@ const CTA_COLORS = {
 } as const;
 
 const LandingPage: React.FC = () => {
-  const { user, signIn } = useAuth();
+  const { user, openSignIn } = useAuth();
   const { theme } = useTheme();
   const featuresRef = useRef(null);
   const featuresInView = useInView(featuresRef, { once: true, margin: '-60px 0px' });
@@ -395,7 +395,7 @@ const LandingPage: React.FC = () => {
             </Link>
           ) : (
             <button
-              onClick={signIn}
+              onClick={openSignIn}
               className="flex items-center gap-2 border border-brand-border px-4 py-2 text-sm font-semibold text-brand-text-primary transition-colors hover:bg-brand-dark"
             >
               Sign in <ArrowRight className="h-3.5 w-3.5" />

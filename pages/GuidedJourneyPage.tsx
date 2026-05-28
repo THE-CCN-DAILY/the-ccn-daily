@@ -12,6 +12,8 @@ import ScriptureStudyCompanion from '../components/ScriptureStudyCompanion';
 import { getScriptureSnippet } from '../services/bibleService';
 import { getTodayDevotional } from '../services/contentService';
 import { useAudioPlayer } from '../contexts/AudioPlayerContext';
+import { useAuth } from '../contexts/AuthContext';
+import { usePrayerCircle } from '../hooks/usePrayerCircle';
 import ReactMarkdown from 'react-markdown';
 
 interface Devotional {
@@ -91,7 +93,7 @@ const FURTHER_STUDY_TEXTS: Record<string, string> = {
     '2 Timothy 1:7': 'For the Spirit God gave us does not make us timid, but gives us power, love and self-discipline.',
 };
 
-const StepContent: React.FC<{ stepIndex: number; onComplete: () => void; devotional: Devotional | null; onOpenVoice: (ctx: string) => void }> = ({ stepIndex, onComplete, devotional, onOpenVoice }) => {
+const StepContent: React.FC<{ stepIndex: number; onComplete: () => void; devotional: Devotional | null; onOpenVoice: (ctx: string) => void; prayerPeople?: Array<{ id: string; name: string; prayerPoints: string[]; }> }> = ({ stepIndex, onComplete, devotional, onOpenVoice, prayerPeople = [] }) => {
     const [isPrayerComplete, setIsPrayerComplete] = useState(false);
     const [activeSnippet, setActiveSnippet] = useState<string | null>(null);
     const [journalText, setJournalText] = useState('');
@@ -225,6 +227,33 @@ const StepContent: React.FC<{ stepIndex: number; onComplete: () => void; devotio
                 return (
                     <div>
                         <p style={{ fontFamily: 'var(--sans-ui, "Inter Tight", -apple-system, sans-serif)', fontSize: '12px', fontWeight: 700, letterSpacing: '0.10em', textTransform: 'uppercase', color: 'var(--crimson, #8E1B1B)', marginBottom: '0.5rem' }}>Step 4</p>
+                        {prayerPeople.length > 0 && (
+                            <motion.div
+                                className="mb-6 rounded-xl border border-brand-accent/20 bg-brand-accent/5 p-4"
+                                initial={{ opacity: 0, y: 8 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.1 }}
+                            >
+                                <p style={{ fontFamily: 'var(--sans-ui)', fontSize: '11px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--crimson, #8E1B1B)', marginBottom: '0.75rem' }}>
+                                    Praying for today
+                                </p>
+                                <div className="space-y-3">
+                                    {prayerPeople.map((person) => (
+                                        <div key={person.id} className="flex items-start gap-3">
+                                            <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-brand-accent/20 text-sm font-bold text-brand-accent">
+                                                {person.name.charAt(0).toUpperCase()}
+                                            </div>
+                                            <div>
+                                                <p className="text-sm font-semibold text-brand-text-primary">{person.name}</p>
+                                                {person.prayerPoints.slice(0, 2).map((pt, i) => (
+                                                    <p key={i} className="text-xs text-brand-text-secondary">· {pt}</p>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </motion.div>
+                        )}
                         <h2 style={{ fontFamily: 'var(--serif-display, "Cormorant Garamond", "Didot", Georgia, serif)', fontWeight: 600, fontSize: '1.75rem', lineHeight: 1.2, color: 'var(--fg-1, #2A1C15)', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                             <SoundWaveIcon className="w-8 h-8 text-brand-accent animate-pulse"/>
                             Guided Prayer Sanctuary
@@ -352,6 +381,8 @@ const GuidedJourneyPage: React.FC = () => {
     const [devotional, setDevotional] = useState<Devotional | null>(null);
     const [voiceDrawerOpen, setVoiceDrawerOpen] = useState(false);
     const [voiceStepContext, setVoiceStepContext] = useState('');
+    const { user } = useAuth();
+    const { todaysPeople } = usePrayerCircle(user?.uid);
 
     useEffect(() => {
         const fetchTodayDevotional = async () => {
@@ -457,6 +488,7 @@ const GuidedJourneyPage: React.FC = () => {
                             stepIndex={currentStep}
                             onComplete={handleNextStep}
                             devotional={devotional}
+                            prayerPeople={todaysPeople}
                             onOpenVoice={(ctx) => {
                                 setVoiceStepContext(ctx);
                                 setVoiceDrawerOpen(true);
