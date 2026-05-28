@@ -25,3 +25,6 @@ artifacts/browser-profiles
 *.njsproj
 *.sln
 *.sw?
+
+# Firebase local config — contains plaintext API key, never commit
+firebase-applet-config.json

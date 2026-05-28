@@ -8,7 +8,8 @@
 import _sodium from 'libsodium-wrappers';
 
 // Repo public key (from data-public-key on the GitHub secrets form)
-const PUBLIC_KEY_B64 = 'BtyMp7UWJ8drdTVac7b7ApQvFE6qTRlKMQffa7CyMVs=';
+// Updated for preryezak/the-ccn-daily repo
+const PUBLIC_KEY_B64 = 'HcmhJT/uI62XpW/jD7wf4jfWYCTRDj7mxJ57kt7PpSk=';
 const KEY_ID = '3380204578043523366';
 
 // Secrets to encrypt — name → plaintext value
