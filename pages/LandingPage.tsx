@@ -678,15 +678,10 @@ const LandingPage: React.FC = () => {
                   <div
                     className="absolute inset-0"
                     style={{
-                      background: 'linear-gradient(to top, rgba(13,11,9,0.92) 0%, rgba(13,11,9,0.50) 40%, rgba(13,11,9,0.10) 70%, transparent 100%)',
+                      background: 'linear-gradient(to top, rgba(13,11,9,0.75) 0%, rgba(13,11,9,0.30) 40%, transparent 70%)',
                     }}
                     aria-hidden
                   />
-                  {/* Name & title pinned to bottom */}
-                  <div className="absolute bottom-0 inset-x-0 p-7">
-                    <p className="text-white font-display text-xl font-bold leading-tight">Eryeza Kalalu</p>
-                    <p className="text-brand-accent text-xs font-semibold uppercase tracking-widest mt-1">Pastor, Author &amp; Founder</p>
-                  </div>
                 </div>
               </motion.div>
 
@@ -698,32 +693,25 @@ const LandingPage: React.FC = () => {
                 viewport={{ once: true }}
                 transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
               >
-                <h2 className="font-display text-3xl font-bold leading-tight text-brand-text-primary md:text-4xl mb-8">
-                  Welcome. We are glad you are here.
-                </h2>
                 <div className="space-y-5 text-base leading-[1.9] text-brand-text-secondary font-serif">
                   <p>
-                    This app was built for one purpose — to help you slow down, hear God's Word,
-                    and carry it into the ordinary places of your day. What started in 2017 as
+                    This app was built to be a space where you slow down, hear God's Word, and
+                    carry it into the ordinary places of your day. What started in 2017 as
                     Bible-based encouragement sent to a small group of friends has grown into a
                     daily home for believers who want to walk closely with God, think biblically,
                     and live faithfully wherever He has placed them.
                   </p>
                   <p>
                     Inside, you will find devotionals rooted in Scripture, prayer prompts, guided
-                    reflections, and resources that take your faith seriously — not just on Sundays,
-                    but every day of the week.
+                    reflections, and resources that enrich your faith every day.
                   </p>
                   <p>
                     God is near. His Word is alive. And your daily walk with Him matters more than
                     you know.
                   </p>
                 </div>
-                <p className="mt-8 font-serif italic text-brand-text-primary text-base">
-                  Welcome to the journey.
-                </p>
-                <p className="mt-3 text-xs font-semibold uppercase tracking-widest text-brand-accent">
-                  — Eryeza Kalalu
+                <p className="mt-8 text-xs font-semibold uppercase tracking-widest text-brand-accent">
+                  Eryeza Kalalu
                 </p>
               </motion.div>
 
