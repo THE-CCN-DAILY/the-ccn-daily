@@ -84,7 +84,7 @@ const EventsPage: React.FC = () => {
         <h1 className="text-4xl text-brand-text-primary mb-2" style={{ fontFamily: 'var(--serif-display, var(--font-display))', fontWeight: 600, lineHeight: 1.2 }}>
           Live Events
         </h1>
-        <p style={{ fontFamily: 'var(--serif-body)', fontSize: '18px', lineHeight: 1.65, color: 'var(--fg-2, #5B4A3C)' }}>Gatherings, conferences, and encounters — join the body in real time.</p>
+        <p style={{ fontFamily: 'var(--serif-body)', fontSize: '18px', lineHeight: 1.65, color: 'var(--fg-2, #5B4A3C)' }}>Gatherings, services, and moments happening now and ahead.</p>
       </motion.div>
 
       {error && (

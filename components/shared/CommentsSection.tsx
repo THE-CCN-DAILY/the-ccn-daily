@@ -11,7 +11,7 @@ interface CommentsSectionProps {
 
 const mockComments: Comment[] = [
     { id: '1', author: 'Sarah K.', avatar: 'https://picsum.photos/seed/sarah/100', text: 'This was so timely. The distinction between holy and worldly ambition is something I\'ve been wrestling with. Thank you for the clarity!', timestamp: '2 hours ago' },
-    { id: '2', author: 'John D.', avatar: 'https://picsum.photos/seed/john/100', text: 'The Nehemiah example really hit home for me. It\'s about rebuilding what matters to God, not just building a career. Powerful message.', timestamp: '5 hours ago' },
+    { id: '2', author: 'John D.', avatar: 'https://picsum.photos/seed/john/100', text: 'The Nehemiah example really hit home for me. It\'s about rebuilding what matters to God, not just building a career. This spoke right to me.', timestamp: '5 hours ago' },
     { id: '3', author: 'Anonymous', avatar: '', text: 'I needed to hear this today. "Your current season is a training ground" - that line is going to stick with me all week.', timestamp: '1 day ago' },
 ];
 

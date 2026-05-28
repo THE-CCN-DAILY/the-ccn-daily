@@ -104,9 +104,9 @@ const JournalingPage: React.FC = () => {
         >
           <p style={{ fontFamily: 'var(--sans-ui)', fontSize: '12px', fontWeight: 700, letterSpacing: '0.10em', textTransform: 'uppercase', color: '#8E1B1B' }} className="mb-2">Pray</p>
           <h1 className="text-4xl font-black text-brand-text-primary mb-2" style={{ fontFamily: 'var(--serif-display, var(--font-display))', fontWeight: 600, lineHeight: 1.2 }}>
-            Journaling
+            Your Journal
           </h1>
-          <p style={{ fontFamily: 'var(--serif-body)', fontSize: '18px', lineHeight: 1.65, color: 'var(--fg-2, #5B4A3C)' }}>Write what God is speaking to you. Your private sanctuary of reflection.</p>
+          <p style={{ fontFamily: 'var(--serif-body)', fontSize: '18px', lineHeight: 1.65, color: 'var(--fg-2, #5B4A3C)' }}>A private space to write, reflect, and listen.</p>
         </motion.div>
         <AnimatePresence>
           {!isWriting && (

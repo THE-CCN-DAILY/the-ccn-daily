@@ -114,7 +114,7 @@ const GivingPage: React.FC = () => {
         <h1 className="text-4xl text-brand-text-primary mb-2" style={{ fontFamily: 'var(--serif-display, var(--font-display))', fontWeight: 600, lineHeight: 1.2 }}>
           Giving &amp; Support
         </h1>
-        <p style={{ fontFamily: 'var(--serif-body)', fontSize: '18px', lineHeight: 1.65, color: 'var(--fg-2, #5B4A3C)' }}>Your generosity fuels the mission. Every gift builds something eternal.</p>
+        <p style={{ fontFamily: 'var(--serif-body)', fontSize: '18px', lineHeight: 1.65, color: 'var(--fg-2, #5B4A3C)' }}>Support the mission. Every gift builds what God is doing here.</p>
       </motion.div>
 
       <motion.div

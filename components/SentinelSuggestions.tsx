@@ -27,7 +27,7 @@ const suggestions: Suggestion[] = [
     {
         id: 's2',
         title: 'Virtual Expert Council',
-        description: 'A dedicated team of AI personas representing Mental Health Professionals, Biblical Scholars, and Spiritual Mentors to provide multi-perspective guidance.',
+        description: 'A dedicated team of AI personas — counsellors, Biblical scholars, and spiritual mentors — speaking into your situation from different angles.',
         icon: TeamIcon,
         iconName: 'TeamIcon',
         benefit: 'Provides holistic care (Mind, Body, Spirit) in one interface.',

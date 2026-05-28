@@ -466,6 +466,12 @@ const GuidedJourneyPage: React.FC = () => {
                 </AnimatePresence>
             </div>
 
+            <VoiceCompanionDrawer
+                isOpen={voiceDrawerOpen}
+                onClose={() => setVoiceDrawerOpen(false)}
+                stepContext={voiceStepContext}
+            />
+
         </div>
     );
 };

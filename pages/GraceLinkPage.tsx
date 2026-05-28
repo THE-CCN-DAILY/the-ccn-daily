@@ -20,7 +20,7 @@ const mockGiftableItems: GiftableItem[] = [
         id: 'dev1',
         type: 'devotional',
         title: 'Faith in the Fire (Substack)',
-        description: 'A powerful daily devotional about maintaining peace during trials.',
+        description: 'A daily devotional on holding peace during trials — anchored in Scripture.',
         icon: ReaderIcon,
         isPremium: false,
     },
@@ -146,7 +146,7 @@ const GraceLinkPage: React.FC = () => {
               <h1 className="text-4xl font-black text-brand-text-primary mb-2" style={{ fontFamily: 'var(--font-display)' }}>
                 Grace Links
               </h1>
-              <p className="text-brand-text-secondary">Send the gift of faith. Share access to content that transforms.</p>
+              <p className="text-brand-text-secondary">Share digital gifts of faith — devotionals, songs, and Scripture — with someone who needs them.</p>
             </motion.div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
