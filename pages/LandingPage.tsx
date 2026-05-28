@@ -693,6 +693,9 @@ const LandingPage: React.FC = () => {
                 viewport={{ once: true }}
                 transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
               >
+                <h2 className="font-display text-3xl font-bold leading-tight text-brand-text-primary md:text-4xl mb-8">
+                  Welcome. We are glad you are here.
+                </h2>
                 <div className="space-y-5 text-base leading-[1.9] text-brand-text-secondary font-serif">
                   <p>
                     This app was built to be a space where you slow down, hear God's Word, and
@@ -710,8 +713,11 @@ const LandingPage: React.FC = () => {
                     you know.
                   </p>
                 </div>
-                <p className="mt-8 text-xs font-semibold uppercase tracking-widest text-brand-accent">
-                  Eryeza Kalalu
+                <p className="mt-8 font-serif italic text-brand-text-primary text-base">
+                  Welcome to the journey.
+                </p>
+                <p className="mt-3 text-xs font-semibold uppercase tracking-widest text-brand-accent">
+                  — Eryeza Kalalu
                 </p>
               </motion.div>
 

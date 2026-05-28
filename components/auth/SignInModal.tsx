@@ -58,7 +58,6 @@ const SignInModal: React.FC = () => {
     e.preventDefault();
     setError('');
     setIsSubmitting(true);
-
     try {
       if (emailMode === 'signup') {
         if (password !== confirmPassword) {
@@ -70,9 +69,18 @@ const SignInModal: React.FC = () => {
       } else {
         await signInEmail(email, password);
       }
-      // Modal auto-closes via onAuthStateChanged → closeSignIn()
-    } catch (err: any) {
-      setError(err.message ?? 'Something went wrong. Please try again.');
+      handleClose();
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Something went wrong.';
+      setError(
+        msg.includes('user-not-found') || msg.includes('wrong-password') || msg.includes('invalid-credential')
+          ? 'Invalid email or password.'
+          : msg.includes('email-already-in-use')
+          ? 'An account with this email already exists.'
+          : msg.includes('weak-password')
+          ? 'Password must be at least 6 characters.'
+          : 'Something went wrong. Please try again.',
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -86,13 +94,16 @@ const SignInModal: React.FC = () => {
 
   if (!showSignIn) return null;
 
+  const inputClass =
+    'w-full rounded-lg border border-brand-border bg-brand-secondary px-4 py-3 text-sm text-brand-text-primary outline-none transition-colors placeholder:text-brand-text-secondary/50 focus:border-brand-accent/70';
+
   return (
     <AnimatePresence>
       {showSignIn && (
         <>
           {/* Backdrop */}
           <motion.div
-            className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm"
+            className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -101,23 +112,26 @@ const SignInModal: React.FC = () => {
 
           {/* Modal */}
           <motion.div
-            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            className="fixed inset-0 z-50 flex items-end justify-center sm:items-center p-0 sm:p-4"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
             <motion.div
-              className="relative w-full max-w-md rounded-2xl border border-on-surface/12 bg-surface shadow-2xl overflow-hidden"
-              initial={{ opacity: 0, y: 20, scale: 0.97 }}
+              className="relative w-full max-w-md overflow-hidden border border-brand-border bg-brand-dark shadow-2xl sm:rounded-2xl"
+              initial={{ opacity: 0, y: 40, scale: 0.97 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 10, scale: 0.98 }}
-              transition={{ duration: 0.35, ease }}
+              exit={{ opacity: 0, y: 20, scale: 0.98 }}
+              transition={{ duration: 0.38, ease }}
               onClick={(e) => e.stopPropagation()}
             >
+              {/* Top accent bar */}
+              <div className="h-0.5 w-full bg-brand-accent" />
+
               {/* Close button */}
               <button
                 onClick={handleClose}
-                className="absolute right-4 top-4 z-10 flex h-8 w-8 items-center justify-center rounded-full text-on-surface/40 transition-colors hover:bg-surface-high hover:text-on-surface"
+                className="absolute right-4 top-4 z-10 flex h-8 w-8 items-center justify-center rounded-full text-brand-text-secondary transition-colors hover:bg-brand-secondary hover:text-brand-text-primary"
                 aria-label="Close"
               >
                 <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -125,33 +139,43 @@ const SignInModal: React.FC = () => {
                 </svg>
               </button>
 
-              <div className="p-8">
-                {/* Logo */}
-                <div className="mb-6 flex flex-col items-center">
+              <div className="px-8 py-8 pb-10">
+                {/* Logo + brand */}
+                <div className="mb-7 flex flex-col items-center">
                   <img
-                    src="/brand/flame.svg"
+                    src="/brand/flame-color.png"
                     alt="THE CCN DAILY"
-                    className="mb-3 h-10 w-10 object-contain"
+                    className="mb-3 h-12 w-12 object-contain"
+                    onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
                   />
-                  <p className="text-[11px] font-display uppercase tracking-[0.18em] text-primary-brand">
+                  <p className="text-[10px] font-display font-bold uppercase tracking-[0.22em] text-brand-accent">
                     THE CCN DAILY
                   </p>
-                  <h2 className="mt-2 font-display text-2xl font-semibold text-on-surface">
-                    {emailMode === 'reset' ? 'Reset your password' : emailMode === 'signup' ? 'Create an account' : 'Sign in'}
+                  <h2 className="mt-2 font-display text-2xl font-bold text-brand-text-primary">
+                    {emailMode === 'reset'
+                      ? 'Reset password'
+                      : emailMode === 'signup'
+                      ? 'Create account'
+                      : 'Sign in'}
                   </h2>
+                  {emailMode === 'signin' && (
+                    <p className="mt-1 text-xs text-brand-text-secondary text-center">
+                      Sign in once — your profile is created automatically.
+                    </p>
+                  )}
                 </div>
 
                 {emailMode !== 'reset' && (
                   <>
                     {/* Tab switcher */}
-                    <div className="mb-6 flex gap-1 rounded-xl bg-surface-high p-1">
+                    <div className="mb-6 flex gap-1 rounded-lg bg-brand-secondary p-1">
                       <button
                         type="button"
                         onClick={() => { setActiveTab('email'); setError(''); }}
-                        className={`flex-1 rounded-lg py-2.5 text-sm font-display font-semibold transition-colors ${
+                        className={`flex-1 rounded-md py-2 text-sm font-display font-semibold transition-colors ${
                           activeTab === 'email'
-                            ? 'bg-surface text-on-surface shadow-sm'
-                            : 'text-on-surface/50 hover:text-on-surface'
+                            ? 'bg-brand-dark text-brand-text-primary shadow-sm'
+                            : 'text-brand-text-secondary hover:text-brand-text-primary'
                         }`}
                       >
                         Email
@@ -159,10 +183,10 @@ const SignInModal: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => { setActiveTab('google'); setError(''); }}
-                        className={`flex-1 rounded-lg py-2.5 text-sm font-display font-semibold transition-colors ${
+                        className={`flex-1 rounded-md py-2 text-sm font-display font-semibold transition-colors ${
                           activeTab === 'google'
-                            ? 'bg-surface text-on-surface shadow-sm'
-                            : 'text-on-surface/50 hover:text-on-surface'
+                            ? 'bg-brand-dark text-brand-text-primary shadow-sm'
+                            : 'text-brand-text-secondary hover:text-brand-text-primary'
                         }`}
                       >
                         Google
@@ -175,19 +199,19 @@ const SignInModal: React.FC = () => {
                           type="button"
                           onClick={handleGoogleSignIn}
                           disabled={loading}
-                          className="flex w-full items-center justify-center gap-3 rounded-xl border border-on-surface/15 bg-surface py-3.5 font-display text-sm font-semibold text-on-surface transition-all hover:bg-surface-high disabled:opacity-60"
+                          className="flex w-full items-center justify-center gap-3 rounded-lg border border-brand-border bg-brand-secondary py-3.5 font-display text-sm font-semibold text-brand-text-primary transition-all hover:border-brand-accent/40 hover:bg-brand-dark disabled:opacity-60"
                         >
                           <GoogleIcon className="h-5 w-5" />
                           Continue with Google
                         </button>
-                        <p className="text-center text-xs text-on-surface/40 font-display">
+                        <p className="text-center text-xs text-brand-text-secondary">
                           Your Google account is used only for sign-in.
                         </p>
                       </div>
                     )}
 
                     {activeTab === 'email' && (
-                      <form onSubmit={handleEmailSubmit} className="space-y-4">
+                      <form onSubmit={handleEmailSubmit} className="space-y-3">
                         <input
                           type="email"
                           placeholder="Email address"
@@ -195,7 +219,7 @@ const SignInModal: React.FC = () => {
                           onChange={(e) => setEmail(e.target.value)}
                           required
                           autoFocus
-                          className="w-full rounded-xl border border-on-surface/12 bg-bg px-4 py-3.5 text-sm text-on-surface outline-none transition-colors placeholder:text-on-surface/35 focus:border-primary-brand/60"
+                          className={inputClass}
                         />
                         <input
                           type="password"
@@ -204,7 +228,7 @@ const SignInModal: React.FC = () => {
                           onChange={(e) => setPassword(e.target.value)}
                           required
                           minLength={6}
-                          className="w-full rounded-xl border border-on-surface/12 bg-bg px-4 py-3.5 text-sm text-on-surface outline-none transition-colors placeholder:text-on-surface/35 focus:border-primary-brand/60"
+                          className={inputClass}
                         />
                         {emailMode === 'signup' && (
                           <input
@@ -214,7 +238,7 @@ const SignInModal: React.FC = () => {
                             onChange={(e) => setConfirmPassword(e.target.value)}
                             required
                             minLength={6}
-                            className="w-full rounded-xl border border-on-surface/12 bg-bg px-4 py-3.5 text-sm text-on-surface outline-none transition-colors placeholder:text-on-surface/35 focus:border-primary-brand/60"
+                            className={inputClass}
                           />
                         )}
 
@@ -224,7 +248,7 @@ const SignInModal: React.FC = () => {
                               initial={{ opacity: 0, height: 0 }}
                               animate={{ opacity: 1, height: 'auto' }}
                               exit={{ opacity: 0, height: 0 }}
-                              className="rounded-lg bg-red-500/10 px-3 py-2 text-xs text-red-500"
+                              className="rounded-lg bg-red-500/10 px-3 py-2 text-xs text-red-400"
                             >
                               {error}
                             </motion.p>
@@ -234,26 +258,38 @@ const SignInModal: React.FC = () => {
                         <button
                           type="submit"
                           disabled={isSubmitting || loading}
-                          className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary-brand py-3.5 font-display text-sm font-semibold text-on-primary-brand transition-all hover:bg-primary-brand/90 disabled:opacity-60"
+                          className="flex w-full items-center justify-center gap-2 rounded-lg bg-brand-accent py-3.5 font-display text-sm font-semibold text-white transition-all hover:bg-brand-accent/90 disabled:opacity-60"
                         >
                           {isSubmitting ? (
-                            <div className="h-4 w-4 animate-spin rounded-full border-2 border-on-primary-brand/30 border-t-on-primary-brand" />
+                            <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
                           ) : emailMode === 'signup' ? 'Create account' : 'Sign in'}
                         </button>
 
-                        <div className="flex items-center justify-between text-xs font-display text-on-surface/50">
+                        <div className="flex items-center justify-between pt-1 text-xs font-display text-brand-text-secondary">
                           {emailMode === 'signin' ? (
                             <>
-                              <button type="button" onClick={() => { setEmailMode('signup'); setError(''); }} className="transition-colors hover:text-primary-brand">
+                              <button
+                                type="button"
+                                onClick={() => { setEmailMode('signup'); setError(''); }}
+                                className="transition-colors hover:text-brand-accent"
+                              >
                                 Create account
                               </button>
-                              <button type="button" onClick={() => { setEmailMode('reset'); setError(''); }} className="transition-colors hover:text-primary-brand">
+                              <button
+                                type="button"
+                                onClick={() => { setEmailMode('reset'); setError(''); }}
+                                className="transition-colors hover:text-brand-accent"
+                              >
                                 Forgot password?
                               </button>
                             </>
                           ) : (
-                            <button type="button" onClick={() => { setEmailMode('signin'); setError(''); }} className="transition-colors hover:text-primary-brand">
-                              ← Back to sign in
+                            <button
+                              type="button"
+                              onClick={() => { setEmailMode('signin'); setError(''); }}
+                              className="transition-colors hover:text-brand-accent"
+                            >
+                              Back to sign in
                             </button>
                           )}
                         </div>
@@ -272,21 +308,21 @@ const SignInModal: React.FC = () => {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                           </svg>
                         </div>
-                        <p className="text-sm text-on-surface/70 font-display">
+                        <p className="text-sm text-brand-text-secondary">
                           If an account with that email exists, a reset link has been sent. Check your inbox.
                         </p>
                         <button
                           type="button"
                           onClick={() => { setEmailMode('signin'); setResetSent(false); setActiveTab('email'); }}
-                          className="font-display text-sm text-primary-brand transition-colors hover:text-primary-brand/80"
+                          className="text-sm text-brand-accent transition-colors hover:text-brand-accent/80"
                         >
                           Back to sign in
                         </button>
                       </div>
                     ) : (
                       <form onSubmit={handleReset} className="space-y-4">
-                        <p className="text-sm text-on-surface/60 font-display">
-                          Enter your email and we'll send you a link to reset your password.
+                        <p className="text-sm text-brand-text-secondary">
+                          Enter your email and we will send you a link to reset your password.
                         </p>
                         <input
                           type="email"
@@ -295,20 +331,20 @@ const SignInModal: React.FC = () => {
                           onChange={(e) => setResetEmail(e.target.value)}
                           required
                           autoFocus
-                          className="w-full rounded-xl border border-on-surface/12 bg-bg px-4 py-3.5 text-sm text-on-surface outline-none transition-colors placeholder:text-on-surface/35 focus:border-primary-brand/60"
+                          className={inputClass}
                         />
                         <button
                           type="submit"
-                          className="flex w-full items-center justify-center rounded-xl bg-primary-brand py-3.5 font-display text-sm font-semibold text-on-primary-brand transition-all hover:bg-primary-brand/90"
+                          className="flex w-full items-center justify-center rounded-lg bg-brand-accent py-3.5 font-display text-sm font-semibold text-white transition-all hover:bg-brand-accent/90"
                         >
                           Send reset link
                         </button>
                         <button
                           type="button"
                           onClick={() => { setEmailMode('signin'); setActiveTab('email'); }}
-                          className="block w-full text-center font-display text-xs text-on-surface/50 transition-colors hover:text-primary-brand"
+                          className="block w-full text-center text-xs text-brand-text-secondary transition-colors hover:text-brand-accent"
                         >
-                          ← Back to sign in
+                          Back to sign in
                         </button>
                       </form>
                     )}
