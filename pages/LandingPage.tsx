@@ -168,22 +168,22 @@ const testimonials = [
   },
 ];
 
-const bookQuotes = [
+const formationVerses = [
   {
-    quote: 'Prayer is not preparation for the battle. Prayer is the battle.',
-    scripture: 'Ephesians 6:18',
+    text: 'Your word is a lamp to my feet and a light to my path.',
+    ref: 'Psalm 119:105',
   },
   {
-    quote: 'Hearing God is not a privilege reserved for the spiritual elite. It is the inheritance of every child of the Father.',
-    scripture: 'John 10:27',
+    text: 'The word of God is living and active, sharper than any two-edged sword, piercing to the division of soul and of spirit.',
+    ref: 'Hebrews 4:12',
   },
   {
-    quote: 'God meets you where your faith and your daily life feel most sharply divided.',
-    scripture: 'Isaiah 41:10',
+    text: 'Let the word of Christ dwell in you richly, teaching and admonishing one another in all wisdom.',
+    ref: 'Colossians 3:16',
   },
   {
-    quote: 'Spiritual health is the daily habit of making the right choice when no one is looking.',
-    scripture: 'Proverbs 4:23',
+    text: 'Man shall not live by bread alone, but by every word that comes from the mouth of God.',
+    ref: 'Matthew 4:4',
   },
 ];
 
@@ -671,7 +671,7 @@ const LandingPage: React.FC = () => {
                 <div className="relative overflow-hidden rounded-2xl aspect-[3/4] max-h-[560px]">
                   <img
                     src="/pr-eryeza.jpg"
-                    alt="Eliezer Kalalu"
+                    alt="Eryeza Kalalu"
                     className="w-full h-full object-cover object-top"
                   />
                   {/* dark editorial gradient overlay */}
@@ -684,13 +684,13 @@ const LandingPage: React.FC = () => {
                   />
                   {/* Name & title pinned to bottom */}
                   <div className="absolute bottom-0 inset-x-0 p-7">
-                    <p className="text-white font-display text-xl font-bold leading-tight">Eliezer Kalalu</p>
+                    <p className="text-white font-display text-xl font-bold leading-tight">Eryeza Kalalu</p>
                     <p className="text-brand-accent text-xs font-semibold uppercase tracking-widest mt-1">Pastor, Author &amp; Founder</p>
                   </div>
                 </div>
               </motion.div>
 
-              {/* Text column */}
+              {/* Text column — Welcome message */}
               <motion.div
                 className="order-last lg:order-first"
                 initial={{ opacity: 0, y: 32 }}
@@ -698,30 +698,33 @@ const LandingPage: React.FC = () => {
                 viewport={{ once: true }}
                 transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
               >
-                <p className="text-xs font-bold uppercase tracking-widest text-brand-accent mb-4">
-                  How It Began
-                </p>
-                <h2 className="font-display text-3xl font-bold leading-tight text-brand-text-primary md:text-4xl mb-7">
-                  From an SMS in 2017 to a home for thousands
+                <h2 className="font-display text-3xl font-bold leading-tight text-brand-text-primary md:text-4xl mb-8">
+                  Welcome. We are glad you are here.
                 </h2>
-                <p className="text-base leading-[1.85] text-brand-text-secondary mb-8">
-                  What began as a simple commitment — a devotional sent each morning to a handful
-                  of believers in Uganda — became something none of us planned. The WhatsApp groups
-                  grew. People forwarded the messages. Churches asked to share them. Books were written.
-                  A podcast followed. A newsletter reached thousands. And now, this: one home for every
-                  piece of the ministry, built so you never have to look anywhere else.
-                </p>
-                <blockquote
-                  className="italic text-brand-text-primary text-lg leading-relaxed pl-5"
-                  style={{ borderLeft: '3px solid var(--color-brand-accent, #F27D26)' }}
-                >
-                  <p className="mb-3 font-serif">
-                    "Every morning, without fail. That was the commitment from day one."
+                <div className="space-y-5 text-base leading-[1.9] text-brand-text-secondary font-serif">
+                  <p>
+                    This app was built for one purpose — to help you slow down, hear God's Word,
+                    and carry it into the ordinary places of your day. What started in 2017 as
+                    Bible-based encouragement sent to a small group of friends has grown into a
+                    daily home for believers who want to walk closely with God, think biblically,
+                    and live faithfully wherever He has placed them.
                   </p>
-                  <cite className="not-italic text-xs font-semibold uppercase tracking-widest text-brand-text-secondary">
-                    — Eliezer Kalalu
-                  </cite>
-                </blockquote>
+                  <p>
+                    Inside, you will find devotionals rooted in Scripture, prayer prompts, guided
+                    reflections, and resources that take your faith seriously — not just on Sundays,
+                    but every day of the week.
+                  </p>
+                  <p>
+                    God is near. His Word is alive. And your daily walk with Him matters more than
+                    you know.
+                  </p>
+                </div>
+                <p className="mt-8 font-serif italic text-brand-text-primary text-base">
+                  Welcome to the journey.
+                </p>
+                <p className="mt-3 text-xs font-semibold uppercase tracking-widest text-brand-accent">
+                  — Eryeza Kalalu
+                </p>
               </motion.div>
 
             </div>
@@ -838,46 +841,36 @@ const LandingPage: React.FC = () => {
           </div>
         </section>
 
-        {/* ── From the Books ────────────────────────────────────────────────── */}
+        {/* ── Formation Scriptures ──────────────────────────────────────────── */}
         <section className="bg-brand-secondary border-t border-brand-border py-20 px-6 md:py-28">
           <div className="mx-auto max-w-6xl">
             <Reveal className="mb-14 text-center">
               <p className="text-xs font-bold uppercase tracking-widest text-brand-accent mb-4">
-                From the Founder
+                The Word That Grounds Us
               </p>
               <h2 className="font-display text-3xl font-bold leading-tight text-brand-text-primary md:text-4xl max-w-2xl mx-auto">
-                Faithful words to meet you where you are.
+                Scripture is not decoration. It is the foundation.
               </h2>
             </Reveal>
 
             <div className="grid gap-6 md:grid-cols-2">
-              {bookQuotes.map(({ quote, scripture }, i) => (
-                <motion.blockquote
-                  key={scripture}
+              {formationVerses.map(({ text, ref }, i) => (
+                <motion.div
+                  key={ref}
                   initial={{ opacity: 0, y: 24 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.55, delay: i * 0.09, ease: [0.22, 1, 0.36, 1] }}
                   className="rounded-2xl border border-brand-border bg-brand-dark p-8"
+                  style={{ borderTop: '2px solid var(--color-brand-accent, #F27D26)' }}
                 >
-                  <div
-                    className="font-display text-4xl leading-none text-brand-accent mb-4 select-none"
-                    aria-hidden
-                  >
-                    "
-                  </div>
-                  <p className="font-serif text-lg leading-[1.85] text-brand-text-primary mb-6 italic">
-                    {quote}
+                  <p className="font-serif text-lg leading-[1.9] text-brand-text-primary mb-6 italic">
+                    "{text}"
                   </p>
-                  <footer>
-                    <p className="text-xs font-bold uppercase tracking-widest text-brand-accent">
-                      {scripture}
-                    </p>
-                    <p className="text-xs text-brand-text-secondary mt-1">
-                      — Eliezer Kalalu
-                    </p>
-                  </footer>
-                </motion.blockquote>
+                  <p className="text-xs font-bold uppercase tracking-widest text-brand-accent">
+                    {ref}
+                  </p>
+                </motion.div>
               ))}
             </div>
           </div>
