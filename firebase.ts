@@ -2,6 +2,12 @@ import { initializeApp } from 'firebase/app';
 import { getFirestore, doc, getDocFromServer } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 import { getMessaging, isSupported } from 'firebase/messaging';
+import {
+  getAuth,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  sendPasswordResetEmail,
+} from 'firebase/auth';
 
 // Config is supplied at build time via VITE_ env vars.
 // Never import firebase-applet-config.json — it contains a plaintext API key.
@@ -27,6 +33,16 @@ export const getMessagingInstance = async () => {
   const supported = await isSupported();
   return supported ? getMessaging(app) : null;
 };
+
+// Email/password auth: enable this provider in Firebase Console → Authentication → Sign-in method
+export const signUpWithEmail = (email: string, password: string) =>
+  createUserWithEmailAndPassword(getAuth(), email, password);
+
+export const signInWithEmail = (email: string, password: string) =>
+  signInWithEmailAndPassword(getAuth(), email, password);
+
+export const resetPassword = (email: string) =>
+  sendPasswordResetEmail(getAuth(), email);
 
 export const testFirestoreConnection = async () => {
   try {

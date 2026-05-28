@@ -68,9 +68,11 @@ import BookReaderPage from './pages/BookReaderPage';
 import ReadingPlansPage from './pages/ReadingPlansPage';
 
 import ErrorBoundary from './components/ErrorBoundary';
+import SignInModal from './components/auth/SignInModal';
 
 import RequireAuth from './components/auth/RequireAuth';
 import RequireRole from './components/auth/RequireRole';
+import PrayerCirclePage from './pages/PrayerCirclePage';
 
 import NewsletterPage from './pages/NewsletterPage';
 import HelpPage from './pages/HelpPage';
@@ -92,6 +94,7 @@ const App: React.FC = () => {
                   <HashRouter>
                     <UpgradeModalProvider>
                       <Layout>
+                        <SignInModal />
                         <Routes>
                           {/* Public Routes */}
                           <Route path="/" element={<LandingPage />} />
@@ -138,6 +141,7 @@ const App: React.FC = () => {
                             <Route path="journaling" element={<RequireAuth><JournalingPage /></RequireAuth>} />
                             <Route path="planner" element={<RequireAuth><PlannerPage /></RequireAuth>} />
                             <Route path="community-rooms" element={<RequireAuth><CommunityRoomsPage /></RequireAuth>} />
+                            <Route path="prayer-circle" element={<RequireAuth><PrayerCirclePage /></RequireAuth>} />
                             <Route path="family-dashboard" element={<RequireRole allowedRoles={['admin', 'family_lead']}><FamilyDashboardPage /></RequireRole>} />
                             <Route path="leader-dashboard" element={<RequireRole allowedRoles={['admin', 'group_lead']}><LeaderDashboardPage /></RequireRole>} />
                           </Route>

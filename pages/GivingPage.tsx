@@ -39,7 +39,7 @@ const GivingPage: React.FC = () => {
     customizations: {
       title: 'THE CCN DAILY Support',
       description: `Payment for ${type} partnership`,
-      logo: 'https://st2.depositphotos.com/4403291/7418/v/450/depositphotos_74189661-stock-illustration-online-shop-log.jpg',
+      logo: '/brand/the-ccn-daily-app-icon-concept-1024.png',
     },
   };
 
@@ -55,7 +55,7 @@ const GivingPage: React.FC = () => {
              await recordDonation();
          } else {
              setIsProcessing(false);
-             notify("Payment was not successful. Please try again.", "error");
+             notify('Payment was not successful. Please try again.', 'error');
          }
       },
       onClose: () => {

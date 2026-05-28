@@ -442,7 +442,7 @@ const LandingPage: React.FC = () => {
                 variants={fadeUp}
                 className="mb-5 text-xs font-semibold uppercase tracking-[0.12em] text-brand-accent"
               >
-                Faith for the workday soul
+                Rooted in Christ. Renewed daily.
               </motion.p>
 
               <motion.h1
@@ -456,8 +456,7 @@ const LandingPage: React.FC = () => {
                 variants={fadeUp}
                 className="mt-7 max-w-xl text-[1.125rem] leading-[1.8] text-brand-text-secondary"
               >
-                Begin again with God. Read, listen, reflect, journal, and lead with a
-                formed inner life. Every morning.
+                Scripture, audio devotionals, and spiritual formation — for people who want to go deep, not just get through the day.
               </motion.p>
 
               <motion.div
@@ -787,7 +786,7 @@ const LandingPage: React.FC = () => {
                 What People Say
               </p>
               <h2 className="font-display text-3xl font-bold leading-tight text-brand-text-primary md:text-4xl max-w-2xl mx-auto">
-                Trusted by believers across East Africa and beyond.
+                Trusted by believers across the world.
               </h2>
             </Reveal>
 

@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BookOpen, BookMarked, Calendar, Pencil, Plus, Trash2 } from 'lucide-react';
+import { BookOpen, BookMarked, Calendar, Pencil, Plus, Trash2, Mic, Mail } from 'lucide-react';
 import Card from '../components/Card';
 import { useNotifications } from '../contexts/NotificationContext';
 import {
@@ -34,7 +34,7 @@ import type {
 
 type UploadRole = 'file' | 'cover' | 'audio';
 
-type TabId = ContentType | 'written-devotionals' | 'books-library' | 'reading-plans';
+type TabId = ContentType | 'written-devotionals' | 'books-library' | 'reading-plans' | 'podcasts' | 'newsletters';
 
 const TABS: Array<{ id: TabId; label: string; icon: React.FC<React.SVGProps<SVGSVGElement>> }> = [
   { id: 'written-devotionals', label: 'Devotionals', icon: (props) => <BookOpen {...props} /> },
@@ -43,6 +43,8 @@ const TABS: Array<{ id: TabId; label: string; icon: React.FC<React.SVGProps<SVGS
   { id: 'books', label: 'Books (EPUB/PDF)', icon: ReaderIcon },
   { id: 'challenges', label: 'Challenges', icon: GamificationIcon },
   { id: 'courses', label: 'Courses', icon: SparklesIcon },
+  { id: 'podcasts', label: 'Podcasts', icon: (props) => <Mic {...props} /> },
+  { id: 'newsletters', label: 'Newsletters', icon: (props) => <Mail {...props} /> },
   { id: 'books-library', label: 'Books Library', icon: (props) => <BookMarked {...props} /> },
   { id: 'reading-plans', label: 'Reading Plans', icon: (props) => <Calendar {...props} /> },
 ];
@@ -58,6 +60,11 @@ interface DevotionalDoc {
   author: string;
   status: 'draft' | 'published';
   date: string;
+  authorName?: string;
+  authorPhotoUrl?: string;
+  authorBio?: string;
+  authorWebsiteUrl?: string;
+  authorTwitterHandle?: string;
 }
 
 const emptyForm = () => ({
@@ -68,6 +75,11 @@ const emptyForm = () => ({
   author: 'Pastor Eryeza Kalalu',
   status: 'draft' as 'draft' | 'published',
   date: new Date().toISOString().split('T')[0],
+  authorName: '',
+  authorPhotoUrl: '',
+  authorBio: '',
+  authorWebsiteUrl: '',
+  authorTwitterHandle: '',
 });
 
 const DevotionalsTab: React.FC = () => {
@@ -130,6 +142,11 @@ const DevotionalsTab: React.FC = () => {
       author: dev.author,
       status: dev.status,
       date: dev.date,
+      authorName: dev.authorName ?? '',
+      authorPhotoUrl: dev.authorPhotoUrl ?? '',
+      authorBio: dev.authorBio ?? '',
+      authorWebsiteUrl: dev.authorWebsiteUrl ?? '',
+      authorTwitterHandle: dev.authorTwitterHandle ?? '',
     });
     setEditingId(dev.id);
     setShowForm(true);
@@ -185,6 +202,20 @@ const DevotionalsTab: React.FC = () => {
                     <option value="published">Published</option>
                   </select>
                 ))}
+
+                {/* Author Information */}
+                <div className="border-t border-brand-border pt-5">
+                  <h3 className="text-sm font-bold text-brand-text-secondary uppercase tracking-wider mb-4">Author Information</h3>
+                  <div className="space-y-4">
+                    {field('Author Name', <input type="text" value={form.authorName} onChange={e => setForm(f => ({ ...f, authorName: e.target.value }))} className={inputCls} placeholder="Full name of the author" />)}
+                    {field('Author Photo URL', <input type="url" value={form.authorPhotoUrl} onChange={e => setForm(f => ({ ...f, authorPhotoUrl: e.target.value }))} className={inputCls} placeholder="https://…/photo.jpg" />)}
+                    {field('Author Bio', <textarea value={form.authorBio} onChange={e => setForm(f => ({ ...f, authorBio: e.target.value }))} rows={3} className={`${inputCls} resize-none`} placeholder="Pastor at [church]. Author of [book]. Passionate about..." />)}
+                    <p className="text-xs text-brand-text-secondary -mt-3">Max 3 sentences.</p>
+                    {field('Author Website', <input type="url" value={form.authorWebsiteUrl} onChange={e => setForm(f => ({ ...f, authorWebsiteUrl: e.target.value }))} className={inputCls} placeholder="https://… (optional)" />)}
+                    {field('Twitter/X Handle', <input type="text" value={form.authorTwitterHandle} onChange={e => setForm(f => ({ ...f, authorTwitterHandle: e.target.value }))} className={inputCls} placeholder="@handle (optional)" />)}
+                  </div>
+                </div>
+
                 <div className="flex gap-3 pt-2">
                   <button onClick={handleSave} disabled={saving || !form.title} className="flex-1 py-3 rounded-xl font-bold bg-brand-accent text-white hover:bg-opacity-90 disabled:opacity-50 disabled:cursor-wait transition-colors">
                     {saving ? 'Saving…' : editingId ? 'Update' : 'Save'}
@@ -828,6 +859,446 @@ const ReadingPlansManagerTab: React.FC = () => {
   );
 };
 
+// ─── Podcasts Tab ────────────────────────────────────────────────────────────
+
+interface PodcastEpisodeDoc {
+  id: string;
+  showName: string;
+  episodeTitle: string;
+  episodeNumber?: number;
+  description?: string;
+  audioUrl?: string;
+  coverUrl?: string;
+  duration?: string;
+  publishDate?: string;
+  isPremium: boolean;
+  rssFeedUrl?: string;
+}
+
+const emptyPodcastForm = () => ({
+  showName: '',
+  episodeTitle: '',
+  episodeNumber: '' as number | '',
+  description: '',
+  audioUrl: '',
+  coverUrl: '',
+  duration: '',
+  publishDate: new Date().toISOString().split('T')[0],
+  isPremium: false,
+  rssFeedUrl: '',
+});
+
+const PodcastsTab: React.FC = () => {
+  const [episodes, setEpisodes] = useState<PodcastEpisodeDoc[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [form, setForm] = useState(emptyPodcastForm());
+
+  const load = async () => {
+    setLoading(true);
+    try {
+      const { collection, getDocs, orderBy, query } = await import('firebase/firestore');
+      const { db } = await import('../firebase');
+      const q = query(collection(db, 'admin_podcasts'), orderBy('publishDate', 'desc'));
+      const snap = await getDocs(q);
+      setEpisodes(snap.docs.map(d => ({ id: d.id, ...d.data() } as PodcastEpisodeDoc)));
+    } catch {
+      // Firestore may not be set up yet
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => { load(); }, []);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const { collection, addDoc, doc, updateDoc, serverTimestamp } = await import('firebase/firestore');
+      const { db } = await import('../firebase');
+      const payload = {
+        ...form,
+        episodeNumber: form.episodeNumber === '' ? null : Number(form.episodeNumber),
+      };
+      if (editingId) {
+        await updateDoc(doc(db, 'admin_podcasts', editingId), { ...payload, updatedAt: serverTimestamp() });
+      } else {
+        await addDoc(collection(db, 'admin_podcasts'), { ...payload, createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
+      }
+      setShowForm(false);
+      setEditingId(null);
+      setForm(emptyPodcastForm());
+      await load();
+    } catch {
+      // Save error
+    }
+    setSaving(false);
+  };
+
+  const handleEdit = (ep: PodcastEpisodeDoc) => {
+    setForm({
+      showName: ep.showName,
+      episodeTitle: ep.episodeTitle,
+      episodeNumber: ep.episodeNumber ?? '',
+      description: ep.description ?? '',
+      audioUrl: ep.audioUrl ?? '',
+      coverUrl: ep.coverUrl ?? '',
+      duration: ep.duration ?? '',
+      publishDate: ep.publishDate ?? new Date().toISOString().split('T')[0],
+      isPremium: ep.isPremium,
+      rssFeedUrl: ep.rssFeedUrl ?? '',
+    });
+    setEditingId(ep.id);
+    setShowForm(true);
+  };
+
+  const handleDelete = async (ep: PodcastEpisodeDoc) => {
+    if (!window.confirm(`Delete "${ep.episodeTitle}"?`)) return;
+    try {
+      const { doc, deleteDoc } = await import('firebase/firestore');
+      const { db } = await import('../firebase');
+      await deleteDoc(doc(db, 'admin_podcasts', ep.id));
+      await load();
+    } catch {
+      // Delete error
+    }
+  };
+
+  const handleCancel = () => {
+    setShowForm(false);
+    setEditingId(null);
+    setForm(emptyPodcastForm());
+  };
+
+  const field = (label: string, el: React.ReactNode) => (
+    <div>
+      <label className="block text-sm font-bold text-brand-text-primary mb-2">{label}</label>
+      {el}
+    </div>
+  );
+
+  const inputCls = "w-full bg-brand-dark border border-brand-border rounded-lg px-4 py-3 text-brand-text-primary focus:outline-none focus:border-brand-accent";
+
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="lg:col-span-1">
+        <Card className="border-brand-border bg-brand-dark/30 sticky top-24">
+          {showForm ? (
+            <>
+              <h2 className="text-xl font-bold text-brand-text-primary mb-6 border-b border-brand-border pb-4">
+                {editingId ? 'Edit Episode' : 'New Episode'}
+              </h2>
+              <div className="space-y-5 max-h-[75vh] overflow-y-auto pr-1 custom-scrollbar">
+                {field('Show / Series Name *', <input type="text" value={form.showName} onChange={e => setForm(f => ({ ...f, showName: e.target.value }))} className={inputCls} placeholder="e.g. The CCN Podcast" />)}
+                {field('Episode Title *', <input type="text" value={form.episodeTitle} onChange={e => setForm(f => ({ ...f, episodeTitle: e.target.value }))} className={inputCls} placeholder="Episode title…" />)}
+                {field('Episode Number', <input type="number" min={1} value={form.episodeNumber} onChange={e => setForm(f => ({ ...f, episodeNumber: e.target.value === '' ? '' : Number(e.target.value) }))} className={inputCls} placeholder="e.g. 42" />)}
+                {field('Description', <textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} rows={4} className={`${inputCls} resize-none`} placeholder="What is this episode about?" />)}
+                {field('Audio File URL', <input type="url" value={form.audioUrl} onChange={e => setForm(f => ({ ...f, audioUrl: e.target.value }))} className={inputCls} placeholder="https://…/episode.mp3" />)}
+                {field('Cover Image URL', <input type="url" value={form.coverUrl} onChange={e => setForm(f => ({ ...f, coverUrl: e.target.value }))} className={inputCls} placeholder="https://…/cover.jpg" />)}
+                {field('Duration', <input type="text" value={form.duration} onChange={e => setForm(f => ({ ...f, duration: e.target.value }))} className={inputCls} placeholder="e.g. 42 min" />)}
+                {field('Publish Date', <input type="date" value={form.publishDate} onChange={e => setForm(f => ({ ...f, publishDate: e.target.value }))} className={inputCls} />)}
+                {field('RSS Feed URL (optional)', <input type="url" value={form.rssFeedUrl} onChange={e => setForm(f => ({ ...f, rssFeedUrl: e.target.value }))} className={inputCls} placeholder="https://…/feed.xml" />)}
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <input type="checkbox" checked={form.isPremium} onChange={e => setForm(f => ({ ...f, isPremium: e.target.checked }))} className="w-5 h-5 rounded border-brand-border bg-brand-dark text-brand-accent focus:ring-brand-accent" />
+                  <span className="text-sm font-bold text-brand-text-primary">Premium Content</span>
+                </label>
+                <div className="flex gap-3 pt-2">
+                  <button onClick={handleSave} disabled={saving || !form.showName || !form.episodeTitle} className="flex-1 py-3 rounded-xl font-bold bg-brand-accent text-white hover:bg-opacity-90 disabled:opacity-50 disabled:cursor-wait transition-colors">
+                    {saving ? 'Saving…' : editingId ? 'Update' : 'Save'}
+                  </button>
+                  <button onClick={handleCancel} className="px-5 py-3 rounded-xl font-bold bg-brand-dark border border-brand-border text-brand-text-secondary hover:text-brand-text-primary transition-colors">
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="text-center py-8">
+              <Mic className="w-10 h-10 mx-auto mb-4 text-brand-text-secondary/40" />
+              <p className="text-brand-text-secondary mb-6 text-sm">Manage podcast episodes and series.</p>
+              <button onClick={() => setShowForm(true)} className="px-6 py-3 rounded-xl font-bold bg-brand-accent text-white hover:bg-opacity-90 transition-colors">
+                + New Episode
+              </button>
+            </div>
+          )}
+        </Card>
+      </div>
+
+      <div className="lg:col-span-2">
+        <Card className="border-brand-border bg-brand-dark/30 min-h-[600px]">
+          <h2 className="text-xl font-bold text-brand-text-primary mb-6 border-b border-brand-border pb-4 flex justify-between items-center">
+            <span>Podcast Episodes</span>
+            <span className="text-sm font-normal text-brand-text-secondary bg-brand-secondary px-3 py-1 rounded-full">
+              {episodes.length} items
+            </span>
+          </h2>
+          {loading ? (
+            <div className="flex justify-center py-20">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-accent" />
+            </div>
+          ) : episodes.length > 0 ? (
+            <div className="space-y-3">
+              {episodes.map(ep => (
+                <div key={ep.id} className="flex items-center justify-between p-4 rounded-xl border border-brand-border bg-brand-dark/50 hover:border-brand-accent/50 transition-colors">
+                  <div className="flex items-center gap-4 overflow-hidden min-w-0">
+                    <div className="w-10 h-10 rounded-lg bg-brand-secondary flex-shrink-0 overflow-hidden flex items-center justify-center">
+                      {ep.coverUrl ? (
+                        <img src={ep.coverUrl} alt={ep.episodeTitle} className="w-full h-full object-cover" />
+                      ) : (
+                        <Mic className="w-5 h-5 text-brand-text-secondary/50" />
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <h4 className="text-brand-text-primary font-bold truncate">{ep.episodeTitle}</h4>
+                      <p className="text-xs text-brand-text-secondary truncate">
+                        {ep.showName}{ep.episodeNumber ? ` · Ep. ${ep.episodeNumber}` : ''}{ep.duration ? ` · ${ep.duration}` : ''}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 flex-shrink-0 ml-4">
+                    {ep.isPremium && (
+                      <span className="px-2 py-0.5 text-[11px] font-bold rounded-full bg-brand-accent/20 text-brand-accent whitespace-nowrap">Premium</span>
+                    )}
+                    <button onClick={() => handleEdit(ep)} className="p-2 text-brand-text-secondary hover:text-brand-accent hover:bg-brand-accent/10 rounded-lg transition-colors" title="Edit">
+                      <Pencil className="w-4 h-4" />
+                    </button>
+                    <button onClick={() => handleDelete(ep)} className="p-2 text-brand-text-secondary hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors" title="Delete">
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-20 text-brand-text-secondary">
+              <Mic className="w-12 h-12 mx-auto mb-4 opacity-30" />
+              <p>No podcast episodes yet.</p>
+              <p className="text-sm mt-2">Use the form to add the first one.</p>
+            </div>
+          )}
+        </Card>
+      </div>
+    </div>
+  );
+};
+
+// ─── Newsletters Tab ─────────────────────────────────────────────────────────
+
+interface NewsletterIssueDoc {
+  id: string;
+  seriesName: string;
+  issueTitle: string;
+  issueNumber?: number;
+  description?: string;
+  publishDate?: string;
+  archiveUrl?: string;
+  coverUrl?: string;
+  isPremium: boolean;
+}
+
+const emptyNewsletterForm = () => ({
+  seriesName: '',
+  issueTitle: '',
+  issueNumber: '' as number | '',
+  description: '',
+  publishDate: new Date().toISOString().split('T')[0],
+  archiveUrl: '',
+  coverUrl: '',
+  isPremium: false,
+});
+
+const NewslettersTab: React.FC = () => {
+  const [issues, setIssues] = useState<NewsletterIssueDoc[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [form, setForm] = useState(emptyNewsletterForm());
+
+  const load = async () => {
+    setLoading(true);
+    try {
+      const { collection, getDocs, orderBy, query } = await import('firebase/firestore');
+      const { db } = await import('../firebase');
+      const q = query(collection(db, 'admin_newsletters'), orderBy('publishDate', 'desc'));
+      const snap = await getDocs(q);
+      setIssues(snap.docs.map(d => ({ id: d.id, ...d.data() } as NewsletterIssueDoc)));
+    } catch {
+      // Firestore may not be set up yet
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => { load(); }, []);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const { collection, addDoc, doc, updateDoc, serverTimestamp } = await import('firebase/firestore');
+      const { db } = await import('../firebase');
+      const payload = {
+        ...form,
+        issueNumber: form.issueNumber === '' ? null : Number(form.issueNumber),
+      };
+      if (editingId) {
+        await updateDoc(doc(db, 'admin_newsletters', editingId), { ...payload, updatedAt: serverTimestamp() });
+      } else {
+        await addDoc(collection(db, 'admin_newsletters'), { ...payload, createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
+      }
+      setShowForm(false);
+      setEditingId(null);
+      setForm(emptyNewsletterForm());
+      await load();
+    } catch {
+      // Save error
+    }
+    setSaving(false);
+  };
+
+  const handleEdit = (issue: NewsletterIssueDoc) => {
+    setForm({
+      seriesName: issue.seriesName,
+      issueTitle: issue.issueTitle,
+      issueNumber: issue.issueNumber ?? '',
+      description: issue.description ?? '',
+      publishDate: issue.publishDate ?? new Date().toISOString().split('T')[0],
+      archiveUrl: issue.archiveUrl ?? '',
+      coverUrl: issue.coverUrl ?? '',
+      isPremium: issue.isPremium,
+    });
+    setEditingId(issue.id);
+    setShowForm(true);
+  };
+
+  const handleDelete = async (issue: NewsletterIssueDoc) => {
+    if (!window.confirm(`Delete "${issue.issueTitle}"?`)) return;
+    try {
+      const { doc, deleteDoc } = await import('firebase/firestore');
+      const { db } = await import('../firebase');
+      await deleteDoc(doc(db, 'admin_newsletters', issue.id));
+      await load();
+    } catch {
+      // Delete error
+    }
+  };
+
+  const handleCancel = () => {
+    setShowForm(false);
+    setEditingId(null);
+    setForm(emptyNewsletterForm());
+  };
+
+  const field = (label: string, el: React.ReactNode) => (
+    <div>
+      <label className="block text-sm font-bold text-brand-text-primary mb-2">{label}</label>
+      {el}
+    </div>
+  );
+
+  const inputCls = "w-full bg-brand-dark border border-brand-border rounded-lg px-4 py-3 text-brand-text-primary focus:outline-none focus:border-brand-accent";
+
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="lg:col-span-1">
+        <Card className="border-brand-border bg-brand-dark/30 sticky top-24">
+          {showForm ? (
+            <>
+              <h2 className="text-xl font-bold text-brand-text-primary mb-6 border-b border-brand-border pb-4">
+                {editingId ? 'Edit Issue' : 'New Issue'}
+              </h2>
+              <div className="space-y-5 max-h-[75vh] overflow-y-auto pr-1 custom-scrollbar">
+                {field('Newsletter Series Name *', <input type="text" value={form.seriesName} onChange={e => setForm(f => ({ ...f, seriesName: e.target.value }))} className={inputCls} placeholder="e.g. The Weekly Word" />)}
+                {field('Issue Title *', <input type="text" value={form.issueTitle} onChange={e => setForm(f => ({ ...f, issueTitle: e.target.value }))} className={inputCls} placeholder="Issue title…" />)}
+                {field('Issue Number', <input type="number" min={1} value={form.issueNumber} onChange={e => setForm(f => ({ ...f, issueNumber: e.target.value === '' ? '' : Number(e.target.value) }))} className={inputCls} placeholder="e.g. 12" />)}
+                {field('Description', <textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} rows={4} className={`${inputCls} resize-none`} placeholder="What's in this issue?" />)}
+                {field('Publish Date', <input type="date" value={form.publishDate} onChange={e => setForm(f => ({ ...f, publishDate: e.target.value }))} className={inputCls} />)}
+                {field('External Archive URL (optional)', <input type="url" value={form.archiveUrl} onChange={e => setForm(f => ({ ...f, archiveUrl: e.target.value }))} className={inputCls} placeholder="https://… (link to full issue online)" />)}
+                {field('Cover Image URL', <input type="url" value={form.coverUrl} onChange={e => setForm(f => ({ ...f, coverUrl: e.target.value }))} className={inputCls} placeholder="https://…/cover.jpg" />)}
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <input type="checkbox" checked={form.isPremium} onChange={e => setForm(f => ({ ...f, isPremium: e.target.checked }))} className="w-5 h-5 rounded border-brand-border bg-brand-dark text-brand-accent focus:ring-brand-accent" />
+                  <span className="text-sm font-bold text-brand-text-primary">Premium Content</span>
+                </label>
+                <div className="flex gap-3 pt-2">
+                  <button onClick={handleSave} disabled={saving || !form.seriesName || !form.issueTitle} className="flex-1 py-3 rounded-xl font-bold bg-brand-accent text-white hover:bg-opacity-90 disabled:opacity-50 disabled:cursor-wait transition-colors">
+                    {saving ? 'Saving…' : editingId ? 'Update' : 'Save'}
+                  </button>
+                  <button onClick={handleCancel} className="px-5 py-3 rounded-xl font-bold bg-brand-dark border border-brand-border text-brand-text-secondary hover:text-brand-text-primary transition-colors">
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="text-center py-8">
+              <Mail className="w-10 h-10 mx-auto mb-4 text-brand-text-secondary/40" />
+              <p className="text-brand-text-secondary mb-6 text-sm">Manage newsletter issues and series.</p>
+              <button onClick={() => setShowForm(true)} className="px-6 py-3 rounded-xl font-bold bg-brand-accent text-white hover:bg-opacity-90 transition-colors">
+                + New Issue
+              </button>
+            </div>
+          )}
+        </Card>
+      </div>
+
+      <div className="lg:col-span-2">
+        <Card className="border-brand-border bg-brand-dark/30 min-h-[600px]">
+          <h2 className="text-xl font-bold text-brand-text-primary mb-6 border-b border-brand-border pb-4 flex justify-between items-center">
+            <span>Newsletter Issues</span>
+            <span className="text-sm font-normal text-brand-text-secondary bg-brand-secondary px-3 py-1 rounded-full">
+              {issues.length} items
+            </span>
+          </h2>
+          {loading ? (
+            <div className="flex justify-center py-20">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-accent" />
+            </div>
+          ) : issues.length > 0 ? (
+            <div className="space-y-3">
+              {issues.map(issue => (
+                <div key={issue.id} className="flex items-center justify-between p-4 rounded-xl border border-brand-border bg-brand-dark/50 hover:border-brand-accent/50 transition-colors">
+                  <div className="flex items-center gap-4 overflow-hidden min-w-0">
+                    <div className="w-10 h-10 rounded-lg bg-brand-secondary flex-shrink-0 overflow-hidden flex items-center justify-center">
+                      {issue.coverUrl ? (
+                        <img src={issue.coverUrl} alt={issue.issueTitle} className="w-full h-full object-cover" />
+                      ) : (
+                        <Mail className="w-5 h-5 text-brand-text-secondary/50" />
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <h4 className="text-brand-text-primary font-bold truncate">{issue.issueTitle}</h4>
+                      <p className="text-xs text-brand-text-secondary truncate">
+                        {issue.seriesName}{issue.issueNumber ? ` · Issue #${issue.issueNumber}` : ''}{issue.publishDate ? ` · ${issue.publishDate}` : ''}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 flex-shrink-0 ml-4">
+                    {issue.isPremium && (
+                      <span className="px-2 py-0.5 text-[11px] font-bold rounded-full bg-brand-accent/20 text-brand-accent whitespace-nowrap">Premium</span>
+                    )}
+                    <button onClick={() => handleEdit(issue)} className="p-2 text-brand-text-secondary hover:text-brand-accent hover:bg-brand-accent/10 rounded-lg transition-colors" title="Edit">
+                      <Pencil className="w-4 h-4" />
+                    </button>
+                    <button onClick={() => handleDelete(issue)} className="p-2 text-brand-text-secondary hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors" title="Delete">
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-20 text-brand-text-secondary">
+              <Mail className="w-12 h-12 mx-auto mb-4 opacity-30" />
+              <p>No newsletter issues yet.</p>
+              <p className="text-sm mt-2">Use the form to add the first one.</p>
+            </div>
+          )}
+        </Card>
+      </div>
+    </div>
+  );
+};
+
 const ContentManagerPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabId>('written-devotionals');
   const navigate = useNavigate();
@@ -849,7 +1320,7 @@ const ContentManagerPage: React.FC = () => {
   const [items, setItems] = useState<CatalogContentItem[]>([]);
   const [loadingItems, setLoadingItems] = useState(false);
 
-  const isCatalogTab = activeTab !== 'written-devotionals' && activeTab !== 'books-library' && activeTab !== 'reading-plans';
+  const isCatalogTab = activeTab !== 'written-devotionals' && activeTab !== 'books-library' && activeTab !== 'reading-plans' && activeTab !== 'podcasts' && activeTab !== 'newsletters';
   const catalogTab = isCatalogTab ? (activeTab as ContentType) : 'devotionals';
 
   const requiresAuthor = catalogTab === 'audiobooks' || catalogTab === 'books' || catalogTab === 'courses';
@@ -985,6 +1456,10 @@ const ContentManagerPage: React.FC = () => {
         <BooksManagerTab />
       ) : activeTab === 'reading-plans' ? (
         <ReadingPlansManagerTab />
+      ) : activeTab === 'podcasts' ? (
+        <PodcastsTab />
+      ) : activeTab === 'newsletters' ? (
+        <NewslettersTab />
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-1">

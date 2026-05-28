@@ -305,4 +305,51 @@ export interface ReadingPlan {
   updatedAt?: string;
 }
 
+// ─── Podcast System ─────────────────────────────────────────────────────────
+
+export interface PodcastEpisodeDoc {
+  id: string;
+  showName: string;
+  episodeTitle: string;
+  episodeNumber?: number;
+  description?: string;
+  audioUrl?: string;
+  coverUrl?: string;
+  duration?: string;
+  publishDate?: string;
+  isPremium: boolean;
+  rssFeedUrl?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+// ─── Newsletter System ───────────────────────────────────────────────────────
+
+export interface NewsletterIssueDoc {
+  id: string;
+  seriesName: string;
+  issueTitle: string;
+  issueNumber?: number;
+  description?: string;
+  publishDate?: string;
+  archiveUrl?: string;
+  coverUrl?: string;
+  isPremium: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export * from './types/pricing';
+
+// ─── Prayer Circle ────────────────────────────────────────────────────────────
+
+export interface PrayerPerson {
+  id: string;
+  name: string;
+  relationship: string; // e.g. 'Spouse', 'Parent', 'Friend', 'Colleague'
+  notes: string;
+  prayerPoints: string[];
+  photoUrl?: string;
+  lastPrayedDate?: string; // ISO date string 'YYYY-MM-DD'
+  createdAt: string;
+}
