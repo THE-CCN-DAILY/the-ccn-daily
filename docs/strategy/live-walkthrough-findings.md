@@ -112,6 +112,38 @@ These present "demo"/placeholder experiences to real users and undercut the prem
   already exists in `_redirects`), add Organization/WebSite/Article schema, `robots.txt` + `sitemap.xml`
   + `llms.txt`, and per-route meta/OG. (Full plan from the SEO/GEO expert pending Workflow resume.)
 
+## Visual / UX — premium-tonal assessment
+
+**The design-token system (`index.css`) is already premium and tonally disciplined** — tinted warm
+surfaces (paper/espresso, never pure white/black), deep chromatic text, a single dominant flame family
+(crimson→ember→amber→gold) + sage support, dark-mode contrast adjustments, warm-tinted shadows,
+three themes (dark/paper/sepia), and a real Cormorant + EB Garamond + Inter Tight pairing. The
+foundation does NOT need a redesign — it needs targeted application polish.
+
+**Polish gaps (application, not system):**
+- **Hero headline is under-contrast** — the core value prop recedes instead of being the focal moment.
+  Use `--fg-1` at full strength for the H1; reserve the muted tone for sub-copy. (Also a WCAG issue.)
+- **Hero atmosphere image (cross) reads murky/underexposed** — lift exposure or add a tonal scrim so it
+  feels crafted, not muddy.
+- **Wordmark missing in the public header** (flame only) — weak brand lockup at the most-seen spot.
+- **Guided-journey timeline labels crowd/overlap** at desktop width — needs spacing/responsive rule.
+- **Sign-in modal backdrop** was too transparent (improved in a later build — verify).
+
+## Accessibility (WCAG 2.2) — code-level
+- Low-contrast hero text fails AA contrast (above).
+- Heavy `motion/react` usage across pages — **verify `prefers-reduced-motion`** is honored (motion
+  sickness / a11y). Needs a global reduced-motion guard.
+- Modal focus-trap, ARIA labelling, and keyboard nav need a dedicated pass (not yet verified).
+- Positive: light/sepia/dark themes aid low-vision and reading comfort.
+
+## Performance — code-level
+- **Main JS bundle ≈ 2.5 MB (689 KB gzip) + 538 KB Firebase chunk**, with **no route code-splitting**
+  (`App.tsx` imports pages eagerly; no `React.lazy`/`Suspense`). Blows the landing JS budget; hurts
+  LCP/TBT — and likely the ~5–7s perceived auth delay. **Fix:** route-based lazy-loading + manualChunks;
+  lazy-load Firebase and heavy libs (Mux, Flutterwave, remotion) only where used.
+- **3 Google Font families imported via render-blocking `@import`** (`index.css:1`) with many weights.
+  Self-host + subset, use `font-display: swap`, preload only the critical weight.
+
 ## Method note
 Full audit = this live walkthrough (real-user UX) + the expert-team Workflow (security, perf, SEO/GEO,
 a11y, feature-parity, content, functionality, positioning — 6/9 already completed and cached; 3
