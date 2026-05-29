@@ -92,6 +92,15 @@ app owning the lane of teaching depth + guided formation + a theologically-disci
 - Every change: build → verify on staging → promote to production (per `DEPLOY.md`). Code stored in
   GitHub. Nothing untested reaches live users.
 
+## Backlog — founder requests (slot into Phase E/G)
+- **Rich-text editor** in the devotional/content generator (formatting commands, not raw markdown).
+- **Standardize design-system fonts/styles across all screens** — some screens don't use the
+  Cormorant/EB Garamond/Inter Tight tokens; audit and normalize against `index.css`.
+- **Content Manager: per-item audio/video upload** to the library (individual media assets), not just
+  catalog records.
+- **Fix Roles-page admin promotion** (writing a user's role to admin currently fails) — reconcile with
+  the rules' role-change path; not blocking since ministry emails are admin via the allowlist.
+
 ## Status
 - [x] Audit complete (functional, visual/tonal, a11y, perf, SEO-file-level)
 - [x] Positioning thesis captured

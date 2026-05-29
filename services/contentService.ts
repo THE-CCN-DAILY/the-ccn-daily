@@ -108,9 +108,28 @@ export const listAudiobooks = async (): Promise<CatalogContentItem[]> => {
   return data.audiobooks;
 };
 
+// Reads the latest PUBLISHED devotional dated on/before `date` from Firestore — the same
+// store the Content Manager writes to (so publish path == display path). Filters in JS to
+// avoid requiring a composite Firestore index.
 export const getTodayDevotional = async (date: string): Promise<CatalogContentItem | null> => {
-  const data = await requestJson<{ devotional: CatalogContentItem | null }>(
-    `/api/devotionals/today?date=${encodeURIComponent(date)}`
-  );
-  return data.devotional;
+  try {
+    const { collection, getDocs, orderBy, query, limit } = await import('firebase/firestore');
+    const { db } = await import('../firebase');
+    const snap = await getDocs(query(collection(db, 'devotionals'), orderBy('date', 'desc'), limit(30)));
+    const doc = snap.docs
+      .map((d) => ({ id: d.id, ...(d.data() as Record<string, unknown>) }))
+      .find((d) => d.status === 'published' && typeof d.date === 'string' && (d.date as string) <= date);
+    if (!doc) return null;
+    return {
+      id: doc.id,
+      title: String(doc.title ?? ''),
+      content: String((doc.body ?? doc.content ?? '') as string),
+      author: typeof doc.author === 'string' ? doc.author : undefined,
+      date: typeof doc.date === 'string' ? doc.date : undefined,
+      audioUrl: typeof doc.audioUrl === 'string' ? doc.audioUrl : undefined,
+      status: 'published',
+    };
+  } catch {
+    return null;
+  }
 };
