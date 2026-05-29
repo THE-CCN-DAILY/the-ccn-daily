@@ -64,6 +64,31 @@ Plus: verify each content surface is **populated vs empty** (D1 seeding).
   *incomplete/transitional* scheme (brittle, and a hardcoded admin email in client code) — replace
   with verified-session auth.
 
+## CRITICAL — Fragmented content storage (publish path ≠ display path)
+
+The app has **two parallel, unsynced content systems**, so published content can silently fail to
+appear where users see it:
+
+| Content | Published to | Read/displayed from | Result |
+|---|---|---|---|
+| Devotionals | Firestore `devotionals` (`ContentManagerPage:120`) | D1 via `/api/devotionals/today` (guided journey); Firestore `devotionals` (`DashboardPage:262`) | Guided-journey "today" reads a *different store* than the Content Manager writes |
+| Podcasts | Firestore `admin_podcasts` (`ContentManagerPage:927`) | Firestore `podcastEpisodes` (`DashboardPage:296`) | **Collection-name mismatch** — published podcasts never show on the dashboard |
+| Newsletters | Firestore `admin_newsletters` (`ContentManagerPage:1147`) | (verify reader) | Likely same split |
+| Catalog (books/courses/audiobooks) | D1 via `/api/admin/content/*` | D1 endpoints | Self-consistent, but blocked by the admin-auth issue above |
+
+**This is likely a top reason the app "felt unfinished":** content gets published but doesn't surface.
+**Fix:** pick ONE source of truth per content type (recommend D1 for catalog/devotionals, Firestore
+only for user-generated data), align collection/endpoint names, and route publish + display through
+the same store. Then seed/migrate existing content.
+
+## Confirmed working (wired to real data)
+- **Giving / donations / pricing:** real Flutterwave checkout + Firestore `donations`/`settings`
+  (`GivingPage`, `DonationPage`, `PricingPage`). Payment key configurable via admin.
+- **User data:** Bible highlights (`users/{uid}/highlights`), help messages (`helpMessages`),
+  journal/notes, admin resources/inbox/discounts (Firestore `onSnapshot`) — all wired.
+- **Landing testimonials:** 3 **hardcoded placeholders** (`LandingPage.tsx:153`), no submission path,
+  no avatars — to be replaced by the real reviews feature.
+
 ## Method note
 Full audit = this live walkthrough (real-user UX) + the expert-team Workflow (security, perf, SEO/GEO,
 a11y, feature-parity, content, functionality, positioning — 6/9 already completed and cached; 3
