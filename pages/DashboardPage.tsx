@@ -290,17 +290,19 @@ const DashboardPage: React.FC = () => {
     };
 
     // Fetch latest podcast episode
+    // Podcasts: the Anchor.fm RSS feed is the source of truth (same as the public library).
     const fetchPodcast = async () => {
       try {
-        const q = query(
-          collection(db, 'podcastEpisodes'),
-          orderBy('publishedAt', 'desc'),
-          limit(1),
-        );
-        const snap = await getDocs(q);
-        if (!snap.empty) {
-          const d = snap.docs[0];
-          setPodcast({ id: d.id, ...(d.data() as Omit<PodcastEpisode, 'id'>) });
+        const { fetchRSSFeed } = await import('../services/rssService');
+        const feed = await fetchRSSFeed('https://anchor.fm/s/f7311ecc/podcast/rss');
+        const item = feed.items.find((i) => i.enclosure?.type?.startsWith('audio')) ?? feed.items[0];
+        if (item) {
+          setPodcast({
+            id: item.guid || '0',
+            title: item.title || 'Latest Episode',
+            duration: item.itunes?.duration,
+            publishedAt: item.pubDate ? { seconds: Math.floor(new Date(item.pubDate).getTime() / 1000) } : null,
+          });
         }
       } catch {
         // Show placeholder

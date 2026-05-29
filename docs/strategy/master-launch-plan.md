@@ -92,6 +92,12 @@ app owning the lane of teaching depth + guided formation + a theologically-disci
 - Every change: build → verify on staging → promote to production (per `DEPLOY.md`). Code stored in
   GitHub. Nothing untested reaches live users.
 
+## Decision log
+- **Podcasts = RSS source of truth** (Anchor.fm). Dashboard card now reads the RSS feed (matching the
+  public library); the orphaned `admin_podcasts` Firestore CRUD and the empty `podcastEpisodes` read are
+  abandoned. Phase C: retire/hide the Content Manager "Podcasts" tab. Newsletters likely follow the same
+  pattern (Substack RSS via `NewsletterPage`) — retire the `admin_newsletters` CRUD unless self-hosting.
+
 ## Backlog — founder requests (slot into Phase E/G)
 - **Rich-text editor** in the devotional/content generator (formatting commands, not raw markdown).
 - **Standardize design-system fonts/styles across all screens** — some screens don't use the
