@@ -340,7 +340,7 @@ const Step4: React.FC<Step4Props> = ({
         style={{ fontFamily: 'var(--serif-body)', fontSize: '17px', lineHeight: 1.65 }}
       >
         Optional — add your phone number for key announcements, reminders, and
-        important updates. Not daily devotionals — just the things worth knowing.
+        important updates.
       </p>
     </div>
 
