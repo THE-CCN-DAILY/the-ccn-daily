@@ -108,26 +108,23 @@ export const listAudiobooks = async (): Promise<CatalogContentItem[]> => {
   return data.audiobooks;
 };
 
-// Reads the latest PUBLISHED devotional dated on/before `date` from Firestore — the same
-// store the Content Manager writes to (so publish path == display path). Filters in JS to
-// avoid requiring a composite Firestore index.
-export const getTodayDevotional = async (date: string): Promise<CatalogContentItem | null> => {
+// Single devotional source of truth: the latest PUBLISHED Blog Studio post (D1 `blog_posts`,
+// served newest-first by /api/blog/posts). The same content powers the public Blog AND the
+// guided journey's Daily Sanctuary, so "publish in Blog Studio" == "appears everywhere".
+export const getTodayDevotional = async (_date: string): Promise<CatalogContentItem | null> => {
   try {
-    const { collection, getDocs, orderBy, query, limit } = await import('firebase/firestore');
-    const { db } = await import('../firebase');
-    const snap = await getDocs(query(collection(db, 'devotionals'), orderBy('date', 'desc'), limit(30)));
-    const match = snap.docs
-      .map((d) => ({ id: d.id, data: d.data() as Record<string, unknown> }))
-      .find((d) => d.data.status === 'published' && typeof d.data.date === 'string' && (d.data.date as string) <= date);
-    if (!match) return null;
-    const doc = match.data;
+    const data = await requestJson<{
+      posts: Array<{ id: string; title?: string; content?: string; publishedAt?: string; audioUrl?: string; authorName?: string }>;
+    }>('/api/blog/posts');
+    const post = data.posts?.[0];
+    if (!post) return null;
     return {
-      id: match.id,
-      title: String(doc.title ?? ''),
-      content: String(doc.body ?? doc.content ?? ''),
-      author: typeof doc.author === 'string' ? doc.author : undefined,
-      date: typeof doc.date === 'string' ? doc.date : undefined,
-      audioUrl: typeof doc.audioUrl === 'string' ? doc.audioUrl : undefined,
+      id: post.id,
+      title: String(post.title ?? ''),
+      content: String(post.content ?? ''),
+      author: post.authorName,
+      date: post.publishedAt,
+      audioUrl: post.audioUrl,
       status: 'published',
     };
   } catch {
