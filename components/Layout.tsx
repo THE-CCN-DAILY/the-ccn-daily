@@ -263,7 +263,7 @@ const Sidebar: React.FC<SidebarProps> = ({ className = '', onNavigate }) => {
             <div className="flex items-center">
               <UserCircleIcon className="w-8 h-8 mr-3 text-brand-text-secondary"/>
               <div className="flex-grow">
-                <p className="font-semibold text-sm text-brand-text-primary truncate">{user.displayName || 'Founder'}</p>
+                <p className="font-semibold text-sm text-brand-text-primary truncate">{user.displayName || (user.role === 'admin' || user.role === 'lead_developer' ? 'Founder' : 'Member')}</p>
                 <button onClick={signOut} className="text-xs text-brand-accent hover:underline">Sign Out</button>
               </div>
             </div>

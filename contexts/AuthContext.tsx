@@ -25,6 +25,10 @@ interface AuthContextType {
   sendPasswordReset: (email: string) => Promise<void>;
 }
 
+// Ministry owner accounts that always receive admin access on the frontend,
+// keeping the UI in sync with the backend's email-based admin rule.
+const ADMIN_EMAILS = ['pastor.eryeza@gmail.com', 'ccndaily@gmail.com'];
+
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -75,6 +79,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
         } catch {
           // Firestore unavailable — default role is safe
+        }
+
+        // Ministry owner emails are always admins (frontend mirror of the
+        // backend's email-based admin rule), regardless of the stored role.
+        if (ADMIN_EMAILS.includes((firebaseUser.email ?? '').toLowerCase())) {
+          role = 'admin';
         }
 
         setUser({
