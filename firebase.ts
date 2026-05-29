@@ -20,6 +20,22 @@ const firebaseConfig = {
   messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
 };
 
+// VITE_ vars are inlined at build time. If the build environment is missing them,
+// Firebase initializes with undefined credentials and auth silently hangs forever.
+// Expose this so the auth layer can fail loudly instead of spinning indefinitely.
+export const isFirebaseConfigured = Boolean(
+  firebaseConfig.apiKey &&
+  firebaseConfig.authDomain &&
+  firebaseConfig.projectId &&
+  firebaseConfig.appId,
+);
+
+if (!isFirebaseConfigured) {
+  console.error(
+    'Firebase configuration is missing. Set the VITE_FIREBASE_* environment variables in the build environment and redeploy.',
+  );
+}
+
 // Non-default Firestore database created in Firebase AI Studio.
 // This is a database identifier, not a secret.
 const FIRESTORE_DATABASE_ID = 'ai-studio-99552f04-30cb-4061-a5c7-62e531885ebf';

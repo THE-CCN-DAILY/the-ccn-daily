@@ -131,7 +131,7 @@ const groupLabelStyle = (color: string): React.CSSProperties => ({
 });
 
 const Sidebar: React.FC<SidebarProps> = ({ className = '', onNavigate }) => {
-  const { user, loading, signIn, signOut } = useAuth();
+  const { user, loading, openSignIn, signOut } = useAuth();
 
   const [isStrategyMode, setIsStrategyMode] = React.useState(() => {
     return localStorage.getItem('phoenix_mode') === 'strategy';
@@ -268,7 +268,7 @@ const Sidebar: React.FC<SidebarProps> = ({ className = '', onNavigate }) => {
               </div>
             </div>
           ) : (
-            <button onClick={signIn} className="w-full px-4 py-2 rounded-lg bg-brand-accent text-white font-semibold hover:bg-opacity-90 transition-opacity">
+            <button onClick={openSignIn} className="w-full px-4 py-2 rounded-lg bg-brand-accent text-white font-semibold hover:bg-opacity-90 transition-opacity">
               Sign In
             </button>
           )}

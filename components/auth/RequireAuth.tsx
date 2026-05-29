@@ -10,7 +10,7 @@ interface RequireAuthProps {
 }
 
 const RequireAuth: React.FC<RequireAuthProps> = ({ children }) => {
-  const { user, loading, signIn } = useAuth();
+  const { user, loading, openSignIn } = useAuth();
   const navigate = useNavigate();
   const [onboardingChecked, setOnboardingChecked] = useState(false);
 
@@ -69,17 +69,17 @@ const RequireAuth: React.FC<RequireAuthProps> = ({ children }) => {
             Sign in to continue
           </h1>
           <p className="mt-3 text-sm leading-relaxed text-brand-text-secondary">
-            This section is for members. Sign in with Google to access your devotional,
+            This section is for members. Sign in to reach your devotional,
             journal, courses, and community.
           </p>
           <button
-            onClick={signIn}
+            onClick={openSignIn}
             className="mt-8 w-full border border-brand-accent bg-brand-accent px-6 py-3 text-sm font-semibold text-brand-secondary hover:opacity-90 transition-opacity"
           >
-            Sign in with Google
+            Sign in
           </button>
           <p className="mt-4 text-xs text-brand-text-secondary">
-            No account needed — sign in once and your profile is created automatically.
+            Use email and a password, or continue with Google — your profile is created automatically.
           </p>
         </div>
       </div>

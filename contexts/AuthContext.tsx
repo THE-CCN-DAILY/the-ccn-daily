@@ -8,7 +8,7 @@ import {
   getRedirectResult,
 } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
-import { db, signInWithEmail, signUpWithEmail, resetPassword as firebaseResetPassword } from '../firebase';
+import { db, isFirebaseConfigured, signInWithEmail, signUpWithEmail, resetPassword as firebaseResetPassword } from '../firebase';
 import type { AppUser } from '../types';
 
 interface AuthContextType {
@@ -37,6 +37,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const closeSignIn = useCallback(() => { setShowSignIn(false); setRedirectError(null); }, []);
 
   useEffect(() => {
+    // Without Firebase config, onAuthStateChanged never fires and the app hangs on a
+    // spinner forever. Resolve loading and surface a clear message instead.
+    if (!isFirebaseConfigured) {
+      setRedirectError('Sign-in is temporarily unavailable. Please try again later.');
+      setLoading(false);
+      return;
+    }
+
     const auth = getAuth();
 
     // Consume any pending redirect result — surface errors instead of silently dropping them

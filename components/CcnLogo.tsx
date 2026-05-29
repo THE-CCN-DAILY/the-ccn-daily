@@ -13,7 +13,7 @@ const SIZES = {
   lg: { icon: 60, wordmark: 52 },
 };
 
-const GAP = { sm: 6, md: 9, lg: 12 };
+const GAP = { sm: 2, md: 4, lg: 5 };
 
 /**
  * CCN Daily logo — brand-accurate, theme-aware

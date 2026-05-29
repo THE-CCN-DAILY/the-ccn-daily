@@ -97,7 +97,7 @@ const EarningActionItem: React.FC<{ action: typeof mockEarningActions[0] }> = ({
 );
 
 const GamificationPage: React.FC = () => {
-    const { user, signIn } = useAuth();
+    const { user, openSignIn } = useAuth();
     const { stats, unlockedAchievements, redeemReward } = useGamification();
     const [unlockedRewards, setUnlockedRewards] = useState<string[]>([]);
     const [activeTab, setActiveTab] = useState<'progress' | 'rewards' | 'earn'>('progress');
@@ -129,7 +129,7 @@ const GamificationPage: React.FC = () => {
         <Card className="text-center py-16">
           <h2 className="text-2xl font-black text-brand-text-primary mb-2" style={{ fontFamily: 'var(--font-display)' }}>Sign In to See Your Progress</h2>
           <p className="text-brand-text-secondary mb-6">Your achievements, points, and rewards are waiting.</p>
-          <button onClick={signIn} className="px-6 py-2 rounded-full bg-brand-accent hover:bg-opacity-90 text-white font-semibold shadow-md">
+          <button onClick={openSignIn} className="px-6 py-2 rounded-full bg-brand-accent hover:bg-opacity-90 text-white font-semibold shadow-md">
             Sign In
           </button>
         </Card>
