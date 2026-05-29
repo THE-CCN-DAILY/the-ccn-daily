@@ -89,6 +89,29 @@ the same store. Then seed/migrate existing content.
 - **Landing testimonials:** 3 **hardcoded placeholders** (`LandingPage.tsx:153`), no submission path,
   no avatars — to be replaced by the real reviews feature.
 
+## Unfinished features shipped into production (quality risk)
+These present "demo"/placeholder experiences to real users and undercut the premium feel:
+- `AudiobookLibraryPage:180` — "Coming Soon" (though `/api/audiobooks` exists)
+- `TestimoniesPage:19` — hardcoded placeholder testimonies ("replace with live Firebase query")
+- `GraceLinkPage:17` — `mockGiftableItems`, gifting not wired
+- `GrowthConsole:5` — demo analytics data, not connected
+- `VisionaryLab` / `VisualSanctuary` / `VoiceCompanion` — AI demo/prototype pages
+- **Decision needed:** finish, hide, or clearly label each before launch. A $200M app ships no
+  "Coming Soon" or demo-data screens in primary navigation.
+
+## Payments risk
+- `GivingPage:14` — Flutterwave key falls back to a **sandbox test key** (`FLWPUBK_TEST-…`) if
+  `VITE_FLUTTERWAVE_PUBLIC_KEY` is missing → real gifts silently wouldn't process. Confirm the live
+  key is set in every deploy env (it was uploaded to prod, but the fallback is a footgun).
+
+## SEO / GEO gaps (zero-budget discovery is currently near-impossible)
+- `public/` has **no `robots.txt`, no `sitemap.xml`, no `llms.txt`** (only FCM SW + webmanifest).
+- HashRouter `/#/` URLs are poorly crawlable; `index.html` lacks `og:image`/Twitter image and JSON-LD
+  structured data; canonical is static.
+- To be found by Google **and** surfaced by Gemini/AI engines: migrate to BrowserRouter (SPA fallback
+  already exists in `_redirects`), add Organization/WebSite/Article schema, `robots.txt` + `sitemap.xml`
+  + `llms.txt`, and per-route meta/OG. (Full plan from the SEO/GEO expert pending Workflow resume.)
+
 ## Method note
 Full audit = this live walkthrough (real-user UX) + the expert-team Workflow (security, perf, SEO/GEO,
 a11y, feature-parity, content, functionality, positioning — 6/9 already completed and cached; 3
