@@ -116,14 +116,15 @@ export const getTodayDevotional = async (date: string): Promise<CatalogContentIt
     const { collection, getDocs, orderBy, query, limit } = await import('firebase/firestore');
     const { db } = await import('../firebase');
     const snap = await getDocs(query(collection(db, 'devotionals'), orderBy('date', 'desc'), limit(30)));
-    const doc = snap.docs
-      .map((d) => ({ id: d.id, ...(d.data() as Record<string, unknown>) }))
-      .find((d) => d.status === 'published' && typeof d.date === 'string' && (d.date as string) <= date);
-    if (!doc) return null;
+    const match = snap.docs
+      .map((d) => ({ id: d.id, data: d.data() as Record<string, unknown> }))
+      .find((d) => d.data.status === 'published' && typeof d.data.date === 'string' && (d.data.date as string) <= date);
+    if (!match) return null;
+    const doc = match.data;
     return {
-      id: doc.id,
+      id: match.id,
       title: String(doc.title ?? ''),
-      content: String((doc.body ?? doc.content ?? '') as string),
+      content: String(doc.body ?? doc.content ?? ''),
       author: typeof doc.author === 'string' ? doc.author : undefined,
       date: typeof doc.date === 'string' ? doc.date : undefined,
       audioUrl: typeof doc.audioUrl === 'string' ? doc.audioUrl : undefined,
