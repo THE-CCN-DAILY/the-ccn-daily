@@ -1,3 +1,5 @@
+import { adminAuthHeaders } from './adminAuth';
+
 export interface AppEvent {
   id: string;
   title: string;
@@ -48,7 +50,7 @@ export const createAdminEvent = async (event: {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'x-admin-email': ADMIN_EMAIL,
+      ...(await adminAuthHeaders()),
     },
     body: JSON.stringify({
       ...event,

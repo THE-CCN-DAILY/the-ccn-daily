@@ -1,3 +1,5 @@
+import { adminAuthHeaders } from './adminAuth';
+
 export interface LiveStreamStatus {
   status: 'offline' | 'live';
   isLive: boolean;
@@ -43,7 +45,7 @@ export const updateAdminLiveStreamStatus = async (stream: {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
-      'x-admin-email': ADMIN_EMAIL,
+      ...(await adminAuthHeaders()),
     },
     body: JSON.stringify(stream),
   });
@@ -59,7 +61,7 @@ export const createMuxLiveStream = async (): Promise<{
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'x-admin-email': ADMIN_EMAIL,
+      ...(await adminAuthHeaders()),
     },
   });
 };

@@ -1,3 +1,5 @@
+import { adminAuthHeaders } from './adminAuth';
+
 export interface Course {
   id: string;
   title: string;
@@ -51,7 +53,7 @@ const requestJson = async <T>(url: string, init?: RequestInit): Promise<T> => {
   return response.json() as Promise<T>;
 };
 
-const adminHeaders = () => ({ 'x-admin-email': ADMIN_EMAIL });
+// Admin requests authenticate with the signed-in user's Firebase ID token (see ./adminAuth).
 
 export const listCourses = async (includeDrafts = false): Promise<Course[]> => {
   const data = await requestJson<{ courses: Course[] }>(
@@ -92,7 +94,7 @@ export const publishCourse = async (course: Partial<Course> & {
 }) => {
   return requestJson<{ course: Course | null }>('/api/admin/courses', {
     method: 'POST',
-    headers: adminHeaders(),
+    headers: await adminAuthHeaders(),
     body: JSON.stringify(course),
   });
 };
@@ -106,7 +108,7 @@ export const saveCourseModule = async (
     `/api/admin/courses/${encodeURIComponent(courseId)}/modules`,
     {
       method: 'POST',
-      headers: adminHeaders(),
+      headers: await adminAuthHeaders(),
       body: JSON.stringify(module),
     }
   );
@@ -117,7 +119,7 @@ export const deleteCourseModule = async (courseId: string, moduleId: string): Pr
     `/api/admin/courses/${encodeURIComponent(courseId)}/modules/${encodeURIComponent(moduleId)}`,
     {
       method: 'DELETE',
-      headers: adminHeaders(),
+      headers: await adminAuthHeaders(),
     }
   );
 };
