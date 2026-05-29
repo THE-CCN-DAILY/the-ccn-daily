@@ -43,48 +43,17 @@ const CcnLogo: React.FC<CcnLogoProps> = ({
       aria-label="THE CCN DAILY"
       role="img"
     >
-      {isLight ? (
-        /* Light mode: solid black transparent PNG — crisp on white/sepia */
-        <img
-          src="/logo-flame-black.png"
-          alt=""
-          aria-hidden="true"
-          width={icon}
-          height={icon}
-          style={{ width: icon, height: icon, display: 'block', objectFit: 'contain', flexShrink: 0 }}
-          loading="eager"
-          decoding="async"
-        />
-      ) : (
-        /* Dark / sepia mode: SVG gradient flame — no background artifacts */
-        <svg
-          width={icon}
-          height={icon}
-          viewBox="0 0 54 80"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-          aria-hidden="true"
-          style={{ flexShrink: 0 }}
-        >
-          <defs>
-            <linearGradient id="ccnFlameG" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%"   stopColor="#5E0F0F" />
-              <stop offset="30%"  stopColor="#8E1B1B" />
-              <stop offset="62%"  stopColor="#C23B1E" />
-              <stop offset="100%" stopColor="#E87A2C" />
-            </linearGradient>
-          </defs>
-          <path
-            d="M32,72 C16,72 8,58 10,44 C12,32 22,26 24,18 C26,10 28,4 30,2 C31,8 30,16 34,22 C38,28 42,30 42,40 C42,54 38,66 32,72 Z"
-            fill="url(#ccnFlameG)"
-          />
-          <path
-            d="M46,72 C40,72 36,64 37,54 C38,46 43,42 44,36 C45,30 45,26 46,24 C47,28 46,32 49,36 C52,40 54,44 54,52 C54,62 51,70 46,72 Z"
-            fill="url(#ccnFlameG)"
-            opacity="0.85"
-          />
-        </svg>
-      )}
+      {/* Brand flame — color PNG for dark/sepia, black PNG for light */}
+      <img
+        src={isLight ? '/logo-flame-black.png' : '/logo-flame-color.png'}
+        alt=""
+        aria-hidden="true"
+        width={icon}
+        height={icon}
+        style={{ width: icon, height: icon, display: 'block', objectFit: 'contain', flexShrink: 0 }}
+        loading="eager"
+        decoding="async"
+      />
 
       {/* Wordmark — official brand PNG, theme-aware */}
       <img

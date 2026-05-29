@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { BookOpenCheck, ArrowLeft } from 'lucide-react';
+import { ScrollText, ArrowLeft } from 'lucide-react';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import Card from '../components/Card';
 import ContentDisplay from '../components/reader/ContentDisplay';
@@ -228,7 +228,7 @@ const BibleReaderPage: React.FC = () => {
                   : 'bg-brand-secondary border border-brand-border text-brand-text-secondary hover:text-brand-accent'
               }`}
             >
-              <BookOpenCheck className="w-4 h-4" />
+              <ScrollText className="w-4 h-4" />
               <span className="hidden sm:inline">{studyGuideOpen ? 'Close Guide' : 'Study with a Guide'}</span>
             </button>
             {/* Mobile sidebar toggle */}

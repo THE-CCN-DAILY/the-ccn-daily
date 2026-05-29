@@ -8,9 +8,15 @@
   "theme_color": "#0D0B09",
   "icons": [
     {
-      "src": "/favicon.svg",
+      "src": "/logo-icon.webp",
       "sizes": "any",
-      "type": "image/svg+xml",
+      "type": "image/webp",
+      "purpose": "any"
+    },
+    {
+      "src": "/logo-flame-color.png",
+      "sizes": "512x512",
+      "type": "image/png",
       "purpose": "any maskable"
     }
   ]
