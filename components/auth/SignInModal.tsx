@@ -143,9 +143,9 @@ const SignInModal: React.FC = () => {
                 {/* Logo + brand */}
                 <div className="mb-7 flex flex-col items-center">
                   <img
-                    src="/brand/flame-color.png"
+                    src="/flame-transparent.png"
                     alt="THE CCN DAILY"
-                    className="mb-3 h-12 w-12 object-contain"
+                    className="mb-3 h-14 w-14 object-contain"
                     onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
                   />
                   <p className="text-[10px] font-display font-bold uppercase tracking-[0.22em] text-brand-accent">

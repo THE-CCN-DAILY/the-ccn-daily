@@ -8,18 +8,18 @@ interface CcnLogoProps {
 }
 
 const SIZES = {
-  sm: { icon: 24, wordmark: 22 },
-  md: { icon: 36, wordmark: 32 },
-  lg: { icon: 52, wordmark: 48 },
+  sm: { icon: 30, wordmark: 26 },
+  md: { icon: 44, wordmark: 36 },
+  lg: { icon: 60, wordmark: 52 },
 };
 
-const GAP = { sm: 5, md: 7, lg: 10 };
+const GAP = { sm: 6, md: 9, lg: 12 };
 
 /**
  * CCN Daily logo — brand-accurate, theme-aware
  *
- * Dark / sepia  → SVG gradient flame  +  /logo-wordmark-white.webp
- * Light         → /logo-flame-black.png (transparent)  +  /logo-wordmark-black.webp
+ * Dark / sepia  → /flame-transparent.png  +  /logo-wordmark-white.webp
+ * Light         → /flame-transparent.png  +  /logo-wordmark-black.webp
  */
 const CcnLogo: React.FC<CcnLogoProps> = ({
   theme = 'auto',
@@ -43,9 +43,9 @@ const CcnLogo: React.FC<CcnLogoProps> = ({
       aria-label="THE CCN DAILY"
       role="img"
     >
-      {/* Brand flame — color PNG for dark/sepia, black PNG for light */}
+      {/* Brand flame — transparent PNG, works on all backgrounds */}
       <img
-        src={isLight ? '/logo-flame-black.png' : '/logo-flame-color.png'}
+        src="/flame-transparent.png"
         alt=""
         aria-hidden="true"
         width={icon}
