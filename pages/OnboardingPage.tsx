@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuth } from '../contexts/AuthContext';
 import { useNotifications } from '../contexts/NotificationContext';
@@ -12,13 +12,17 @@ import CcnLogo from '../components/CcnLogo';
 type FaithJourney = 'beginning' | 'growing' | 'established' | 'leading';
 
 interface OnboardingData {
+  uid: string;
+  email: string | null;
+  role: string;
+  createdAt: ReturnType<typeof serverTimestamp>;
   preferredName: string;
   faithJourney: FaithJourney | '';
   interests: string[];
   phone: string;
   smsConsent: boolean;
   onboardingComplete: true;
-  completedAt: string;
+  completedAt: ReturnType<typeof serverTimestamp>;
 }
 
 // ─── Constants ───────────────────────────────────────────────────────────────
@@ -329,13 +333,14 @@ const Step4: React.FC<Step4Props> = ({
         className="text-3xl text-brand-text-primary mb-2"
         style={{ fontFamily: 'var(--font-display)', fontWeight: 600, lineHeight: 1.2 }}
       >
-        Get your daily encounter delivered
+        Stay in the loop
       </h1>
       <p
         className="text-brand-text-secondary"
         style={{ fontFamily: 'var(--serif-body)', fontSize: '17px', lineHeight: 1.65 }}
       >
-        Optional — enter your phone number to receive morning devotionals by SMS.
+        Optional — add your phone number for key announcements, reminders, and
+        important updates. Not daily devotionals — just the things worth knowing.
       </p>
     </div>
 
@@ -378,7 +383,7 @@ const Step4: React.FC<Step4Props> = ({
         className="text-sm text-brand-text-secondary group-hover:text-brand-text-primary transition-colors"
         style={{ fontFamily: 'var(--serif-body)', lineHeight: 1.6 }}
       >
-        I agree to receive morning devotional SMS from THE CCN DAILY. You can unsubscribe anytime.
+        I agree to receive occasional announcements, reminders, and updates by SMS from THE CCN DAILY. You can unsubscribe anytime.
       </p>
     </label>
 
@@ -449,13 +454,19 @@ const OnboardingPage: React.FC = () => {
     setIsSaving(true);
     try {
       const data: OnboardingData = {
+        // Base identity fields the security rules require on every users/{uid} write
+        uid: user.uid,
+        email: user.email,
+        role: user.role ?? 'user',
+        createdAt: serverTimestamp(),
+        // Onboarding preferences
         preferredName,
         faithJourney,
         interests,
         phone: skipPhone ? '' : phone,
         smsConsent: skipPhone ? false : smsConsent,
         onboardingComplete: true,
-        completedAt: new Date().toISOString(),
+        completedAt: serverTimestamp(),
       };
       await setDoc(doc(db, 'users', user.uid), data, { merge: true });
       navigate('/app/guided-journey', { replace: true });

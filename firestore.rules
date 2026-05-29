@@ -177,7 +177,7 @@ service cloud.firestore {
     // ===============================================================
     function isValidUser(data) {
       return hasRequiredFields(['uid', 'email', 'role', 'createdAt']) &&
-             hasOnlyAllowedFields(['uid', 'displayName', 'email', 'photoURL', 'role', 'createdAt', 'lastActive', 'stats', 'unlockedAchievements']) &&
+             hasOnlyAllowedFields(['uid', 'displayName', 'email', 'photoURL', 'role', 'createdAt', 'lastActive', 'stats', 'unlockedAchievements', 'preferredName', 'faithJourney', 'interests', 'phone', 'smsConsent', 'onboardingComplete', 'completedAt', 'fcmToken', 'fcmTokenUpdatedAt']) &&
              data.uid == request.auth.uid &&
              data.email == request.auth.token.email &&
              isValidEmail(data.email) &&
@@ -191,9 +191,18 @@ service cloud.firestore {
                data.stats.points is number && data.stats.points >= 0
              )) &&
              (!('unlockedAchievements' in data) || (
-               data.unlockedAchievements is list && 
+               data.unlockedAchievements is list &&
                data.unlockedAchievements.size() < 100
-             ));
+             )) &&
+             (!('preferredName' in data) || (data.preferredName is string && data.preferredName.size() < 100)) &&
+             (!('faithJourney' in data) || (data.faithJourney is string && data.faithJourney.size() < 50)) &&
+             (!('interests' in data) || (data.interests is list && data.interests.size() < 30)) &&
+             (!('phone' in data) || (data.phone is string && data.phone.size() < 40)) &&
+             (!('smsConsent' in data) || data.smsConsent is bool) &&
+             (!('onboardingComplete' in data) || data.onboardingComplete is bool) &&
+             (!('completedAt' in data) || data.completedAt is timestamp) &&
+             (!('fcmToken' in data) || data.fcmToken is string) &&
+             (!('fcmTokenUpdatedAt' in data) || data.fcmTokenUpdatedAt is timestamp);
     }
 
     function isValidChallenge(data) {
