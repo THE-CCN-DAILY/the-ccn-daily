@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import { ScrollText } from 'lucide-react';
 import { generateCloudflareText } from '../services/geminiService';
 import { ChatIcon, CloseIcon } from './icons';
 
@@ -195,16 +196,12 @@ const BibleStudyGuide: React.FC<BibleStudyGuideProps> = ({ currentPassage, onClo
     <div className="h-full flex flex-col bg-brand-secondary border border-brand-border rounded-2xl overflow-hidden">
       {/* Panel header */}
       <div className="flex-shrink-0 flex items-center justify-between px-4 py-3 border-b border-brand-border">
-        <div className="flex items-center gap-2">
-          <div
-            className={`w-7 h-7 rounded-full flex items-center justify-center font-black text-[12px] flex-shrink-0 ${expert.avatarBg} ${expert.avatarText}`}
-          >
-            {expert.avatar}
-          </div>
+        <div className="flex items-center gap-2.5">
+          <ScrollText className="w-4 h-4 text-brand-accent flex-shrink-0" />
           <div>
-            <p className="text-xs font-bold text-brand-text-primary leading-none">{expert.name}</p>
+            <p className="text-xs font-bold text-brand-text-primary leading-none">Study with a Guide</p>
             <p className={`text-[12px] font-semibold leading-none mt-0.5 ${expert.avatarText}`}>
-              {expert.specialty}
+              {expert.name} · {expert.specialty}
             </p>
           </div>
         </div>
@@ -217,11 +214,11 @@ const BibleStudyGuide: React.FC<BibleStudyGuideProps> = ({ currentPassage, onClo
         </button>
       </div>
 
-      {/* AI disclosure */}
+      {/* Study note */}
       <div className="flex-shrink-0 px-3 py-2 bg-brand-dark/60 border-b border-brand-border">
         <p className="text-[11px] text-brand-text-secondary/70 leading-snug">
-          <span className="font-semibold text-brand-text-secondary">AI-assisted study guides.</span>{' '}
-          Dr. Sarah, Rev. Marcus, Dr. Emily, and Prof. David are AI personas trained to explore Scripture from different angles — not real people. Always test responses against the Bible.
+          <span className="font-semibold text-brand-text-secondary">Four perspectives on Scripture.</span>{' '}
+          Dr. Sarah, Rev. Marcus, Dr. Emily, and Prof. David each bring a different lens — scholarly, pastoral, personal, and historical. Always hold their words against the Bible itself.
         </p>
       </div>
 

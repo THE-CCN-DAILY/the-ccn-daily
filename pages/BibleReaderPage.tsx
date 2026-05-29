@@ -9,7 +9,7 @@ import BibleStudyGuide from '../components/BibleStudyGuide';
 import ScriptureStudyCompanion from '../components/ScriptureStudyCompanion';
 import { getBibleBooks, getChapterText, searchBible, type TranslationCode } from '../services/bibleService';
 import type { BibleBook, BibleSearchResult } from '../types';
-import { ChevronDownIcon, SpinnerIcon, SearchIcon, SparklesIcon, CloseIcon } from '../components/icons';
+import { ChevronDownIcon, SpinnerIcon, SearchIcon, CloseIcon } from '../components/icons';
 import { db } from '../firebase';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -409,7 +409,7 @@ const BibleReaderPage: React.FC = () => {
                   <Card className="overflow-y-auto max-h-[80vh]">
                     <div className="flex justify-between items-center mb-5">
                       <h2 className="text-lg font-bold text-brand-text-primary flex items-center gap-2">
-                        <SparklesIcon className="w-5 h-5 text-brand-accent" />
+                        <SearchIcon className="w-5 h-5 text-brand-accent" />
                         {searchResults.length} result{searchResults.length !== 1 ? 's' : ''} for &ldquo;{searchQuery}&rdquo;
                       </h2>
                       <button

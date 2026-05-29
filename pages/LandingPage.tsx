@@ -648,6 +648,24 @@ const LandingPage: React.FC = () => {
           </motion.div>
         </section>
 
+        {/* ── Scripture Accent — Psalm 119:105 ───────────────────────────────── */}
+        <div className="py-10 px-6 text-center bg-brand-dark border-t border-brand-border/40">
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.65 }}
+            className="max-w-lg mx-auto"
+          >
+            <p className="font-serif italic text-base leading-[1.9] text-brand-text-secondary">
+              "Your word is a lamp to my feet and a light to my path."
+            </p>
+            <p className="mt-3 text-[10px] font-bold uppercase tracking-[0.18em] text-brand-accent">
+              Psalm 119:105
+            </p>
+          </motion.div>
+        </div>
+
         {/* ── Origin Story ──────────────────────────────────────────────────── */}
         <section className="w-full bg-brand-dark py-20 px-6 md:py-28">
           <style>{`
@@ -724,6 +742,24 @@ const LandingPage: React.FC = () => {
             </div>
           </div>
         </section>
+
+        {/* ── Scripture Accent — Matthew 4:4 ──────────────────────────────────── */}
+        <div className="py-10 px-6 text-center bg-brand-secondary border-t border-brand-border/40">
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.65 }}
+            className="max-w-lg mx-auto"
+          >
+            <p className="font-serif italic text-base leading-[1.9] text-brand-text-secondary">
+              "Man shall not live by bread alone, but by every word that comes from the mouth of God."
+            </p>
+            <p className="mt-3 text-[10px] font-bold uppercase tracking-[0.18em] text-brand-accent">
+              Matthew 4:4
+            </p>
+          </motion.div>
+        </div>
 
         {/* ── What's Inside (Feature Grid) ──────────────────────────────────── */}
         <section className="bg-brand-secondary py-20 px-6 md:py-28">
@@ -835,40 +871,23 @@ const LandingPage: React.FC = () => {
           </div>
         </section>
 
-        {/* ── Formation Scriptures ──────────────────────────────────────────── */}
-        <section className="bg-brand-secondary border-t border-brand-border py-20 px-6 md:py-28">
-          <div className="mx-auto max-w-6xl">
-            <Reveal className="mb-14 text-center">
-              <p className="text-xs font-bold uppercase tracking-widest text-brand-accent mb-4">
-                The Word That Grounds Us
-              </p>
-              <h2 className="font-display text-3xl font-bold leading-tight text-brand-text-primary md:text-4xl max-w-2xl mx-auto">
-                Scripture is not decoration. It is the foundation.
-              </h2>
-            </Reveal>
-
-            <div className="grid gap-6 md:grid-cols-2">
-              {formationVerses.map(({ text, ref }, i) => (
-                <motion.div
-                  key={ref}
-                  initial={{ opacity: 0, y: 24 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.55, delay: i * 0.09, ease: [0.22, 1, 0.36, 1] }}
-                  className="rounded-2xl border border-brand-border bg-brand-dark p-8"
-                  style={{ borderTop: '2px solid var(--color-brand-accent, #F27D26)' }}
-                >
-                  <p className="font-serif text-lg leading-[1.9] text-brand-text-primary mb-6 italic">
-                    "{text}"
-                  </p>
-                  <p className="text-xs font-bold uppercase tracking-widest text-brand-accent">
-                    {ref}
-                  </p>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        </section>
+        {/* ── Scripture Accent — Hebrews 4:12 ─────────────────────────────────── */}
+        <div className="py-10 px-6 text-center bg-brand-dark border-t border-brand-border/40">
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.65 }}
+            className="max-w-xl mx-auto"
+          >
+            <p className="font-serif italic text-base leading-[1.9] text-brand-text-secondary">
+              "The word of God is living and active, sharper than any two-edged sword, piercing to the division of soul and of spirit."
+            </p>
+            <p className="mt-3 text-[10px] font-bold uppercase tracking-[0.18em] text-brand-accent">
+              Hebrews 4:12
+            </p>
+          </motion.div>
+        </div>
 
         {/* ── Final CTA ─────────────────────────────────────────────────────── */}
         <Reveal>
@@ -918,6 +937,24 @@ const LandingPage: React.FC = () => {
             </div>
           </section>
         </Reveal>
+
+        {/* ── Scripture Accent — Colossians 3:16 ──────────────────────────────── */}
+        <div className="py-10 px-6 text-center bg-brand-dark border-t border-brand-border/40">
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.65 }}
+            className="max-w-lg mx-auto"
+          >
+            <p className="font-serif italic text-base leading-[1.9] text-brand-text-secondary">
+              "Let the word of Christ dwell in you richly, teaching and admonishing one another in all wisdom."
+            </p>
+            <p className="mt-3 text-[10px] font-bold uppercase tracking-[0.18em] text-brand-accent">
+              Colossians 3:16
+            </p>
+          </motion.div>
+        </div>
 
         {/* ── Closing CTA ───────────────────────────────────────────────────── */}
         <Reveal>

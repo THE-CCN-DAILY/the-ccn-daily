@@ -15,6 +15,7 @@ interface AuthContextType {
   user: AppUser | null;
   loading: boolean;
   showSignIn: boolean;
+  redirectError: string | null;
   openSignIn: () => void;
   closeSignIn: () => void;
   signIn: () => void;
@@ -30,15 +31,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [showSignIn, setShowSignIn] = useState(false);
+  const [redirectError, setRedirectError] = useState<string | null>(null);
 
   const openSignIn = useCallback(() => setShowSignIn(true), []);
-  const closeSignIn = useCallback(() => setShowSignIn(false), []);
+  const closeSignIn = useCallback(() => { setShowSignIn(false); setRedirectError(null); }, []);
 
   useEffect(() => {
     const auth = getAuth();
 
-    // Consume any pending redirect result first (no-op if no redirect in progress)
-    getRedirectResult(auth).catch(() => {});
+    // Consume any pending redirect result — surface errors instead of silently dropping them
+    getRedirectResult(auth).catch((err: unknown) => {
+      const code = (err as { code?: string }).code ?? '';
+      // auth/null-user fires on every cold load with no pending redirect — not an error
+      if (code && code !== 'auth/null-user') {
+        const msg =
+          code === 'auth/unauthorized-domain'
+            ? 'Google sign-in is not yet enabled for this domain. Use email & password for now.'
+            : code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request'
+            ? null // user cancelled — no message needed
+            : 'Google sign-in failed. Please try again or use email & password.';
+        if (msg) {
+          setRedirectError(msg);
+          setShowSignIn(true); // reopen modal so the user can see the error
+        }
+      }
+    });
 
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
@@ -95,8 +112,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const value = useMemo(
-    () => ({ user, loading, showSignIn, openSignIn, closeSignIn, signIn, signOut, signInEmail, signUpEmail, sendPasswordReset }),
-    [user, loading, showSignIn, openSignIn, closeSignIn, signIn, signOut, signInEmail, signUpEmail, sendPasswordReset],
+    () => ({ user, loading, showSignIn, redirectError, openSignIn, closeSignIn, signIn, signOut, signInEmail, signUpEmail, sendPasswordReset }),
+    [user, loading, showSignIn, redirectError, openSignIn, closeSignIn, signIn, signOut, signInEmail, signUpEmail, sendPasswordReset],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

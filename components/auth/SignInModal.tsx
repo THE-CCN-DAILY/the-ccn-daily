@@ -21,7 +21,7 @@ const GoogleIcon: React.FC<{ className?: string }> = ({ className }) => (
 );
 
 const SignInModal: React.FC = () => {
-  const { showSignIn, closeSignIn, signIn, signInEmail, signUpEmail, sendPasswordReset, loading } = useAuth();
+  const { showSignIn, closeSignIn, signIn, signInEmail, signUpEmail, sendPasswordReset, loading, redirectError } = useAuth();
 
   const [activeTab, setActiveTab] = useState<AuthTab>('email');
   const [emailMode, setEmailMode] = useState<EmailMode>('signin');
@@ -204,6 +204,20 @@ const SignInModal: React.FC = () => {
                           <GoogleIcon className="h-5 w-5" />
                           Continue with Google
                         </button>
+
+                        <AnimatePresence>
+                          {(error || redirectError) && (
+                            <motion.p
+                              initial={{ opacity: 0, height: 0 }}
+                              animate={{ opacity: 1, height: 'auto' }}
+                              exit={{ opacity: 0, height: 0 }}
+                              className="rounded-lg bg-red-500/10 px-3 py-2 text-xs text-red-400"
+                            >
+                              {redirectError || error}
+                            </motion.p>
+                          )}
+                        </AnimatePresence>
+
                         <p className="text-center text-xs text-brand-text-secondary">
                           Your Google account is used only for sign-in.
                         </p>
