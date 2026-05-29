@@ -98,6 +98,15 @@ app owning the lane of teaching depth + guided formation + a theologically-disci
   abandoned. Phase C: retire/hide the Content Manager "Podcasts" tab. Newsletters likely follow the same
   pattern (Substack RSS via `NewsletterPage`) — retire the `admin_newsletters` CRUD unless self-hosting.
 
+## Decision log (cont.)
+- **Devotionals consolidated onto Blog Studio (D1 `blog_posts`)** as the single source. The guided
+  journey + public Blog now both read it. Retire in Phase C: the Content Manager "Daily Devotionals"
+  (Firestore) tab AND the catalog "Devotionals" (D1 `devotionals` table) tab — both redundant.
+- **Blog Studio stale copy:** the "PRODUCTION ADMIN TOKEN" field + "Admin gate" note are no longer true
+  after the Bearer-token auth migration. Remove/replace (quick Phase C cleanup).
+- **VisualSanctuary: retire** (Phase C). AI scene-image generation is a novelty that doesn't serve the
+  formation mission; not launch-worthy. Hide from nav.
+
 ## Backlog — founder requests (slot into Phase E/G)
 - **Rich-text editor** in the devotional/content generator (formatting commands, not raw markdown).
 - **Standardize design-system fonts/styles across all screens** — some screens don't use the
