@@ -37,6 +37,33 @@ Bible Reader, Books, Reading Plans, News, Podcast Library, Courses, Community/Pr
 Giving, Pricing, Notifications, and the landing-page Reviews section (for the reviews feature build).
 Plus: verify each content surface is **populated vs empty** (D1 seeding).
 
+## Code-level audit (data & auth wiring) — 2026-05-29
+
+### Architecture is genuinely backend-driven (good)
+- Only `data/gamificationData.ts` is static/mock. Every other surface fetches real data via
+  `/api/*` (e.g. `getTodayDevotional` → `/api/devotionals/today`, `listAudiobooks` → `/api/audiobooks`,
+  admin content → `/api/admin/content/*`). The app is real, not a mockup.
+
+### CRITICAL (launch blocker) — Admin Content Manager is non-functional in production
+- `services/contentService.ts` authorizes admin writes by sending only an `x-admin-email` header
+  (hardcoded `pastor.eryeza@gmail.com`, line 24/43). It never sends `x-admin-token`.
+- Backend `isAdminRequest` (`functions/api/[[path]].ts:618`) requires, when `ADMIN_API_TOKEN` is set
+  (it is, in prod), BOTH a matching `x-admin-token` AND the email. So the browser's admin calls
+  return **401 ADMIN_AUTH_REQUIRED** in production.
+- Net effect: **the founder cannot publish/edit devotionals, books, audiobooks, or courses through
+  the UI in production.** The "manage content without code" promise is broken. The code comments
+  confirm it's a transitional state pending a real auth migration.
+- A secret token must never be shipped to the browser, so the fix is NOT to send the token from the
+  client. **Proper fix:** real session-based admin auth — verify the Firebase ID token server-side in
+  the Functions and derive admin from the verified email (the ministry allowlist), then drop the
+  header/token scheme. Medium backend task; unblocks all admin content management.
+
+### Security (corrected, not a trivial bypass)
+- The admin gate is reasonably guarded in prod (token required); the email-only path is limited to
+  localhost preview. So this is NOT an "anyone can forge admin" hole. The real risk is the
+  *incomplete/transitional* scheme (brittle, and a hardcoded admin email in client code) — replace
+  with verified-session auth.
+
 ## Method note
 Full audit = this live walkthrough (real-user UX) + the expert-team Workflow (security, perf, SEO/GEO,
 a11y, feature-parity, content, functionality, positioning — 6/9 already completed and cached; 3
