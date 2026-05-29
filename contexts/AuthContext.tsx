@@ -1,7 +1,7 @@
 import React, { createContext, useState, useContext, useEffect, useMemo, useCallback } from 'react';
 import {
   getAuth,
-  signInWithRedirect,
+  signInWithPopup,
   GoogleAuthProvider,
   onAuthStateChanged,
   signOut as firebaseSignOut,
@@ -18,7 +18,7 @@ interface AuthContextType {
   redirectError: string | null;
   openSignIn: () => void;
   closeSignIn: () => void;
-  signIn: () => void;
+  signIn: () => Promise<void>;
   signOut: () => Promise<void>;
   signInEmail: (email: string, password: string) => Promise<void>;
   signUpEmail: (email: string, password: string) => Promise<void>;
@@ -95,9 +95,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => unsubscribe();
   }, []);
 
-  const signIn = useCallback(() => {
-    // Always use redirect — never popup (per CLAUDE.md)
-    signInWithRedirect(getAuth(), new GoogleAuthProvider());
+  const signIn = useCallback(async () => {
+    // Popup (not redirect): redirect loses its result on Cloudflare Pages because the
+    // cross-domain authDomain cookie is blocked by the browser, looping back to sign-in.
+    setRedirectError(null);
+    try {
+      await signInWithPopup(getAuth(), new GoogleAuthProvider());
+    } catch (err: unknown) {
+      const code = (err as { code?: string }).code ?? '';
+      if (code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request') {
+        return; // user dismissed the popup — not an error
+      }
+      setRedirectError(
+        code === 'auth/unauthorized-domain'
+          ? 'Google sign-in is not enabled for this domain yet. Use email & password for now.'
+          : 'Google sign-in failed. Please try again or use email & password.',
+      );
+      throw err;
+    }
   }, []);
 
   const signOut = useCallback(async () => {

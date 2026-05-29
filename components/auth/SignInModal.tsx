@@ -51,7 +51,12 @@ const SignInModal: React.FC = () => {
 
   const handleGoogleSignIn = async () => {
     setError('');
-    await signIn();
+    try {
+      await signIn();
+      handleClose(); // popup resolved successfully — close the modal
+    } catch {
+      // failure is surfaced via redirectError from AuthContext; keep modal open
+    }
   };
 
   const handleEmailSubmit = async (e: React.FormEvent) => {
