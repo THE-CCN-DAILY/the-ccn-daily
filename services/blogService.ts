@@ -1,3 +1,5 @@
+import { adminAuthHeaders } from './adminAuth';
+
 export interface BlogPost {
   id: string;
   slug: string;
@@ -39,12 +41,9 @@ const requestJson = async <T>(url: string, init?: RequestInit): Promise<T> => {
   return response.json() as Promise<T>;
 };
 
-const adminHeaders = (auth?: AdminBlogAuth): HeadersInit => {
-  const headers: Record<string, string> = {};
-  if (auth?.email) headers['x-admin-email'] = auth.email;
-  if (auth?.token) headers['x-admin-token'] = auth.token;
-  return headers;
-};
+// Admin auth now uses the signed-in user's Firebase ID token (see ./adminAuth).
+// The legacy `auth` param is accepted for signature compatibility but ignored.
+const adminHeaders = (_auth?: AdminBlogAuth): Promise<Record<string, string>> => adminAuthHeaders();
 
 export const listPublishedBlogPosts = async (): Promise<BlogPost[]> => {
   const data = await requestJson<{ posts: BlogPost[] }>('/api/blog/posts');
@@ -58,7 +57,7 @@ export const getPublishedBlogPost = async (slug: string): Promise<BlogPost> => {
 
 export const listAllBlogPosts = async (auth?: AdminBlogAuth): Promise<BlogPost[]> => {
   const data = await requestJson<{ posts: BlogPost[] }>('/api/admin/blog/posts', {
-    headers: adminHeaders(auth),
+    headers: await adminHeaders(auth),
   });
   return data.posts;
 };
@@ -66,7 +65,7 @@ export const listAllBlogPosts = async (auth?: AdminBlogAuth): Promise<BlogPost[]
 export const saveBlogPost = async (post: BlogPostInput, auth?: AdminBlogAuth): Promise<BlogPost> => {
   const data = await requestJson<{ post: BlogPost }>('/api/admin/blog/posts', {
     method: 'POST',
-    headers: adminHeaders(auth),
+    headers: await adminHeaders(auth),
     body: JSON.stringify(post),
   });
   return data.post;
@@ -75,6 +74,6 @@ export const saveBlogPost = async (post: BlogPostInput, auth?: AdminBlogAuth): P
 export const deleteBlogPost = async (id: string, auth?: AdminBlogAuth): Promise<void> => {
   await requestJson<{ ok: true }>(`/api/admin/blog/posts/${encodeURIComponent(id)}`, {
     method: 'DELETE',
-    headers: adminHeaders(auth),
+    headers: await adminHeaders(auth),
   });
 };

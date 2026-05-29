@@ -1,3 +1,5 @@
+import { adminAuthHeaders } from './adminAuth';
+
 export type ContentType = 'devotionals' | 'audiobooks' | 'books' | 'challenges' | 'courses';
 
 export interface CatalogContentItem {
@@ -40,13 +42,13 @@ const requestJson = async <T>(url: string, init?: RequestInit): Promise<T> => {
   return response.json() as Promise<T>;
 };
 
-const adminHeaders = () => ({ 'x-admin-email': ADMIN_EMAIL });
+// Admin requests authenticate with the signed-in user's Firebase ID token (see ./adminAuth).
 
 export const listCatalogContent = async (type: ContentType, includeDrafts = true): Promise<CatalogContentItem[]> => {
   const query = includeDrafts ? '?includeDrafts=true' : '';
   const data = await requestJson<{ items: CatalogContentItem[] }>(
     `/api/admin/content/${encodeURIComponent(type)}${query}`,
-    { headers: adminHeaders() }
+    { headers: await adminAuthHeaders() }
   );
   return data.items;
 };
@@ -59,7 +61,7 @@ export const saveCatalogContent = async (
     `/api/admin/content/${encodeURIComponent(type)}`,
     {
       method: 'POST',
-      headers: adminHeaders(),
+      headers: await adminAuthHeaders(),
       body: JSON.stringify(item),
     }
   );
@@ -71,7 +73,7 @@ export const deleteCatalogContent = async (type: ContentType, id: string): Promi
     `/api/admin/content/${encodeURIComponent(type)}/${encodeURIComponent(id)}`,
     {
       method: 'DELETE',
-      headers: adminHeaders(),
+      headers: await adminAuthHeaders(),
     }
   );
 };
@@ -92,7 +94,7 @@ export const uploadCatalogMedia = async (
     '/api/admin/content/media',
     {
       method: 'POST',
-      headers: adminHeaders(),
+      headers: await adminAuthHeaders(),
       body: form,
     }
   );

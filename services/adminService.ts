@@ -1,3 +1,5 @@
+import { adminAuthHeaders } from './adminAuth';
+
 export interface AdminUser {
   id: string;
   uid?: string;
@@ -26,7 +28,7 @@ const formatDate = (value?: string) => {
 
 export const listAdminUsers = async (): Promise<{ users: AdminUser[]; stats: AdminUserStats }> => {
   const response = await fetch('/api/admin/users', {
-    headers: { 'x-admin-email': ADMIN_EMAIL },
+    headers: await adminAuthHeaders(),
   });
 
   if (!response.ok) {

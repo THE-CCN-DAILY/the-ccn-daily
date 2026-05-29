@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import { SignJWT, jwtVerify } from 'jose';
+import { SignJWT, jwtVerify, createRemoteJWKSet } from 'jose';
 
 type D1PreparedStatement = {
   bind: (...values: unknown[]) => D1PreparedStatement;
@@ -49,7 +49,48 @@ type Env = {
   RESEND_API_KEY?: string;
 };
 
-const app = new Hono<{ Bindings: Env }>();
+const app = new Hono<{
+  Bindings: Env;
+  Variables: { idTokenEmail?: string; idTokenEmailVerified?: boolean; idTokenUid?: string };
+}>();
+
+// Firebase ID-token verification (RS256) against Google's public JWKS.
+const firebaseJwks = createRemoteJWKSet(
+  new URL('https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com'),
+);
+
+const verifyFirebaseIdToken = async (token: string, projectId: string) => {
+  try {
+    const { payload } = await jwtVerify(token, firebaseJwks, {
+      issuer: `https://securetoken.google.com/${projectId}`,
+      audience: projectId,
+    });
+    const claims = payload as Record<string, unknown>;
+    return {
+      uid: String(payload.sub ?? ''),
+      email: String(claims.email ?? '').toLowerCase(),
+      emailVerified: claims.email_verified === true,
+    };
+  } catch {
+    return null;
+  }
+};
+
+// Verify a Bearer Firebase ID token once per request and stash the result on context,
+// so synchronous admin checks (requireAdmin) need no per-route changes.
+app.use('*', async (c, next) => {
+  const authHeader = c.req.header('authorization') || '';
+  if (authHeader.startsWith('Bearer ')) {
+    const projectId = c.env.FIREBASE_PROJECT_ID || 'ccn-daily';
+    const session = await verifyFirebaseIdToken(authHeader.slice(7).trim(), projectId);
+    if (session) {
+      c.set('idTokenEmail', session.email);
+      c.set('idTokenEmailVerified', session.emailVerified);
+      c.set('idTokenUid', session.uid);
+    }
+  }
+  await next();
+});
 
 type BlogPostRow = {
   id: string;
@@ -615,7 +656,16 @@ const mapAiUsage = (row: AiUsageRow) => {
 
 const isSafeId = (value: string) => /^[a-zA-Z0-9._:@-]{1,160}$/.test(value);
 
+const ADMIN_EMAILS = ['pastor.eryeza@gmail.com', 'ccndaily@gmail.com'];
+
 const isAdminRequest = (c: any) => {
+  // Primary: a verified Firebase ID token (set by the auth middleware) for a ministry owner.
+  const sessionEmail = (c.get('idTokenEmail') || '').toLowerCase();
+  if (sessionEmail && c.get('idTokenEmailVerified') === true && ADMIN_EMAILS.includes(sessionEmail)) {
+    return true;
+  }
+
+  // Transitional fallbacks: header email + shared token, or localhost preview.
   const expected = (c.env.ADMIN_EMAIL || 'pastor.eryeza@gmail.com').toLowerCase();
   const email = (c.req.header('x-admin-email') || '').toLowerCase();
   const configuredToken = c.env.ADMIN_API_TOKEN || '';

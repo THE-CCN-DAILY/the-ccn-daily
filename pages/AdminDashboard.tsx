@@ -6,6 +6,7 @@ import { UserIcon, PlusCircleIcon, ChatBubbleLeftRightIcon, PencilIcon, SpeakerW
 import { useNotifications } from '../contexts/NotificationContext';
 import { db, storage } from '../firebase';
 import { collection, addDoc, serverTimestamp, query, orderBy, onSnapshot } from 'firebase/firestore';
+import { adminAuthHeaders } from '../services/adminAuth';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { handleFirestoreError, OperationType } from '../utils/firestoreErrorHandler';
 import { useAuth } from '../contexts/AuthContext';
@@ -120,11 +121,9 @@ const AdminDashboard: React.FC = () => {
         
         try {
             // 1. Get direct upload URL from our backend
-            const response = await fetch('/api/mux/upload', { 
+            const response = await fetch('/api/mux/upload', {
                 method: 'POST',
-                headers: {
-                    'x-admin-email': 'pastor.eryeza@gmail.com'
-                }
+                headers: await adminAuthHeaders(),
             });
             if (!response.ok) {
                 const errorData = await response.json();
