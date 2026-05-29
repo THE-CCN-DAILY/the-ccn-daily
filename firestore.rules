@@ -151,9 +151,14 @@ service cloud.firestore {
     }
 
     function isAdmin() {
-      return isAuthenticated() &&
-        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
-          (request.auth.token.email == "pastor.eryeza@gmail.com" && request.auth.token.email_verified == true));
+      return isAuthenticated() && (
+        // Ministry owner emails (verified) — primary admin path
+        (request.auth.token.email in ['pastor.eryeza@gmail.com', 'ccndaily@gmail.com']
+          && request.auth.token.email_verified == true) ||
+        // Or an explicit admin role on the user's own doc (exists() guards against missing doc)
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid))
+          && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin')
+      );
     }
 
     function hasRequiredFields(fields) {
@@ -331,12 +336,23 @@ service cloud.firestore {
     }
 
     function isValidDevotional(data) {
-      return hasRequiredFields(['title', 'content', 'date', 'authorUid', 'createdAt']) &&
+      return hasRequiredFields(['title', 'date', 'authorUid', 'createdAt']) &&
              data.title is string && data.title.size() < 200 &&
-             data.content is string && data.content.size() < 50000 &&
              data.date is string && data.date.size() < 20 &&
-             data.authorUid == request.auth.uid &&
+             data.authorUid is string &&
              data.createdAt is timestamp &&
+             (!('body' in data) || (data.body is string && data.body.size() < 50000)) &&
+             (!('content' in data) || (data.content is string && data.content.size() < 50000)) &&
+             (!('scriptureRef' in data) || (data.scriptureRef is string && data.scriptureRef.size() < 300)) &&
+             (!('scriptureText' in data) || (data.scriptureText is string && data.scriptureText.size() < 5000)) &&
+             (!('author' in data) || (data.author is string && data.author.size() < 200)) &&
+             (!('status' in data) || data.status in ['draft', 'published', 'archived']) &&
+             (!('authorName' in data) || (data.authorName is string && data.authorName.size() < 200)) &&
+             (!('authorPhotoUrl' in data) || (data.authorPhotoUrl is string && data.authorPhotoUrl.size() < 1000)) &&
+             (!('authorBio' in data) || (data.authorBio is string && data.authorBio.size() < 2000)) &&
+             (!('authorWebsiteUrl' in data) || (data.authorWebsiteUrl is string && data.authorWebsiteUrl.size() < 1000)) &&
+             (!('authorTwitterHandle' in data) || (data.authorTwitterHandle is string && data.authorTwitterHandle.size() < 100)) &&
+             (!('updatedAt' in data) || data.updatedAt is timestamp) &&
              (!('audioUrl' in data) || (data.audioUrl is string && data.audioUrl.size() < 1000)) &&
              (!('isPremium' in data) || data.isPremium is bool) &&
              (!('price' in data) || data.price is number);
@@ -401,7 +417,8 @@ service cloud.firestore {
 
     match /devotionals/{devotionalId} {
       allow read: if isAuthenticated();
-      allow create: if isAdmin() && isValidDevotional(request.resource.data);
+      allow create: if isAdmin() && isValidDevotional(request.resource.data)
+                       && request.resource.data.authorUid == request.auth.uid;
       allow update: if isAdmin() && isValidDevotional(request.resource.data);
       allow delete: if isAdmin();
     }

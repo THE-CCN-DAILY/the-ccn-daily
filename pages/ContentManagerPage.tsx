@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { BookOpen, BookMarked, Calendar, Pencil, Plus, Trash2, Mic, Mail } from 'lucide-react';
 import Card from '../components/Card';
 import { useNotifications } from '../contexts/NotificationContext';
+import { useAuth } from '../contexts/AuthContext';
 import {
   CatalogContentItem,
   ContentType,
@@ -83,6 +84,8 @@ const emptyForm = () => ({
 });
 
 const DevotionalsTab: React.FC = () => {
+  const { user } = useAuth();
+  const { notify } = useNotifications();
   const [devotionals, setDevotionals] = useState<DevotionalDoc[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -107,6 +110,10 @@ const DevotionalsTab: React.FC = () => {
   useEffect(() => { loadDevotionals(); }, []);
 
   const handleSave = async () => {
+    if (!user) {
+      notify('You must be signed in as an admin to save.', 'error');
+      return;
+    }
     setSaving(true);
     try {
       const { collection, addDoc, doc, updateDoc, serverTimestamp } = await import('firebase/firestore');
@@ -119,6 +126,7 @@ const DevotionalsTab: React.FC = () => {
       } else {
         await addDoc(collection(db, 'devotionals'), {
           ...form,
+          authorUid: user.uid, // required by Firestore rules for ownership
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
         });
@@ -127,8 +135,9 @@ const DevotionalsTab: React.FC = () => {
       setEditingId(null);
       setForm(emptyForm());
       await loadDevotionals();
-    } catch {
-      // Save error — form stays open
+      notify(editingId ? 'Devotional updated.' : 'Devotional published.', 'success');
+    } catch (err) {
+      notify(err instanceof Error ? err.message : 'Could not save the devotional. Please try again.', 'error');
     }
     setSaving(false);
   };

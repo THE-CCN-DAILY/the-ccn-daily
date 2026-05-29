@@ -6,6 +6,7 @@ import {
   onAuthStateChanged,
   signOut as firebaseSignOut,
   getRedirectResult,
+  sendEmailVerification,
 } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { db, isFirebaseConfigured, signInWithEmail, signUpWithEmail, resetPassword as firebaseResetPassword } from '../firebase';
@@ -28,6 +29,9 @@ interface AuthContextType {
 // Ministry owner accounts that always receive admin access on the frontend,
 // keeping the UI in sync with the backend's email-based admin rule.
 const ADMIN_EMAILS = ['pastor.eryeza@gmail.com', 'ccndaily@gmail.com'];
+
+// Send the verification email at most once per page load.
+let verificationSent = false;
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -85,6 +89,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // backend's email-based admin rule), regardless of the stored role.
         if (ADMIN_EMAILS.includes((firebaseUser.email ?? '').toLowerCase())) {
           role = 'admin';
+        }
+
+        // Admin writes require a verified email (Firestore rules). Auto-send the
+        // verification link once if a ministry admin hasn't verified yet.
+        if (role === 'admin' && !firebaseUser.emailVerified && !verificationSent) {
+          verificationSent = true;
+          sendEmailVerification(firebaseUser).catch(() => {});
         }
 
         setUser({
