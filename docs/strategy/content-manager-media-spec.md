@@ -4,6 +4,12 @@ Goal: every media field is an **upload** with the **accepted formats shown** in 
 **optional URL field** only for externally-hosted assets. No URL-only dead-ends. Uploads go through the
 existing `uploadCatalogMedia` / R2 plumbing (and `/api/mux/upload` for video).
 
+> **Scope note — "benchmark then supersede" is app-wide, not just here.** This document covers the
+> Content Manager's media authoring. The benchmark→supersede standard applies to the WHOLE product:
+> visual/UX of every member screen (Phase E), SEO/GEO + performance (Phase F), and the AI trend-setting
+> layer (Phase G). Per-feature benchmarks + above-standard moves live in
+> `feature-benchmark-upgrade-plan.md`. The Content Manager is one slice of a whole-app standard.
+
 ## Supported formats (standardize across the app)
 - **Images** (covers, author photos): `JPG, PNG, WEBP` (≤ 5 MB). Show preview after upload.
 - **Books / documents**: `EPUB, PDF` (≤ 50 MB).
@@ -18,11 +24,31 @@ existing `uploadCatalogMedia` / R2 plumbing (and `/api/mux/upload` for video).
 | **Blog** (Blog Studio) | optional (upload) | — | optional (MP3) | — | **upload** | rich-text body (backlog) |
 | **Book** | **required (upload)** | **EPUB/PDF (upload)** + optional URL | — | — | — | consolidate the two book surfaces; variants keep format select |
 | **Audiobook** | required (upload) | — | **required (MP3 upload)** | — | — | |
-| **Course** | required (upload) | — | per-module audio | per-module **video (Mux)** | — | modules need audio/video upload |
-| **Challenge** | optional (upload) | — | — | — | — | structured modules |
+| **Course** | required (upload) | per-module docs (PDF) | per-module audio (MP3) | per-module **video (Mux)** | — | **rich per-module media — see below** |
+| **Challenge** | optional (upload) | per-module docs (PDF) | per-module audio (MP3) | per-module video (Mux) | — | **rich per-module/day media — see below** |
 | **Reading Plan** | optional (upload) | — | — | — | — | **structured schedule, NOT a file** — clarify UI; build day/items |
 | **Podcast** | — | — | — | — | — | RSS source of truth → no manual upload (CRUD retired) |
 | **Newsletter** | — | — | — | — | — | RSS/Substack → no manual upload (verify, then retire CRUD) |
+
+## Course & Challenge modules — wide media range (each module/day)
+
+A course module or challenge day is a **rich lesson**, not a single field. Each should support
+**multiple attachments of mixed types**, added/reordered freely:
+- **Video** — MP4 via Mux (adaptive streaming, thumbnails, captions).
+- **Audio** — MP3/M4A (teaching, guided prayer) with player + waveform.
+- **Document / slides / handout** — PDF (downloadable; inline viewer where possible).
+- **Image** — JPG/PNG/WEBP (diagrams, scripture art).
+- **Downloadable resource** — PDF/ZIP (workbooks, study guides).
+- **Rich text** — the lesson body (headings, lists, scripture blocks).
+- **Scripture reference** — structured (book/chapter/verse) that deep-links the Bible reader.
+- **External embed / link** — optional (YouTube, external worksheet) with safety review.
+
+Data model: a module has an ordered `attachments[]` (type + url + meta), not fixed single fields, so
+courses/challenges can mix video + PDF + audio + image in one lesson. The `<MediaUpload>` component is
+reused per attachment with the right `accept` for its type.
+
+**Supersede (Phase G):** auto-captions/transcript for module video & audio; AI-generated lesson summary
++ reflection questions from the attachments; auto-thumbnail from video; on-brand tonal cover if none.
 
 ## Current-state gaps (to fix)
 - **Devotional author photo** = URL input (`authorPhotoUrl`) → change to image **upload** + format hint.
