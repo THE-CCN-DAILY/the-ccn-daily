@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BookOpen, BookMarked, Calendar, Pencil, Plus, Trash2, Mic, Mail } from 'lucide-react';
 import Card from '../components/Card';
+import MediaUpload from '../components/MediaUpload';
 import { useNotifications } from '../contexts/NotificationContext';
 import { useAuth } from '../contexts/AuthContext';
 import {
@@ -217,7 +218,14 @@ const DevotionalsTab: React.FC = () => {
                   <h3 className="text-sm font-bold text-brand-text-secondary uppercase tracking-wider mb-4">Author Information</h3>
                   <div className="space-y-4">
                     {field('Author Name', <input type="text" value={form.authorName} onChange={e => setForm(f => ({ ...f, authorName: e.target.value }))} className={inputCls} placeholder="Full name of the author" />)}
-                    {field('Author Photo URL', <input type="url" value={form.authorPhotoUrl} onChange={e => setForm(f => ({ ...f, authorPhotoUrl: e.target.value }))} className={inputCls} placeholder="https://…/photo.jpg" />)}
+                    <MediaUpload
+                      label="Author Photo"
+                      kind="image"
+                      value={form.authorPhotoUrl}
+                      alt={form.authorName}
+                      onChange={(url) => setForm(f => ({ ...f, authorPhotoUrl: url }))}
+                      upload={(file, onProgress) => uploadCatalogMedia('devotionals', 'cover', file, onProgress)}
+                    />
                     {field('Author Bio', <textarea value={form.authorBio} onChange={e => setForm(f => ({ ...f, authorBio: e.target.value }))} rows={3} className={`${inputCls} resize-none`} placeholder="Pastor at [church]. Author of [book]. Passionate about..." />)}
                     <p className="text-xs text-brand-text-secondary -mt-3">Max 3 sentences.</p>
                     {field('Author Website', <input type="url" value={form.authorWebsiteUrl} onChange={e => setForm(f => ({ ...f, authorWebsiteUrl: e.target.value }))} className={inputCls} placeholder="https://… (optional)" />)}
