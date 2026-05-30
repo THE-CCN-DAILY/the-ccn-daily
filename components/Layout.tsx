@@ -83,7 +83,6 @@ const sanctuaryItems = [
   { to: '/app/gamification', text: 'Your Journey', icon: Trophy, group: 'Account' },
   { to: '/app/grace-link', text: 'Grace Links', icon: Gift, group: 'Community' },
   { to: '/app/sponsor', text: 'Partner With Us', icon: Handshake, group: 'Community' },
-  { to: '/app/visual-sanctuary', text: 'Visual Sanctuary', icon: Image, group: 'Pray' },
   { to: '/app/inbox', text: 'Inbox & Updates', icon: Inbox, group: 'Account' },
   { to: '/app/events', text: 'Live Events', icon: CalendarDays, group: 'Live' },
   { to: '/app/live', text: 'Live Broadcast', icon: Radio, group: 'Live' },

@@ -151,39 +151,11 @@ const BlogStudioPage: React.FC = () => {
           </div>
         </header>
 
-        <section className="mt-8 grid gap-6 border-b border-brand-border pb-8 lg:grid-cols-[1fr_1fr_0.8fr]">
-          <label className="block">
-            <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.08em] text-brand-text-secondary">
-              Admin email
-            </span>
-            <input
-              value={adminEmail}
-              onChange={(event) => setAdminEmail(event.target.value)}
-              placeholder="pastor.eryeza@gmail.com"
-              className="h-12 w-full border border-brand-border bg-brand-secondary px-4 text-sm outline-none focus:border-brand-accent"
-            />
-          </label>
-          <label className="block">
-            <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.08em] text-brand-text-secondary">
-              Production admin token
-            </span>
-            <input
-              value={adminToken}
-              onChange={(event) => setAdminToken(event.target.value)}
-              placeholder="Only needed after ADMIN_API_TOKEN is set"
-              type="password"
-              className="h-12 w-full border border-brand-border bg-brand-secondary px-4 text-sm outline-none focus:border-brand-accent"
-            />
-          </label>
-          <div className="border border-brand-border p-4 text-sm leading-6 text-brand-text-secondary">
-            <p className="flex items-center gap-2 font-semibold text-brand-text-primary">
-              <ShieldCheck className="h-4 w-4" /> Admin gate
-            </p>
-            <p className="mt-2">
-              Local preview accepts the configured admin email. Production must use a Cloudflare secret token until
-              the full auth migration replaces Firebase role reads.
-            </p>
-          </div>
+        <section className="mt-8 border-b border-brand-border pb-8">
+          <p className="flex items-center gap-2 text-sm text-brand-text-secondary">
+            <ShieldCheck className="h-4 w-4 text-brand-accent" />
+            Publishing uses your signed-in admin session automatically — no email or token needed.
+          </p>
         </section>
 
         {(message || error) && (
