@@ -456,7 +456,13 @@ const BooksManagerTab: React.FC = () => {
                 {field('Author *', <input type="text" value={form.author} onChange={e => setForm(f => ({ ...f, author: e.target.value }))} className={INPUT_CLS} />)}
                 {field('Category *', <input type="text" value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value }))} className={INPUT_CLS} placeholder="e.g. Devotional, Leadership…" />)}
                 {field('Description *', <textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} rows={3} className={`${INPUT_CLS} resize-none`} placeholder="Short description…" />)}
-                {field('Cover URL', <input type="url" value={form.coverUrl} onChange={e => setForm(f => ({ ...f, coverUrl: e.target.value }))} className={INPUT_CLS} placeholder="https://…/cover.jpg" />)}
+                <MediaUpload
+                  label="Cover"
+                  kind="image"
+                  value={form.coverUrl}
+                  onChange={(url) => setForm(f => ({ ...f, coverUrl: url }))}
+                  upload={(file, onProgress) => uploadCatalogMedia('books', 'cover', file, onProgress)}
+                />
                 {field('ISBN', <input type="text" value={form.isbn} onChange={e => setForm(f => ({ ...f, isbn: e.target.value }))} className={INPUT_CLS} placeholder="978-…" />)}
                 {field('Status', (
                   <select value={form.status} onChange={e => setForm(f => ({ ...f, status: e.target.value as 'draft' | 'published' }))} className={INPUT_CLS}>
@@ -752,7 +758,13 @@ const ReadingPlansManagerTab: React.FC = () => {
                 {field('Title *', <input type="text" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} className={INPUT_CLS} placeholder="Plan title…" />)}
                 {field('Description *', <textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} rows={3} className={`${INPUT_CLS} resize-none`} placeholder="What readers will gain…" />)}
                 {field('Category *', <input type="text" value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value }))} className={INPUT_CLS} placeholder="e.g. Bible Study, Book Club…" />)}
-                {field('Cover URL', <input type="url" value={form.coverUrl} onChange={e => setForm(f => ({ ...f, coverUrl: e.target.value }))} className={INPUT_CLS} placeholder="https://…/cover.jpg" />)}
+                <MediaUpload
+                  label="Cover"
+                  kind="image"
+                  value={form.coverUrl}
+                  onChange={(url) => setForm(f => ({ ...f, coverUrl: url }))}
+                  upload={(file, onProgress) => uploadCatalogMedia('books', 'cover', file, onProgress)}
+                />
                 {field('Total Days', <input type="number" min={1} value={form.totalDays} onChange={e => setForm(f => ({ ...f, totalDays: Number(e.target.value) }))} className={INPUT_CLS} />)}
                 {field('Status', (
                   <select value={form.status} onChange={e => setForm(f => ({ ...f, status: e.target.value as 'draft' | 'published' }))} className={INPUT_CLS}>
