@@ -258,15 +258,22 @@ const DashboardPage: React.FC = () => {
     // Fetch latest devotional
     const fetchDevotional = async () => {
       try {
-        const q = query(
-          collection(db, 'devotionals'),
-          orderBy('publishedAt', 'desc'),
-          limit(1),
-        );
-        const snap = await getDocs(q);
-        if (!snap.empty) {
-          const d = snap.docs[0];
-          setDevotional({ id: d.id, ...(d.data() as Omit<Devotional, 'id'>) });
+        // Match the guided journey: latest PUBLISHED devotional dated on/before today.
+        // (Devotionals store a `date` string, not `publishedAt` — ordering by the missing
+        // field was returning nothing.) Filter in JS to avoid a composite index.
+        const today = new Date();
+        const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+        const snap = await getDocs(query(collection(db, 'devotionals'), orderBy('date', 'desc'), limit(30)));
+        const match = snap.docs
+          .map((d) => ({ id: d.id, data: d.data() as Record<string, unknown> }))
+          .find((d) => d.data.status === 'published' && typeof d.data.date === 'string' && (d.data.date as string) <= todayStr);
+        if (match) {
+          setDevotional({
+            id: match.id,
+            title: String(match.data.title ?? ''),
+            body: String(match.data.body ?? match.data.content ?? ''),
+            publishedAt: null,
+          });
         }
       } catch {
         // Firestore unavailable — show placeholder
