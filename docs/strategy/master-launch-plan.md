@@ -99,9 +99,14 @@ app owning the lane of teaching depth + guided formation + a theologically-disci
   pattern (Substack RSS via `NewsletterPage`) — retire the `admin_newsletters` CRUD unless self-hosting.
 
 ## Decision log (cont.)
-- **Devotionals consolidated onto Blog Studio (D1 `blog_posts`)** as the single source. The guided
-  journey + public Blog now both read it. Retire in Phase C: the Content Manager "Daily Devotionals"
-  (Firestore) tab AND the catalog "Devotionals" (D1 `devotionals` table) tab — both redundant.
+- **Blog ≠ Devotional (kept separate, per founder).**
+  - **Devotional** = the journey's core content (optionally public). Source of truth = Firestore
+    `devotionals` (Content Manager → Daily Devotionals tab). The guided journey reads this. Only
+    **published** (not draft) devotionals appear.
+  - **Blog** = public-facing essays. Source = D1 `blog_posts` (Blog Studio) → public Blog page.
+  - **Redundancy to retire (Phase C):** the catalog "Devotionals" tab (D1 `devotionals` table) +
+    `/api/devotionals/today` — duplicates the Firestore devotional source. Keep ONE devotional
+    authoring surface (the Daily Devotionals tab).
 - **Blog Studio stale copy:** the "PRODUCTION ADMIN TOKEN" field + "Admin gate" note are no longer true
   after the Bearer-token auth migration. Remove/replace (quick Phase C cleanup).
 - **VisualSanctuary: retire** (Phase C). AI scene-image generation is a novelty that doesn't serve the
