@@ -39,11 +39,34 @@ app owning the lane of teaching depth + guided formation + a theologically-disci
 - Walk every surface; confirm none is empty.
 - **DoD:** No empty primary surface; the daily journey shows real content.
 
-### Phase C — Resolve unfinished surfaces 🟠
-- Decide per page: **finish, hide, or label** — Audiobooks (Coming Soon), Testimonies (placeholder),
-  GraceLink (mock), GrowthConsole (demo), VisionaryLab/VisualSanctuary/VoiceCompanion (prototypes).
-- Wire Testimonies to Firestore (feeds Phase D).
-- **DoD:** Nothing demo/placeholder is reachable in primary navigation.
+### Phase C — Streamlining inventory (finish / hide / retire) 🟠
+Every page gets a decision so nothing half-built ships in nav.
+
+**Retire / hide (novelty or redundant — don't serve the formation mission):**
+- **VisualSanctuary** — AI scene images; no formation value. Hide.
+- **VisionaryLab** — AI demo/prototype playground. Hide (internal only).
+- Catalog **"Devotionals" tab** (D1) + `/api/devotionals/today` — redundant with the Firestore
+  Daily Devotionals source. Retire.
+- Stale **Blog Studio admin-token copy** — remove (false after Bearer auth).
+- Admin-only prototype pages (MasterPlan, RoadmapEvolution, DataArchitecture, MultiTenancy,
+  DynamicTheming, AtmosphericMusic, MediaPlayerPlan, DesignSystem, Team, NextSteps, ChatWithTeam) —
+  keep out of member nav; group under a clearly-internal "Lab" or remove.
+
+**Evaluate (keep only if it earns its place, premium + on-brand):**
+- **Quote Graphics / Quote Generator** — *legitimate* if it produces premium, on-brand shareable
+  quote cards for social distribution (ties to content engine). Keep & polish if so; otherwise retire.
+  Decision: keep, but it must pass the premium-tonal bar (Phase E) before launch.
+- **VoiceCompanion / "Pray Aloud"** — strong concept; either make it a real free TTS "pray this aloud"
+  moment (Phase G) or hide until it works. No half-built premium gate at launch.
+- **GrowthConsole** — demo analytics; wire to real data or hide.
+
+**Finish (real feature, just incomplete):**
+- **Testimonies** — wire to Firestore (feeds the reviews feature, Phase D); remove placeholder data.
+- **Audiobooks** — replace "Coming Soon" with the real `/api/audiobooks` catalog, or hide until seeded.
+- **GraceLink** — wire gifting to real data or hide.
+
+- **DoD:** Nothing demo/placeholder/Coming-Soon is reachable in primary (member) navigation; internal
+  tools are clearly separated; every visible feature is real.
 
 ### Phase D — Reviews feature ✨
 - Build per spec: low-friction prompt ("why it matters") + ghost-text starter; round avatar (initials
