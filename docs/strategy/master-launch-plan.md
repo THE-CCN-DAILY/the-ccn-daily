@@ -135,6 +135,21 @@ Every page gets a decision so nothing half-built ships in nav.
 - **VisualSanctuary: retire** (Phase C). AI scene-image generation is a novelty that doesn't serve the
   formation mission; not launch-worthy. Hide from nav.
 
+## Content Manager authoring gaps (Phase B/C — must fix before seeding is sane)
+- **Two competing Book surfaces:** the catalog "Books (EPUB/PDF)" tab has real file upload
+  (cover + EPUB/PDF via `uploadCatalogMedia`), but the separate "Books Library" tab is **URL-only**
+  (no upload). → Consolidate to ONE book authoring surface with file upload **and** an optional URL
+  field (for externally-hosted files/covers). Retire the duplicate.
+- **Covers:** several forms (Books Library, Reading Plans, Podcasts, Newsletters) accept **cover URL
+  only** — add image **upload** (with URL as the alternative) consistently across all forms.
+- **Reading Plans authoring is unclear:** a plan is a **structured schedule** (ordered day/items),
+  not a file upload. Clarify the form (it builds items; cover optional via upload/URL); remove any
+  implication that a file is uploaded.
+- **Per-item audio/video upload** (founder request) — same `uploadCatalogMedia` plumbing already
+  exists for the catalog tabs; extend it to the surfaces that still only take URLs.
+- **DoD:** one clear path per content type to add a cover (upload or URL) and a file where relevant;
+  no URL-only dead-ends; reading-plan authoring is self-explanatory.
+
 ## Backlog — founder requests (slot into Phase E/G)
 - **Rich-text editor** in the devotional/content generator (formatting commands, not raw markdown).
 - **Standardize design-system fonts/styles across all screens** — some screens don't use the
