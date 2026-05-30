@@ -32,6 +32,31 @@ existing `uploadCatalogMedia` / R2 plumbing (and `/api/mux/upload` for video).
 - No content type currently **shows accepted formats / size limits** in the UI → add helper text +
   `accept="…"` on every file input + a preview for images.
 
+## Benchmark → supersede (the bar the build must hit)
+
+**Industry standard** (Sanity, Contentful, Ghost, Notion, Mux, Cloudinary):
+- Drag-and-drop *and* click-to-pick; paste-from-clipboard.
+- Instant preview — image thumbnail, audio player, doc icon + filename.
+- Upload progress + cancel; client-side format/size validation with friendly errors.
+- Server-side image optimization (resize, compress, auto-WebP/AVIF).
+- Alt text on images (accessibility + SEO).
+- Adaptive video via a dedicated service (Mux).
+
+**Above standard — CCN trend-setting** (uses Gemini / Workers AI + the tonal design system; Phase G):
+- **AI cover generation, on-brand:** one click generates a premium cover from the title/excerpt using
+  the brand tonal palette (ties to Quote Graphics / `premium-tonal-design`) — no stock images, no random
+  AI blobs. Default to brand-tonal art rather than empty covers.
+- **AI alt text + image description** auto-written from the image (Workers AI vision) — accessibility and
+  SEO done for the founder, not as a chore.
+- **Audio → show notes + chapters + transcript** auto-generated on upload (ties to the audio/podcast
+  story); a "key takeaways" card from the transcript.
+- **Smart format coaching:** inline guidance ("we'll optimize and convert to WebP", "MP3 recommended,
+  we'll generate a waveform") instead of bare format codes.
+- **Instant on-brand crop/framing** for covers to the app's card aspect ratios.
+
+These supersede the category: most faith/CMS tools make the author do the grunt work (find a cover,
+write alt text, cut show notes). CCN's authoring should do that *for* the founder, in the brand voice.
+
 ## Implementation plan (one shared component, applied everywhere)
 1. Build a reusable **`<MediaUpload>`** component: drag/drop or pick, `accept` per role, progress,
    preview (image) / filename (doc/audio), and an "or paste a URL" fallback. Returns the stored URL.
