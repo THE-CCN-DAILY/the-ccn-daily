@@ -13,7 +13,10 @@ const SIZES = {
   lg: { icon: 60, wordmark: 52 },
 };
 
-const GAP = { sm: 2, md: 4, lg: 5 };
+// Flame + wordmark read as ONE lockup: zero flex gap, plus a negative margin (PULL)
+// on the wordmark to absorb the images' transparent internal padding.
+const GAP = { sm: 0, md: 0, lg: 0 };
+const PULL = { sm: 4, md: 6, lg: 8 };
 
 /**
  * CCN Daily logo — brand-accurate, theme-aware
@@ -60,7 +63,7 @@ const CcnLogo: React.FC<CcnLogoProps> = ({
         src={wordmarkSrc}
         alt="THE CCN DAILY"
         height={wordmark}
-        style={{ height: wordmark, width: 'auto', display: 'block', objectFit: 'contain', flexShrink: 0 }}
+        style={{ height: wordmark, width: 'auto', display: 'block', objectFit: 'contain', flexShrink: 0, marginLeft: -PULL[size] }}
         loading="eager"
         decoding="async"
       />
