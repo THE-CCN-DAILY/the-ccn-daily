@@ -41,7 +41,9 @@ type TabId = ContentType | 'written-devotionals' | 'books-library' | 'reading-pl
 
 const TABS: Array<{ id: TabId; label: string; icon: React.FC<React.SVGProps<SVGSVGElement>> }> = [
   { id: 'written-devotionals', label: 'Devotionals', icon: (props) => <BookOpen {...props} /> },
-  { id: 'devotionals', label: 'Daily Devotionals', icon: SparklesIcon },
+  // Retired (Phase C): the D1 "Daily Devotionals" catalog tab duplicated the Firestore
+  // `devotionals` source the guided journey + dashboard actually read. The "Devotionals"
+  // tab above (Firestore) is the single devotional authoring surface.
   { id: 'audiobooks', label: 'Audiobooks', icon: SpeakerWaveIcon },
   { id: 'books', label: 'Books (EPUB/PDF)', icon: ReaderIcon },
   { id: 'challenges', label: 'Challenges', icon: GamificationIcon },
