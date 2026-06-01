@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
+import { Lock } from 'lucide-react';
 import Card from '../components/Card';
 import { SparklesIcon, PlayIcon, CheckIcon } from '../components/icons';
+import { usePremiumGate } from '../hooks/usePremiumGate';
 import { listCourses, type Course } from '../services/courseService';
 
 const EASE = [0.22, 1, 0.36, 1] as [number, number, number, number];
@@ -13,6 +15,14 @@ const CoursesPage: React.FC = () => {
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const { requireAccess, canAccess } = usePremiumGate();
+
+  const handleOpenCourse = (course: Course) => {
+    // Premium gate: block opening a premium course for non-admins until the
+    // purchase flow is live (opens the upgrade modal instead).
+    if (!requireAccess(course.isPremium, course.title)) return;
+    navigate(`/app/courses/${course.id}`);
+  };
 
   useEffect(() => {
     const fetchCourses = async () => {
@@ -56,7 +66,7 @@ const CoursesPage: React.FC = () => {
           {courses.map((course) => (
             <motion.div key={course.id} variants={fadeUp} transition={{ duration: 0.5, ease: EASE }}>
             <Card
-              onClick={() => navigate(`/app/courses/${course.id}`)}
+              onClick={() => handleOpenCourse(course)}
               className="flex flex-col border-brand-border bg-brand-dark/30 overflow-hidden p-0 group cursor-pointer hover:border-brand-accent/50 transition-colors h-full"
             >
               <div className="relative h-48 w-full bg-brand-secondary flex items-center justify-center overflow-hidden">
@@ -84,7 +94,11 @@ const CoursesPage: React.FC = () => {
                     <span className="text-xs font-bold text-green-400 uppercase tracking-wider">Free</span>
                   )}
                   <button className="flex items-center text-sm font-bold text-brand-text-primary hover:text-brand-accent transition-colors">
-                    Start Course <PlayIcon className="w-4 h-4 ml-2" />
+                    {canAccess(course.isPremium) ? (
+                      <>Start Course <PlayIcon className="w-4 h-4 ml-2" /></>
+                    ) : (
+                      <>Unlock <Lock className="w-4 h-4 ml-2" /></>
+                    )}
                   </button>
                 </div>
               </div>

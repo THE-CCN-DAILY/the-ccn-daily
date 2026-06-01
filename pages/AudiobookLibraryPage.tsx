@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
+import { Lock } from 'lucide-react';
 import Card from '../components/Card';
 import { SpeakerWaveIcon, PlayIcon, PauseIcon } from '../components/icons';
 import { useAudioPlayer } from '../contexts/AudioPlayerContext';
+import { usePremiumGate } from '../hooks/usePremiumGate';
 import { listAudiobooks } from '../services/contentService';
 
 interface Audiobook {
@@ -11,6 +13,8 @@ interface Audiobook {
   author: string;
   coverUrl?: string;
   audioUrl: string;
+  isPremium?: boolean;
+  price?: number;
   createdAt: unknown;
 }
 
@@ -22,6 +26,7 @@ const AudiobookLibraryPage: React.FC = () => {
   const [audiobooks, setAudiobooks] = useState<Audiobook[]>([]);
   const [loading, setLoading] = useState(true);
   const { playTrack, currentTrack, isPlaying, togglePlayPause } = useAudioPlayer();
+  const { requireAccess, canAccess } = usePremiumGate();
 
   useEffect(() => {
     const fetchAudiobooks = async () => {
@@ -39,6 +44,9 @@ const AudiobookLibraryPage: React.FC = () => {
   }, []);
 
   const handlePlay = (book: Audiobook) => {
+    // Premium gate: blocks playback of premium titles for non-admins until the
+    // purchase flow is live (opens the upgrade modal instead).
+    if (!requireAccess(book.isPremium, book.title)) return;
     if (currentTrack?.id === book.id) {
       togglePlayPause();
     } else {
@@ -95,6 +103,7 @@ const AudiobookLibraryPage: React.FC = () => {
           {audiobooks.map((book) => {
             const isCurrentlyPlaying = currentTrack?.id === book.id && isPlaying;
             const isActive = currentTrack?.id === book.id;
+            const locked = !canAccess(book.isPremium);
 
             return (
               <motion.div key={book.id} variants={fadeUp} transition={{ duration: 0.45, ease: EASE }}>
@@ -116,16 +125,26 @@ const AudiobookLibraryPage: React.FC = () => {
                       </div>
                     )}
 
-                    {/* Play overlay */}
+                    {/* Premium lock badge */}
+                    {book.isPremium && (
+                      <div className="absolute top-2 right-2 flex items-center gap-1.5 bg-brand-deep/80 text-brand-paper text-[11px] font-bold uppercase tracking-wider px-2 py-1 rounded-full backdrop-blur-sm">
+                        <Lock className="w-3 h-3" />
+                        {locked ? 'Premium' : 'Unlocked'}
+                      </div>
+                    )}
+
+                    {/* Play / lock overlay */}
                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                       <button
                         onClick={() => handlePlay(book)}
-                        aria-label={isCurrentlyPlaying ? `Pause ${book.title}` : `Play ${book.title}`}
+                        aria-label={locked ? `Unlock ${book.title}` : isCurrentlyPlaying ? `Pause ${book.title}` : `Play ${book.title}`}
                         className="w-16 h-16 rounded-full bg-brand-accent flex items-center justify-center text-white shadow-lg transform hover:scale-110 transition-transform"
                       >
-                        {isCurrentlyPlaying
-                          ? <PauseIcon className="w-7 h-7" />
-                          : <PlayIcon className="w-8 h-8 ml-1" />}
+                        {locked
+                          ? <Lock className="w-6 h-6" />
+                          : isCurrentlyPlaying
+                            ? <PauseIcon className="w-7 h-7" />
+                            : <PlayIcon className="w-8 h-8 ml-1" />}
                       </button>
                     </div>
 
@@ -156,7 +175,9 @@ const AudiobookLibraryPage: React.FC = () => {
                             : 'bg-brand-dark border border-brand-border text-brand-text-primary hover:bg-brand-secondary'
                         }`}
                       >
-                        {isCurrentlyPlaying ? (
+                        {locked ? (
+                          <><Lock className="w-4 h-4" /> Premium{book.price ? ` · $${book.price}` : ''}</>
+                        ) : isCurrentlyPlaying ? (
                           <><PauseIcon className="w-4 h-4" /> Pause</>
                         ) : (
                           <><PlayIcon className="w-4 h-4" /> Listen</>
