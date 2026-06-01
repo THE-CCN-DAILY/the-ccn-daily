@@ -38,7 +38,6 @@ type Env = {
   FIREBASE_PROJECT_ID?: string;
   PRODUCTION_ORIGIN?: string;
   ADMIN_EMAIL?: string;
-  ADMIN_API_TOKEN?: string;
   MEDIA_PUBLIC_BASE_URL?: string;
   WORKERS_AI_TEXT_MODEL?: string;
   MUX_TOKEN_ID?: string;
@@ -659,22 +658,16 @@ const isSafeId = (value: string) => /^[a-zA-Z0-9._:@-]{1,160}$/.test(value);
 const ADMIN_EMAILS = ['pastor.eryeza@gmail.com', 'ccndaily@gmail.com'];
 
 const isAdminRequest = (c: any) => {
-  // Primary: a verified Firebase ID token (set by the auth middleware) for a ministry owner.
+  // Admin = a verified Firebase ID token (set by the auth middleware) for a ministry-owner email.
+  // This is the ONLY admin path. The old spoofable x-admin-email + x-admin-token shared-secret
+  // scheme and the host-based localhost bypass have been removed (host headers are client-supplied).
+  // For local testing, sign in with a ministry account so the request carries a real ID token.
   const sessionEmail = (c.get('idTokenEmail') || '').toLowerCase();
-  if (sessionEmail && c.get('idTokenEmailVerified') === true && ADMIN_EMAILS.includes(sessionEmail)) {
-    return true;
-  }
-
-  // Transitional fallbacks: header email + shared token, or localhost preview.
-  const expected = (c.env.ADMIN_EMAIL || 'pastor.eryeza@gmail.com').toLowerCase();
-  const email = (c.req.header('x-admin-email') || '').toLowerCase();
-  const configuredToken = c.env.ADMIN_API_TOKEN || '';
-  const token = c.req.header('x-admin-token') || '';
-  const host = c.req.header('host') || '';
-  const isLocalPreview = host.startsWith('127.0.0.1') || host.startsWith('localhost');
-
-  if (configuredToken) return token === configuredToken && email === expected;
-  return isLocalPreview && email === expected;
+  return Boolean(
+    sessionEmail &&
+    c.get('idTokenEmailVerified') === true &&
+    ADMIN_EMAILS.includes(sessionEmail),
+  );
 };
 
 const requireAdmin = (c: any) => {
@@ -682,7 +675,7 @@ const requireAdmin = (c: any) => {
   return c.json({
     error: 'ADMIN_AUTH_REQUIRED',
     message:
-      'Admin blog writes require a verified admin session. Local preview accepts the configured admin email; production must set ADMIN_API_TOKEN until the Cloudflare auth migration is complete.',
+      'Admin actions require a verified ministry-owner session. Sign in with an admin account so the request carries a valid Firebase ID token.',
   }, 401);
 };
 
