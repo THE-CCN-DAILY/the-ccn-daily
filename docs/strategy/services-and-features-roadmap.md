@@ -58,12 +58,26 @@ team reviews before sending** — without compromising security.
 
 ---
 
+## F. Books & in-app reader (NEW, founder-requested 2026-06-01) — see books-and-reader-spec.md
+- **External buy options** for print/ebook/audiobook on popular platforms, each with its logo,
+  activating only when a link is added (extends existing `purchaseLinks`/`PodPlatformId`).
+- **In-app ebook purchase + in-app EPUB reading** = prominent headline feature. `EpubReader` is
+  currently a stub; **no EPUB engine** yet — must add one. Premium reader, benchmarked vs
+  Kindle/Apple Books/Kobo, superseding via Scripture-awareness + pastoral AI margin + Read↔Listen.
+- **Ebook↔audiobook bundling:** buying both attaches the audiobook to the owned ebook; buying one
+  cross-sells the other. Needs per-format entitlements.
+- Authoring + free-ebook reader = buildable now; **in-app purchase + per-format entitlements +
+  server-side file protection = founder-gated** (same payment/media track as the audiobook paywall).
+
 ## Priority order (slots into the master plan)
 1. Finish Phase E visual + authoring polish (in progress).
-2. Support system (C-tier value for trust at launch) — design ready above.
-3. Media On Demand + podcast a/v selection.
-4. Cloudflare Stream migration (video) — own task.
-5. Cloudflare Email — defer to GA.
+2. Books & in-app reader — authoring + EPUB engine (free ebooks) buildable now; purchase founder-gated.
+3. Support system (C-tier value for trust at launch) — design ready above.
+4. Media On Demand + podcast a/v selection.
+5. Cloudflare Stream migration (video) — own task.
+6. Payment/entitlement loop (Flutterwave) + server-side media protection — unlocks audiobook & ebook
+   paywalls and in-app book purchase. Founder-gated.
+7. Cloudflare Email — defer to GA.
 
 **Sources (Stream/Mux + Cloudflare Email/Resend):** mux.com/compare/cloudflare-stream,
 buildmvpfast.com/api-costs/video, developers.cloudflare.com/email-service, sequenzy.com (CF Email vs Resend).
