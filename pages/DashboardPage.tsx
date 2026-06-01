@@ -419,21 +419,25 @@ const DashboardPage: React.FC = () => {
           {CONTINUE_CARDS.map((card) => (
             <motion.div
               key={card.route}
-              whileHover={{ scale: 1.02 }}
-              transition={{ duration: 0.2, ease: EASE }}
+              whileHover={{ y: -3, scale: 1.02 }}
+              transition={{ duration: 0.22, ease: EASE }}
               className="flex-shrink-0"
             >
               <Link
                 to={card.route}
-                className="flex flex-col gap-3 p-5 rounded-xl border border-brand-border bg-brand-dark hover:border-brand-border-strong hover:shadow-md transition-all w-48"
+                className="flex flex-col gap-3 p-5 rounded-xl border border-brand-border transition-colors duration-200 w-48 group"
+                style={{
+                  background: 'var(--bg-card)',
+                  boxShadow: 'var(--sh-card)',
+                }}
               >
                 <div
-                  className="w-9 h-9 rounded-lg flex items-center justify-center"
-                  style={{ background: 'rgba(var(--cta-raw), 0.12)' }}
+                  className="w-9 h-9 rounded-lg flex items-center justify-center transition-colors duration-200 group-hover:bg-ember/15"
+                  style={{ background: 'rgba(var(--cta-raw), 0.10)' }}
                 >
                   <card.icon
-                    className="w-4.5 h-4.5"
-                    style={{ color: 'rgb(var(--cta-raw))' }}
+                    className="w-4 h-4 transition-colors duration-200"
+                    style={{ color: 'var(--ember)' }}
                   />
                 </div>
                 <div>
@@ -444,8 +448,8 @@ const DashboardPage: React.FC = () => {
                     {card.title}
                   </p>
                   <p
-                    className="text-xs text-brand-text-secondary leading-snug"
-                    style={{ fontFamily: 'var(--sans-ui)' }}
+                    className="text-xs leading-snug"
+                    style={{ fontFamily: 'var(--sans-ui)', color: 'var(--fg-3)' }}
                   >
                     {card.desc}
                   </p>
@@ -632,21 +636,31 @@ const DashboardPage: React.FC = () => {
 
         <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
           {QUICK_LINKS.map((link) => (
-            <Link
+            <motion.div
               key={link.route}
-              to={link.route}
-              className="flex flex-col items-center gap-2 py-4 px-2 rounded-xl border border-brand-border bg-brand-dark hover:border-brand-border-strong hover:bg-brand-secondary transition-all group"
+              whileHover={{ y: -2 }}
+              transition={{ duration: 0.18, ease: EASE }}
             >
-              <link.icon
-                className="w-5 h-5 text-brand-text-secondary group-hover:text-brand-text-primary transition-colors"
-              />
-              <span
-                className="text-[11px] font-medium text-brand-text-secondary group-hover:text-brand-text-primary transition-colors text-center leading-tight"
-                style={{ fontFamily: 'var(--sans-ui)' }}
+              <Link
+                to={link.route}
+                className="flex flex-col items-center gap-2 py-4 px-2 rounded-xl border border-brand-border transition-colors duration-200 group"
+                style={{
+                  background: 'var(--bg-card)',
+                  boxShadow: 'var(--sh-card)',
+                }}
               >
-                {link.label}
-              </span>
-            </Link>
+                <link.icon
+                  className="w-5 h-5 transition-colors duration-200"
+                  style={{ color: 'var(--fg-3)' }}
+                />
+                <span
+                  className="text-[11px] font-medium text-center leading-tight transition-colors duration-200"
+                  style={{ fontFamily: 'var(--sans-ui)', color: 'var(--fg-3)' }}
+                >
+                  {link.label}
+                </span>
+              </Link>
+            </motion.div>
           ))}
         </div>
       </motion.section>

@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BookOpen, BookMarked, Calendar, Pencil, Plus, Trash2, Mic, Mail } from 'lucide-react';
+import { BookOpen, BookMarked, Calendar, Pencil, Plus, Trash2, Mic, Mail, Layers } from 'lucide-react';
 import Card from '../components/Card';
+import EmptyState from '../components/EmptyState';
 import MediaUpload from '../components/MediaUpload';
 import { useNotifications } from '../contexts/NotificationContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -297,11 +298,11 @@ const DevotionalsTab: React.FC = () => {
               ))}
             </div>
           ) : (
-            <div className="text-center py-20 text-brand-text-secondary">
-              <BookOpen className="w-12 h-12 mx-auto mb-4 opacity-30" />
-              <p>No devotionals yet.</p>
-              <p className="text-sm mt-2">Use the form to create the first one.</p>
-            </div>
+            <EmptyState
+              icon={<BookOpen className="w-8 h-8" />}
+              heading="No devotionals yet"
+              subtext="Use the form to create the first one."
+            />
           )}
         </Card>
       </div>
@@ -634,11 +635,11 @@ const BooksManagerTab: React.FC = () => {
               ))}
             </div>
           ) : (
-            <div className="text-center py-20 text-brand-text-secondary">
-              <BookMarked className="w-12 h-12 mx-auto mb-4 opacity-30" />
-              <p>No books yet.</p>
-              <p className="text-sm mt-2">Use the form to add the first one.</p>
-            </div>
+            <EmptyState
+              icon={<BookMarked className="w-8 h-8" />}
+              heading="No books yet"
+              subtext="Use the form to add the first one."
+            />
           )}
         </Card>
       </div>
@@ -876,11 +877,11 @@ const ReadingPlansManagerTab: React.FC = () => {
               ))}
             </div>
           ) : (
-            <div className="text-center py-20 text-brand-text-secondary">
-              <Calendar className="w-12 h-12 mx-auto mb-4 opacity-30" />
-              <p>No reading plans yet.</p>
-              <p className="text-sm mt-2">Use the form to create the first one.</p>
-            </div>
+            <EmptyState
+              icon={<Calendar className="w-8 h-8" />}
+              heading="No reading plans yet"
+              subtext="Use the form to create the first one."
+            />
           )}
         </Card>
       </div>
@@ -1100,11 +1101,11 @@ const PodcastsTab: React.FC = () => {
               ))}
             </div>
           ) : (
-            <div className="text-center py-20 text-brand-text-secondary">
-              <Mic className="w-12 h-12 mx-auto mb-4 opacity-30" />
-              <p>No podcast episodes yet.</p>
-              <p className="text-sm mt-2">Use the form to add the first one.</p>
-            </div>
+            <EmptyState
+              icon={<Mic className="w-8 h-8" />}
+              heading="No podcast episodes yet"
+              subtext="Use the form to add the first one."
+            />
           )}
         </Card>
       </div>
@@ -1316,11 +1317,11 @@ const NewslettersTab: React.FC = () => {
               ))}
             </div>
           ) : (
-            <div className="text-center py-20 text-brand-text-secondary">
-              <Mail className="w-12 h-12 mx-auto mb-4 opacity-30" />
-              <p>No newsletter issues yet.</p>
-              <p className="text-sm mt-2">Use the form to add the first one.</p>
-            </div>
+            <EmptyState
+              icon={<Mail className="w-8 h-8" />}
+              heading="No newsletter issues yet"
+              subtext="Use the form to add the first one."
+            />
           )}
         </Card>
       </div>
@@ -1333,14 +1334,11 @@ const ContentManagerPage: React.FC = () => {
   const navigate = useNavigate();
   const { notify } = useNotifications();
   const [isSaving, setIsSaving] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
 
   const [title, setTitle] = useState('');
   const [author, setAuthor] = useState('');
   const [description, setDescription] = useState('');
   const [date, setDate] = useState('');
-  const [file, setFile] = useState<File | null>(null);
-  const [coverImage, setCoverImage] = useState<File | null>(null);
   const [fileUrl, setFileUrl] = useState('');
   const [coverUrl, setCoverUrl] = useState('');
   const [isPremium, setIsPremium] = useState(false);
@@ -1365,8 +1363,6 @@ const ContentManagerPage: React.FC = () => {
     setAuthor('');
     setDescription('');
     setDate('');
-    setFile(null);
-    setCoverImage(null);
     setFileUrl('');
     setCoverUrl('');
     setIsPremium(false);
@@ -1390,32 +1386,11 @@ const ContentManagerPage: React.FC = () => {
     fetchItems();
   }, [activeTab]);
 
-  const handleFileChange = (
-    e: React.ChangeEvent<HTMLInputElement>,
-    setter: React.Dispatch<React.SetStateAction<File | null>>
-  ) => {
-    setter(e.target.files?.[0] || null);
-  };
-
-  const uploadIfNeeded = async (selectedFile: File | null, role: UploadRole, existingUrl: string) => {
-    if (existingUrl.trim()) return existingUrl.trim();
-    if (!selectedFile) return '';
-    return uploadCatalogMedia(catalogTab, role, selectedFile, setUploadProgress);
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSaving(true);
-    setUploadProgress(0);
 
     try {
-      const uploadedFileUrl = usesPrimaryFile
-        ? await uploadIfNeeded(file, primaryFileRole, fileUrl)
-        : '';
-      const uploadedCoverUrl = usesCover
-        ? await uploadIfNeeded(coverImage, 'cover', coverUrl)
-        : '';
-
       await saveCatalogContent(catalogTab, {
         title,
         description,
@@ -1424,9 +1399,9 @@ const ContentManagerPage: React.FC = () => {
         instructor: catalogTab === 'courses' ? author : undefined,
         date: catalogTab === 'devotionals' ? date : undefined,
         startDate: catalogTab === 'challenges' ? date : undefined,
-        audioUrl: catalogTab === 'devotionals' || catalogTab === 'audiobooks' ? uploadedFileUrl : undefined,
-        fileUrl: catalogTab === 'books' ? uploadedFileUrl : undefined,
-        coverUrl: uploadedCoverUrl || undefined,
+        audioUrl: catalogTab === 'devotionals' || catalogTab === 'audiobooks' ? fileUrl || undefined : undefined,
+        fileUrl: catalogTab === 'books' ? fileUrl || undefined : undefined,
+        coverUrl: coverUrl || undefined,
         status: 'published',
         isPremium,
         price: isPremium ? Number(price || 0) : 0,
@@ -1439,7 +1414,6 @@ const ContentManagerPage: React.FC = () => {
       notify(error instanceof Error ? error.message : `Failed to save ${heading}.`, 'error');
     } finally {
       setIsSaving(false);
-      setUploadProgress(0);
     }
   };
 
@@ -1555,22 +1529,13 @@ const ContentManagerPage: React.FC = () => {
                 </div>
 
                 {usesCover && (
-                  <div className="space-y-3">
-                    <label className="block text-sm font-bold text-brand-text-primary">Cover Image</label>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => handleFileChange(e, setCoverImage)}
-                      className="w-full text-brand-text-secondary file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-bold file:bg-brand-accent/10 file:text-brand-accent hover:file:bg-brand-accent/20"
-                    />
-                    <input
-                      type="url"
-                      value={coverUrl}
-                      onChange={(e) => setCoverUrl(e.target.value)}
-                      className="w-full bg-brand-dark border border-brand-border rounded-lg px-4 py-3 text-brand-text-primary focus:outline-none focus:border-brand-accent"
-                      placeholder="https://.../cover.jpg"
-                    />
-                  </div>
+                  <MediaUpload
+                    label="Cover Image"
+                    kind="image"
+                    value={coverUrl}
+                    onChange={setCoverUrl}
+                    upload={(f, onProg) => uploadCatalogMedia(catalogTab, 'cover', f, onProg)}
+                  />
                 )}
 
                 <div className="flex flex-col gap-4 border border-brand-border rounded-xl p-4 bg-brand-dark/50">
@@ -1606,32 +1571,15 @@ const ContentManagerPage: React.FC = () => {
                 </div>
 
                 {usesPrimaryFile && (
-                  <div className="space-y-3">
-                    <label className="block text-sm font-bold text-brand-text-primary">
-                      {catalogTab === 'devotionals' ? 'Audio File' : catalogTab === 'audiobooks' ? 'Audio File' : 'Book File'}
-                    </label>
-                    <input
-                      type="file"
-                      required={catalogTab !== 'devotionals' && !fileUrl}
-                      accept={catalogTab === 'books' ? '.epub,.pdf' : 'audio/*'}
-                      onChange={(e) => handleFileChange(e, setFile)}
-                      className="w-full text-brand-text-secondary file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-bold file:bg-brand-accent/10 file:text-brand-accent hover:file:bg-brand-accent/20"
-                    />
-                    <input
-                      type="url"
-                      required={catalogTab !== 'devotionals' && !file}
-                      value={fileUrl}
-                      onChange={(e) => setFileUrl(e.target.value)}
-                      className="w-full bg-brand-dark border border-brand-border rounded-lg px-4 py-3 text-brand-text-primary focus:outline-none focus:border-brand-accent"
-                      placeholder={catalogTab === 'books' ? 'https://.../book.pdf' : 'https://.../audio.mp3'}
-                    />
-                  </div>
-                )}
-
-                {isSaving && uploadProgress > 0 && (
-                  <div className="w-full bg-brand-dark rounded-full h-2.5 mb-4 overflow-hidden">
-                    <div className="bg-brand-accent h-2.5 rounded-full transition-all duration-300" style={{ width: `${uploadProgress}%` }} />
-                  </div>
+                  <MediaUpload
+                    label={catalogTab === 'books' ? 'Book File' : 'Audio File'}
+                    kind={catalogTab === 'books' ? 'document' : 'audio'}
+                    value={fileUrl}
+                    onChange={setFileUrl}
+                    upload={(f, onProg) => uploadCatalogMedia(catalogTab, primaryFileRole, f, onProg)}
+                    required={catalogTab !== 'devotionals'}
+                    allowUrl
+                  />
                 )}
 
                 <button
@@ -1710,10 +1658,11 @@ const ContentManagerPage: React.FC = () => {
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-20 text-brand-text-secondary">
-                  <p>No {catalogTab} found.</p>
-                  <p className="text-sm mt-2">Use the form to add the first one.</p>
-                </div>
+                <EmptyState
+                  icon={<Layers className="w-8 h-8" />}
+                  heading={`No ${heading}s yet`}
+                  subtext="Use the form to add the first one."
+                />
               )}
             </Card>
           </div>
