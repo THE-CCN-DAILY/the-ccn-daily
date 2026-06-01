@@ -4,6 +4,17 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
+  <!-- Apply the saved theme before first paint to prevent a light-theme flash (FOUC) on the dark UI -->
+  <script>
+    (function () {
+      try {
+        document.documentElement.classList.add(localStorage.getItem('phoenix_theme') || 'dark');
+      } catch (e) {
+        document.documentElement.classList.add('dark');
+      }
+    })();
+  </script>
+
   <title>THE CCN DAILY — Faith for the workday soul</title>
   <meta name="description" content="A quiet daily rhythm for Scripture, prayer, work, and spiritual steadiness. THE CCN DAILY helps busy professionals begin again with God every day." />
 
@@ -30,6 +41,7 @@
   <link rel="icon" type="image/png" href="/flame-transparent.png" />
   <link rel="apple-touch-icon" href="/flame-transparent.png" />
   <link rel="manifest" href="/site.webmanifest" />
+  <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="CCN Daily" />
