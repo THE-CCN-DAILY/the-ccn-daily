@@ -10,11 +10,10 @@ FIREBASE_PROJECT_ID = "ccn-daily"
 PRODUCTION_ORIGIN = "https://theccndaily.com"
 ADMIN_EMAIL = "pastor.eryeza@gmail.com"
 
-# R2 media bucket — uncomment after enabling R2 + creating the bucket:
-#   npx wrangler r2 bucket create ccn-daily-media
-# [[r2_buckets]]
-# binding = "MEDIA_BUCKET"
-# bucket_name = "ccn-daily-media"
+# R2 media bucket — serves uploaded covers/audio via /api/media/<key>
+[[r2_buckets]]
+binding = "MEDIA_BUCKET"
+bucket_name = "ccn-daily-media"
 
 [[d1_databases]]
 binding = "DB"
