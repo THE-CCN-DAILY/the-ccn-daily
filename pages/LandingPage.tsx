@@ -1,7 +1,8 @@
-import React, { useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, useInView, useScroll, useTransform } from 'motion/react';
 import { useAuth } from '../contexts/AuthContext';
+import { listTestimonies } from '../services/testimonyService';
 import { useTheme } from '../contexts/ThemeContext';
 import CcnLogo from '../components/CcnLogo';
 import {
@@ -150,23 +151,9 @@ const appFeatures = [
   },
 ];
 
-const testimonials = [
-  {
-    quote: "I've been receiving these devotionals for three years. They don't feel like content — they feel like someone who knows Scripture and knows you.",
-    name: 'Grace M.',
-    location: 'Nairobi',
-  },
-  {
-    quote: "The podcast changed how I read the Bible. Pastor Eryeza preaches from the text, not around it.",
-    name: 'Samuel A.',
-    location: 'Lagos',
-  },
-  {
-    quote: "My whole family uses the app now. The courses section has become our family discipleship plan.",
-    name: 'Ruth N.',
-    location: 'Kampala',
-  },
-];
+// Landing testimonials are pulled live from the Firestore `testimonies` collection
+// (the Wall of Testimony). No hardcoded/fake testimonials.
+type LandingTestimony = { quote: string; name: string; location?: string };
 
 const formationVerses = [
   {
@@ -347,6 +334,23 @@ const CTA_COLORS = {
 const LandingPage: React.FC = () => {
   const { user, openSignIn } = useAuth();
   const { theme } = useTheme();
+
+  // Live testimonials from the Wall of Testimony (latest 3 published). Public read.
+  const [testimonials, setTestimonials] = useState<LandingTestimony[]>([]);
+  useEffect(() => {
+    let mounted = true;
+    listTestimonies(3)
+      .then((items) => {
+        if (mounted) setTestimonials(items.map((t) => ({ quote: t.text, name: t.author })));
+      })
+      .catch(() => {
+        /* public page — if Firestore is unavailable, simply show no testimonials */
+      });
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
   const featuresRef = useRef(null);
   const featuresInView = useInView(featuresRef, { once: true, margin: '-60px 0px' });
 
@@ -828,7 +832,8 @@ const LandingPage: React.FC = () => {
           </div>
         </div>
 
-        {/* ── Testimonials ──────────────────────────────────────────────────── */}
+        {/* ── Testimonials (live from the Wall of Testimony) ──────────────────── */}
+        {testimonials.length > 0 && (
         <section className="bg-brand-dark py-20 px-6 md:py-28">
           <div className="mx-auto max-w-6xl">
             <Reveal className="mb-14 text-center">
@@ -863,13 +868,14 @@ const LandingPage: React.FC = () => {
                     <p className="text-xs font-bold uppercase tracking-widest text-brand-text-primary" style={{ fontVariant: 'small-caps' }}>
                       {name}
                     </p>
-                    <p className="text-xs text-brand-text-secondary mt-0.5">{location}</p>
+                    {location && <p className="text-xs text-brand-text-secondary mt-0.5">{location}</p>}
                   </div>
                 </motion.div>
               ))}
             </div>
           </div>
         </section>
+        )}
 
         {/* ── Scripture Accent — Hebrews 4:12 ─────────────────────────────────── */}
         <div className="py-10 px-6 text-center bg-brand-dark border-t border-brand-border/40">

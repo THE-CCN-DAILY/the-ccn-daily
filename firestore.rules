@@ -382,6 +382,16 @@ service cloud.firestore {
              (!('price' in data) || data.price is number);
     }
 
+    function isValidTestimony(data) {
+      return hasRequiredFields(['author', 'authorUid', 'title', 'text', 'status', 'createdAt']) &&
+             data.author is string && data.author.size() > 0 && data.author.size() < 100 &&
+             data.authorUid == request.auth.uid &&
+             data.title is string && data.title.size() > 0 && data.title.size() < 160 &&
+             data.text is string && data.text.size() > 0 && data.text.size() < 2000 &&
+             data.status == 'published' &&
+             data.createdAt is timestamp;
+    }
+
     // ===============================================================
     // Match Rules
     // ===============================================================
@@ -389,6 +399,14 @@ service cloud.firestore {
     // Default deny
     match /{document=**} {
       allow read, write: if false;
+    }
+
+    // Wall of Testimony — public-readable (landing + community), member-writable,
+    // admin-moderated (reactive: delete/hide). Light moderation per the launch plan.
+    match /testimonies/{testimonyId} {
+      allow read: if isAdmin() || resource.data.status == 'published';
+      allow create: if isAuthenticated() && isValidTestimony(request.resource.data);
+      allow update, delete: if isAdmin();
     }
 
     match /users/{userId} {

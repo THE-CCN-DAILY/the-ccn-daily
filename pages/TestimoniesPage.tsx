@@ -1,8 +1,17 @@
-import React, { useState, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import { Trash2 } from 'lucide-react';
 import Card from '../components/Card';
-import { SparklesIcon, UserIcon, SendIcon } from '../components/icons';
-import type { PrayerRequest, StandaloneTestimony } from '../types';
+import EmptyState from '../components/EmptyState';
+import { SparklesIcon, SendIcon } from '../components/icons';
+import { useAuth } from '../contexts/AuthContext';
+import { useNotifications } from '../contexts/NotificationContext';
+import {
+  type Testimony,
+  listTestimonies,
+  submitTestimony,
+  deleteTestimony,
+} from '../services/testimonyService';
 
 const EASE = [0.22, 1, 0.36, 1] as [number, number, number, number];
 
@@ -16,73 +25,50 @@ const stagger = {
   visible: { transition: { staggerChildren: 0.07, delayChildren: 0.05 } },
 };
 
-// Placeholder testimonies — replace with live Firebase query when Testimonies collection is ready
-const seedAnsweredPrayers: PrayerRequest[] = [
-  {
-    id: 5,
-    text: 'For a job interview I had last week. Praying for favor and a positive outcome.',
-    author: 'Emily R.',
-    prayerCount: 51,
-    testimony:
-      "Thank you all for your prayers! I got the job! God is so faithful and truly opened the right doors. I'm so grateful for this community.",
-  },
-  {
-    id: 6,
-    text: "Please pray for my mother's surgery to go well and for a speedy recovery.",
-    author: 'David L.',
-    prayerCount: 103,
-    testimony:
-      'The surgery was a complete success, and my mom is recovering faster than the doctors expected. Your prayers made a tangible difference. All glory to God!',
-  },
-  {
-    id: 7,
-    text: 'I was struggling with a creative block on a very important project. Praying for a breakthrough.',
-    author: 'Anonymous',
-    prayerCount: 45,
-    testimony:
-      'The morning after I posted this, I woke up with a completely fresh perspective and finished the project that day. The block is gone! Thank you, Jesus.',
-  },
-];
+const GHOST_STARTER =
+  'There was a season when… and then God…';
 
-// Seed testimonies — replace with live Firestore query when collection is live
-const seedStandaloneTestimonies: StandaloneTestimony[] = [
-  {
-    id: 8,
-    author: 'Maria G.',
-    title: 'An Unexpected Reconciliation',
-    text: "I hadn't spoken to my brother in years after a painful disagreement. I've been praying for restoration but didn't know how it could happen. Out of the blue, he called me. We had the most healing conversation we've had in a decade. A true miracle. Don't ever stop praying for restoration.",
-  },
-  {
-    id: 9,
-    author: 'Samuel T.',
-    title: 'Gratitude for the "Small" Things',
-    text: "Today I was just overwhelmed with gratitude. Not for any huge miracle, but for the warmth of the sun, the taste of my coffee, and the sound of my children laughing. It's in these small, everyday moments that I feel God's presence most profoundly. He is in everything.",
-  },
-];
+// ─── Avatar (initials fallback) ───────────────────────────────────────────────
 
-type UnifiedTestimony = {
-  id: string;
-  author: string;
-  testimonyText: string;
-  contextTitle: string;
-  contextText: string | null;
-};
+const initialsOf = (name: string): string =>
+  name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((p) => p[0]?.toUpperCase() ?? '')
+    .join('') || '✦';
+
+const Avatar: React.FC<{ name: string }> = ({ name }) => (
+  <div
+    className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-xs font-bold"
+    style={{ background: 'var(--bg-sunk)', color: 'var(--ember)' }}
+    aria-hidden
+  >
+    {initialsOf(name)}
+  </div>
+);
 
 // ─── Share Story Modal ────────────────────────────────────────────────────────
 
 const ShareStoryModal: React.FC<{
   onClose: () => void;
-  onSave: (testimony: StandaloneTestimony) => void;
-}> = ({ onClose, onSave }) => {
+  onSubmit: (title: string, text: string) => Promise<void>;
+}> = ({ onClose, onSubmit }) => {
   const [title, setTitle] = useState('');
   const [text, setText] = useState('');
+  const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
-  const handleSave = () => {
-    if (title.trim() && text.trim()) {
-      onSave({ id: Date.now(), author: 'You', title, text });
+  const handleSave = async () => {
+    if (!title.trim() || !text.trim() || saving) return;
+    setSaving(true);
+    try {
+      await onSubmit(title, text);
       setSaved(true);
-      setTimeout(onClose, 1800);
+      setTimeout(onClose, 1600);
+    } catch {
+      // Error surfaced via toast by the caller
+      setSaving(false);
     }
   };
 
@@ -123,14 +109,16 @@ const ShareStoryModal: React.FC<{
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="A title for your testimony"
+                maxLength={160}
                 className="w-full bg-brand-dark border border-brand-border rounded-xl py-2.5 px-3 text-brand-text-primary placeholder-brand-text-secondary focus:outline-none focus:ring-2 focus:ring-brand-accent"
               />
               <textarea
                 value={text}
                 onChange={(e) => setText(e.target.value)}
                 rows={6}
+                maxLength={2000}
                 className="w-full p-3 bg-brand-dark border border-brand-border rounded-xl text-brand-text-primary placeholder-brand-text-secondary focus:outline-none focus:ring-2 focus:ring-brand-accent resize-none"
-                placeholder="Share your story of faith, gratitude, or a moment of God's goodness..."
+                placeholder={`${GHOST_STARTER}\n\nShare your story of faith, gratitude, or a moment of God's goodness…`}
               />
               <p className="text-xs text-brand-text-secondary/60 flex items-center gap-1.5">
                 <span aria-hidden>🎙</span>
@@ -147,13 +135,13 @@ const ShareStoryModal: React.FC<{
               </button>
               <motion.button
                 onClick={handleSave}
-                disabled={!title.trim() || !text.trim()}
+                disabled={!title.trim() || !text.trim() || saving}
                 className="px-6 py-2.5 rounded-xl bg-brand-accent text-white font-semibold shadow-md disabled:opacity-40"
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
                 transition={{ type: 'spring', stiffness: 400, damping: 20 }}
               >
-                Share Story
+                {saving ? 'Sharing…' : 'Share Story'}
               </motion.button>
             </div>
           </>
@@ -165,34 +153,37 @@ const ShareStoryModal: React.FC<{
 
 // ─── Testimony Card ───────────────────────────────────────────────────────────
 
-const TestimonyCard: React.FC<{ testimony: UnifiedTestimony }> = ({ testimony }) => (
+const TestimonyCard: React.FC<{
+  testimony: Testimony;
+  canModerate: boolean;
+  onDelete: (t: Testimony) => void;
+}> = ({ testimony, canModerate, onDelete }) => (
   <motion.div variants={fadeUp} transition={{ duration: 0.4, ease: EASE }}>
     <Card className="flex flex-col h-full">
       <div className="flex items-start justify-between mb-3 pb-3 border-b border-brand-border gap-2">
         <h3 className="text-base font-bold text-brand-accent flex items-center gap-2 leading-snug">
           <SparklesIcon className="w-4 h-4 flex-shrink-0" />
-          {testimony.contextTitle}
+          {testimony.title}
         </h3>
-        <div className="flex items-center gap-1.5 text-xs text-brand-text-secondary flex-shrink-0">
-          <UserIcon className="w-3.5 h-3.5" />
-          <span>{testimony.author}</span>
-        </div>
+        {canModerate && (
+          <button
+            onClick={() => onDelete(testimony)}
+            className="flex-shrink-0 text-brand-text-secondary hover:text-red-400 transition-colors"
+            title="Remove testimony"
+            aria-label="Remove testimony"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        )}
       </div>
 
-      <div className="flex-grow space-y-3">
-        <p className="text-brand-text-primary text-sm leading-relaxed">
-          {testimony.testimonyText}
-        </p>
-        {testimony.contextText && (
-          <div className="p-3 bg-brand-dark rounded-xl border border-brand-border">
-            <p className="text-[12px] font-bold uppercase tracking-wider text-brand-text-secondary mb-1">
-              Original Prayer
-            </p>
-            <p className="text-xs text-brand-text-secondary italic leading-relaxed">
-              "{testimony.contextText}"
-            </p>
-          </div>
-        )}
+      <p className="text-brand-text-primary text-sm leading-relaxed flex-grow">
+        {testimony.text}
+      </p>
+
+      <div className="flex items-center gap-2.5 mt-4 pt-3 border-t border-brand-border">
+        <Avatar name={testimony.author} />
+        <span className="text-xs font-semibold text-brand-text-secondary">{testimony.author}</span>
       </div>
     </Card>
   </motion.div>
@@ -201,37 +192,56 @@ const TestimonyCard: React.FC<{ testimony: UnifiedTestimony }> = ({ testimony })
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 const TestimoniesPage: React.FC = () => {
-  const [standaloneTestimonies, setStandaloneTestimonies] = useState(seedStandaloneTestimonies);
+  const { user } = useAuth();
+  const { notify } = useNotifications();
+  const [testimonies, setTestimonies] = useState<Testimony[]>([]);
+  const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const unifiedTestimonies = useMemo<UnifiedTestimony[]>(() => {
-    const fromAnsweredPrayers: UnifiedTestimony[] = seedAnsweredPrayers
-      .filter((r) => r.testimony)
-      .map((r) => ({
-        id: `p-${r.id}`,
-        author: r.author,
-        testimonyText: r.testimony!,
-        contextTitle: 'Answered Prayer',
-        contextText: r.text,
-      }));
+  const canModerate = user?.role === 'admin';
 
-    const fromStandalone: UnifiedTestimony[] = standaloneTestimonies.map((t) => ({
-      id: `s-${t.id}`,
-      author: t.author,
-      testimonyText: t.text,
-      contextTitle: t.title,
-      contextText: null,
-    }));
-
-    return [...fromStandalone, ...fromAnsweredPrayers].sort(
-      (a, b) => parseInt(b.id.split('-')[1]) - parseInt(a.id.split('-')[1])
-    );
-  }, [standaloneTestimonies]);
-
-  const handleSaveStory = (newStory: StandaloneTestimony) => {
-    setStandaloneTestimonies([newStory, ...standaloneTestimonies]);
-    setIsModalOpen(false);
+  const load = async () => {
+    try {
+      setTestimonies(await listTestimonies());
+    } catch {
+      notify('Could not load testimonies right now. Please try again later.', 'error');
+    } finally {
+      setLoading(false);
+    }
   };
+
+  useEffect(() => {
+    load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleSubmit = async (title: string, text: string) => {
+    if (!user?.uid) {
+      notify('Please sign in to share your story.', 'error');
+      throw new Error('auth required');
+    }
+    try {
+      await submitTestimony({ uid: user.uid, displayName: user.displayName }, { title, text });
+      notify('Your testimony has been shared. Thank you!', 'success');
+      await load();
+    } catch (error) {
+      notify(error instanceof Error ? error.message : 'Could not share your testimony.', 'error');
+      throw error;
+    }
+  };
+
+  const handleDelete = async (t: Testimony) => {
+    if (!window.confirm(`Remove the testimony "${t.title}"?`)) return;
+    try {
+      await deleteTestimony(t.id);
+      notify('Testimony removed.', 'success');
+      setTestimonies((prev) => prev.filter((x) => x.id !== t.id));
+    } catch (error) {
+      notify(error instanceof Error ? error.message : 'Could not remove testimony.', 'error');
+    }
+  };
+
+  const hasTestimonies = testimonies.length > 0;
 
   return (
     <div className="max-w-6xl mx-auto pb-20">
@@ -270,14 +280,19 @@ const TestimoniesPage: React.FC = () => {
         </motion.button>
       </motion.div>
 
-      {/* Cards grid */}
-      {unifiedTestimonies.length === 0 ? (
-        <div className="text-center py-20">
-          <SparklesIcon className="w-12 h-12 text-brand-text-secondary/40 mx-auto mb-4" />
-          <p className="text-brand-text-secondary" style={{ fontFamily: 'var(--serif-body)', lineHeight: 1.65 }}>
-            No testimonies yet — yours could be the first. What has God done?
-          </p>
+      {/* Body */}
+      {loading ? (
+        <div className="flex justify-center py-24">
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-brand-accent" />
         </div>
+      ) : !hasTestimonies ? (
+        <EmptyState
+          icon={<SparklesIcon className="w-8 h-8" />}
+          heading="No testimonies yet"
+          subtext="Yours could be the first. What has God done?"
+          ctaLabel="Share Your Story"
+          ctaOnClick={() => setIsModalOpen(true)}
+        />
       ) : (
         <motion.div
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
@@ -285,8 +300,13 @@ const TestimoniesPage: React.FC = () => {
           initial="hidden"
           animate="visible"
         >
-          {unifiedTestimonies.map((item) => (
-            <TestimonyCard key={item.id} testimony={item} />
+          {testimonies.map((item) => (
+            <TestimonyCard
+              key={item.id}
+              testimony={item}
+              canModerate={canModerate}
+              onDelete={handleDelete}
+            />
           ))}
         </motion.div>
       )}
@@ -296,7 +316,7 @@ const TestimoniesPage: React.FC = () => {
         {isModalOpen && (
           <ShareStoryModal
             onClose={() => setIsModalOpen(false)}
-            onSave={handleSaveStory}
+            onSubmit={handleSubmit}
           />
         )}
       </AnimatePresence>
