@@ -150,6 +150,29 @@ Every page gets a decision so nothing half-built ships in nav.
 - **DoD:** one clear path per content type to add a cover (upload or URL) and a file where relevant;
   no URL-only dead-ends; reading-plan authoring is self-explanatory.
 
+## Autonomous execution goal (founder away — finish on staging)
+
+**Goal:** complete the Phase E visual + authoring polish to a premium, benchmarked bar, all verified on
+**staging**. Production promotion stays with the founder (their standing rule: never risk live users).
+
+Autonomous task list (in order, deploy+screenshot-verify each on staging):
+1. ✅ Logo lockup (flame+wordmark as one) — done & verified.
+2. ✅ Theme-flash (FOUC) eliminated; deprecated meta fixed — done.
+3. ✅ MediaUpload component + author photo + book/reading-plan covers; R2 live — done.
+4. Guided-journey timeline — fix crowded/overlapping step labels.
+5. Dashboard + cards — editorial hierarchy, designed hover/focus/active states (premium-tonal).
+6. Sign-in modal — backdrop/contrast polish.
+7. Catalog editor — upgrade raw file inputs to `<MediaUpload>` (drag/drop, preview, format hints).
+8. Empty states — every list (catalog, community, journal) gets a premium empty state, not a blank.
+
+**Deferred for founder (NOT autonomous):**
+- Production promotion of the verified staging build.
+- Course/Challenge **rich module attachments** (wide-media data-model change — sizable; do with review).
+- Real upload verification (needs founder to drag a real file), email-verification, Google custom-domain (Phase H).
+- Phase F (SEO/GEO + perf) and Phase G (AI moves) — separate phases.
+
+Rule: stay on staging; commit each step; checkpoint via save-session before context runs out.
+
 ## Backlog — founder requests (slot into Phase E/G)
 - **Rich-text editor** in the devotional/content generator (formatting commands, not raw markdown).
 - **Standardize design-system fonts/styles across all screens** — some screens don't use the

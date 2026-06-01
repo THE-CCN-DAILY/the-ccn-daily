@@ -458,9 +458,11 @@ const GuidedJourneyPage: React.FC = () => {
                                     >
                                         {isCompleted ? <CheckIcon className="w-5 h-5" /> : <step.icon className="w-5 h-5" />}
                                     </motion.div>
-                                    <p className={`absolute top-12 whitespace-nowrap text-[12px] font-bold uppercase tracking-widest transition-all duration-400 ${isCurrent ? 'text-brand-accent' : 'text-brand-text-secondary opacity-40'}`}>
-                                        {step.name}
-                                    </p>
+                                    {isCurrent && (
+                                        <p className="absolute top-12 whitespace-nowrap text-[12px] font-bold uppercase tracking-widest text-brand-accent transition-all duration-400">
+                                            {step.name}
+                                        </p>
+                                    )}
                                 </div>
                             </li>
                         );
