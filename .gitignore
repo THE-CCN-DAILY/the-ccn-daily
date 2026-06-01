@@ -28,3 +28,9 @@ artifacts/browser-profiles
 
 # Firebase local config — contains plaintext API key, never commit
 firebase-applet-config.json
+
+# Browser-automation scratch output (Playwright / Chrome MCP)
+.playwright-mcp/
+# Local staging verification screenshots
+dashboard-staging.png
+production-live.png
