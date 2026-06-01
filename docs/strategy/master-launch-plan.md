@@ -165,11 +165,21 @@ Autonomous task list (in order, deploy+screenshot-verify each on staging):
 7. Catalog editor — upgrade raw file inputs to `<MediaUpload>` (drag/drop, preview, format hints).
 8. Empty states — every list (catalog, community, journal) gets a premium empty state, not a blank.
 
+**New tracks (see `services-and-features-roadmap.md`):** Media On Demand (audio+video, with a/v
+version selection), podcast audio/video toggle, **support system** (live chat + tickets + AI-drafted
+human-reviewed replies, in-app/Firestore for security), **Cloudflare Stream** migration for video
+(substitute Mux; founder-approved direction), **keep Resend** (revisit Cloudflare Email at GA).
+
+**GOAL until founder returns (autonomous):** finish the Phase E visual + authoring polish on staging
+(dashboard/cards, catalog editor → MediaUpload, empty states), verify catalog *display* across all
+content types (audiobook confirmed working), and produce ready-to-build **design specs** for the new
+tracks above. Build polish + write specs; do NOT autonomously build large new features or migrate video
+without review. Everything on staging; production promotion stays with the founder.
+
 **Deferred for founder (NOT autonomous):**
 - Production promotion of the verified staging build.
-- Course/Challenge **rich module attachments** (wide-media data-model change — sizable; do with review).
-- Real upload verification (needs founder to drag a real file), email-verification, Google custom-domain (Phase H).
-- Phase F (SEO/GEO + perf) and Phase G (AI moves) — separate phases.
+- Large new builds: support system, Media On Demand, Stream migration, Course/Challenge rich attachments.
+- Email-verification, Google custom-domain (Phase H); Phase F (SEO/GEO+perf) & Phase G (AI moves).
 
 Rule: stay on staging; commit each step; checkpoint via save-session before context runs out.
 
