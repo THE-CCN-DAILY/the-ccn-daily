@@ -1,9 +1,11 @@
 name: Deploy to Cloudflare Pages
 
+# Manual-only. The canonical release path is `wrangler` direct upload (see DEPLOY.md):
+# build -> verify on staging -> promote the SAME dist to production. Auto-deploy on
+# push to main was removed so a push can never bypass the staging gate or ship an
+# unverified rebuild. Trigger this workflow by hand (Actions tab -> Run workflow) only
+# as a backup path.
 on:
-  push:
-    branches:
-      - main
   workflow_dispatch:
 
 jobs:
