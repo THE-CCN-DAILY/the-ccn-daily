@@ -37,8 +37,19 @@ though logic is type-checked and low-risk.
   CF dashboard flakiness. Confirmed harmless: your secret saves all landed. Not an app/code issue.
 
 ## 🔴 Still needs YOUR action
-- **Revoke the leaked Mux key** in the Mux dashboard (we're dropping Mux for Cloudflare Stream — no
-  re-provision needed, just disable the exposed token for hygiene).
+- **Mux** — ✅ you deleted the environment. (Code migration to Stream in progress.)
+- **Cloudflare dashboard actions** (from the enable-now audit):
+  - 🔴 **CRITICAL — Workers AI:** the `AI` binding is missing, so AI generation is running on STUB text.
+    I'll add `[ai] binding = "AI"` to wrangler.toml (during Stream consolidation); also add the binding in
+    the dashboard (Pages → Settings → Functions → Bindings → Workers AI → var `AI`, Prod+Preview). Free.
+  - 🔴 **Enable Cloudflare Stream** (paid add-on) + create an Account-scoped **Stream:Edit** API token;
+    set `CF_ACCOUNT_ID` + `CF_STREAM_TOKEN` as Pages secrets. Without this, the Stream video won't function.
+  - 🟠 **Turnstile** (free) — widget + `TURNSTILE_SECRET`; protects the unauthenticated `/api/ai/generate`
+    (real $ per call) + anonymous forms from bot abuse.
+  - 🟢 Free zone toggles: **Web Analytics** (auto-inject), **Tiered Cache**, **Bot Fight Mode**,
+    **Always-HTTPS + HSTS**.
+  - 🟢 Later: **Cloudflare Images** (transform R2 originals → right-sized card images), **Email Routing**
+    (`support@` → ticket). Full step-by-step is in the agent report; I'll fold key ones into the build.
 
 ## ❓ Decisions (FYI — locked unless you say otherwise)
 - **Testimonies/comments moderation:** admin-approval before publish; decline shows the author a reason.
