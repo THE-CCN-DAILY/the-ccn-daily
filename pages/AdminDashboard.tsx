@@ -24,14 +24,19 @@ interface AppUser {
 }
 
 const StatCard: React.FC<{ title: string; value: string | number; change: string; icon: React.FC<any> }> = ({ title, value, change, icon: Icon }) => (
-    <Card className="flex items-center p-4">
-        <div className="p-3 bg-brand-accent/20 rounded-lg mr-4">
+    <Card className="flex items-center gap-5 p-5" style={{ boxShadow: 'var(--sh-card)' }}>
+        <div className="p-3.5 bg-brand-accent/10 border border-brand-accent/20 rounded-xl shrink-0">
             <Icon className="w-6 h-6 text-brand-accent" />
         </div>
-        <div>
-            <p className="text-sm text-brand-text-secondary">{title}</p>
-            <p className="text-2xl font-bold text-brand-text-primary">{value}</p>
-            <p className="text-xs text-status-success">{change}</p>
+        <div className="min-w-0">
+            <p className="text-[11px] font-bold uppercase tracking-[0.1em] text-brand-text-secondary">{title}</p>
+            <p
+                className="text-3xl font-semibold text-brand-text-primary leading-tight"
+                style={{ fontFamily: 'var(--serif-display)' }}
+            >
+                {value}
+            </p>
+            <p className="text-xs text-status-success mt-0.5">{change}</p>
         </div>
     </Card>
 );
@@ -520,10 +525,18 @@ const AdminDashboard: React.FC = () => {
 
     return (
         <div className="max-w-6xl mx-auto pb-20">
-            <h1 className="text-4xl font-bold text-brand-text-primary mb-2">Nexus Admin Hub</h1>
-            <p className="text-lg text-brand-text-secondary mb-8">
-                Global Command Center for THE CCN DAILY.
-            </p>
+            <header className="mb-10 pt-2">
+                <p className="ds-eyebrow mb-3">Operator Console</p>
+                <h1
+                    className="font-semibold text-brand-text-primary mb-2"
+                    style={{ fontFamily: 'var(--serif-display)', fontSize: 'clamp(2rem, 5vw, 3.25rem)', lineHeight: 1.05 }}
+                >
+                    Nexus Admin Hub
+                </h1>
+                <p className="text-base text-brand-text-secondary max-w-xl">
+                    Global Command Center for THE CCN DAILY.
+                </p>
+            </header>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
                 <StatCard title="Total Members" value={userStats.total} change={`${userStats.active30d} active in 30 days`} icon={UserIcon} />
@@ -536,7 +549,7 @@ const AdminDashboard: React.FC = () => {
                     <button
                         key={tab}
                         onClick={() => setActiveTab(tab)}
-                        className={`px-6 py-2 rounded-full text-sm font-bold border transition-all ${activeTab === tab ? 'bg-brand-accent text-white' : 'bg-brand-secondary text-brand-text-secondary border-brand-border'}`}
+                        className={`px-5 py-2 rounded-full text-sm font-bold border transition-all ${activeTab === tab ? 'bg-brand-accent text-white border-brand-accent shadow-sm' : 'bg-brand-dark text-brand-text-secondary border-brand-border hover:text-brand-text-primary hover:border-brand-border-strong'}`}
                     >
                         {tab === 'challenges' ? 'AI Course Studio' : tab === 'tenancy' ? 'Multi-Tenant (P7)' : tab === 'budget' ? 'AI Budget' : tab === 'landscape' ? 'Landscape' : tab.charAt(0).toUpperCase() + tab.slice(1)}
                     </button>
@@ -547,10 +560,10 @@ const AdminDashboard: React.FC = () => {
                 <div className="lg:col-span-2">
                     {activeTab === 'users' ? (
                         <Card>
-                            <h2 className="text-xl font-bold text-brand-text-primary mb-4">User Management</h2>
+                            <h2 className="text-2xl font-semibold text-brand-text-primary mb-4" style={{ fontFamily: 'var(--serif-display)' }}>User Management</h2>
                             <div className="overflow-x-auto">
                                 <table className="w-full text-sm text-left">
-                                    <thead className="text-xs text-brand-text-secondary uppercase bg-brand-secondary/50">
+                                    <thead className="text-[11px] font-bold tracking-[0.08em] text-brand-text-secondary uppercase bg-brand-dark border-b border-brand-border">
                                         <tr>
                                             <th scope="col" className="px-6 py-3">Name</th>
                                             <th scope="col" className="px-6 py-3">Role</th>
@@ -564,7 +577,7 @@ const AdminDashboard: React.FC = () => {
                                                 <td colSpan={4} className="px-6 py-8 text-center text-brand-text-secondary">Loading members...</td>
                                             </tr>
                                         ) : users.map(user => (
-                                            <tr key={user.id} className="border-b border-brand-border hover:bg-brand-secondary/30">
+                                            <tr key={user.id} className="border-b border-brand-border last:border-0 hover:bg-brand-dark/60 transition-colors">
                                                 <th scope="row" className="px-6 py-4 font-medium text-brand-text-primary whitespace-nowrap">
                                                     <div className="flex items-center">
                                                         <div className="w-8 h-8 rounded-full bg-brand-accent/20 flex items-center justify-center text-brand-accent font-bold mr-3">
@@ -577,7 +590,7 @@ const AdminDashboard: React.FC = () => {
                                                     </div>
                                                 </th>
                                                 <td className="px-6 py-4">
-                                                    <span className={`px-2 py-1 text-[12px] font-bold uppercase rounded-full ${user.role === 'admin' ? 'bg-red-500/20 text-red-400' : 'bg-green-500/20 text-green-400'}`}>
+                                                    <span className={`inline-block px-2.5 py-1 text-[11px] font-bold tracking-[0.06em] uppercase rounded-full border ${user.role === 'admin' ? 'bg-brand-accent/10 text-brand-accent border-brand-accent/30' : 'bg-status-success/10 text-status-success border-status-success/30'}`}>
                                                         {user.role}
                                                     </span>
                                                 </td>
@@ -593,7 +606,7 @@ const AdminDashboard: React.FC = () => {
                         </Card>
                     ) : activeTab === 'inbox' ? (
                         <Card className="animate-fade-in">
-                            <h2 className="text-xl font-bold text-brand-text-primary mb-4">Support Inbox</h2>
+                            <h2 className="text-2xl font-semibold text-brand-text-primary mb-4" style={{ fontFamily: 'var(--serif-display)' }}>Support Inbox</h2>
                             <p className="text-sm text-brand-text-secondary mb-6">Incoming emails received via Resend Webhooks.</p>
                             
                             <div className="space-y-4">
@@ -628,12 +641,15 @@ const AdminDashboard: React.FC = () => {
                         <div className="space-y-6">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <Card className="p-6">
-                                    <h3 className="text-xl font-bold mb-4">AI Cost Overview (Last 30 Days)</h3>
+                                    <h3 className="text-xl font-semibold text-brand-text-primary mb-4" style={{ fontFamily: 'var(--serif-display)' }}>AI Cost Overview (Last 30 Days)</h3>
                                     {loadingBudget ? (
                                         <SpinnerIcon className="w-8 h-8 animate-spin text-brand-accent" />
                                     ) : (
                                         <>
-                                            <div className="text-4xl font-bold text-brand-accent mb-2">
+                                            <div
+                                                className="text-4xl font-semibold text-brand-accent mb-2"
+                                                style={{ fontFamily: 'var(--serif-display)' }}
+                                            >
                                                 ${usageStats?.totalCost.toFixed(4) || '0.0000'}
                                             </div>
                                             <p className="text-sm text-brand-text-secondary">Estimated platform cost for AI operations.</p>
@@ -641,7 +657,7 @@ const AdminDashboard: React.FC = () => {
                                     )}
                                 </Card>
                                 <Card className="p-6">
-                                    <h3 className="text-xl font-bold mb-4">Feature Breakdown</h3>
+                                    <h3 className="text-xl font-semibold text-brand-text-primary mb-4" style={{ fontFamily: 'var(--serif-display)' }}>Feature Breakdown</h3>
                                     <div className="space-y-2">
                                         {usageStats?.featureBreakdown && Object.entries(usageStats.featureBreakdown).map(([feature, cost]: [string, any]) => (
                                             <div key={feature} className="flex justify-between items-center">
@@ -657,7 +673,7 @@ const AdminDashboard: React.FC = () => {
                             </div>
 
                             <Card className="p-6">
-                                <h3 className="text-xl font-bold mb-4">Recent AI Operations</h3>
+                                <h3 className="text-xl font-semibold text-brand-text-primary mb-4" style={{ fontFamily: 'var(--serif-display)' }}>Recent AI Operations</h3>
                                 <div className="overflow-x-auto">
                                     <table className="w-full text-left">
                                         <thead>
@@ -688,7 +704,7 @@ const AdminDashboard: React.FC = () => {
                         <ChallengeCreator />
                     ) : activeTab === 'broadcasts' ? (
                         <Card className="animate-fade-in">
-                            <h2 className="text-xl font-bold text-brand-text-primary mb-4">Broadcast Engine</h2>
+                            <h2 className="text-2xl font-semibold text-brand-text-primary mb-4" style={{ fontFamily: 'var(--serif-display)' }}>Broadcast Engine</h2>
                             <p className="text-sm text-brand-text-secondary mb-6">Send targeted updates via in-app push notifications and email.</p>
                             <div className="space-y-4">
                                 <div>
@@ -741,11 +757,11 @@ const AdminDashboard: React.FC = () => {
                         </Card>
                     ) : activeTab === 'events' ? (
                         <Card className="animate-fade-in">
-                            <h2 className="text-xl font-bold text-brand-text-primary mb-4">Live Events & Streaming</h2>
+                            <h2 className="text-2xl font-semibold text-brand-text-primary mb-4" style={{ fontFamily: 'var(--serif-display)' }}>Live Events & Streaming</h2>
                             <p className="text-sm text-brand-text-secondary mb-6">Manage online streams (Mux/Agora) and physical event registrations.</p>
                             <div className="space-y-6">
                                 <div className="p-6 border border-brand-border rounded-xl bg-brand-secondary/30">
-                                    <h3 className="font-bold text-brand-text-primary mb-4">Schedule New Event</h3>
+                                    <h3 className="text-lg font-semibold text-brand-text-primary mb-4" style={{ fontFamily: 'var(--serif-display)' }}>Schedule New Event</h3>
                                     <div className="space-y-4">
                                         <div>
                                             <label className="block text-xs font-bold text-brand-text-secondary uppercase mb-2">Event Title</label>
@@ -799,7 +815,7 @@ const AdminDashboard: React.FC = () => {
                                 </div>
 
                                 <div className="p-6 border border-brand-border rounded-xl bg-brand-secondary/30">
-                                    <h3 className="font-bold text-brand-text-primary mb-4">Mux Live Stream Configuration</h3>
+                                    <h3 className="text-lg font-semibold text-brand-text-primary mb-4" style={{ fontFamily: 'var(--serif-display)' }}>Mux Live Stream Configuration</h3>
                                     <p className="text-sm text-brand-text-secondary mb-4">Generate a secure stream key for OBS or other broadcasting software.</p>
                                     
                                     {muxStreamKey ? (
@@ -822,7 +838,7 @@ const AdminDashboard: React.FC = () => {
                                         <button 
                                             onClick={handleCreateMuxStream}
                                             disabled={isCreatingMuxStream}
-                                            className="w-full py-3 bg-[#FB9129] text-white rounded-xl font-bold hover:scale-[1.02] transition-transform flex items-center justify-center gap-2 disabled:opacity-50"
+                                            className="w-full py-3 bg-brand-accent text-white rounded-xl font-bold hover:scale-[1.02] transition-transform flex items-center justify-center gap-2 disabled:opacity-50"
                                         >
                                             {isCreatingMuxStream ? <><SpinnerIcon className="w-5 h-5"/> Generating...</> : 'Generate Mux Stream Key'}
                                         </button>
@@ -832,24 +848,24 @@ const AdminDashboard: React.FC = () => {
                         </Card>
                     ) : activeTab === 'payments' ? (
                         <Card className="animate-fade-in">
-                            <h2 className="text-xl font-bold text-brand-text-primary mb-4">Global Payment Gateways</h2>
+                            <h2 className="text-2xl font-semibold text-brand-text-primary mb-4" style={{ fontFamily: 'var(--serif-display)' }}>Global Payment Gateways</h2>
                             <p className="text-sm text-brand-text-secondary mb-6">Manage monetization, subscriptions, and international/local payments.</p>
                             <div className="space-y-6">
                                 <div className="flex items-center justify-between p-4 border border-brand-border rounded-xl bg-brand-secondary/30">
                                     <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 bg-[#FB9129]/10 rounded-lg flex items-center justify-center">
-                                            <DbIcon className="w-6 h-6 text-[#FB9129]" />
+                                        <div className="w-10 h-10 bg-brand-accent/10 border border-brand-accent/20 rounded-lg flex items-center justify-center">
+                                            <DbIcon className="w-6 h-6 text-brand-accent" />
                                         </div>
                                         <div>
                                             <h3 className="font-bold text-brand-text-primary">Flutterwave Integration</h3>
                                             <p className="text-xs text-brand-text-secondary">Global Cards, Mobile Money & Local Payments</p>
                                         </div>
                                     </div>
-                                    <span className="px-2 py-1 bg-green-500/20 text-green-400 text-[12px] font-bold uppercase rounded-full">Connected</span>
+                                    <span className="px-2.5 py-1 bg-status-success/10 text-status-success border border-status-success/30 text-[11px] font-bold tracking-[0.06em] uppercase rounded-full">Connected</span>
                                 </div>
 
                                 <div className="p-6 border border-brand-border rounded-xl bg-brand-secondary/30">
-                                    <h3 className="font-bold text-brand-text-primary mb-4">Payment Configuration</h3>
+                                    <h3 className="text-lg font-semibold text-brand-text-primary mb-4" style={{ fontFamily: 'var(--serif-display)' }}>Payment Configuration</h3>
                                     <div className="space-y-4">
                                         <div>
                                             <label className="block text-xs font-bold text-brand-text-secondary uppercase mb-2">Flutterwave Public Key</label>
@@ -877,12 +893,12 @@ const AdminDashboard: React.FC = () => {
                         </Card>
                     ) : activeTab === 'discounts' ? (
                         <Card className="animate-fade-in">
-                            <h2 className="text-xl font-bold text-brand-text-primary mb-4">Discount Management</h2>
+                            <h2 className="text-2xl font-semibold text-brand-text-primary mb-4" style={{ fontFamily: 'var(--serif-display)' }}>Discount Management</h2>
                             <p className="text-sm text-brand-text-secondary mb-6">Configure seasonal discounts and promotional offers for subscriptions.</p>
                             
                             <div className="space-y-6">
                                 <div className="p-6 border border-brand-border rounded-xl bg-brand-secondary/30">
-                                    <h3 className="font-bold text-brand-text-primary mb-4">Active Promotions</h3>
+                                    <h3 className="text-lg font-semibold text-brand-text-primary mb-4" style={{ fontFamily: 'var(--serif-display)' }}>Active Promotions</h3>
                                     <div className="space-y-4">
                                         <div className="flex items-center justify-between p-4 bg-brand-dark rounded-xl border border-brand-border">
                                             <div>
@@ -891,7 +907,7 @@ const AdminDashboard: React.FC = () => {
                                             </div>
                                             <div className="flex items-center gap-4">
                                                 <span className="text-lg font-black text-brand-accent">20% OFF</span>
-                                                <span className="px-2 py-1 bg-green-500/20 text-green-400 text-[12px] font-bold uppercase rounded-full">Active</span>
+                                                <span className="px-2.5 py-1 bg-status-success/10 text-status-success border border-status-success/30 text-[11px] font-bold tracking-[0.06em] uppercase rounded-full">Active</span>
                                             </div>
                                         </div>
                                         {loadingDiscounts ? (
@@ -914,7 +930,7 @@ const AdminDashboard: React.FC = () => {
                                                         <div className="flex flex-col gap-2">
                                                             <button 
                                                                 onClick={() => handleToggleDiscount(discount.id, discount.isActive)}
-                                                                className={`px-3 py-1 text-[12px] font-bold uppercase rounded-full transition-colors ${discount.isActive ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30' : 'bg-red-500/20 text-red-400 hover:bg-red-500/30'}`}
+                                                                className={`px-3 py-1 text-[11px] font-bold tracking-[0.06em] uppercase rounded-full border transition-colors ${discount.isActive ? 'bg-status-success/10 text-status-success border-status-success/30 hover:bg-status-success/20' : 'bg-status-error/10 text-status-error border-status-error/30 hover:bg-status-error/20'}`}
                                                             >
                                                                 {discount.isActive ? 'Active' : 'Inactive'}
                                                             </button>
@@ -933,7 +949,7 @@ const AdminDashboard: React.FC = () => {
                                 </div>
 
                                 <div className="p-6 border border-brand-border rounded-xl bg-brand-secondary/30">
-                                    <h3 className="font-bold text-brand-text-primary mb-4">Create Discount Campaign</h3>
+                                    <h3 className="text-lg font-semibold text-brand-text-primary mb-4" style={{ fontFamily: 'var(--serif-display)' }}>Create Discount Campaign</h3>
                                     <div className="space-y-4">
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             <div>
@@ -1030,12 +1046,12 @@ const AdminDashboard: React.FC = () => {
                         </Card>
                     ) : activeTab === 'resources' ? (
                         <Card className="animate-fade-in">
-                            <h2 className="text-xl font-bold text-brand-text-primary mb-4">Resource Manager</h2>
+                            <h2 className="text-2xl font-semibold text-brand-text-primary mb-4" style={{ fontFamily: 'var(--serif-display)' }}>Resource Manager</h2>
                             <p className="text-sm text-brand-text-secondary mb-6">Upload and manage books, courses, and media with monetization settings.</p>
                             
                             <div className="space-y-8">
                                 <div className="p-6 border border-brand-border rounded-xl bg-brand-secondary/30">
-                                    <h3 className="font-bold text-brand-text-primary mb-4">Add New Resource</h3>
+                                    <h3 className="text-lg font-semibold text-brand-text-primary mb-4" style={{ fontFamily: 'var(--serif-display)' }}>Add New Resource</h3>
                                     <div className="space-y-4">
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             <div>
@@ -1134,7 +1150,7 @@ const AdminDashboard: React.FC = () => {
                                                         <button 
                                                             onClick={handleMuxUpload}
                                                             disabled={isUploading || !resourceTitle}
-                                                            className="px-8 py-3 bg-[#FB9129] text-white rounded-xl font-bold hover:scale-[1.02] transition-transform disabled:opacity-50"
+                                                            className="px-8 py-3 bg-gold-ds text-white rounded-xl font-bold hover:scale-[1.02] transition-transform disabled:opacity-50"
                                                         >
                                                             {isUploading ? 'Uploading to Mux...' : 'Upload Video to Mux'}
                                                         </button>
@@ -1152,7 +1168,7 @@ const AdminDashboard: React.FC = () => {
                                 </div>
 
                                 <div className="p-6 border border-brand-border rounded-xl bg-brand-secondary/30">
-                                    <h3 className="font-bold text-brand-text-primary mb-4">Existing Resources</h3>
+                                    <h3 className="text-lg font-semibold text-brand-text-primary mb-4" style={{ fontFamily: 'var(--serif-display)' }}>Existing Resources</h3>
                                     <div className="space-y-4">
                                         {loadingResources ? (
                                             <div className="text-center text-brand-text-secondary py-4">Loading resources...</div>
@@ -1192,12 +1208,12 @@ const AdminDashboard: React.FC = () => {
                             <Card className="border-l-4 border-brand-accent">
                                 <div className="flex justify-between items-center">
                                     <div>
-                                        <h3 className="text-lg font-bold text-brand-text-primary">Victory Community</h3>
+                                        <h3 className="text-lg font-semibold text-brand-text-primary" style={{ fontFamily: 'var(--serif-display)' }}>Victory Community</h3>
                                         <p className="text-xs text-brand-text-secondary">Infrastructure: Dedicated Firestore Isolation (US-East)</p>
                                     </div>
                                     <div className="text-right">
-                                        <p className="text-xl font-black text-brand-accent">1,250</p>
-                                        <p className="text-[12px] uppercase font-bold text-brand-text-secondary">Active Members</p>
+                                        <p className="text-2xl font-semibold text-brand-accent" style={{ fontFamily: 'var(--serif-display)' }}>1,250</p>
+                                        <p className="text-[11px] tracking-[0.08em] uppercase font-bold text-brand-text-secondary">Active Members</p>
                                     </div>
                                 </div>
                             </Card>
@@ -1211,24 +1227,24 @@ const AdminDashboard: React.FC = () => {
                 </div>
 
                 <Card>
-                    <h2 className="text-xl font-bold text-brand-text-primary mb-4">Content Controls</h2>
+                    <h2 className="text-2xl font-semibold text-brand-text-primary mb-4" style={{ fontFamily: 'var(--serif-display)' }}>Content Controls</h2>
                     <div className="space-y-3">
-                        <button className="w-full text-left flex items-center p-3 rounded-lg bg-brand-secondary hover:bg-brand-border transition-colors">
-                            <TrophyIcon className="w-6 h-6 mr-3 text-brand-accent"/>
+                        <button className="w-full text-left flex items-center gap-3 p-3.5 rounded-xl bg-brand-dark border border-brand-border hover:border-brand-accent/40 hover:bg-brand-accent/5 transition-colors">
+                            <TrophyIcon className="w-6 h-6 text-brand-accent shrink-0"/>
                             <div>
                                 <p className="font-semibold text-brand-text-primary">Challenge Templates</p>
                                 <p className="text-xs text-brand-text-secondary">Manage Community Sprints</p>
                             </div>
                         </button>
-                        <button className="w-full text-left flex items-center p-3 rounded-lg bg-brand-secondary hover:bg-brand-border transition-colors">
-                            <ReaderIcon className="w-6 h-6 mr-3 text-brand-accent"/>
+                        <button className="w-full text-left flex items-center gap-3 p-3.5 rounded-xl bg-brand-dark border border-brand-border hover:border-brand-accent/40 hover:bg-brand-accent/5 transition-colors">
+                            <ReaderIcon className="w-6 h-6 text-brand-accent shrink-0"/>
                             <div>
                                 <p className="font-semibold text-brand-text-primary">Books & Courses</p>
                                 <p className="text-xs text-brand-text-secondary">Global Library Distribution</p>
                             </div>
                         </button>
-                        <button className="w-full text-left flex items-center p-3 rounded-lg bg-brand-secondary hover:bg-brand-border transition-colors">
-                            <SpeakerWaveIcon className="w-6 h-6 mr-3 text-brand-accent"/>
+                        <button className="w-full text-left flex items-center gap-3 p-3.5 rounded-xl bg-brand-dark border border-brand-border hover:border-brand-accent/40 hover:bg-brand-accent/5 transition-colors">
+                            <SpeakerWaveIcon className="w-6 h-6 text-brand-accent shrink-0"/>
                              <div>
                                 <p className="font-semibold text-brand-text-primary">Voice Training</p>
                                 <p className="text-xs text-brand-text-secondary">Kai Customization Logic</p>
