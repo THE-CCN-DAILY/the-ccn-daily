@@ -420,6 +420,11 @@ service cloud.firestore {
       allow update: if isOwner(userId) &&
                        request.resource.data.diff(resource.data).affectedKeys()
                          .hasOnly(['fcmToken', 'fcmTokenUpdatedAt']);
+      // Allow users to update only their own notification preferences (Settings page)
+      allow update: if isOwner(userId) &&
+                       request.resource.data.diff(resource.data).affectedKeys()
+                         .hasOnly(['notificationPrefs']) &&
+                       request.resource.data.notificationPrefs is map;
 
       match /courseProgress/{courseId} {
         allow read: if isOwner(userId) || isAdmin();

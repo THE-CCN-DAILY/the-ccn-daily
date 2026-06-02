@@ -56,6 +56,7 @@ import ChallengeDetailPage from './pages/ChallengeDetailPage';
 import ChallengeModuleViewerPage from './pages/ChallengeModuleViewerPage';
 import JournalingPage from './pages/JournalingPage';
 import LibraryPage from './pages/LibraryPage';
+import SettingsPage from './pages/SettingsPage';
 import CommunityRoomsPage from './pages/CommunityRoomsPage';
 import DashboardPage from './pages/DashboardPage';
 import FamilyDashboardPage from './pages/FamilyDashboardPage';
@@ -141,6 +142,7 @@ const App: React.FC = () => {
                             <Route path="reading-plans/:planId" element={<RequireAuth><ReadingPlansPage /></RequireAuth>} />
                             <Route path="journaling" element={<RequireAuth><JournalingPage /></RequireAuth>} />
                             <Route path="library" element={<RequireAuth><LibraryPage /></RequireAuth>} />
+                            <Route path="settings" element={<RequireAuth><SettingsPage /></RequireAuth>} />
                             <Route path="planner" element={<RequireAuth><PlannerPage /></RequireAuth>} />
                             <Route path="community-rooms" element={<RequireAuth><CommunityRoomsPage /></RequireAuth>} />
                             <Route path="prayer-circle" element={<RequireAuth><PrayerCirclePage /></RequireAuth>} />
