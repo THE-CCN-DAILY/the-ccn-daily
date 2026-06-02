@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Trash2, Quote } from 'lucide-react';
+import { Trash2, Quote, Check, X, Clock } from 'lucide-react';
 import Card from '../components/Card';
 import EmptyState from '../components/EmptyState';
 import { SendIcon } from '../components/icons';
@@ -9,7 +9,11 @@ import { useNotifications } from '../contexts/NotificationContext';
 import {
   type Testimony,
   listTestimonies,
+  listPendingTestimonies,
+  listMyTestimonies,
   submitTestimony,
+  approveTestimony,
+  rejectTestimony,
   deleteTestimony,
 } from '../services/testimonyService';
 
@@ -195,6 +199,8 @@ const TestimoniesPage: React.FC = () => {
   const { user } = useAuth();
   const { notify } = useNotifications();
   const [testimonies, setTestimonies] = useState<Testimony[]>([]);
+  const [pending, setPending] = useState<Testimony[]>([]);
+  const [mine, setMine] = useState<Testimony[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -202,7 +208,14 @@ const TestimoniesPage: React.FC = () => {
 
   const load = async () => {
     try {
-      setTestimonies(await listTestimonies());
+      const [published, myOwn, queue] = await Promise.all([
+        listTestimonies(),
+        user?.uid ? listMyTestimonies(user.uid) : Promise.resolve([]),
+        canModerate ? listPendingTestimonies() : Promise.resolve([]),
+      ]);
+      setTestimonies(published);
+      setMine(myOwn);
+      setPending(queue);
     } catch {
       notify('Could not load testimonies right now. Please try again later.', 'error');
     } finally {
@@ -213,7 +226,7 @@ const TestimoniesPage: React.FC = () => {
   useEffect(() => {
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [user?.uid, canModerate]);
 
   const handleSubmit = async (title: string, text: string) => {
     if (!user?.uid) {
@@ -222,11 +235,33 @@ const TestimoniesPage: React.FC = () => {
     }
     try {
       await submitTestimony({ uid: user.uid, displayName: user.displayName }, { title, text });
-      notify('Your testimony has been shared. Thank you!', 'success');
+      notify('Thank you! Your testimony was submitted for review.', 'success');
       await load();
     } catch (error) {
       notify(error instanceof Error ? error.message : 'Could not share your testimony.', 'error');
       throw error;
+    }
+  };
+
+  const handleApprove = async (t: Testimony) => {
+    try {
+      await approveTestimony(t.id);
+      notify('Testimony approved and published.', 'success');
+      await load();
+    } catch (error) {
+      notify(error instanceof Error ? error.message : 'Could not approve testimony.', 'error');
+    }
+  };
+
+  const handleReject = async (t: Testimony) => {
+    const reason = window.prompt(`Decline "${t.title}" — give a reason the author will see:`)?.trim();
+    if (!reason) return;
+    try {
+      await rejectTestimony(t.id, reason);
+      notify('Testimony declined; the author will see your reason.', 'success');
+      await load();
+    } catch (error) {
+      notify(error instanceof Error ? error.message : 'Could not decline testimony.', 'error');
     }
   };
 
@@ -235,12 +270,14 @@ const TestimoniesPage: React.FC = () => {
     try {
       await deleteTestimony(t.id);
       notify('Testimony removed.', 'success');
-      setTestimonies((prev) => prev.filter((x) => x.id !== t.id));
+      await load();
     } catch (error) {
       notify(error instanceof Error ? error.message : 'Could not remove testimony.', 'error');
     }
   };
 
+  // Author's own items that aren't yet on the public wall (pending/rejected) — show status to them.
+  const myUnpublished = mine.filter((t) => t.status !== 'published');
   const hasTestimonies = testimonies.length > 0;
 
   return (
@@ -279,6 +316,68 @@ const TestimoniesPage: React.FC = () => {
           Share Your Story
         </motion.button>
       </motion.div>
+
+      {/* Admin moderation queue */}
+      {canModerate && pending.length > 0 && (
+        <div className="mb-10">
+          <p className="text-xs font-bold uppercase tracking-widest text-brand-accent mb-3 flex items-center gap-2">
+            <Clock className="w-3.5 h-3.5" /> Awaiting review ({pending.length})
+          </p>
+          <div className="space-y-3">
+            {pending.map((t) => (
+              <Card key={t.id} className="flex flex-col sm:flex-row sm:items-start gap-3 justify-between">
+                <div className="min-w-0">
+                  <h4 className="font-bold text-brand-text-primary">{t.title}</h4>
+                  <p className="text-sm text-brand-text-secondary mt-1 line-clamp-3">{t.text}</p>
+                  <p className="text-xs text-brand-text-tertiary mt-1">By {t.author}</p>
+                </div>
+                <div className="flex gap-2 flex-shrink-0">
+                  <button
+                    onClick={() => handleApprove(t)}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold text-status-success hover:bg-status-success/10 transition-colors"
+                  >
+                    <Check className="w-4 h-4" /> Approve
+                  </button>
+                  <button
+                    onClick={() => handleReject(t)}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold text-status-error hover:bg-status-error/10 transition-colors"
+                  >
+                    <X className="w-4 h-4" /> Decline
+                  </button>
+                </div>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* The author's own submissions that aren't public yet (status + decline reason) */}
+      {myUnpublished.length > 0 && (
+        <div className="mb-10">
+          <p className="text-xs font-bold uppercase tracking-widest text-brand-text-secondary mb-3">
+            Your submissions
+          </p>
+          <div className="space-y-3">
+            {myUnpublished.map((t) => (
+              <Card key={t.id} className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <h4 className="font-bold text-brand-text-primary">{t.title}</h4>
+                  {t.status === 'rejected' && t.declineReason && (
+                    <p className="text-sm text-status-error mt-1">Not published: {t.declineReason}</p>
+                  )}
+                </div>
+                <span
+                  className={`flex-shrink-0 px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider ${
+                    t.status === 'pending' ? 'text-status-warning bg-status-warning/10' : 'text-status-error bg-status-error/10'
+                  }`}
+                >
+                  {t.status === 'pending' ? 'In review' : 'Declined'}
+                </span>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Body */}
       {loading ? (

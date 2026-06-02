@@ -88,6 +88,46 @@ cohesion+benchmark coverage, Cloudflare untapped potential). Findings feed the e
    reading + W6 PPP; Mux→Stream (W2); server-side media protection (W8).
 
 ## Founder decisions pending
-- Greenlight order for the founder-gated track (payment loop, Stream migration, PPP).
-- Promotions to prod (each verified-on-staging wave).
+- Promotions to prod (pre-launch: autonomous OK; POST-LAUNCH: staging + founder/dev test first).
 - Delete `ADMIN_API_TOKEN` Cloudflare secret (post Phase A cleanup).
+
+---
+
+# Round 2 — founder decisions & additions (2026-06-02)
+
+## Decisions locked
+- **Testimonies → admin-approval before publish** (was reactive). Declined items must tell the user WHY.
+  This becomes the template for the public-comments approval flow below.
+- **Founder-gated track: GREENLIT.** Build order (my rec): (1) payment + entitlement loop →
+  (2) server-side media protection → (3) Mux→Stream → (4) Durable Objects realtime chat/support →
+  (5) Vectorize semantic AI. Each verified on staging.
+- **AI must be AMBIENT, not pronounced.** AI blends into the background to support value delivery —
+  never surfaced "look, AI!" for its own sake. No AI-branding/sparkle theatrics (icon already removed).
+- **Mux dropped.** Don't provision Mux in prod; revoke the leaked Mux key. Rotate Flutterwave + add as
+  prod secrets (currently MUX_* and FLUTTERWAVE_SECRET/ENCRYPTION are NOT set in prod — provisioning gap).
+
+## New features to fold into cohesion (W3) — "leave no stone unturned"
+- **User Library** (new hub): the user's saved items + ALL their notes in one place.
+  - **Notes everywhere**: any product (devotional, Bible passage, book, audiobook, course, challenge,
+    podcast, blog) supports notes. Free users: text notes. **Paid users: voice notes** too.
+  - **Personal notes/comments** on any product are private → stored in the user's Library.
+  - **Public comments**: on products that benefit from them, a user may post a PUBLIC comment →
+    requires **admin approval**; if **declined, the user is told why** (decline reason surfaced to them).
+- **Daily devotional scroll-back**: paid users can browse PAST devotionals up to a sensible window
+  (benchmark first, then pick what suits this app — e.g. last 30–90 days for paid; today + few for free).
+- **Cohesion wiring (from expert audit)**: Journey → fire streak + save journal step; unify the single
+  streak source; `AppContext`/`useAppData()`; highlights→Library/Journaling; persist reading progress →
+  real "Continue"; onboarding answers → first-week content. Map every feature to how it feeds others.
+
+## Platform / settings / launch process (new)
+- **User Settings**: build it (currently lacking) — theme (dark default; light/sepia), notification prefs,
+  account, voice-note/playback prefs, language later. **Admin Settings** also lacking — add admin prefs.
+- **In-app Notifications for updates**: ensure a notifications system exists; POST-LAUNCH every major
+  update sends users an in-app notification (what's changing / changed / any action needed) — changelog.
+- **Post-launch deploy discipline**: pre-launch (now) autonomous push-to-prod is fine (no public users).
+  After public launch: NO direct-to-prod; staging + founder/designated-dev verification first, then
+  promote. `.dev`/staging is the real-time test surface. (Document in DEPLOY.md too.)
+
+## Standing rule
+- **Keep THIS plan current.** Every new idea (founder's or discovered during execution) gets added here.
+  This is the living plan docket.

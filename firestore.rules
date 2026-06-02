@@ -388,7 +388,7 @@ service cloud.firestore {
              data.authorUid == request.auth.uid &&
              data.title is string && data.title.size() > 0 && data.title.size() < 160 &&
              data.text is string && data.text.size() > 0 && data.text.size() < 2000 &&
-             data.status == 'published' &&
+             data.status == 'pending' &&
              data.createdAt is timestamp;
     }
 
@@ -401,10 +401,13 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
-    // Wall of Testimony — public-readable (landing + community), member-writable,
-    // admin-moderated (reactive: delete/hide). Light moderation per the launch plan.
+    // Wall of Testimony — submit goes to 'pending'; admin approves (->published) or rejects
+    // (->rejected + declineReason). Public sees published; authors see their own (to read
+    // status + decline reason); admins see all.
     match /testimonies/{testimonyId} {
-      allow read: if isAdmin() || resource.data.status == 'published';
+      allow read: if resource.data.status == 'published'
+                  || isAdmin()
+                  || (isAuthenticated() && resource.data.authorUid == request.auth.uid);
       allow create: if isAuthenticated() && isValidTestimony(request.resource.data);
       allow update, delete: if isAdmin();
     }

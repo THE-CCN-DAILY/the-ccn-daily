@@ -9,9 +9,12 @@ import {
   query,
   type QueryConstraint,
   serverTimestamp,
+  updateDoc,
   where,
 } from 'firebase/firestore';
 import { db } from '../firebase';
+
+export type TestimonyStatus = 'pending' | 'published' | 'rejected';
 
 export interface Testimony {
   id: string;
@@ -19,7 +22,8 @@ export interface Testimony {
   authorUid: string;
   title: string;
   text: string;
-  status: 'published';
+  status: TestimonyStatus;
+  declineReason?: string;
   createdAt: string; // ISO string (derived from Firestore Timestamp)
 }
 
@@ -43,9 +47,20 @@ const toIso = (value: unknown): string => {
   return new Date().toISOString();
 };
 
+const mapDoc = (id: string, data: Record<string, unknown>): Testimony => ({
+  id,
+  author: String(data.author ?? 'Anonymous'),
+  authorUid: String(data.authorUid ?? ''),
+  title: String(data.title ?? ''),
+  text: String(data.text ?? ''),
+  status: (data.status as TestimonyStatus) ?? 'pending',
+  declineReason: data.declineReason ? String(data.declineReason) : undefined,
+  createdAt: toIso(data.createdAt),
+});
+
 /**
- * Published testimonies, newest first. Public-readable (the Wall of Testimony and
- * the landing page both call this). `max` caps the landing-page preview.
+ * Published testimonies, newest first. Public-readable (the Wall of Testimony and the
+ * landing page both call this). `max` caps the landing-page preview.
  */
 export const listTestimonies = async (max?: number): Promise<Testimony[]> => {
   const constraints: QueryConstraint[] = [
@@ -53,25 +68,29 @@ export const listTestimonies = async (max?: number): Promise<Testimony[]> => {
     orderBy('createdAt', 'desc'),
   ];
   if (max && max > 0) constraints.push(fsLimit(max));
-
   const snap = await getDocs(query(collection(db, COLLECTION), ...constraints));
-  return snap.docs.map((d) => {
-    const data = d.data() as Record<string, unknown>;
-    return {
-      id: d.id,
-      author: String(data.author ?? 'Anonymous'),
-      authorUid: String(data.authorUid ?? ''),
-      title: String(data.title ?? ''),
-      text: String(data.text ?? ''),
-      status: 'published',
-      createdAt: toIso(data.createdAt),
-    };
-  });
+  return snap.docs.map((d) => mapDoc(d.id, d.data() as Record<string, unknown>));
+};
+
+/** Admin moderation queue: testimonies awaiting review, oldest first. */
+export const listPendingTestimonies = async (): Promise<Testimony[]> => {
+  const snap = await getDocs(
+    query(collection(db, COLLECTION), where('status', '==', 'pending'), orderBy('createdAt', 'asc')),
+  );
+  return snap.docs.map((d) => mapDoc(d.id, d.data() as Record<string, unknown>));
+};
+
+/** The signed-in user's own submissions (any status) so they can see approval/decline + reason. */
+export const listMyTestimonies = async (uid: string): Promise<Testimony[]> => {
+  const snap = await getDocs(
+    query(collection(db, COLLECTION), where('authorUid', '==', uid), orderBy('createdAt', 'desc')),
+  );
+  return snap.docs.map((d) => mapDoc(d.id, d.data() as Record<string, unknown>));
 };
 
 /**
- * Submit a testimony. Created as published (low-friction wall); admins can remove
- * via `deleteTestimony` (light, reactive moderation per the launch plan).
+ * Submit a testimony. Created as 'pending' — an admin must approve before it is public
+ * (admin-approval moderation). The author can see its status afterward.
  */
 export const submitTestimony = async (user: AuthorLike, input: NewTestimony): Promise<void> => {
   const title = input.title.trim();
@@ -85,12 +104,24 @@ export const submitTestimony = async (user: AuthorLike, input: NewTestimony): Pr
     authorUid: user.uid,
     title,
     text,
-    status: 'published',
+    status: 'pending',
     createdAt: serverTimestamp(),
   });
 };
 
-/** Admin-only: remove a testimony (reactive moderation). */
+/** Admin: approve a pending testimony (makes it public). */
+export const approveTestimony = async (id: string): Promise<void> => {
+  await updateDoc(doc(db, COLLECTION, id), { status: 'published', declineReason: '' });
+};
+
+/** Admin: reject a testimony with a reason the author will see. */
+export const rejectTestimony = async (id: string, reason: string): Promise<void> => {
+  const declineReason = reason.trim();
+  if (!declineReason) throw new Error('A reason is required so the author knows why.');
+  await updateDoc(doc(db, COLLECTION, id), { status: 'rejected', declineReason });
+};
+
+/** Admin-only: remove a testimony entirely. */
 export const deleteTestimony = async (id: string): Promise<void> => {
   await deleteDoc(doc(db, COLLECTION, id));
 };
