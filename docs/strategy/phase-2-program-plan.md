@@ -120,6 +120,9 @@ cohesion+benchmark coverage, Cloudflare untapped potential). Findings feed the e
   real "Continue"; onboarding answers → first-week content. Map every feature to how it feeds others.
 
 ## Platform / settings / launch process (new)
+- **Light theme contrast (founder note):** the light (and sepia) themes must have crisp, confident
+  contrast like Flutterwave's light UI (deep ink text on clean surfaces, strong CTAs) — not washed out.
+  Apply in the W4 theme/typography pass; verify contrast in all three themes.
 - **User Settings**: build it (currently lacking) — theme (dark default; light/sepia), notification prefs,
   account, voice-note/playback prefs, language later. **Admin Settings** also lacking — add admin prefs.
 - **In-app Notifications for updates**: ensure a notifications system exists; POST-LAUNCH every major
