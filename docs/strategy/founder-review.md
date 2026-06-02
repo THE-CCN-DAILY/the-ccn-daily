@@ -18,18 +18,29 @@ and items that need your eyes or action. Newest sections appended as work procee
 | Cohesion 2a: unified streak + Journey→streak/journal + removed fake gamification data | cf5abf4 | prod |
 | AdminDashboard design pass (serif, tonal cards, themed pills) | 9622d22 | prod |
 | Security wave 2: DOMPurify XSS sanitize + public-route draft leak + diagnostics leak + blog DELETE 404 | 629f964 | prod |
+| User Library hub (/app/library): aggregates notes/journal; highlights section (read-all endpoint pending) | 05f4300 | prod |
 
 **Verification note:** type-checks + builds pass and changes are deployed. Authed/visual screens
 (AdminDashboard, Journey streak flow) not yet eyeballed unattended — worth a quick look on your return,
 though logic is type-checked and low-risk.
 
-## 🔴 Needs YOUR action
-1. **Rotate Flutterwave keys** + set as Cloudflare secrets (`FLUTTERWAVE_SECRET_KEY`, `FLUTTERWAVE_ENCRYPTION_KEY`, `FLUTTERWAVE_WEBHOOK_HASH`); revoke the leaked **Mux** key (we're dropping Mux). Webhook URL + secret hash given earlier. Then tell me the **public key**. This unblocks the payment loop.
-2. **Delete `ADMIN_API_TOKEN`** Cloudflare secret (now dead).
+## ✅ Resolved (founder actions done 2026-06-02)
+- **Flutterwave secrets set** — verified present in Cloudflare prod: `FLUTTERWAVE_SECRET_KEY`,
+  `FLUTTERWAVE_ENCRYPTION_KEY`, `FLUTTERWAVE_WEBHOOK_HASH`. Public key
+  `FLWPUBK-2d4211f1a8007f2f64cbdf9e26194a23-X` set in local `.env.local` (baked into builds).
+  Payment loop is now UNBLOCKED to build.
+- **`ADMIN_API_TOKEN` deleted** from Cloudflare prod. ✅
+- **Gamification reset:** your two rows (the only ones, pre-launch) reset to 0/0/0. New users already start at 0. ✅
+- **Cloudflare dashboard error popups** (GET/PATCH .../pages/projects/...): transient — a race between
+  your settings-save (PATCH) and my concurrent `wrangler` deploys (also PATCH the project), or normal
+  CF dashboard flakiness. Confirmed harmless: your secret saves all landed. Not an app/code issue.
 
-## ❓ Decisions awaiting your confirm (I picked a safe default; change anytime)
-- **D1 streak reset:** existing accounts (incl. yours) still show the OLD fake streak (7/1250) because the seed fix only affects NEW users. Want me to reset existing gamification rows to 0? (Default: left as-is.)
-- **Testimonies/comments moderation:** set to **admin-approval before publish** (your call), decline shows the author a reason. Same pattern will apply to public product comments.
+## 🔴 Still needs YOUR action
+- **Revoke the leaked Mux key** in the Mux dashboard (we're dropping Mux for Cloudflare Stream — no
+  re-provision needed, just disable the exposed token for hygiene).
+
+## ❓ Decisions (FYI — locked unless you say otherwise)
+- **Testimonies/comments moderation:** admin-approval before publish; decline shows the author a reason.
 
 ## Decisions I made (FYI)
 - AI stays **ambient** (no AI-branding/sparkle); sparkle icon deleted everywhere.
