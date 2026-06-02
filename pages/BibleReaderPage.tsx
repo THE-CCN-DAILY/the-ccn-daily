@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { ScrollText, ArrowLeft } from 'lucide-react';
+import DOMPurify from 'dompurify';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import Card from '../components/Card';
 import ContentDisplay from '../components/reader/ContentDisplay';
@@ -436,7 +437,7 @@ const BibleReaderPage: React.FC = () => {
                             </h4>
                             <p
                               className="text-sm italic text-brand-text-secondary leading-6"
-                              dangerouslySetInnerHTML={{ __html: result.contextSnippet }}
+                              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(result.contextSnippet) }}
                             />
                           </div>
                         ))}

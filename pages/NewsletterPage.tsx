@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
+import DOMPurify from 'dompurify';
 import Card from '../components/Card';
 import CcnLogo from '../components/CcnLogo';
 import { FeedItem, fetchRSSFeed } from '../services/rssService';
@@ -271,7 +272,7 @@ const NewsletterPage: React.FC = () => {
                     <div
                       className="ds-reading-body prose-newsletter"
                       style={{ fontFamily: 'var(--serif-body)', color: 'var(--fg-1)' }}
-                      dangerouslySetInnerHTML={{ __html: expandedPost.content }}
+                      dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(expandedPost.content) }}
                     />
                   ) : (
                     <p className="text-brand-text-primary leading-8 text-[1.0625rem] whitespace-pre-line">

@@ -822,14 +822,14 @@ app.get('/api/health', (c) =>
 );
 
 app.get('/api/ai/diagnostics', (c) =>
+  // Return only non-sensitive status fields. Internal infra details
+  // (provider implementation, production origin) are intentionally omitted.
   c.json({
     cloudflarePages: 'connected',
     database: c.env.DB ? 'connected' : 'missing',
     workersAi: c.env.AI ? 'connected' : 'fallback',
-    provider: c.env.AI ? 'cloudflare-workers-ai' : 'cloudflare-workers-ai-fallback',
     apiKeySource: 'cloudflare-binding',
     model: c.env.WORKERS_AI_TEXT_MODEL || '@cf/meta/llama-3.1-8b-instruct',
-    productionOrigin: c.env.PRODUCTION_ORIGIN || '',
   })
 );
 
@@ -1077,18 +1077,21 @@ app.delete('/api/admin/blog/posts/:id', async (c) => {
   if (denied) return denied;
   if (!c.env.DB) return c.json({ error: 'D1 database binding is not configured' }, 503);
 
-  await c.env.DB.prepare(`DELETE FROM blog_posts WHERE id = ?`).bind(c.req.param('id')).run();
+  const id = c.req.param('id');
+  const existing = await c.env.DB.prepare(`SELECT id FROM blog_posts WHERE id = ? LIMIT 1`).bind(id).first<{ id: string }>();
+  if (!existing) return c.json({ error: 'Post not found' }, 404);
+
+  await c.env.DB.prepare(`DELETE FROM blog_posts WHERE id = ?`).bind(id).run();
   return c.json({ ok: true });
 });
 
 app.get('/api/challenges', async (c) => {
   if (!c.env.DB) return c.json({ challenges: [], source: 'fallback' });
 
-  const includeDrafts = c.req.query('includeDrafts') === 'true';
+  // Public route always returns published challenges only.
+  // Draft listing is handled by authenticated admin routes.
   const result = await c.env.DB.prepare(
-    includeDrafts
-      ? `SELECT * FROM challenges ORDER BY start_date DESC, created_at DESC`
-      : `SELECT * FROM challenges WHERE status = 'published' ORDER BY start_date DESC, created_at DESC`
+    `SELECT * FROM challenges WHERE status = 'published' ORDER BY start_date DESC, created_at DESC`
   ).all<ChallengeRow>();
 
   return c.json({ challenges: result.results.map(mapChallenge), source: 'd1' });
@@ -1385,11 +1388,10 @@ app.delete('/api/admin/challenges/:id/modules/:moduleId', async (c) => {
 app.get('/api/courses', async (c) => {
   if (!c.env.DB) return c.json({ courses: [], source: 'fallback' });
 
-  const includeDrafts = c.req.query('includeDrafts') === 'true';
+  // Public route always returns published courses only.
+  // Draft listing is handled by authenticated admin routes.
   const result = await c.env.DB.prepare(
-    includeDrafts
-      ? `SELECT * FROM courses ORDER BY created_at DESC`
-      : `SELECT * FROM courses WHERE status = 'published' ORDER BY created_at DESC`
+    `SELECT * FROM courses WHERE status = 'published' ORDER BY created_at DESC`
   ).all<CourseRow>();
 
   return c.json({ courses: result.results.map(mapCourse), source: 'd1' });

@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import DOMPurify from 'dompurify';
 import type { Highlight, ReaderSettings } from '../../types';
 
 interface ReaderEngineProps {
@@ -28,11 +29,12 @@ const ReaderEngine: React.FC<ReaderEngineProps> = ({ articleRef, initialContent,
     const readerPaneClass = `prose max-w-none ${settings.fontFamily} ${lineSpacingClasses[settings.lineSpacing]} transition-colors duration-300`;
 
     const renderedContent = useMemo(() => {
+        const safeContent = DOMPurify.sanitize(initialContent);
         if (!highlights || highlights.length === 0) {
-            return <div dangerouslySetInnerHTML={{ __html: initialContent }} />;
+            return <div dangerouslySetInnerHTML={{ __html: safeContent }} />;
         }
-        
-        let content = initialContent;
+
+        let content = safeContent;
         
         // Sort highlights to process longer ones first, preventing substring issues where "he" would be highlighted inside "the".
         const sortedHighlights = [...highlights].sort((a, b) => b.text.length - a.text.length);
@@ -55,7 +57,7 @@ const ReaderEngine: React.FC<ReaderEngineProps> = ({ articleRef, initialContent,
             content = parts.join('');
         });
 
-        return <div dangerouslySetInnerHTML={{ __html: content }} />;
+        return <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(content) }} />;
     }, [initialContent, highlights]);
 
     return (
