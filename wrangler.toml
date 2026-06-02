@@ -20,5 +20,10 @@ binding = "DB"
 database_name = "project_phoenix_ccn_daily"
 database_id = "ade8eb7e-04e8-4c79-8501-13d8c568409d"
 
+# Workers AI — powers /api/ai/generate (devotional/prayer/study generation, tags).
+# Was missing, so AI calls were silently falling back to stub text.
+[ai]
+binding = "AI"
+
 [dev]
 port = 8788
