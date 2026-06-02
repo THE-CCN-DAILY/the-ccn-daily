@@ -680,8 +680,10 @@ const requireAdmin = (c: any) => {
 };
 
 const isLocalPreviewRequest = (c: any) => {
-  const host = c.req.header('host') || '';
-  return Boolean(c.env.CF_PAGES) && (host.startsWith('127.0.0.1') || host.startsWith('localhost'));
+  // Preview auth must be EXPLICITLY opted in via an env var that is set ONLY in local
+  // .dev.vars (never in production). Do NOT trust the Host header (spoofable) or CF_PAGES
+  // (set on production deployments too) — that allowed forging an admin session in prod.
+  return c.env.PREVIEW_AUTH === 'enabled';
 };
 
 const decodeXml = (value: string) =>
@@ -2801,7 +2803,8 @@ app.get('/api/auth/preview-session', async (c) => {
 // ─── Cloudflare-native Google OAuth + JWT session ────────────────────────────
 
 const JWT_COOKIE = 'ccn_session';
-const LOCAL_AUTH_SECRET = 'local-dev-preview-secret-ccndaily!!';
+// No hardcoded fallback secret: a missing AUTH_SECRET must fail closed, never sign
+// with a public constant (which would let anyone forge an admin session JWT).
 
 async function signSession(payload: Record<string, unknown>, secret: string): Promise<string> {
   const key = new TextEncoder().encode(secret);
@@ -2864,7 +2867,8 @@ async function upsertGoogleUser(
 
 // GET /api/auth/google — redirect to Google OAuth (or issue preview session locally)
 app.get('/api/auth/google', async (c) => {
-  const secret = c.env.AUTH_SECRET || LOCAL_AUTH_SECRET;
+  const secret = c.env.AUTH_SECRET;
+  if (!secret) return c.json({ error: 'AUTH_NOT_CONFIGURED', message: 'Server auth is not configured.' }, 500);
   const adminEmail = (c.env.ADMIN_EMAIL || 'pastor.eryeza@gmail.com').toLowerCase();
 
   if (isLocalPreviewRequest(c)) {
@@ -2947,7 +2951,8 @@ app.get('/api/auth/callback/google', async (c) => {
     ? await upsertGoogleUser(c.env.DB, userId, email, gu.name, gu.picture || null, adminEmail)
     : { role: email === adminEmail ? 'admin' : 'user', tier: email === adminEmail ? 'max' : 'free' };
 
-  const secret = c.env.AUTH_SECRET || LOCAL_AUTH_SECRET;
+  const secret = c.env.AUTH_SECRET;
+  if (!secret) return c.json({ error: 'AUTH_NOT_CONFIGURED', message: 'Server auth is not configured.' }, 500);
   const token = await signSession({ sub: userId, email, name: gu.name, picture: gu.picture || null, role, tier }, secret);
 
   return new Response(null, {
@@ -2958,7 +2963,8 @@ app.get('/api/auth/callback/google', async (c) => {
 
 // GET /api/auth/session — return current user from JWT cookie
 app.get('/api/auth/session', async (c) => {
-  const secret = c.env.AUTH_SECRET || LOCAL_AUTH_SECRET;
+  const secret = c.env.AUTH_SECRET;
+  if (!secret) return c.json({ user: null }, 200);
   const token = getCookieValue(c.req.raw, JWT_COOKIE);
   if (!token) return c.json({ user: null });
 
