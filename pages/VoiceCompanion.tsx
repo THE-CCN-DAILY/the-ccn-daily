@@ -1,7 +1,8 @@
 import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import Card from '../components/Card';
-import { SoundWaveIcon, MicrophoneIcon, StopIcon, SparklesIcon, LockIcon } from '../components/icons';
+import { Mic } from 'lucide-react';
+import { SoundWaveIcon, MicrophoneIcon, StopIcon, LockIcon } from '../components/icons';
 import { connectToSentientGuide } from '../services/liveService';
 import { useAuth } from '../contexts/AuthContext';
 import { useUpgradeModal } from '../contexts/UpgradeModalContext';
@@ -70,7 +71,7 @@ const VoiceCompanion: React.FC = () => {
         <p className="text-xs font-bold uppercase tracking-widest text-brand-accent mb-2">Pray</p>
         <h1 className="text-4xl font-black text-brand-text-primary mb-2 flex items-center gap-3"
           style={{ fontFamily: 'var(--font-display)' }}>
-          <SparklesIcon className="w-9 h-9 text-brand-accent" />
+          <Mic className="w-9 h-9 text-brand-accent" />
           Kai — Sentient Guide
         </h1>
         <p className="text-brand-text-secondary">

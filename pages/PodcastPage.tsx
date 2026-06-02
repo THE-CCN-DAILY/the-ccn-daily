@@ -3,7 +3,8 @@ import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import type { PodcastEpisode, SearchResult } from '../types';
 import { useAudioPlayer } from '../contexts/AudioPlayerContext';
-import { HeartIcon, PauseIcon, PlayIcon, SparklesIcon, SpinnerIcon } from '../components/icons';
+import { Headphones } from 'lucide-react';
+import { HeartIcon, PauseIcon, PlayIcon, SpinnerIcon } from '../components/icons';
 import Card from '../components/Card';
 import CcnLogo from '../components/CcnLogo';
 import { fetchRSSFeed } from '../services/rssService';
@@ -350,7 +351,7 @@ const PodcastPage: React.FC = () => {
       {!loading && !error && searchResults !== null && !isSearching && (
         <motion.div variants={fadeUp} initial="hidden" animate="visible" transition={{ duration: 0.4, ease: EASE }}>
           <h2 className="mb-4 flex items-center gap-2 text-base font-bold text-brand-text-primary">
-            <SparklesIcon className="h-4 w-4 text-brand-accent" />
+            <Headphones className="h-4 w-4 text-brand-accent" />
             Results for &ldquo;{searchQuery}&rdquo;
           </h2>
           {searchResults.length > 0 ? (

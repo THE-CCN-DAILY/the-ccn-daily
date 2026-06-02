@@ -1,9 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Trash2 } from 'lucide-react';
+import { Trash2, Quote } from 'lucide-react';
 import Card from '../components/Card';
 import EmptyState from '../components/EmptyState';
-import { SparklesIcon, SendIcon } from '../components/icons';
+import { SendIcon } from '../components/icons';
 import { useAuth } from '../contexts/AuthContext';
 import { useNotifications } from '../contexts/NotificationContext';
 import {
@@ -92,7 +92,7 @@ const ShareStoryModal: React.FC<{
           className="text-2xl font-black text-brand-text-primary mb-5 flex items-center gap-3"
           style={{ fontFamily: 'var(--font-display)' }}
         >
-          <SparklesIcon className="w-6 h-6 text-brand-accent" />
+          <Quote className="w-6 h-6 text-brand-accent" />
           Share Your Story
         </h2>
 
@@ -162,7 +162,7 @@ const TestimonyCard: React.FC<{
     <Card className="flex flex-col h-full">
       <div className="flex items-start justify-between mb-3 pb-3 border-b border-brand-border gap-2">
         <h3 className="text-base font-bold text-brand-accent flex items-center gap-2 leading-snug">
-          <SparklesIcon className="w-4 h-4 flex-shrink-0" />
+          <Quote className="w-4 h-4 flex-shrink-0" />
           {testimony.title}
         </h3>
         {canModerate && (
@@ -287,7 +287,7 @@ const TestimoniesPage: React.FC = () => {
         </div>
       ) : !hasTestimonies ? (
         <EmptyState
-          icon={<SparklesIcon className="w-8 h-8" />}
+          icon={<Quote className="w-8 h-8" />}
           heading="No testimonies yet"
           subtext="Yours could be the first. What has God done?"
           ctaLabel="Share Your Story"

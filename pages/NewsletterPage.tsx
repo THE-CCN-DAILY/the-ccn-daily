@@ -4,7 +4,8 @@ import { motion, AnimatePresence } from 'motion/react';
 import Card from '../components/Card';
 import CcnLogo from '../components/CcnLogo';
 import { FeedItem, fetchRSSFeed } from '../services/rssService';
-import { ReaderIcon, SparklesIcon, SpinnerIcon } from '../components/icons';
+import { Newspaper } from 'lucide-react';
+import { ReaderIcon, SpinnerIcon } from '../components/icons';
 import { cleanFeedText, excerptFeedText } from '../utils/feedText';
 
 const EASE = [0.22, 1, 0.36, 1] as [number, number, number, number];
@@ -114,7 +115,7 @@ const NewsletterPage: React.FC = () => {
             className="inline-flex items-center gap-2 text-sm font-bold text-brand-accent hover:underline"
           >
             Read this issue
-            <SparklesIcon className="h-4 w-4" />
+            <Newspaper className="h-4 w-4" />
           </button>
         </div>
       </Card>

@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Card from '../components/Card';
-import { SparklesIcon, SoundWaveIcon, PlayIcon, PauseIcon, SpinnerIcon } from '../components/icons';
+import { SoundWaveIcon, PlayIcon, PauseIcon, SpinnerIcon } from '../components/icons';
 import type { Mood } from '../types';
 import { getAtmosphericMusic } from '../services/musicService';
 

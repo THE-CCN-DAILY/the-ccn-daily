@@ -4,7 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import Card from '../components/Card';
 import ManuscriptQuote from '../components/ManuscriptQuote';
-import { CheckIcon, FlagIcon, PencilIcon, PrayingHandsIcon, ReaderIcon, SparklesIcon, CloseIcon, ChevronLeftIcon, SoundWaveIcon, PlayIcon, PauseIcon, MicrophoneIcon } from '../components/icons';
+import { Megaphone } from 'lucide-react';
+import { CheckIcon, FlagIcon, PencilIcon, PrayingHandsIcon, ReaderIcon, CloseIcon, ChevronLeftIcon, SoundWaveIcon, PlayIcon, PauseIcon, MicrophoneIcon } from '../components/icons';
 import RichTextJournal from '../components/RichTextJournal';
 import PrayerTimer from '../components/PrayerTimer';
 import VoiceCompanionDrawer from '../components/VoiceCompanionDrawer';
@@ -30,7 +31,7 @@ const journeySteps = [
   { id: 'devotional', name: 'Daily Devotional', icon: ReaderIcon },
   { id: 'journaling', name: 'Journaling', icon: PencilIcon },
   { id: 'guided-prayer', name: 'Guided Prayer', icon: PrayingHandsIcon },
-  { id: 'declaration', name: 'Declaration', icon: SparklesIcon },
+  { id: 'declaration', name: 'Declaration', icon: Megaphone },
   { id: 'further-study', name: 'Further Study', icon: ReaderIcon },
   { id: 'finish', name: 'Finish', icon: FlagIcon },
 ];

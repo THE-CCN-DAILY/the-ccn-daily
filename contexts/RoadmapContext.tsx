@@ -1,7 +1,8 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import type { PlanPhase, PlanTask } from '../types';
-import { UiIcon, DbIcon, ReaderIcon, AiIcon, CommunityIcon, GamificationIcon, AdminIcon, SpeakerWaveIcon, StepsIcon, SparklesIcon, SoundWaveIcon, SearchIcon } from '../components/icons';
+import { Share2, Film, Lightbulb } from 'lucide-react';
+import { UiIcon, DbIcon, ReaderIcon, AiIcon, CommunityIcon, GamificationIcon, AdminIcon, SpeakerWaveIcon, StepsIcon, SoundWaveIcon, SearchIcon } from '../components/icons';
 
 interface RoadmapContextType {
     phases: PlanPhase[];
@@ -12,8 +13,9 @@ interface RoadmapContextType {
 const RoadmapContext = createContext<RoadmapContextType | undefined>(undefined);
 
 // Helper to map icon names to components
-const iconMap: Record<string, React.FC<React.SVGProps<SVGSVGElement>>> = {
-    UiIcon, DbIcon, ReaderIcon, AiIcon, CommunityIcon, GamificationIcon, AdminIcon, SpeakerWaveIcon, StepsIcon, SparklesIcon, SoundWaveIcon, SearchIcon
+const iconMap: Record<string, React.ComponentType<React.SVGProps<SVGSVGElement>>> = {
+    UiIcon, DbIcon, ReaderIcon, AiIcon, CommunityIcon, GamificationIcon, AdminIcon, SpeakerWaveIcon, StepsIcon, SoundWaveIcon, SearchIcon,
+    Share2, Film, Lightbulb
 };
 
 const initialPhases: PlanPhase[] = [
@@ -47,7 +49,7 @@ const initialPhases: PlanPhase[] = [
     description: 'Integrating high-conversion community features with a spiritual twist.',
     tasks: [
         { id: 'n01', title: 'Multimodal Challenge Creator', description: 'Admin tool to generate challenges from books, newsletters, or URLs (Nas.io logic).', icon: GamificationIcon, status: 'Completed' },
-        { id: 'n02', title: 'Grace Link (Frictionless Sharing)', description: 'Instant URL-based spiritual gift sharing and access without app-download barriers.', icon: SparklesIcon, status: 'Completed' },
+        { id: 'n02', title: 'Grace Link (Frictionless Sharing)', description: 'Instant URL-based spiritual gift sharing and access without app-download barriers.', icon: Share2, status: 'Completed' },
         { id: 'n03', title: 'Lumina (The Community Summarizer)', description: 'AI-driven community conversation and prayer request digests for The Community.', icon: AiIcon, status: 'Completed' },
         { id: 'n04', title: 'Expert Council Portal', description: 'Multi-persona AI guidance (Mental Health, Biblical Scholars).', icon: CommunityIcon, status: 'Completed' },
     ],
@@ -58,7 +60,7 @@ const initialPhases: PlanPhase[] = [
     progress: 100,
     description: 'Cinematic video and adaptive audio environments.',
     tasks: [
-        { id: 't61', title: 'Veo Cinematic Sanctuaries', description: 'Generative high-fidelity video backgrounds.', icon: SparklesIcon, status: 'Completed' },
+        { id: 't61', title: 'Veo Cinematic Sanctuaries', description: 'Generative high-fidelity video backgrounds.', icon: Film, status: 'Completed' },
         { id: 't62', title: 'Adaptive Audio (Lyria)', description: 'Real-time score generation based on mood.', icon: SoundWaveIcon, status: 'Completed' },
     ],
   },

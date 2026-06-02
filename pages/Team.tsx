@@ -2,7 +2,8 @@
 import React, { useState } from 'react';
 import Card from '../components/Card';
 import type { TeamMember } from '../types';
-import { CheckIcon, SparklesIcon, AiIcon, DbIcon, UiIcon, StepsIcon, CommunityIcon } from '../components/icons';
+import { Users } from 'lucide-react';
+import { CheckIcon, AiIcon, DbIcon, UiIcon, StepsIcon, CommunityIcon } from '../components/icons';
 
 const teamData: TeamMember[] = [
   {
@@ -146,7 +147,7 @@ const Team: React.FC = () => {
             
             <Card className="bg-brand-accent/5 border-brand-accent/20">
                 <h3 className="text-xl font-bold text-brand-text-primary mb-4 flex items-center gap-2">
-                    <SparklesIcon className="w-6 h-6 text-brand-accent"/>
+                    <Users className="w-6 h-6 text-brand-accent"/>
                     Strategic Implementation Priority
                 </h3>
                 <p className="text-brand-text-secondary mb-6 italic">

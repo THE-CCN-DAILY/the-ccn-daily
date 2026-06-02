@@ -1,5 +1,6 @@
 import type { Achievement, UserStats, RewardItem, PointEarningAction } from '../types';
-import { FireIcon, SparklesIcon, StepsIcon, ReaderIcon, SpeakerWaveIcon, NoteIcon, CheckIcon, GiftIcon, PrayingHandsIcon, ChatBubbleLeftRightIcon } from '../components/icons';
+import { Trophy, Award } from 'lucide-react';
+import { FireIcon, StepsIcon, ReaderIcon, SpeakerWaveIcon, NoteIcon, CheckIcon, GiftIcon, PrayingHandsIcon, ChatBubbleLeftRightIcon } from '../components/icons';
 
 
 export const mockInitialStats: UserStats = {
@@ -14,14 +15,14 @@ export const mockAchievements: Achievement[] = [
     { id: 'a3', title: 'Engaged Listener', description: 'Finish your first podcast episode.', icon: SpeakerWaveIcon, points: 20, isUnlocked: true },
     { id: 'a4', title: 'Perfect Week', description: 'Maintain a 7-day streak.', icon: FireIcon, points: 100, isUnlocked: true },
     { id: 'a5', title: 'Note Taker', description: 'Create your first highlight or note.', icon: NoteIcon, points: 15, isUnlocked: false },
-    { id: 'a6', title: 'Community Builder', description: 'Post your first prayer request.', icon: SparklesIcon, points: 25, isUnlocked: false },
+    { id: 'a6', title: 'Community Builder', description: 'Post your first prayer request.', icon: Trophy, points: 25, isUnlocked: false },
 ];
 
 export const mockRewards: RewardItem[] = [
     { id: 'r1', title: 'Exclusive Devotional', description: 'A 5-day series on "Finding Joy".', icon: ReaderIcon, cost: 1000, type: 'content' },
     { id: 'r2', title: 'Early-Access Podcast', description: 'Listen to next week\'s episode now.', icon: SpeakerWaveIcon, cost: 1500, type: 'content' },
     { id: 'r3', title: 'Gift a Course', description: 'Share the "Foundations" course with a friend.', icon: GiftIcon, cost: 2500, type: 'content' },
-    { id: 'r4', title: 'Supporter Badge', description: 'Display a special badge on your profile.', icon: SparklesIcon, cost: 5000, type: 'badge' },
+    { id: 'r4', title: 'Supporter Badge', description: 'Display a special badge on your profile.', icon: Award, cost: 5000, type: 'badge' },
 ];
 
 export const mockEarningActions: PointEarningAction[] = [

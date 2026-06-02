@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
-import { XIcon, CheckIcon, SparklesIcon, LockIcon } from './icons';
+import { Crown } from 'lucide-react';
+import { XIcon, CheckIcon, LockIcon } from './icons';
 import { getLocalizedPrice } from '../utils/ppp';
 
 interface UpgradeModalProps {
@@ -117,7 +118,7 @@ const UpgradeModal: React.FC<UpgradeModalProps> = ({ isOpen, onClose, featureNam
                                         </div>
                                     )}
                                     <h3 className="text-xl font-bold text-brand-text-primary flex items-center gap-2">
-                                        Max <SparklesIcon className="w-5 h-5 text-secondary-purple" />
+                                        Max <Crown className="w-5 h-5 text-secondary-purple" />
                                     </h3>
                                     <div className="mb-6">
                                         <span className="text-3xl font-black text-brand-text-primary">{maxPrice.currencySymbol}{maxPrice.discountedPriceUSD}</span>

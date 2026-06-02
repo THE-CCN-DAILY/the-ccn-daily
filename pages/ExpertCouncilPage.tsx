@@ -1,9 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import Card from '../components/Card';
-import { SparklesIcon, ChatIcon } from '../components/icons';
+import { ChatIcon } from '../components/icons';
 import { generateCloudflareText } from '../services/geminiService';
-import { Info } from 'lucide-react';
+import { Info, MessageCircle } from 'lucide-react';
 
 const EASE = [0.22, 1, 0.36, 1] as [number, number, number, number];
 
@@ -299,7 +299,7 @@ const ExpertCouncilPage: React.FC = () => {
                         </p>
                       </div>
                     </div>
-                    <SparklesIcon className="w-4 h-4 text-brand-accent animate-pulse" />
+                    <MessageCircle className="w-4 h-4 text-brand-accent animate-pulse" />
                   </div>
 
                   {/* Messages */}

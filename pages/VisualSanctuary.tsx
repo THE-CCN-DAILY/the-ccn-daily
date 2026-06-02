@@ -2,7 +2,8 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import Card from '../components/Card';
-import { SparklesIcon, SpinnerIcon, PaintBrushIcon, DownloadIcon, ChevronLeftIcon } from '../components/icons';
+import { Wand2 } from 'lucide-react';
+import { SpinnerIcon, PaintBrushIcon, DownloadIcon, ChevronLeftIcon } from '../components/icons';
 import { generateSanctuaryVideo } from '../services/geminiService';
 
 import { useNotifications } from '../contexts/NotificationContext';
@@ -61,7 +62,7 @@ const VisualSanctuary: React.FC = () => {
                             disabled={true}
                             className="w-full mt-4 py-3 bg-brand-secondary text-brand-text-secondary rounded-xl font-bold flex items-center justify-center gap-2 cursor-not-allowed opacity-75"
                         >
-                            <SparklesIcon className="w-5 h-5"/> Premium Feature
+                            <Wand2 className="w-5 h-5"/> Premium Feature
                         </button>
 
                         <div className="mt-8 pt-8 border-t border-brand-border">
@@ -94,7 +95,7 @@ const VisualSanctuary: React.FC = () => {
                                 <div className="relative w-24 h-24 mx-auto mb-6">
                                     <div className="absolute inset-0 border-4 border-brand-accent/20 rounded-full"></div>
                                     <div className="absolute inset-0 border-t-4 border-brand-accent rounded-full animate-spin"></div>
-                                    <SparklesIcon className="w-8 h-8 text-brand-accent absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 animate-pulse"/>
+                                    <Wand2 className="w-8 h-8 text-brand-accent absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 animate-pulse"/>
                                 </div>
                                 <p className="text-brand-accent font-black uppercase tracking-[0.2em] text-xs mb-2">Architecting Sanctuary...</p>
                                 <p className="text-brand-text-secondary text-xs">{progressMsg}</p>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Card from '../components/Card';
-import { PaintBrushIcon, SparklesIcon } from '../components/icons';
+import { Palette } from 'lucide-react';
+import { PaintBrushIcon } from '../components/icons';
 
 type Mood = 'Reflective' | 'Joyful' | 'Hopeful' | 'Courageous';
 
@@ -83,7 +84,7 @@ const DynamicTheming: React.FC = () => {
 
       <Card className="mt-8">
         <h3 className="text-xl font-bold text-brand-text-primary mb-2 flex items-center">
-            <SparklesIcon className="w-5 h-5 mr-2 text-brand-accent"/>
+            <Palette className="w-5 h-5 mr-2 text-brand-accent"/>
             How It Will Work
         </h3>
         <p className="text-brand-text-secondary">

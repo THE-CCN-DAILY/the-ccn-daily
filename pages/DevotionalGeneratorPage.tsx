@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Card from '../components/Card';
-import { SparklesIcon, SpinnerIcon, UserIcon, CheckIcon, LockIcon } from '../components/icons';
+import { PenLine } from 'lucide-react';
+import { SpinnerIcon, UserIcon, CheckIcon, LockIcon } from '../components/icons';
 import { generatePersonalizedDevotional } from '../services/geminiService';
 import type { DevotionalOutput } from '../types';
 import { useGamification } from '../contexts/GamificationContext';
@@ -160,7 +161,7 @@ const DevotionalGeneratorPage: React.FC = () => {
               disabled={isLoading || !!dailyDevotional} 
               className="w-full mt-6 px-4 py-2 rounded-lg bg-brand-accent text-white font-semibold flex items-center justify-center disabled:bg-opacity-50 disabled:cursor-not-allowed"
             >
-                {isLoading ? <SpinnerIcon className="w-5 h-5" /> : dailyDevotional ? 'Generated for Today' : canGenerate ? <><SparklesIcon className="w-5 h-5 mr-2"/> Generate Devotional</> : <><LockIcon className="w-5 h-5 mr-2"/> Access Devotionals</>}
+                {isLoading ? <SpinnerIcon className="w-5 h-5" /> : dailyDevotional ? 'Generated for Today' : canGenerate ? <><PenLine className="w-5 h-5 mr-2"/> Generate Devotional</> : <><LockIcon className="w-5 h-5 mr-2"/> Access Devotionals</>}
             </button>
             {dailyDevotional && (
                  <button
@@ -181,7 +182,7 @@ const DevotionalGeneratorPage: React.FC = () => {
           
           {!dailyDevotional && !isLoading && !error && (
               <Card className="h-full flex flex-col items-center justify-center text-center" style={{ background: 'var(--bg-paper, #F6EFE1)', boxShadow: 'var(--sh-card, 0 1px 2px rgba(42,28,21,.06), 0 8px 24px rgba(42,28,21,.05))' }}>
-                  <SparklesIcon className="w-16 h-16 text-brand-text-secondary/30 mb-4"/>
+                  <PenLine className="w-16 h-16 text-brand-text-secondary/30 mb-4"/>
                   <h3 style={{ fontFamily: 'var(--serif-display, "Cormorant Garamond", "Didot", Georgia, serif)', fontWeight: 600, fontSize: '1.4rem', lineHeight: 1.2, color: 'var(--fg-1, #2A1C15)', marginBottom: '0.5rem' }}>Your Personal Devotional Awaits</h3>
                   <p style={{ fontFamily: 'var(--serif-body, "EB Garamond", "Garamond", Georgia, serif)', fontSize: '17px', lineHeight: 1.7, color: 'var(--fg-2, #5B4A3C)' }}>Click the generate button to create a unique reflection for today.</p>
               </Card>

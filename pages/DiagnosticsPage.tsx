@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Card from '../components/Card';
-import { SpinnerIcon, CheckIcon, XMarkIcon, SparklesIcon } from '../components/icons/index';
+import { Activity } from 'lucide-react';
+import { SpinnerIcon, CheckIcon, XMarkIcon } from '../components/icons/index';
 
 const DiagnosticsPage: React.FC = () => {
     const [status, setStatus] = useState<any>(null);
@@ -156,7 +157,7 @@ const DiagnosticsPage: React.FC = () => {
                                             Local preview can use fallback output. Production should bind Cloudflare Workers AI before enabling paid AI workflows.
                                         </p>
                                         <p className="text-xs font-bold text-brand-accent flex items-center gap-1">
-                                            <SparklesIcon className="w-3 h-3" /> Cloudflare-native AI path active
+                                            <Activity className="w-3 h-3" /> Cloudflare-native AI path active
                                         </p>
                                     </div>
                                 </div>
@@ -167,7 +168,7 @@ const DiagnosticsPage: React.FC = () => {
                                         disabled={testingAi}
                                         className="px-6 py-3 bg-brand-accent text-white rounded-lg font-bold hover:bg-opacity-90 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                                     >
-                                        {testingAi ? <SpinnerIcon className="w-4 h-4" /> : <SparklesIcon className="w-4 h-4" />}
+                                        {testingAi ? <SpinnerIcon className="w-4 h-4" /> : <Activity className="w-4 h-4" />}
                                         {testingAi ? 'Testing...' : 'Run AI Connectivity Test'}
                                     </button>
                                     <button 

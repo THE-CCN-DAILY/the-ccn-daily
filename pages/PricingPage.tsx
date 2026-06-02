@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import Card from '../components/Card';
-import { SparklesIcon, CheckIcon } from '../components/icons';
+import { CheckIcon } from '../components/icons';
 import {
   BookOpen as LucideBookOpen,
   Flame as LucideFlameIcon,
   Users as LucideUsers,
   ShieldCheck as LucideShieldCheck,
+  Crown as LucideCrown,
 } from 'lucide-react';
 
 const EASE = [0.22, 1, 0.36, 1] as [number, number, number, number];
@@ -379,7 +380,7 @@ const PricingPage: React.FC = () => {
             transition={{ duration: 0.4, delay: 0.4 }}
           >
             <p className="flex items-center gap-2 text-sm font-bold text-brand-accent">
-              <SparklesIcon className="h-4 w-4" />
+              <LucideCrown className="h-4 w-4" />
               {activeDiscount.name}: Extra {activeDiscount.percentage}% OFF
             </p>
           </motion.div>

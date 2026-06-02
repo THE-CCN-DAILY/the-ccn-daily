@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Card from '../components/Card';
-import { SparklesIcon, SpinnerIcon, AiIcon, CheckIcon, GiftIcon } from '../components/icons';
+import { SpinnerIcon, AiIcon, CheckIcon, GiftIcon } from '../components/icons';
 import { runTechSentinelAudit, TechAudit } from '../services/sentinelService';
 import { useRoadmap } from '../contexts/RoadmapContext';
 

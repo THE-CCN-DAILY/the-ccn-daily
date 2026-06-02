@@ -1,7 +1,8 @@
 
 import React, { useState } from 'react';
 import Card from './Card';
-import { SparklesIcon, AiIcon, SoundWaveIcon, CheckIcon, TeamIcon } from './icons';
+import { Lightbulb } from 'lucide-react';
+import { AiIcon, SoundWaveIcon, CheckIcon, TeamIcon } from './icons';
 import { useRoadmap } from '../contexts/RoadmapContext';
 
 interface Suggestion {
@@ -37,8 +38,8 @@ const suggestions: Suggestion[] = [
         id: 's3',
         title: 'Video Intelligence Engine',
         description: 'Process uploaded or linked videos (sermons, teachings) to automatically generate summaries, key takeaways, and actionable prayer points.',
-        icon: SparklesIcon,
-        iconName: 'SparklesIcon',
+        icon: Lightbulb,
+        iconName: 'Lightbulb',
         benefit: 'Transforms passive watching into active spiritual growth.',
         status: 'Recommended'
     }
@@ -63,7 +64,7 @@ const SentinelSuggestions: React.FC = () => {
         <div className="mb-12 animate-fade-in">
             <div className="flex items-center gap-3 mb-6">
                 <div className="p-2 bg-brand-accent/20 rounded-lg">
-                    <SparklesIcon className="w-6 h-6 text-brand-accent animate-pulse" />
+                    <Lightbulb className="w-6 h-6 text-brand-accent animate-pulse" />
                 </div>
                 <div>
                     <h2 className="text-2xl font-bold text-brand-text-primary">Sentinel Strategic Recommendations</h2>

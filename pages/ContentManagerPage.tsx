@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BookOpen, BookMarked, Calendar, Pencil, Plus, Trash2, Mic, Mail, Layers } from 'lucide-react';
+import { BookOpen, BookMarked, Calendar, Pencil, Plus, Trash2, Mic, Mail, Layers, GraduationCap } from 'lucide-react';
 import Card from '../components/Card';
 import EmptyState from '../components/EmptyState';
 import MediaUpload from '../components/MediaUpload';
@@ -24,7 +24,7 @@ import {
   updateReadingPlan,
   deleteReadingPlan,
 } from '../services/booksService';
-import { CloseIcon, GamificationIcon, ReaderIcon, SparklesIcon, SpeakerWaveIcon } from '../components/icons';
+import { CloseIcon, GamificationIcon, ReaderIcon, SpeakerWaveIcon } from '../components/icons';
 import type {
   Book,
   BookVariant,
@@ -47,7 +47,7 @@ const TABS: Array<{ id: TabId; label: string; icon: React.FC<React.SVGProps<SVGS
   { id: 'audiobooks', label: 'Audiobooks', icon: SpeakerWaveIcon },
   { id: 'books', label: 'Books (EPUB/PDF)', icon: ReaderIcon },
   { id: 'challenges', label: 'Challenges', icon: GamificationIcon },
-  { id: 'courses', label: 'Courses', icon: SparklesIcon },
+  { id: 'courses', label: 'Courses', icon: (props) => <GraduationCap {...props} /> },
   { id: 'podcasts', label: 'Podcasts', icon: (props) => <Mic {...props} /> },
   { id: 'newsletters', label: 'Newsletters', icon: (props) => <Mail {...props} /> },
   { id: 'books-library', label: 'Books Library', icon: (props) => <BookMarked {...props} /> },
@@ -1620,7 +1620,7 @@ const ContentManagerPage: React.FC = () => {
                             {item.coverUrl ? (
                               <img src={item.coverUrl} alt={item.title} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                             ) : (
-                              <SparklesIcon className="w-6 h-6 text-brand-text-secondary/50" />
+                              <GraduationCap className="w-6 h-6 text-brand-text-secondary/50" />
                             )}
                           </div>
                         )}

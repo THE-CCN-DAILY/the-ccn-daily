@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import Card from '../components/Card';
-import { PrayingHandsIcon, SendIcon, UserIcon, SparklesIcon, SearchIcon, SpinnerIcon, AiIcon, CommunityIcon } from '../components/icons';
+import { MessageCircle } from 'lucide-react';
+import { PrayingHandsIcon, SendIcon, UserIcon, SearchIcon, SpinnerIcon, AiIcon, CommunityIcon } from '../components/icons';
 import { useGamification } from '../contexts/GamificationContext';
 import { getGroundedPrayerTopics } from '../services/geminiService';
 import { useAuth } from '../contexts/AuthContext';
@@ -206,7 +207,7 @@ const TheCommunity: React.FC = () => {
                             {/* Community pulse */}
                             <div className="space-y-4">
                                 <h3 className="text-base font-bold text-brand-text-primary flex items-center gap-2">
-                                    <SparklesIcon className="w-5 h-5 text-brand-accent" />
+                                    <MessageCircle className="w-5 h-5 text-brand-accent" />
                                     Community Pulse
                                 </h3>
                                 <p className="text-brand-text-secondary leading-relaxed bg-brand-secondary/50 p-4 rounded-xl border border-brand-border">

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { SparklesIcon, TeamIcon, CheckIcon, ChevronLeftIcon, PlayIcon } from '../components/icons';
+import { Target } from 'lucide-react';
+import { TeamIcon, CheckIcon, ChevronLeftIcon, PlayIcon } from '../components/icons';
 import Card from '../components/Card';
 import {
   getChallengeDetail,
@@ -91,7 +92,7 @@ const ChallengeDetailPage: React.FC = () => {
           <img src={challenge.coverUrl} alt={challenge.title} className="w-full h-64 object-cover" referrerPolicy="no-referrer" />
         ) : (
           <div className="w-full h-64 bg-brand-secondary flex items-center justify-center">
-            <SparklesIcon className="w-16 h-16 text-brand-text-secondary/50" />
+            <Target className="w-16 h-16 text-brand-text-secondary/50" />
           </div>
         )}
         
@@ -176,7 +177,7 @@ const ChallengeDetailPage: React.FC = () => {
             </div>
           ) : (
             <Card className="border-brand-border bg-brand-dark/30 text-center py-12">
-              <SparklesIcon className="w-12 h-12 text-brand-text-secondary mx-auto mb-4" />
+              <Target className="w-12 h-12 text-brand-text-secondary mx-auto mb-4" />
               <h3 className="text-xl font-bold text-brand-text-primary mb-2">Modules Unlocking Soon</h3>
               <p className="text-brand-text-secondary">
                 The daily content for this challenge will appear here once it begins.

@@ -1,7 +1,8 @@
 
 import React, { useState } from 'react';
 import Card from '../Card';
-import { SparklesIcon, ReaderIcon, SoundWaveIcon, SpinnerIcon, AiIcon } from '../icons';
+import { Wand2 } from 'lucide-react';
+import { ReaderIcon, SoundWaveIcon, SpinnerIcon, AiIcon } from '../icons';
 import { useNotifications } from '../../contexts/NotificationContext';
 import { generateCloudflareText } from '../../services/geminiService';
 import { publishChallenge } from '../../services/challengeService';
@@ -100,7 +101,7 @@ const ChallengeCreator: React.FC = () => {
                                 >
                                     {type === 'Newsletter' && <SoundWaveIcon className="w-5 h-5" />}
                                     {type === 'Book' && <ReaderIcon className="w-5 h-5" />}
-                                    {type === 'URL' && <SparklesIcon className="w-5 h-5" />}
+                                    {type === 'URL' && <Wand2 className="w-5 h-5" />}
                                     {type === 'Manual' && <AiIcon className="w-5 h-5" />}
                                     {type}
                                 </button>
@@ -128,7 +129,7 @@ const ChallengeCreator: React.FC = () => {
                         {isGenerating ? (
                             <><SpinnerIcon className="w-5 h-5" /> Analyzing Source & Generating Interactive Curriculum...</>
                         ) : (
-                            <><SparklesIcon className="w-5 h-5" /> Generate Course/Challenge with AI</>
+                            <><Wand2 className="w-5 h-5" /> Generate Course/Challenge with AI</>
                         )}
                     </button>
                 </div>

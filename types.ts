@@ -21,7 +21,7 @@ export interface PlanTask {
   id: string;
   title: string;
   description: string;
-  icon: React.FC<React.SVGProps<SVGSVGElement>>;
+  icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
   status?: 'Completed' | 'In Progress' | 'Planned';
 }
 
@@ -155,7 +155,7 @@ export interface Achievement {
     id: string;
     title: string;
     description: string;
-    icon: React.FC<React.SVGProps<SVGSVGElement>>;
+    icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
     points: number;
     isUnlocked: boolean;
 }
@@ -170,7 +170,7 @@ export interface RewardItem {
     id: string;
     title: string;
     description: string;
-    icon: React.FC<React.SVGProps<SVGSVGElement>>;
+    icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
     cost: number;
     type: 'content' | 'theme' | 'badge';
 }

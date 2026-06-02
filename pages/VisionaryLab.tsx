@@ -1,7 +1,8 @@
 
 import React, { useState } from 'react';
 import Card from '../components/Card';
-import { AiIcon, SparklesIcon, SpinnerIcon, SearchIcon, SoundWaveIcon, CheckIcon, MicrophoneIcon } from '../components/icons';
+import { FlaskConical } from 'lucide-react';
+import { AiIcon, SpinnerIcon, SearchIcon, SoundWaveIcon, CheckIcon, MicrophoneIcon } from '../components/icons';
 import { getGroundedPrayerTopics, getDeepTheologicalInsight, generateSanctuaryVideo } from '../services/geminiService';
 import { useAuth } from '../contexts/AuthContext';
 import { useNotifications } from '../contexts/NotificationContext';
@@ -115,7 +116,7 @@ const VisionaryLab: React.FC = () => {
         {/* Cinematic Video Demo (PHASE 6) */}
         <Card className="flex flex-col border-brand-accent/30 bg-brand-accent/5">
             <h2 className="text-xl font-bold text-brand-text-primary mb-4 flex items-center">
-                <SparklesIcon className="w-6 h-6 mr-2 text-brand-accent animate-pulse"/>
+                <FlaskConical className="w-6 h-6 mr-2 text-brand-accent animate-pulse"/>
                 Cinematic Sanctuary (Veo 3.1)
             </h2>
             <p className="text-xs text-brand-text-secondary mb-4 uppercase tracking-widest font-black">Phase 6 Immersion</p>

@@ -1,7 +1,8 @@
 import React from 'react';
 import Card from '../components/Card';
 import type { PlanTask } from '../types';
-import { SpeakerWaveIcon, SpeedIcon, ClockIcon, QueueListIcon, BookmarkSquareIcon, ShareIcon, SparklesIcon } from '../components/icons';
+import { FileText, Search, Headphones } from 'lucide-react';
+import { SpeakerWaveIcon, SpeedIcon, ClockIcon, QueueListIcon, BookmarkSquareIcon, ShareIcon } from '../components/icons';
 
 interface FeatureCategory {
   id: string;
@@ -36,9 +37,9 @@ const planData: FeatureCategory[] = [
     title: 'AI-Powered Discovery',
     description: 'Using Cloudflare-routed AI services to make content more accessible and personalized.',
     features: [
-      { id: 'f31', title: 'AI-Generated Summaries', description: 'Provide a concise, AI-generated summary and list of key takeaways for each episode, available before listening.', icon: SparklesIcon },
-      { id: 'f32', title: 'Thematic Search', description: 'Allow users to search for a topic (e.g., "forgiveness") and find all podcast episodes that discuss it, with timestamps.', icon: SparklesIcon },
-      { id: 'f33', title: 'Personalized Recommendations', description: 'Suggest other podcast episodes or even book chapters based on a user\'s listening history and saved notes.', icon: SparklesIcon },
+      { id: 'f31', title: 'AI-Generated Summaries', description: 'Provide a concise, AI-generated summary and list of key takeaways for each episode, available before listening.', icon: FileText },
+      { id: 'f32', title: 'Thematic Search', description: 'Allow users to search for a topic (e.g., "forgiveness") and find all podcast episodes that discuss it, with timestamps.', icon: Search },
+      { id: 'f33', title: 'Personalized Recommendations', description: 'Suggest other podcast episodes or even book chapters based on a user\'s listening history and saved notes.', icon: Headphones },
     ],
   },
 ];

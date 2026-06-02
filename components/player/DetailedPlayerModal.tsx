@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAudioPlayer } from '../../contexts/AudioPlayerContext';
 import { useNotifications } from '../../contexts/NotificationContext';
-import { ChevronLeftIcon, ShareIcon, DownloadIcon, SkipBackIcon, SkipForwardIcon, PlayIcon, PauseIcon, SpinnerIcon, EllipsisHorizontalIcon, MoonIcon, CheckIcon, SparklesIcon, QueueListIcon, BookmarkSquareIcon, ChatBubbleLeftRightIcon } from '../icons';
+import { FileText } from 'lucide-react';
+import { ChevronLeftIcon, ShareIcon, DownloadIcon, SkipBackIcon, SkipForwardIcon, PlayIcon, PauseIcon, SpinnerIcon, EllipsisHorizontalIcon, MoonIcon, CheckIcon, QueueListIcon, BookmarkSquareIcon, ChatBubbleLeftRightIcon } from '../icons';
 import useMediaQuery from '../../hooks/useMediaQuery';
 import CommentsSection from '../shared/CommentsSection';
 
@@ -273,7 +274,7 @@ const DetailedPlayerModal: React.FC = () => {
                     {/* Info Tabs */}
                     <div className="flex-1 min-h-0 flex flex-col bg-black/20 rounded-lg overflow-hidden">
                         <div className="flex items-center border-b border-white/10 flex-shrink-0">
-                            <TabButton label="Summary" icon={SparklesIcon} name="summary" disabled={!currentTrack.summary} />
+                            <TabButton label="Summary" icon={FileText} name="summary" disabled={!currentTrack.summary} />
                             <TabButton label="Transcript" icon={QueueListIcon} name="transcript" disabled={!currentTrack.transcript || currentTrack.transcript.length === 0} />
                             <TabButton label="Chapters" icon={BookmarkSquareIcon} name="chapters" disabled={!currentTrack.chapters || currentTrack.chapters.length === 0} />
                             <TabButton label="Comments" icon={ChatBubbleLeftRightIcon} name="comments" />

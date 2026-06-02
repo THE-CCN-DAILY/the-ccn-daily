@@ -19,7 +19,6 @@ import {
   Clock,
   BookOpenCheck,
   GraduationCap,
-  Sparkles,
 } from 'lucide-react';
 
 /* ─── Animation Variants ──────────────────────────────────────────────────── */
@@ -145,7 +144,7 @@ const appFeatures = [
     description: 'Structured discipleship, live gatherings, and continuing formation.',
   },
   {
-    icon: Sparkles,
+    icon: BookOpen,
     title: 'AI Study Companion',
     description: 'Ask questions. Get answers grounded in Scripture, not speculation.',
   },

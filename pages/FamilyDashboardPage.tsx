@@ -5,7 +5,8 @@ import Card from '../components/Card';
 const EASE = [0.22, 1, 0.36, 1] as [number, number, number, number];
 import { useAuth } from '../contexts/AuthContext';
 import { useNotifications } from '../contexts/NotificationContext';
-import { PlusIcon, UserIcon, SparklesIcon, GamificationIcon, CloseIcon } from '../components/icons';
+import { HeartHandshake } from 'lucide-react';
+import { PlusIcon, UserIcon, GamificationIcon, CloseIcon } from '../components/icons';
 
 interface FamilyMember {
   id: string;
@@ -101,7 +102,7 @@ const FamilyDashboardPage: React.FC = () => {
         <div className="lg:col-span-1 space-y-8">
           <Card className="border-brand-border bg-brand-dark/30">
             <h2 className="text-lg font-bold text-brand-text-primary mb-4 flex items-center gap-2">
-              <SparklesIcon className="w-5 h-5 text-brand-accent" />
+              <HeartHandshake className="w-5 h-5 text-brand-accent" />
               Family Plan
             </h2>
             <div className="mb-6">

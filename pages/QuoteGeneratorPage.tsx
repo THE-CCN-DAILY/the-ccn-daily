@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { Player } from '@remotion/player';
 import Card from '../components/Card';
-import { AiIcon, SparklesIcon, SpinnerIcon, ShareIcon, DownloadIcon, CheckIcon, LockIcon } from '../components/icons';
+import { Quote } from 'lucide-react';
+import { AiIcon, SpinnerIcon, ShareIcon, DownloadIcon, CheckIcon, LockIcon } from '../components/icons';
 import { generateQuoteImage } from '../services/geminiService';
 import { useAuth } from '../contexts/AuthContext';
 import { useUpgradeModal } from '../contexts/UpgradeModalContext';
@@ -136,7 +137,7 @@ const QuoteGeneratorPage: React.FC = () => {
           <div className="space-y-6">
             <Card>
               <h2 className="mb-4 flex items-center text-xl font-bold text-brand-text-primary">
-                <SparklesIcon className="mr-2 h-6 w-6 text-brand-accent" />
+                <Quote className="mr-2 h-6 w-6 text-brand-accent" />
                 Video Card Settings
               </h2>
 
@@ -277,7 +278,7 @@ const QuoteGeneratorPage: React.FC = () => {
                   className={`flex w-full items-center justify-center gap-2 rounded-sm py-3 font-bold transition-colors ${canGenerateQuoteImages ? 'bg-brand-accent text-white hover:bg-opacity-90' : 'bg-brand-secondary text-brand-text-secondary hover:bg-brand-border'}`}
                 >
                   {canGenerateQuoteImages
-                    ? <><SparklesIcon className="h-5 w-5" /> Generate Image</>
+                    ? <><Quote className="h-5 w-5" /> Generate Image</>
                     : <><LockIcon className="h-5 w-5" /> Access Image Generation</>}
                 </button>
                 {error && (
@@ -299,7 +300,7 @@ const QuoteGeneratorPage: React.FC = () => {
                       Premium Tier
                     </div>
                   )}
-                  <SparklesIcon className="mx-auto mb-4 h-16 w-16 text-brand-text-secondary/20" />
+                  <Quote className="mx-auto mb-4 h-16 w-16 text-brand-text-secondary/20" />
                   <p className="mx-auto max-w-xs italic text-brand-text-secondary">
                     {canGenerateQuoteImages
                       ? 'Ready to generate your visual inspiration.'

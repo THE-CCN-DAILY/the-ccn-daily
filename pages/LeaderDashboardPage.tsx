@@ -5,7 +5,8 @@ import Card from '../components/Card';
 const EASE = [0.22, 1, 0.36, 1] as [number, number, number, number];
 import { useAuth } from '../contexts/AuthContext';
 import { useNotifications } from '../contexts/NotificationContext';
-import { PlusIcon, UserIcon, SparklesIcon, ChartBarIcon, ReaderIcon, CloseIcon } from '../components/icons';
+import { Lightbulb } from 'lucide-react';
+import { PlusIcon, UserIcon, ChartBarIcon, ReaderIcon, CloseIcon } from '../components/icons';
 
 interface GroupMember {
   id: string;
@@ -176,7 +177,7 @@ const LeaderDashboardPage: React.FC = () => {
 
           <Card className="border-brand-border bg-brand-dark/30">
             <h2 className="text-lg font-bold text-brand-text-primary mb-4 flex items-center gap-2">
-              <SparklesIcon className="w-5 h-5 text-brand-accent" />
+              <Lightbulb className="w-5 h-5 text-brand-accent" />
               Current Assignments
             </h2>
             <div className="space-y-4">
@@ -300,7 +301,7 @@ const LeaderDashboardPage: React.FC = () => {
           </Card>
           <Card className="border-brand-border bg-brand-dark/30">
             <div className="w-10 h-10 rounded-full bg-brand-accent/15 flex items-center justify-center mb-4">
-              <SparklesIcon className="w-5 h-5 text-brand-accent" />
+              <Lightbulb className="w-5 h-5 text-brand-accent" />
             </div>
             <h3 className="font-bold text-brand-text-primary mb-1">Assign Content</h3>
             <p className="text-xs text-brand-text-secondary mb-4">Push devotionals, courses, and challenges to your entire organization or specific cohorts.</p>

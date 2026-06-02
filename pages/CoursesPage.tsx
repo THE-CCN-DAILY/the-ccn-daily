@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { Lock } from 'lucide-react';
+import { Lock, GraduationCap } from 'lucide-react';
 import Card from '../components/Card';
-import { SparklesIcon, PlayIcon, CheckIcon } from '../components/icons';
+import { PlayIcon, CheckIcon } from '../components/icons';
 import { usePremiumGate } from '../hooks/usePremiumGate';
 import { listCourses, type Course } from '../services/courseService';
 
@@ -73,7 +73,7 @@ const CoursesPage: React.FC = () => {
                 {course.coverUrl ? (
                   <img src={course.coverUrl} alt={course.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" referrerPolicy="no-referrer" />
                 ) : (
-                  <SparklesIcon className="w-16 h-16 text-brand-text-secondary/50" />
+                  <GraduationCap className="w-16 h-16 text-brand-text-secondary/50" />
                 )}
                 <div className="absolute top-4 right-4 bg-brand-dark/80 backdrop-blur-sm px-3 py-1 rounded-full border border-brand-border/50 text-xs font-bold text-brand-text-primary">
                   {course.moduleCount || 0} Modules
@@ -108,7 +108,7 @@ const CoursesPage: React.FC = () => {
         </motion.div>
       ) : (
         <Card className="text-center py-20 border-brand-border border-dashed bg-transparent">
-          <SparklesIcon className="w-12 h-12 text-brand-text-secondary mx-auto mb-4" />
+          <GraduationCap className="w-12 h-12 text-brand-text-secondary mx-auto mb-4" />
           <h3 className="text-xl font-bold text-brand-text-primary mb-2">No courses available yet</h3>
           <p className="text-brand-text-secondary" style={{ fontFamily: 'var(--serif-body)', lineHeight: 1.65 }}>
             Formation takes time. More is coming.
