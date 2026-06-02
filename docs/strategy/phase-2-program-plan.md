@@ -134,3 +134,36 @@ cohesion+benchmark coverage, Cloudflare untapped potential). Findings feed the e
 ## Standing rule
 - **Keep THIS plan current.** Every new idea (founder's or discovered during execution) gets added here.
   This is the living plan docket.
+
+---
+
+# Round 3 — founder directive (2026-06-02 pm)
+
+## Decisions / done
+- Comments system: admin-approval, **shipped to prod**. Mux env **deleted by founder** → migrating to Stream now.
+- Pre-launch: deploy everything to prod (done through comments). Mux→Stream: REMOVE Mux, make Stream truly work (not graceful-fail).
+
+## In-flight expert agents (delegated to save context)
+1. Launch-readiness + unfinished-feature inventory. 2. Pricing & plan tiers (Free/Premium/Family/Group) + PPP. 3. Cloudflare enable-now checklist (Stream subscription, Turnstile, Images, Web Analytics, Email Routing). 4. Typography scale audit. 5. Mux→Cloudflare Stream migration (build).
+
+## New builds to do (after this wave; sequence — they share worker/Dashboard/ContentManager)
+- **Intelligent reminder / engagement engine** (industry-benchmarked): nudges users to take steps / access
+  unaccessed materials, encouraging + graceful. **Daily**: a reminder BEFORE they open the app (push
+  notification) + a "Daily Actions / resources to access" block on the dashboard. **Weekly** items
+  (e.g., weekly podcast, newsletter) remind on their interval. **Monthly/seasonal** remind on cadence;
+  **amplify seasonal** resource reminders. Memory of what each user has/hasn't accessed drives it.
+- **Announcement banners**: authored in Admin Content Manager AND shown on the user dashboard.
+  Well-designed; support a wide asset range — text, image, graphic, video, audio. Include **seasonal
+  promotion** banners. Build the backend/data model to support all asset types + scheduling/targeting.
+- **Payment + entitlement loop** (UNBLOCKED — Flutterwave keys set): real paywall, paid in-app reading,
+  per-format entitlements, PPP. Then server-side media protection.
+- **Tier enforcement**: implement the pricing-agent's recommended Free/Premium/Family/Group so each
+  promise is delivered immediately on upgrade.
+- **Finish half-built dashboard features** (from launch-readiness inventory) so every promise is real.
+- **Typography fixes** (from audit) — correct app-appropriate text sizes + a consistent scale.
+
+## Founder actions pending
+- **Enable Cloudflare Stream** on the account + create a Stream API token (Stream:Edit) → set
+  `CLOUDFLARE_ACCOUNT_ID` + `CLOUDFLARE_STREAM_API_TOKEN` as Pages secrets (Stream is a paid add-on,
+  must be turned on like R2 was — migration code is built but won't function until then).
+- (See the Cloudflare enable-now agent's checklist for Turnstile/Images/etc.)
