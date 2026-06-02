@@ -23,6 +23,11 @@
   --border-raw: 228 224 218;
   --border-strong-raw: 168 162 158;
 
+  /* Status (semantic, theme-aware) — light */
+  --status-success-raw: 46 125 50;
+  --status-error-raw: 192 57 43;
+  --status-warning-raw: 178 94 0;
+
   /* Fonts */
   --font-display: 'Cormorant Garamond', 'Didot', Georgia, serif;
   --font-body: 'EB Garamond', 'Garamond', Georgia, serif;
@@ -72,6 +77,11 @@
   --border-raw: 52 48 44;
   --border-strong-raw: 90 84 78;
 
+  /* Status — dark (lightened for contrast on dark bg) */
+  --status-success-raw: 111 207 127;
+  --status-error-raw: 232 100 90;
+  --status-warning-raw: 245 168 85;
+
   --card-shine: inset 0 1px 0 0 rgba(255, 255, 255, 0.05), 0 1px 4px rgba(0, 0, 0, 0.35);
 
   --bg-paper: #1A1210;
@@ -101,6 +111,11 @@
   --text-tertiary-raw: 139 116 94;
   --border-raw: 214 199 176;
   --border-strong-raw: 139 116 94;
+
+  /* Status — sepia */
+  --status-success-raw: 79 122 63;
+  --status-error-raw: 176 57 43;
+  --status-warning-raw: 154 106 30;
 
   --card-shine: inset 0 1px 0 0 rgba(255, 255, 255, 0.45), 0 1px 3px rgba(0, 0, 0, 0.08);
 }
@@ -141,6 +156,11 @@
   --color-ember: #C23B1E;
   --color-gold-ds: #B7892E;
   --color-sage: #6B7A5A;
+
+  /* Status — semantic, theme-aware (fixes previously-undefined status-* utilities) */
+  --color-status-success: rgb(var(--status-success-raw));
+  --color-status-error:   rgb(var(--status-error-raw));
+  --color-status-warning: rgb(var(--status-warning-raw));
 
   /* Keyframes */
   --animate-fade-in: fade-in 0.5s ease forwards;
