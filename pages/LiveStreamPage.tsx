@@ -3,7 +3,6 @@ import { motion } from 'motion/react';
 import Card from '../components/Card';
 import { SpeakerWaveIcon, ChatIcon, UserCircleIcon } from '../components/icons';
 import { useAuth } from '../contexts/AuthContext';
-import MuxPlayer from '@mux/mux-player-react';
 import {
   LiveStreamMessage,
   getLiveStreamStatus,
@@ -12,6 +11,17 @@ import {
 } from '../services/liveStreamService';
 
 const EASE = [0.22, 1, 0.36, 1] as [number, number, number, number];
+
+// Cloudflare Stream customer subdomain (e.g. "customer-abc123"). Found in the Stream
+// dashboard — not a secret (it appears in every public playback URL).
+const CF_STREAM_CUSTOMER_SUBDOMAIN =
+  (import.meta.env.VITE_CF_STREAM_CUSTOMER_SUBDOMAIN as string | undefined) || '';
+
+// Build the Cloudflare Stream iframe embed URL for a live input / video uid.
+const buildStreamIframeUrl = (uid: string): string =>
+  CF_STREAM_CUSTOMER_SUBDOMAIN
+    ? `https://${CF_STREAM_CUSTOMER_SUBDOMAIN}.cloudflarestream.com/${uid}/iframe?autoplay=true&muted=true`
+    : '';
 
 const LiveStreamPage: React.FC = () => {
   const [isLive, setIsLive] = useState(false);
@@ -151,19 +161,23 @@ const LiveStreamPage: React.FC = () => {
         <div className="lg:col-span-2">
           <Card className="p-0 overflow-hidden relative group">
             <div className="aspect-video bg-black relative flex items-center justify-center">
-              {playbackId ? (
-                <MuxPlayer
-                  streamType="live"
-                  playbackId={playbackId}
-                  metadata={{
-                    video_id: 'sunday-gathering',
-                    video_title: 'Sunday Gathering',
-                    viewer_user_id: user?.uid || 'anonymous',
-                  }}
-                  autoPlay
-                  muted
-                  className="w-full h-full object-cover"
+              {playbackId && buildStreamIframeUrl(playbackId) ? (
+                <iframe
+                  src={buildStreamIframeUrl(playbackId)}
+                  title="Sunday Gathering live broadcast"
+                  className="w-full h-full"
+                  style={{ border: 'none' }}
+                  allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;"
+                  allowFullScreen
                 />
+              ) : playbackId ? (
+                <div className="text-center p-8">
+                  <SpeakerWaveIcon className="w-16 h-16 text-brand-text-secondary mx-auto mb-4 opacity-50" />
+                  <h3 className="text-xl font-bold text-brand-text-primary mb-2">Player Not Configured</h3>
+                  <p className="text-brand-text-secondary">
+                    Set VITE_CF_STREAM_CUSTOMER_SUBDOMAIN to enable the Cloudflare Stream player.
+                  </p>
+                </div>
               ) : (
                 <div className="text-center p-8">
                   <SpeakerWaveIcon className="w-16 h-16 text-brand-text-secondary mx-auto mb-4 opacity-50" />

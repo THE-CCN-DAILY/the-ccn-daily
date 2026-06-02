@@ -17,8 +17,6 @@
     "remotion:render": "remotion render remotion/index.ts VerseCard out/verse-card.mp4"
   },
   "dependencies": {
-    "@mux/mux-node": "^12.8.1",
-    "@mux/mux-player-react": "^3.11.6",
     "@remotion/player": "^4.0.464",
     "@tailwindcss/vite": "^4.2.2",
     "dompurify": "^3.4.7",

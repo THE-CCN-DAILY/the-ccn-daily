@@ -81,7 +81,7 @@ const initialPhases: PlanPhase[] = [
     description: 'Live streaming, event registration, and targeted broadcast communication.',
     tasks: [
         { id: 't81', title: 'Broadcast Engine', description: 'Targeted in-app push notifications and email updates via Resend/SendGrid.', icon: SpeakerWaveIcon, status: 'Completed' },
-        { id: 't82', title: 'Live Streaming Integration', description: 'Low-latency audio/video streaming via Mux or Agora.', icon: SoundWaveIcon, status: 'Completed' },
+        { id: 't82', title: 'Live Streaming Integration', description: 'Low-latency audio/video streaming via Cloudflare Stream.', icon: SoundWaveIcon, status: 'Completed' },
         { id: 't83', title: 'Event Registration Portal', description: 'Online and physical event management with shareable Grace Links.', icon: CommunityIcon, status: 'Completed' },
     ],
   },

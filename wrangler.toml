@@ -9,6 +9,13 @@ pages_build_output_dir = "dist"
 FIREBASE_PROJECT_ID = "ccn-daily"
 PRODUCTION_ORIGIN = "https://theccndaily.com"
 ADMIN_EMAIL = "pastor.eryeza@gmail.com"
+# Cloudflare Stream (VOD + live) — REST API, no binding required.
+#   CF_ACCOUNT_ID and CF_STREAM_TOKEN are SECRETS — set them via:
+#     wrangler secret put CF_ACCOUNT_ID
+#     wrangler secret put CF_STREAM_TOKEN      # API token scoped to Stream:Edit
+#   CF_STREAM_CUSTOMER_SUBDOMAIN is NOT secret (it appears in every public playback URL).
+#   Find it in the Stream dashboard (format: customer-<code>). Uncomment + set below:
+# CF_STREAM_CUSTOMER_SUBDOMAIN = "customer-xxxxxxxx"
 
 # R2 media bucket — serves uploaded covers/audio via /api/media/<key>
 [[r2_buckets]]

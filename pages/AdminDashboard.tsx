@@ -12,7 +12,7 @@ import { handleFirestoreError, OperationType } from '../utils/firestoreErrorHand
 import { useAuth } from '../contexts/AuthContext';
 import { AdminUserStats, listAdminUsers } from '../services/adminService';
 import { createAdminEvent } from '../services/eventService';
-import { createMuxLiveStream } from '../services/liveStreamService';
+import { createStreamLiveInput } from '../services/liveStreamService';
 import LandscapeTab from '../components/admin/LandscapeTab';
 
 interface AppUser {
@@ -83,10 +83,11 @@ const AdminDashboard: React.FC = () => {
     const [isUploading, setIsUploading] = useState(false);
     const [uploadMessage, setUploadMessage] = useState('');
 
-    // Mux State
-    const [muxStreamKey, setMuxStreamKey] = useState('');
-    const [muxPlaybackId, setMuxPlaybackId] = useState('');
-    const [isCreatingMuxStream, setIsCreatingMuxStream] = useState(false);
+    // Cloudflare Stream state
+    const [streamKey, setStreamKey] = useState('');
+    const [streamPlaybackId, setStreamPlaybackId] = useState('');
+    const [streamIngestUrl, setStreamIngestUrl] = useState('');
+    const [isCreatingLiveInput, setIsCreatingLiveInput] = useState(false);
 
     // Payment Settings State
     const [flutterwaveKey, setFlutterwaveKey] = useState('');
@@ -104,57 +105,57 @@ const AdminDashboard: React.FC = () => {
     const [targetBilling, setTargetBilling] = useState<'monthly' | 'yearly' | 'both'>('both');
     const [isCreatingDiscount, setIsCreatingDiscount] = useState(false);
 
-    const handleCreateMuxStream = async () => {
-        setIsCreatingMuxStream(true);
+    const handleCreateLiveInput = async () => {
+        setIsCreatingLiveInput(true);
         try {
-            const data = await createMuxLiveStream();
-            setMuxStreamKey(data.streamKey);
-            setMuxPlaybackId(data.playbackId);
+            const data = await createStreamLiveInput();
+            setStreamKey(data.streamKey);
+            setStreamPlaybackId(data.playbackId);
+            setStreamIngestUrl(data.ingestUrl);
 
-            notify('Mux Live Stream created successfully! Save your Stream Key securely.', 'success');
+            notify('Cloudflare Stream live input created! Save your Stream Key securely.', 'success');
         } catch (error: any) {
-            notify(`Failed to create Mux stream: ${error.message}`, 'error');
+            notify(`Failed to create live input: ${error.message}`, 'error');
         } finally {
-            setIsCreatingMuxStream(false);
+            setIsCreatingLiveInput(false);
         }
     };
 
-    const handleMuxUpload = async () => {
+    const handleStreamUpload = async () => {
         if (!uploadFile) return;
         setIsUploading(true);
-        setUploadMessage('Requesting Mux upload URL...');
-        
+        setUploadMessage('Requesting Cloudflare Stream upload URL...');
+
         try {
-            // 1. Get direct upload URL from our backend
-            const response = await fetch('/api/mux/upload', {
+            // 1. Get one-time direct creator upload URL from our backend
+            const response = await fetch('/api/stream/upload', {
                 method: 'POST',
                 headers: await adminAuthHeaders(),
             });
             if (!response.ok) {
                 const errorData = await response.json();
-                throw new Error(errorData.error || 'Failed to get Mux upload URL');
+                throw new Error(errorData.message || errorData.error || 'Failed to get upload URL');
             }
             const { uploadUrl, uploadId } = await response.json();
 
-            setUploadMessage('Uploading to Mux...');
-            
-            // 2. Upload file directly to Mux
+            setUploadMessage('Uploading to Cloudflare Stream...');
+
+            // 2. Upload file directly to Cloudflare Stream (multipart form-data)
+            const formData = new FormData();
+            formData.append('file', uploadFile);
             const uploadResponse = await fetch(uploadUrl, {
-                method: 'PUT',
-                body: uploadFile,
-                headers: {
-                    'Content-Type': uploadFile.type,
-                }
+                method: 'POST',
+                body: formData,
             });
 
             if (!uploadResponse.ok) {
-                throw new Error('Failed to upload file to Mux');
+                throw new Error('Failed to upload file to Cloudflare Stream');
             }
 
-            // 3. Save metadata to Firestore
+            // 3. Save metadata to Firestore (streamUid is the Stream video id for playback)
             await addDoc(collection(db, 'resources'), {
                 title: resourceTitle || uploadFile.name,
-                muxUploadId: uploadId,
+                streamUid: uploadId,
                 type: resourceType,
                 size: uploadFile.size,
                 accessLane: resourceAccessLane,
@@ -163,10 +164,10 @@ const AdminDashboard: React.FC = () => {
                 isPremium: resourceAccessLane !== 'included' || resourceTier !== 'free',
                 uploadedBy: user?.uid,
                 createdAt: serverTimestamp(),
-                provider: 'mux'
+                provider: 'cloudflare-stream'
             });
 
-            setUploadMessage('Video uploaded to Mux successfully! It will be ready to play shortly.');
+            setUploadMessage('Video uploaded to Cloudflare Stream successfully! It will be ready to play shortly.');
             setUploadFile(null);
             setResourceTitle('');
         } catch (error: any) {
@@ -758,7 +759,7 @@ const AdminDashboard: React.FC = () => {
                     ) : activeTab === 'events' ? (
                         <Card className="animate-fade-in">
                             <h2 className="text-2xl font-semibold text-brand-text-primary mb-4" style={{ fontFamily: 'var(--serif-display)' }}>Live Events & Streaming</h2>
-                            <p className="text-sm text-brand-text-secondary mb-6">Manage online streams (Mux/Agora) and physical event registrations.</p>
+                            <p className="text-sm text-brand-text-secondary mb-6">Manage online streams (Cloudflare Stream) and physical event registrations.</p>
                             <div className="space-y-6">
                                 <div className="p-6 border border-brand-border rounded-xl bg-brand-secondary/30">
                                     <h3 className="text-lg font-semibold text-brand-text-primary mb-4" style={{ fontFamily: 'var(--serif-display)' }}>Schedule New Event</h3>
@@ -815,10 +816,10 @@ const AdminDashboard: React.FC = () => {
                                 </div>
 
                                 <div className="p-6 border border-brand-border rounded-xl bg-brand-secondary/30">
-                                    <h3 className="text-lg font-semibold text-brand-text-primary mb-4" style={{ fontFamily: 'var(--serif-display)' }}>Mux Live Stream Configuration</h3>
-                                    <p className="text-sm text-brand-text-secondary mb-4">Generate a secure stream key for OBS or other broadcasting software.</p>
-                                    
-                                    {muxStreamKey ? (
+                                    <h3 className="text-lg font-semibold text-brand-text-primary mb-4" style={{ fontFamily: 'var(--serif-display)' }}>Cloudflare Stream Live Configuration</h3>
+                                    <p className="text-sm text-brand-text-secondary mb-4">Create a secure RTMPS live input for OBS or other broadcasting software.</p>
+
+                                    {streamKey ? (
                                         <div className="space-y-4">
                                             <div className="p-4 bg-brand-dark rounded-xl border border-brand-border">
                                                 <p className="text-xs text-status-success uppercase font-bold mb-1">Stream is Active & Ready</p>
@@ -826,21 +827,27 @@ const AdminDashboard: React.FC = () => {
                                             </div>
                                             <div className="p-4 bg-brand-dark rounded-xl border border-brand-border">
                                                 <p className="text-xs text-brand-text-secondary uppercase font-bold mb-1">Stream Key (Keep Secret)</p>
-                                                <p className="font-mono text-brand-text-primary break-all">{muxStreamKey}</p>
+                                                <p className="font-mono text-brand-text-primary break-all">{streamKey}</p>
                                             </div>
                                             <div className="p-4 bg-brand-dark rounded-xl border border-brand-border">
-                                                <p className="text-xs text-brand-text-secondary uppercase font-bold mb-1">Playback ID</p>
-                                                <p className="font-mono text-brand-text-primary break-all">{muxPlaybackId}</p>
+                                                <p className="text-xs text-brand-text-secondary uppercase font-bold mb-1">Playback ID (Stream UID)</p>
+                                                <p className="font-mono text-brand-text-primary break-all">{streamPlaybackId}</p>
                                             </div>
-                                            <p className="text-xs text-brand-accent">Use the Stream Key in OBS Studio (Server: rtmp://global-live.mux.com:5222/app)</p>
+                                            {streamIngestUrl && (
+                                                <div className="p-4 bg-brand-dark rounded-xl border border-brand-border">
+                                                    <p className="text-xs text-brand-text-secondary uppercase font-bold mb-1">RTMPS Ingest URL (OBS Server)</p>
+                                                    <p className="font-mono text-brand-text-primary break-all">{streamIngestUrl}</p>
+                                                </div>
+                                            )}
+                                            <p className="text-xs text-brand-accent">In OBS, set Service to "Custom", paste the RTMPS Ingest URL as the Server and the Stream Key above.</p>
                                         </div>
                                     ) : (
-                                        <button 
-                                            onClick={handleCreateMuxStream}
-                                            disabled={isCreatingMuxStream}
+                                        <button
+                                            onClick={handleCreateLiveInput}
+                                            disabled={isCreatingLiveInput}
                                             className="w-full py-3 bg-brand-accent text-white rounded-xl font-bold hover:scale-[1.02] transition-transform flex items-center justify-center gap-2 disabled:opacity-50"
                                         >
-                                            {isCreatingMuxStream ? <><SpinnerIcon className="w-5 h-5"/> Generating...</> : 'Generate Mux Stream Key'}
+                                            {isCreatingLiveInput ? <><SpinnerIcon className="w-5 h-5"/> Generating...</> : 'Create Live Input & Stream Key'}
                                         </button>
                                     )}
                                 </div>
@@ -1147,12 +1154,12 @@ const AdminDashboard: React.FC = () => {
                                                         {isUploading ? `Uploading... ${Math.round(uploadProgress)}%` : 'Upload to Firebase'}
                                                     </button>
                                                     {uploadFile.type.startsWith('video/') && (
-                                                        <button 
-                                                            onClick={handleMuxUpload}
+                                                        <button
+                                                            onClick={handleStreamUpload}
                                                             disabled={isUploading || !resourceTitle}
                                                             className="px-8 py-3 bg-gold-ds text-white rounded-xl font-bold hover:scale-[1.02] transition-transform disabled:opacity-50"
                                                         >
-                                                            {isUploading ? 'Uploading to Mux...' : 'Upload Video to Mux'}
+                                                            {isUploading ? 'Uploading to Stream...' : 'Upload Video to Cloudflare Stream'}
                                                         </button>
                                                     )}
                                                 </div>

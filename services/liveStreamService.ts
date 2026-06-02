@@ -52,12 +52,14 @@ export const updateAdminLiveStreamStatus = async (stream: {
   return data.stream;
 };
 
-export const createMuxLiveStream = async (): Promise<{
+export const createStreamLiveInput = async (): Promise<{
   streamKey: string;
   playbackId: string;
   streamId: string;
+  ingestUrl: string;
+  customerSubdomain: string;
 }> => {
-  return requestJson('/api/mux/live', {
+  return requestJson('/api/stream/live', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

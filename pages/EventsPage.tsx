@@ -145,7 +145,7 @@ const EventsPage: React.FC = () => {
                 </div>
               </div>
               <div className="flex justify-between border-t border-brand-border px-6 py-3" style={{ fontFamily: 'var(--sans-ui)', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--fg-3, #8A7A6A)', background: 'rgba(42,28,21,0.04)' }}>
-                <span>Streaming Engine: {event.streamingPlatform || (event.type === 'online' ? 'Mux' : 'N/A')}</span>
+                <span>Streaming Engine: {event.streamingPlatform || (event.type === 'online' ? 'Cloudflare Stream' : 'N/A')}</span>
                 <span>Live event desk</span>
               </div>
             </Card>

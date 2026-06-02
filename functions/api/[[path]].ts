@@ -40,8 +40,14 @@ type Env = {
   ADMIN_EMAIL?: string;
   MEDIA_PUBLIC_BASE_URL?: string;
   WORKERS_AI_TEXT_MODEL?: string;
-  MUX_TOKEN_ID?: string;
-  MUX_TOKEN_SECRET?: string;
+  // Cloudflare Stream (VOD + live) — REST API, no binding.
+  // CF_ACCOUNT_ID: Cloudflare account id. CF_STREAM_TOKEN: API token with Stream:Edit.
+  // CF_STREAM_CUSTOMER_SUBDOMAIN: the "customer-<code>" hostname shown in the Stream
+  //   dashboard (used to build iframe/HLS playback URLs). Falls back to parsing it from
+  //   the live input's playback URLs when present.
+  CF_ACCOUNT_ID?: string;
+  CF_STREAM_TOKEN?: string;
+  CF_STREAM_CUSTOMER_SUBDOMAIN?: string;
   GOOGLE_CLIENT_ID?: string;
   GOOGLE_CLIENT_SECRET?: string;
   AUTH_SECRET?: string;
@@ -1927,44 +1933,72 @@ app.delete('/api/admin/live/chat/messages/:id', async (c) => {
   return c.json({ ok: true });
 });
 
-app.post('/api/mux/live', async (c) => {
+// Cloudflare Stream helpers.
+const STREAM_API_BASE = 'https://api.cloudflare.com/client/v4';
+
+const streamConfigured = (env: Env): boolean =>
+  Boolean(env.CF_ACCOUNT_ID && env.CF_STREAM_TOKEN);
+
+// Derive the "customer-<code>.cloudflarestream.com" host from a Stream playback URL.
+const parseStreamCustomerSubdomain = (value: unknown): string => {
+  if (typeof value !== 'string') return '';
+  const match = value.match(/(customer-[a-z0-9]+)\.cloudflarestream\.com/i);
+  return match ? match[1] : '';
+};
+
+const resolveStreamCustomerSubdomain = (env: Env, ...candidates: unknown[]): string => {
+  for (const candidate of candidates) {
+    const parsed = parseStreamCustomerSubdomain(candidate);
+    if (parsed) return parsed;
+  }
+  return env.CF_STREAM_CUSTOMER_SUBDOMAIN || '';
+};
+
+// POST /api/stream/live — create a Cloudflare Stream live input (RTMPS ingest + uid).
+app.post('/api/stream/live', async (c) => {
   const denied = requireAdmin(c);
   if (denied) return denied;
 
-  if (!c.env.MUX_TOKEN_ID || !c.env.MUX_TOKEN_SECRET) {
+  if (!streamConfigured(c.env)) {
     return c.json({
-      error: 'MUX_NOT_CONFIGURED',
-      message: 'MUX_TOKEN_ID and MUX_TOKEN_SECRET must be configured before live stream keys can be generated.',
+      error: 'STREAM_NOT_CONFIGURED',
+      message: 'CF_ACCOUNT_ID and CF_STREAM_TOKEN must be configured before live stream keys can be generated.',
     }, 501);
   }
 
-  const response = await fetch('https://api.mux.com/video/v1/live-streams', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Basic ${btoa(`${c.env.MUX_TOKEN_ID}:${c.env.MUX_TOKEN_SECRET}`)}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      playback_policy: ['public'],
-      new_asset_settings: { playback_policy: ['public'] },
-    }),
-  });
+  const response = await fetch(
+    `${STREAM_API_BASE}/accounts/${c.env.CF_ACCOUNT_ID}/stream/live_inputs`,
+    {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${c.env.CF_STREAM_TOKEN}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        meta: { name: 'CCN DAILY Global Broadcast' },
+        recording: { mode: 'automatic' },
+      }),
+    }
+  );
 
   const data: any = await response.json().catch(() => ({}));
-  if (!response.ok) {
-    return c.json({
-      error: 'MUX_REQUEST_FAILED',
-      message: data?.error?.message || 'Mux live stream creation failed.',
-      details: data,
-    }, response.status as any);
+  if (!response.ok || data?.success === false) {
+    const message = data?.errors?.[0]?.message || 'Cloudflare Stream live input creation failed.';
+    return c.json({ error: 'STREAM_REQUEST_FAILED', message, details: data }, response.status as any);
   }
 
-  const stream = data?.data || data;
-  const playbackId = stream?.playback_ids?.[0]?.id || '';
-  const streamId = stream?.id || '';
-  const streamKey = stream?.stream_key || '';
+  const result = data?.result || {};
+  const uid: string = result?.uid || '';
+  const ingestUrl: string = result?.rtmps?.url || '';
+  const streamKey: string = result?.rtmps?.streamKey || '';
+  const customerSubdomain = resolveStreamCustomerSubdomain(
+    c.env,
+    result?.playback?.hls,
+    result?.playback?.dash,
+  );
 
-  if (c.env.DB && playbackId) {
+  if (c.env.DB && uid) {
+    // playback_id / stream_id are provider-neutral; both hold the Stream uid.
     await c.env.DB.prepare(
       `INSERT INTO live_stream_settings (
         id, status, playback_id, stream_id, title, viewer_count, updated_at
@@ -1975,20 +2009,57 @@ app.post('/api/mux/live', async (c) => {
         stream_id = excluded.stream_id,
         title = excluded.title,
         updated_at = CURRENT_TIMESTAMP`
-    ).bind(playbackId, streamId).run();
+    ).bind(uid, uid).run();
   }
 
-  return c.json({ streamKey, playbackId, streamId, source: 'mux' });
+  // playbackId == uid (consumed by the player iframe/HLS). ingestUrl + streamKey go into OBS.
+  return c.json({
+    streamKey,
+    playbackId: uid,
+    streamId: uid,
+    ingestUrl,
+    customerSubdomain,
+    source: 'cloudflare-stream',
+  });
 });
 
-app.post('/api/mux/upload', async (c) => {
+// POST /api/stream/upload — one-time direct creator upload URL for VOD.
+app.post('/api/stream/upload', async (c) => {
   const denied = requireAdmin(c);
   if (denied) return denied;
 
+  if (!streamConfigured(c.env)) {
+    return c.json({
+      error: 'STREAM_NOT_CONFIGURED',
+      message: 'CF_ACCOUNT_ID and CF_STREAM_TOKEN must be configured before video uploads can be generated.',
+    }, 501);
+  }
+
+  const response = await fetch(
+    `${STREAM_API_BASE}/accounts/${c.env.CF_ACCOUNT_ID}/stream/direct_upload`,
+    {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${c.env.CF_STREAM_TOKEN}`,
+        'Content-Type': 'application/json',
+      },
+      // Cap at 4h; tune as needed. requireSignedURLs left false for public playback.
+      body: JSON.stringify({ maxDurationSeconds: 14400 }),
+    }
+  );
+
+  const data: any = await response.json().catch(() => ({}));
+  if (!response.ok || data?.success === false) {
+    const message = data?.errors?.[0]?.message || 'Cloudflare Stream direct upload creation failed.';
+    return c.json({ error: 'STREAM_REQUEST_FAILED', message, details: data }, response.status as any);
+  }
+
+  const result = data?.result || {};
   return c.json({
-    error: 'MUX_NOT_CONFIGURED',
-    message: 'Mux direct upload is not configured in the Cloudflare preview yet.',
-  }, 501);
+    uploadUrl: result?.uploadURL || '',
+    uploadId: result?.uid || '',
+    source: 'cloudflare-stream',
+  });
 });
 
 const contentTypes = ['devotionals', 'audiobooks', 'books', 'challenges', 'courses'] as const;
