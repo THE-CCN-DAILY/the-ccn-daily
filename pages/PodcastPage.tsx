@@ -9,6 +9,7 @@ import Card from '../components/Card';
 import CcnLogo from '../components/CcnLogo';
 import { fetchRSSFeed } from '../services/rssService';
 import { cleanFeedText, excerptFeedText } from '../utils/feedText';
+import ProductComments from '../components/ProductComments';
 
 const PODCAST_FEED_URL = 'https://anchor.fm/s/f7311ecc/podcast/rss';
 
@@ -428,6 +429,9 @@ const PodcastPage: React.FC = () => {
                   </div>
                 </div>
               </Card>
+
+              {/* Public comments on the latest episode (admin-approved before showing) */}
+              <ProductComments contentType="podcast" contentId={String(featuredEpisode.id)} />
             </motion.div>
           )}
 

@@ -63,6 +63,7 @@ import FamilyDashboardPage from './pages/FamilyDashboardPage';
 import LeaderDashboardPage from './pages/LeaderDashboardPage';
 
 import ContentManagerPage from './pages/ContentManagerPage';
+import CommentModerationPage from './pages/CommentModerationPage';
 import ChallengeModuleManagerPage from './pages/ChallengeModuleManagerPage';
 import CourseModuleManagerPage from './pages/CourseModuleManagerPage';
 import BooksLibraryPage from './pages/BooksLibraryPage';
@@ -169,6 +170,7 @@ const App: React.FC = () => {
                             <Route path="design-system" element={<RequireRole allowedRoles={['admin']}><DesignSystem /></RequireRole>} />
                             <Route path="diagnostics" element={<RequireRole allowedRoles={['admin']}><DiagnosticsPage /></RequireRole>} />
                             <Route path="content-manager" element={<RequireRole allowedRoles={['admin', 'lead_developer']}><ContentManagerPage /></RequireRole>} />
+                            <Route path="comments" element={<RequireRole allowedRoles={['admin']}><CommentModerationPage /></RequireRole>} />
                             <Route path="challenges/:challengeId/modules" element={<RequireRole allowedRoles={['admin', 'lead_developer']}><ChallengeModuleManagerPage /></RequireRole>} />
                             <Route path="courses/:courseId/modules" element={<RequireRole allowedRoles={['admin', 'lead_developer']}><CourseModuleManagerPage /></RequireRole>} />
                             <Route path="growth" element={<RequireRole allowedRoles={['admin']}><GrowthConsole /></RequireRole>} />

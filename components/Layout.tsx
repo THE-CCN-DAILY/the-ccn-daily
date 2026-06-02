@@ -99,6 +99,7 @@ const sanctuaryItems = [
 const commandCenterItems = [
   { to: '/studio/admin', text: 'Admin Dashboard', icon: LayoutDashboard, group: 'Operate' },
   { to: '/studio/content-manager', text: 'Content Manager', icon: FolderOpen, group: 'Operate' },
+  { to: '/studio/comments', text: 'Comment Moderation', icon: MessagesSquare, group: 'Operate' },
   { to: '/studio/blog', text: 'Blog Studio', icon: FilePenLine, group: 'Publish' },
   { to: '/studio/devotional-generator', text: 'Devotional Generator', icon: BookPlus, group: 'Publish' },
   { to: '/studio/quote-generator', text: 'Quote Graphics', icon: ImagePlus, group: 'Publish' },

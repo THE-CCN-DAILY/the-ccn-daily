@@ -392,6 +392,17 @@ service cloud.firestore {
              data.createdAt is timestamp;
     }
 
+    function isValidComment(data) {
+      return hasRequiredFields(['contentType', 'contentId', 'author', 'authorUid', 'text', 'status', 'createdAt']) &&
+             data.contentType in ['podcast', 'book', 'blog', 'devotional', 'audiobook'] &&
+             data.contentId is string && data.contentId.size() > 0 && data.contentId.size() < 200 &&
+             data.author is string && data.author.size() > 0 && data.author.size() < 100 &&
+             data.authorUid == request.auth.uid &&
+             data.text is string && data.text.size() > 0 && data.text.size() < 2000 &&
+             data.status == 'pending' &&
+             data.createdAt is timestamp;
+    }
+
     // ===============================================================
     // Match Rules
     // ===============================================================
@@ -409,6 +420,17 @@ service cloud.firestore {
                   || isAdmin()
                   || (isAuthenticated() && resource.data.authorUid == request.auth.uid);
       allow create: if isAuthenticated() && isValidTestimony(request.resource.data);
+      allow update, delete: if isAdmin();
+    }
+
+    // Public comments on products — submit goes to 'pending'; admin approves
+    // (->published) or rejects (->rejected + declineReason). Public sees published;
+    // authors see their own (to read status + decline reason); admins see all.
+    match /comments/{commentId} {
+      allow read: if resource.data.status == 'published'
+                  || isAdmin()
+                  || (isAuthenticated() && resource.data.authorUid == request.auth.uid);
+      allow create: if isAuthenticated() && isValidComment(request.resource.data);
       allow update, delete: if isAdmin();
     }
 
