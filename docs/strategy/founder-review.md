@@ -15,8 +15,13 @@ and items that need your eyes or action. Newest sections appended as work procee
 | Invisible status-text fix (theme-aware tokens) | 0f6493b | prod |
 | Security wave 1 (C-5 JWT fallback, C-6 preview bypass, H-5 headers) | 2fdb89f | prod |
 | AI star icon removed app-wide | 6300db8 | prod |
-| Cohesion 2a: unified streak + Journey→streak/journal + removed fake gamification data | cf5abf4 | staging (promote pending) |
-| AdminDashboard design pass | 9622d22 | staging (build pending) |
+| Cohesion 2a: unified streak + Journey→streak/journal + removed fake gamification data | cf5abf4 | prod |
+| AdminDashboard design pass (serif, tonal cards, themed pills) | 9622d22 | prod |
+| Security wave 2: DOMPurify XSS sanitize + public-route draft leak + diagnostics leak + blog DELETE 404 | 629f964 | prod |
+
+**Verification note:** type-checks + builds pass and changes are deployed. Authed/visual screens
+(AdminDashboard, Journey streak flow) not yet eyeballed unattended — worth a quick look on your return,
+though logic is type-checked and low-risk.
 
 ## 🔴 Needs YOUR action
 1. **Rotate Flutterwave keys** + set as Cloudflare secrets (`FLUTTERWAVE_SECRET_KEY`, `FLUTTERWAVE_ENCRYPTION_KEY`, `FLUTTERWAVE_WEBHOOK_HASH`); revoke the leaked **Mux** key (we're dropping Mux). Webhook URL + secret hash given earlier. Then tell me the **public key**. This unblocks the payment loop.
