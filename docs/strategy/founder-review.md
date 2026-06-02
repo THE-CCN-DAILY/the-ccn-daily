@@ -19,6 +19,7 @@ and items that need your eyes or action. Newest sections appended as work procee
 | AdminDashboard design pass (serif, tonal cards, themed pills) | 9622d22 | prod |
 | Security wave 2: DOMPurify XSS sanitize + public-route draft leak + diagnostics leak + blog DELETE 404 | 629f964 | prod |
 | User Library hub (/app/library): aggregates notes/journal; highlights section (read-all endpoint pending) | 05f4300 | prod |
+| User + Admin Settings (/app/settings): theme (mobile too), notification prefs, account, admin links | 096a92a | prod |
 
 **Verification note:** type-checks + builds pass and changes are deployed. Authed/visual screens
 (AdminDashboard, Journey streak flow) not yet eyeballed unattended — worth a quick look on your return,
