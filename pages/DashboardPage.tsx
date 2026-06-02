@@ -17,8 +17,6 @@ import {
 } from 'lucide-react';
 import {
   collection,
-  doc,
-  getDoc,
   getDocs,
   query,
   orderBy,
@@ -26,6 +24,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuth } from '../contexts/AuthContext';
+import { useGamification } from '../contexts/GamificationContext';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -249,7 +248,9 @@ const DashboardPage: React.FC = () => {
   const [devotional, setDevotional] = useState<Devotional | null>(null);
   const [devotionalLoading, setDevotionalLoading] = useState(true);
 
-  const [streak, setStreak] = useState(0);
+  // Single source of truth for the streak (shared with the Gamification page + Journey).
+  const { stats } = useGamification();
+  const streak = stats.currentStreak;
 
   const [podcast, setPodcast] = useState<PodcastEpisode | null>(null);
   const [podcastLoading, setPodcastLoading] = useState(true);
@@ -282,20 +283,6 @@ const DashboardPage: React.FC = () => {
       }
     };
 
-    // Fetch streak
-    const fetchStreak = async () => {
-      if (!user?.uid) return;
-      try {
-        const userDoc = await getDoc(doc(db, 'users', user.uid));
-        if (userDoc.exists()) {
-          const data = userDoc.data();
-          setStreak(typeof data?.currentStreak === 'number' ? data.currentStreak : 0);
-        }
-      } catch {
-        // Default 0 — safe fallback
-      }
-    };
-
     // Fetch latest podcast episode
     // Podcasts: the Anchor.fm RSS feed is the source of truth (same as the public library).
     const fetchPodcast = async () => {
@@ -319,7 +306,6 @@ const DashboardPage: React.FC = () => {
     };
 
     fetchDevotional();
-    fetchStreak();
     fetchPodcast();
   }, [user?.uid]);
 

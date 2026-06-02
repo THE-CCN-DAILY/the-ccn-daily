@@ -3,10 +3,12 @@ import { Trophy, Award } from 'lucide-react';
 import { FireIcon, StepsIcon, ReaderIcon, SpeakerWaveIcon, NoteIcon, CheckIcon, GiftIcon, PrayingHandsIcon, ChatBubbleLeftRightIcon } from '../components/icons';
 
 
+// Real users start at zero — no fabricated streak/points. The live source of truth is
+// the gamification API via GamificationContext; this is only a safe empty default.
 export const mockInitialStats: UserStats = {
-    currentStreak: 7,
-    longestStreak: 21,
-    points: 1250,
+    currentStreak: 0,
+    longestStreak: 0,
+    points: 0,
 };
 
 export const mockAchievements: Achievement[] = [

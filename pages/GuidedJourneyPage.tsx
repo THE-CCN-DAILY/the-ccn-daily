@@ -12,8 +12,11 @@ import VoiceCompanionDrawer from '../components/VoiceCompanionDrawer';
 import ScriptureStudyCompanion from '../components/ScriptureStudyCompanion';
 import { getScriptureSnippet } from '../services/bibleService';
 import { getTodayDevotional } from '../services/contentService';
+import { saveJournalEntry } from '../services/journalService';
 import { useAudioPlayer } from '../contexts/AudioPlayerContext';
 import { useAuth } from '../contexts/AuthContext';
+import { useGamification } from '../contexts/GamificationContext';
+import { useNotifications } from '../contexts/NotificationContext';
 import { usePrayerCircle } from '../hooks/usePrayerCircle';
 import ReactMarkdown from 'react-markdown';
 
@@ -94,7 +97,7 @@ const FURTHER_STUDY_TEXTS: Record<string, string> = {
     '2 Timothy 1:7': 'For the Spirit God gave us does not make us timid, but gives us power, love and self-discipline.',
 };
 
-const StepContent: React.FC<{ stepIndex: number; onComplete: () => void; devotional: Devotional | null; onOpenVoice: (ctx: string) => void; prayerPeople?: Array<{ id: string; name: string; prayerPoints: string[]; }> }> = ({ stepIndex, onComplete, devotional, onOpenVoice, prayerPeople = [] }) => {
+const StepContent: React.FC<{ stepIndex: number; onComplete: () => void; devotional: Devotional | null; onOpenVoice: (ctx: string) => void; onSaveJournal: (text: string) => void; prayerPeople?: Array<{ id: string; name: string; prayerPoints: string[]; }> }> = ({ stepIndex, onComplete, devotional, onOpenVoice, onSaveJournal, prayerPeople = [] }) => {
     const [isPrayerComplete, setIsPrayerComplete] = useState(false);
     const [activeSnippet, setActiveSnippet] = useState<string | null>(null);
     const [journalText, setJournalText] = useState('');
@@ -341,7 +344,11 @@ const StepContent: React.FC<{ stepIndex: number; onComplete: () => void; devotio
                     {renderContent()}
                     <div className="mt-12 flex flex-col items-center gap-4">
                         <motion.button
-                            onClick={onComplete}
+                            onClick={() => {
+                                // Save the journal step's reflection into the user's journal/Library.
+                                if (stepIndex === 3 && journalText.trim()) onSaveJournal(journalText);
+                                onComplete();
+                            }}
                             disabled={isPrayerStep && !isPrayerComplete}
                             className="group relative px-10 py-4 rounded-full bg-brand-accent text-white font-black text-lg shadow-2xl disabled:opacity-40"
                             whileHover={{ scale: 1.04 }}
@@ -383,7 +390,10 @@ const GuidedJourneyPage: React.FC = () => {
     const [voiceDrawerOpen, setVoiceDrawerOpen] = useState(false);
     const [voiceStepContext, setVoiceStepContext] = useState('');
     const { user } = useAuth();
+    const { dispatchGamificationEvent } = useGamification();
+    const { notify } = useNotifications();
     const { todaysPeople } = usePrayerCircle(user?.uid);
+    const checkedInRef = React.useRef(false);
 
     useEffect(() => {
         const fetchTodayDevotional = async () => {
@@ -399,10 +409,39 @@ const GuidedJourneyPage: React.FC = () => {
         fetchTodayDevotional();
     }, []);
 
+    // Daily check-in: opening the journey counts toward the streak (once per mount).
+    useEffect(() => {
+        if (user?.uid && !checkedInRef.current) {
+            checkedInRef.current = true;
+            dispatchGamificationEvent('e1');
+        }
+    }, [user?.uid, dispatchGamificationEvent]);
+
+    // Save the journal-step reflection into the user's journal (feeds the Library).
+    const handleSaveJournal = async (text: string) => {
+        if (!user?.uid) return;
+        try {
+            await saveJournalEntry(user.uid, {
+                id: (globalThis.crypto?.randomUUID?.() ?? `j-${Date.now()}`),
+                text,
+                color: 'blue',
+                createdAt: new Date().toISOString(),
+                prompt: 'Daily Journey reflection',
+            });
+        } catch {
+            // Non-blocking — journaling save failures shouldn't interrupt the journey
+        }
+    };
+
     const handleNextStep = () => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
         setDirection(1);
         if (currentStep < journeySteps.length - 1) {
+            // Reaching the final (completion) step = the devotional journey is complete.
+            if (currentStep + 1 === journeySteps.length - 1) {
+                dispatchGamificationEvent('e2');
+                notify('Daily journey complete — your streak is updated.', 'success');
+            }
             setCurrentStep(s => s + 1);
         } else {
             setCurrentStep(0);
@@ -490,6 +529,7 @@ const GuidedJourneyPage: React.FC = () => {
                         <StepContent
                             stepIndex={currentStep}
                             onComplete={handleNextStep}
+                            onSaveJournal={handleSaveJournal}
                             devotional={devotional}
                             prayerPeople={todaysPeople}
                             onOpenVoice={(ctx) => {

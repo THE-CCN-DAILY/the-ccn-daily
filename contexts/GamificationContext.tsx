@@ -35,13 +35,13 @@ export const GamificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       .then((data) => {
         if (cancelled) return;
         setStats(data?.stats || mockInitialStats);
-        setUnlockedAchievements(data?.unlockedAchievements || ['a1', 'a2', 'a3', 'a4']);
+        setUnlockedAchievements(data?.unlockedAchievements || []);
       })
       .catch((error) => {
         console.error('Failed to fetch gamification state', error);
         if (!cancelled) {
           setStats(mockInitialStats);
-          setUnlockedAchievements(['a1', 'a2', 'a3', 'a4']);
+          setUnlockedAchievements([]);
         }
       });
 

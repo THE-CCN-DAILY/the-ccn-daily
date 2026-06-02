@@ -617,7 +617,7 @@ const mapGamification = (row: GamificationRow) => ({
     longestStreak: row.longest_streak,
     points: row.points,
   },
-  unlockedAchievements: parseTags(row.unlocked_achievements) || ['a1', 'a2', 'a3', 'a4'],
+  unlockedAchievements: parseTags(row.unlocked_achievements) || [],
   updatedAt: row.updated_at || undefined,
 });
 
@@ -2428,7 +2428,7 @@ const earningPoints: Record<string, number> = {
 const ensureGamificationRow = async (db: D1DatabaseBinding, userId: string) => {
   await db.prepare(
     `INSERT INTO user_gamification (user_id, current_streak, longest_streak, points, unlocked_achievements, updated_at)
-     VALUES (?, 7, 21, 1250, '["a1","a2","a3","a4"]', CURRENT_TIMESTAMP)
+     VALUES (?, 0, 0, 0, '[]', CURRENT_TIMESTAMP)
      ON CONFLICT(user_id) DO NOTHING`
   ).bind(userId).run();
 
@@ -2444,8 +2444,8 @@ app.get('/api/users/:userId/gamification', async (c) => {
     return c.json({
       gamification: {
         userId,
-        stats: { currentStreak: 7, longestStreak: 21, points: 1250 },
-        unlockedAchievements: ['a1', 'a2', 'a3', 'a4'],
+        stats: { currentStreak: 0, longestStreak: 0, points: 0 },
+        unlockedAchievements: [],
       },
       source: 'fallback',
     });
