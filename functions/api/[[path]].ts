@@ -2786,17 +2786,26 @@ app.get('/api/admin/users', async (c) => {
 });
 
 app.post('/api/auth/profile', async (c) => {
-  const body = await c.req.json();
-  const id = String(body.uid || body.id || '').trim();
-  const email = String(body.email || '').trim().toLowerCase();
-  if (!id || !isSafeId(id)) return c.json({ error: 'Valid uid is required' }, 400);
-  if (!email || !email.includes('@')) return c.json({ error: 'Valid email is required' }, 400);
+  // SECURITY (C-3): identity + role come from the VERIFIED Firebase ID token, never the
+  // request body. Previously role/tier were derived from body.email, so anyone could POST
+  // {email:"pastor.eryeza@gmail.com"} and receive an admin profile. Require a verified token.
+  const sessionUid = c.get('idTokenUid');
+  const sessionEmail = (c.get('idTokenEmail') || '').toLowerCase();
+  const sessionEmailVerified = c.get('idTokenEmailVerified') === true;
+  if (!sessionUid || !sessionEmail) {
+    return c.json({ error: 'Authentication required' }, 401);
+  }
+
+  const body = await c.req.json().catch(() => ({}));
+  const id = sessionUid;
+  const email = sessionEmail;
 
   const displayName = String(body.displayName || '').trim() || null;
   const photoUrl = String(body.photoURL || body.photoUrl || '').trim() || null;
-  const adminEmail = (c.env.ADMIN_EMAIL || 'pastor.eryeza@gmail.com').toLowerCase();
-  const defaultRole = email === adminEmail ? 'admin' : 'user';
-  const defaultTier = email === adminEmail ? 'max' : 'free';
+  // Admin only for a VERIFIED ministry-owner email (matches isAdminRequest's allowlist).
+  const isMinistryAdmin = sessionEmailVerified && ADMIN_EMAILS.includes(email);
+  const defaultRole = isMinistryAdmin ? 'admin' : 'user';
+  const defaultTier = isMinistryAdmin ? 'max' : 'free';
 
   if (!c.env.DB) {
     return c.json({
