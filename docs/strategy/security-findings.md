@@ -7,7 +7,7 @@ From the security-reviewer expert pass. Status: ✅ fixed · 🔶 deferred (need
 | ID | Issue | Status |
 |----|-------|--------|
 | C-1 | `/api/media/*` streams any R2 object with no auth/entitlement; catalog leaks premium `audioUrl`/`fileUrl`. Anyone with a URL downloads paid content. | 🔶 Needs server-side entitlement + signed URLs (ties to payment/entitlement loop, founder-gated). Interim client gate only. |
-| C-2 | All `POST /api/users/:userId/*` (gamification, highlights, journal, notifications) + some community writes accept arbitrary `userId` with no token check — write as anyone. | 🔶 Needs Bearer-token + `uid===param` on those routes AND client must send the ID token (services/* don't today). Coordinated client+server change. |
+| C-2 | All `POST /api/users/:userId/*` (gamification, highlights, journal, notifications) + some community writes accept arbitrary `userId` with no token check — write as anyone. | ✅ FIXED (commit b671f3c, live) — `requireSelf(c,userId)` gates all per-user read+write routes + challenge/course progress; all client services now send the Bearer ID token. |
 | C-3 | `/api/auth/profile` sets admin role from **request-body email** (unverified) — privilege escalation. | ✅ FIXED (commit 83ea4b8, live) — requires verified token; role from verified email only. No client depended on it. |
 | C-4 | **Real Mux + Flutterwave production secrets in `.dev.vars`** (plaintext on disk). Not in git history (gitignored ✅) but live keys exposed. | 🔴 FOUNDER: rotate all 4 keys (Mux token id/secret; Flutterwave secret/encryption) + re-add via `wrangler pages secret put`. |
 | C-5 | Hardcoded `LOCAL_AUTH_SECRET` JWT fallback — anyone could forge an admin session JWT if `AUTH_SECRET` ever unset. | ✅ Fixed (commit 2fdb89f) — fails closed now. |
@@ -17,7 +17,7 @@ From the security-reviewer expert pass. Status: ✅ fixed · 🔶 deferred (need
 | ID | Issue | Status |
 |----|-------|--------|
 | H-1 | XSS: `dangerouslySetInnerHTML` with unsanitized RSS HTML (`NewsletterPage`) + Bible search snippet. | 🔶 Add DOMPurify on those render paths. (frontend wave — do after icon agent) |
-| H-2 | No rate-limit/auth on `/api/ai/generate` + `/api/ai/usage` → AI cost-abuse; chat/prayer spam. | 🔶 Gate AI generate behind auth + per-user quota; Turnstile on anonymous forms. |
+| H-2 | No rate-limit/auth on `/api/ai/generate` + `/api/ai/usage` → AI cost-abuse; chat/prayer spam. | ✅ AUTH FIXED (commit b671f3c, live) — `/api/ai/generate` now requires a verified token. Still TODO: per-user quota + Turnstile (defense-in-depth) and `/api/ai/usage` write auth. |
 | H-3 | `?includeDrafts=true` on public `/api/challenges` + `/api/courses` exposes drafts. | 🔶 Quick worker fix (ignore param on public routes); verify admin uses admin routes first. |
 | H-4 | `purchaseService` would grant entitlements client-side with no verification. | 🔶 Founder-gated — entitlements must be written only via the Flutterwave webhook (HMAC-verified). |
 | H-5 | No security headers anywhere. | ✅ Fixed (2fdb89f) `public/_headers` (X-Frame-Options, nosniff, Referrer-Policy, Permissions-Policy, HSTS). CSP deferred (needs origin testing). |
