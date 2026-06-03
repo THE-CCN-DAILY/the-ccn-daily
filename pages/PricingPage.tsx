@@ -113,7 +113,7 @@ const OWNERSHIP_NOTES = [
 ];
 
 const PricingPage: React.FC = () => {
-  const { user } = useAuth();
+  const { user, openSignIn } = useAuth();
   const { notify } = useNotifications();
 
   const [userCountry, setUserCountry] = useState('US');
@@ -198,9 +198,10 @@ const PricingPage: React.FC = () => {
     let finalPrice = basePrice;
 
     if (billingCycle === 'yearly') {
-      if (tier === 'pro') finalPrice = 59.99;
-      else if (tier === 'max') finalPrice = 129.99;
-      else if (tier === 'partner') finalPrice = 199.99;
+      const yearlyBaseUSD = tier === 'pro' ? 59.99 : tier === 'max' ? 129.99 : 199.99;
+      // Apply the same PPP multiplier as monthly so the yearly price is discounted
+      // consistently for the visitor's region (mirrors the server's computeAuthoritativePrice).
+      finalPrice = Number((yearlyBaseUSD * proPrice.multiplier).toFixed(2));
     }
 
     if (activeDiscount && (activeDiscount.targetTier === 'all' || activeDiscount.targetTier === tier)) {
@@ -254,7 +255,10 @@ const PricingPage: React.FC = () => {
   // Flutterwave with the returned values. The launch happens in the effect on `intent`.
   const handleSubscribe = async (tier: PaidTier) => {
     if (!user) {
-      notify('Please sign in to subscribe.', 'error');
+      // Open the sign-in / sign-up modal instead of a dead-end error.
+      notify('Please sign in to continue — it only takes a moment.', 'info');
+      setSelectedTier(tier); // remember the chosen plan so the user can resume after auth
+      openSignIn();
       return;
     }
 

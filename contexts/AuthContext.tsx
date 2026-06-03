@@ -56,7 +56,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const auth = getAuth();
 
     // Consume any pending redirect result — surface errors instead of silently dropping them
-    getRedirectResult(auth).catch((err: unknown) => {
+    getRedirectResult(auth)
+      .then((result) => {
+        // A non-null result means a Google redirect sign-in just completed — take the
+        // user into the app instead of leaving them on the public landing page.
+        if (result?.user) window.location.hash = '#/app/dashboard';
+      })
+      .catch((err: unknown) => {
       const code = (err as { code?: string }).code ?? '';
       // auth/null-user fires on every cold load with no pending redirect — not an error
       if (code && code !== 'auth/null-user') {

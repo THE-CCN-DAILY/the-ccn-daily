@@ -83,7 +83,6 @@ import HelpPage from './pages/HelpPage';
 import OnboardingPage from './pages/OnboardingPage';
 import DonationPage from './pages/DonationPage';
 import StudentVerificationPage from './pages/StudentVerificationPage';
-import SponsorshipPage from './pages/SponsorshipPage';
 import PlannerPage from './pages/PlannerPage';
 
 const App: React.FC = () => {
@@ -132,7 +131,6 @@ const App: React.FC = () => {
                             <Route path="giving" element={<RequireAuth><GivingPage /></RequireAuth>} />
                             <Route path="help" element={<HelpPage />} />
                             <Route path="student-verify" element={<RequireAuth><StudentVerificationPage /></RequireAuth>} />
-                            <Route path="sponsor" element={<RequireAuth><SponsorshipPage /></RequireAuth>} />
                             <Route path="courses" element={<RequireAuth><CoursesPage /></RequireAuth>} />
                             <Route path="courses/:courseId" element={<RequireAuth><CoursePlayerPage /></RequireAuth>} />
                             <Route path="audiobook-library" element={<RequireAuth><AudiobookLibraryPage /></RequireAuth>} />

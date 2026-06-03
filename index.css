@@ -178,14 +178,19 @@
     -moz-osx-font-smoothing: grayscale;
 
     /* Root font-size drives every rem-based utility (text, icon, spacing sizes).
-       Bumping it scales the whole UI up proportionally. 106.25% = 17px base on
-       desktop; mobile goes larger because that's where text/icons read small. */
-    font-size: 106.25%;
+       Bumping it scales the whole UI up proportionally. 110% = 17.6px base on
+       desktop; mobile/tablet go larger because that's where text/icons read small. */
+    font-size: 110%;
+  }
+
+  /* Tablet: a moderate bump. */
+  @media (max-width: 820px) {
+    html { font-size: 118%; }
   }
 
   /* Mobile: enlarge text, icons, and tap targets app-wide. */
   @media (max-width: 640px) {
-    html { font-size: 115%; }
+    html { font-size: 125%; }
   }
 
   body {

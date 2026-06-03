@@ -4,6 +4,7 @@
  */
 import React, { useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 
 type AuthTab = 'google' | 'email';
@@ -22,6 +23,14 @@ const GoogleIcon: React.FC<{ className?: string }> = ({ className }) => (
 
 const SignInModal: React.FC = () => {
   const { showSignIn, closeSignIn, signIn, signInEmail, signUpEmail, sendPasswordReset, loading, redirectError } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // After auth, take the user into the app — unless they were on /pricing (where they
+  // likely want to finish choosing a plan) so they can resume the purchase.
+  const goAfterAuth = () => {
+    if (!location.pathname.startsWith('/pricing')) navigate('/app/dashboard');
+  };
 
   const [activeTab, setActiveTab] = useState<AuthTab>('email');
   const [emailMode, setEmailMode] = useState<EmailMode>('signin');
@@ -75,6 +84,7 @@ const SignInModal: React.FC = () => {
         await signInEmail(email, password);
       }
       handleClose();
+      goAfterAuth();
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Something went wrong.';
       setError(
