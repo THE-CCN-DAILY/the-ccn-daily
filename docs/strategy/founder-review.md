@@ -59,6 +59,20 @@ though logic is type-checked and low-risk.
 - Mux **dropped** (not re-provisioned) in favor of Cloudflare Stream.
 - Post-launch deploy discipline: no direct-to-prod once public; staging + your sign-off first; major updates fire in-app notifications. (Pre-launch now: autonomous prod promotion per your instruction.)
 
+## ▶️ RESUME HERE — payment loop finish (next session, cheap/fresh context)
+Backend payment loop is DONE + committed (9dcc603): `/api/payments/intent`, `/api/payments/flutterwave/webhook`
+(verifies verif-hash + re-verifies txn → writes subscription+entitlement), `GET /api/users/:userId/subscription`,
+D1 tables (user_subscriptions/entitlements/purchases). Both type-checks pass. NOT yet deployed.
+Remaining to make the founder's real-transaction test unlock content:
+1. **Client gate read-back** (3 files): `hooks/useEffectiveAccess.ts` → fetch `GET /api/users/:uid/subscription`
+   with `adminAuthHeaders()` (replace the stub fetchers); `hooks/usePremiumGate.ts` → for non-admins resolve
+   access from the real subscription/entitlements (keep admin bypass); `pages/PricingPage.tsx` → checkout calls
+   `/api/payments/intent` and uses the server amount/tx_ref (drop client-computed amount).
+2. **Apply D1 schema** to remote: `npx wrangler d1 execute project_phoenix_ccn_daily --remote --file=schema/d1-schema.sql`
+3. Build → deploy staging → deploy prod. (Live Flutterwave keys already in prod; webhook URL+hash set.)
+4. **Founder test:** subscribe to lowest tier with a real card → confirm entitlement row written + content unlocks
+   → refund from Flutterwave dashboard. Then C-1 media protection (gate /api/media by entitlement + signed URLs).
+
 ## ▶️ In progress / next (sequential core + isolated agents)
 - AppContext (`useAppData`) → User Library (+ notes, voice notes for paid) → public comments → user/admin Settings → update notifications → premium readers (EPUB engine, devotional scroll-back) → light/sepia contrast + typography pass → founder-gated builds (payment, Stream, Durable Objects chat/support, Vectorize).
 
