@@ -342,6 +342,54 @@ CREATE TABLE IF NOT EXISTS ai_usage_events (
 
 CREATE INDEX IF NOT EXISTS idx_ai_usage_feature_created ON ai_usage_events(feature, created_at DESC);
 
+-- ── Payments & entitlements (server-authoritative) ─────────────────────────────
+-- Entitlements and active subscriptions are ONLY granted server-side, after the
+-- Flutterwave webhook re-verifies a transaction. The client never writes these.
+
+-- One row per user describing their current subscription tier/status.
+CREATE TABLE IF NOT EXISTS user_subscriptions (
+  user_id TEXT PRIMARY KEY,
+  tier TEXT NOT NULL DEFAULT 'free',
+  status TEXT NOT NULL DEFAULT 'none', -- active | expired | canceled | none
+  started_at TEXT,
+  ends_at TEXT,
+  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_user_subscriptions_status ON user_subscriptions(status, ends_at);
+
+-- One row per granted entitlement (subscription-included, owned, or trial).
+-- resource_id may be a tier marker (e.g. 'tier:pro') for subscription grants, or a
+-- concrete resource id for a la carte purchases.
+CREATE TABLE IF NOT EXISTS user_entitlements (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  resource_id TEXT NOT NULL,
+  access_type TEXT NOT NULL DEFAULT 'subscription_included', -- subscription_included | owned_perpetual | trial_limited
+  source TEXT NOT NULL DEFAULT 'subscription', -- purchase | subscription | trial | grant
+  starts_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  ends_at TEXT,
+  is_active INTEGER NOT NULL DEFAULT 1
+);
+
+CREATE INDEX IF NOT EXISTS idx_user_entitlements_user_active ON user_entitlements(user_id, is_active, resource_id);
+
+-- One row per purchase attempt. Created 'pending' at intent time; flipped to
+-- 'active' (or 'failed') by the webhook after re-verification. Idempotent on tx_ref.
+CREATE TABLE IF NOT EXISTS user_purchases (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  resource_id TEXT NOT NULL, -- tier marker (e.g. 'tier:pro') or concrete resource id
+  tx_ref TEXT NOT NULL UNIQUE,
+  amount REAL NOT NULL DEFAULT 0,
+  currency TEXT NOT NULL DEFAULT 'USD',
+  status TEXT NOT NULL DEFAULT 'pending', -- pending | active | failed | refunded | revoked
+  purchased_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_user_purchases_user ON user_purchases(user_id, purchased_at DESC);
+CREATE INDEX IF NOT EXISTS idx_user_purchases_tx_ref ON user_purchases(tx_ref);
+
 INSERT OR IGNORE INTO blog_posts (
   id,
   slug,

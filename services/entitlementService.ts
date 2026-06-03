@@ -1,7 +1,7 @@
 import type { Resource, UserEntitlement, UserPurchase } from '../types/entitlements';
 
 export interface UserSubscription {
-  tier: 'guest' | 'free' | 'pro' | 'max';
+  tier: 'guest' | 'free' | 'pro' | 'max' | 'partner';
   status: 'active' | 'expired' | 'canceled' | 'none';
   endsAt?: string | null;
 }

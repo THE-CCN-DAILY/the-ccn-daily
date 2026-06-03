@@ -10,6 +10,7 @@ type D1PreparedStatement = {
 
 type D1DatabaseBinding = {
   prepare: (query: string) => D1PreparedStatement;
+  batch: (statements: D1PreparedStatement[]) => Promise<unknown[]>;
 };
 
 type WorkersAiBinding = {
@@ -52,6 +53,13 @@ type Env = {
   GOOGLE_CLIENT_SECRET?: string;
   AUTH_SECRET?: string;
   RESEND_API_KEY?: string;
+  // Flutterwave (payments). SECRET_KEY: server API key for transaction verify.
+  // WEBHOOK_HASH: the "Secret hash" set in the Flutterwave dashboard; sent back
+  //   on every webhook in the `verif-hash` header. PUBLIC_KEY: client-side key
+  //   returned by /api/payments/intent so the client initializes Flutterwave.
+  FLUTTERWAVE_SECRET_KEY?: string;
+  FLUTTERWAVE_WEBHOOK_HASH?: string;
+  VITE_FLUTTERWAVE_PUBLIC_KEY?: string;
 };
 
 const app = new Hono<{
@@ -3264,6 +3272,268 @@ app.post('/api/email/gift', async (c) => {
   } catch {
     return c.json({ success: false, error: 'Email delivery failed' }, 500);
   }
+});
+
+// ── Payments → entitlements (server-authoritative) ─────────────────────────────
+// The CLIENT NEVER sets the price or grants access. Flow:
+//   1. POST /api/payments/intent  → server computes the authoritative price from
+//      tier + billing cycle + PPP (request.cf.country), records a `pending`
+//      user_purchases row keyed by a server-generated tx_ref, and returns the
+//      amount/currency/tx_ref/publicKey for the client to initialize Flutterwave.
+//   2. Flutterwave charges the customer and calls our webhook.
+//   3. POST /api/payments/flutterwave/webhook → verify verif-hash, RE-VERIFY the
+//      transaction via Flutterwave's API, confirm status + amount, then (idempotently)
+//      upsert the subscription, write the entitlement, and mark the purchase active.
+
+type PaidTierServer = 'pro' | 'max' | 'partner';
+
+// Base USD prices (authoritative; mirror types/pricing.ts + utils/ppp.ts).
+const TIER_BASE_PRICE_USD: Record<PaidTierServer, { monthly: number; yearly: number }> = {
+  pro: { monthly: 8.99, yearly: 59.99 },
+  max: { monthly: 14.99, yearly: 129.99 },
+  partner: { monthly: 24.99, yearly: 199.99 },
+};
+
+// PPP multipliers by tier (mirror utils/ppp.ts PPP_MULTIPLIERS).
+const PPP_TIER_MULTIPLIER = { TIER_1: 1.0, TIER_2: 0.7, TIER_3: 0.5, TIER_4: 0.3 } as const;
+type PppTier = keyof typeof PPP_TIER_MULTIPLIER;
+
+// Country → PPP tier + currency. Mirrors utils/ppp.ts and ADDS Uganda (UG).
+// Currency is the suggested local currency; amounts are computed in USD and only
+// converted to a non-USD currency when we hold a reliable rate. To stay safe with
+// money, we charge in USD by default unless the local currency is explicitly mapped
+// with a fixed display rate below.
+const COUNTRY_PPP_SERVER: Record<string, { tier: PppTier; currency: string }> = {
+  US: { tier: 'TIER_1', currency: 'USD' },
+  GB: { tier: 'TIER_1', currency: 'USD' },
+  BR: { tier: 'TIER_3', currency: 'USD' },
+  ZA: { tier: 'TIER_3', currency: 'USD' },
+  IN: { tier: 'TIER_4', currency: 'USD' },
+  NG: { tier: 'TIER_4', currency: 'USD' },
+  KE: { tier: 'TIER_4', currency: 'USD' },
+  PH: { tier: 'TIER_4', currency: 'USD' },
+  UG: { tier: 'TIER_4', currency: 'USD' }, // Uganda — added per spec
+};
+
+// Compute the AUTHORITATIVE amount + currency for a tier/cycle/country.
+const computeAuthoritativePrice = (
+  tier: PaidTierServer,
+  cycle: 'monthly' | 'yearly',
+  country: string,
+): { amount: number; currency: string; pppTier: PppTier; country: string } => {
+  const upper = (country || 'US').toUpperCase();
+  const geo = COUNTRY_PPP_SERVER[upper] || COUNTRY_PPP_SERVER.US;
+  const base = TIER_BASE_PRICE_USD[tier][cycle];
+  const amount = Number((base * PPP_TIER_MULTIPLIER[geo.tier]).toFixed(2));
+  return { amount, currency: geo.currency, pppTier: geo.tier, country: upper };
+};
+
+const isPaidTierServer = (value: unknown): value is PaidTierServer =>
+  value === 'pro' || value === 'max' || value === 'partner';
+
+// POST /api/payments/intent
+// Body: { userId, tier, billingCycle }. Records a pending purchase and returns the
+// SERVER-computed amount + tx_ref so the client never sets the price.
+app.post('/api/payments/intent', async (c) => {
+  const body = await c.req.json().catch(() => ({} as Record<string, unknown>));
+  const userId = String(body.userId || '').trim();
+  if (!isSafeId(userId)) return c.json({ error: 'Invalid user id' }, 400);
+
+  // requireSelf: the authenticated token must match the userId in the body.
+  const denied = requireSelf(c, userId); if (denied) return denied;
+
+  if (!c.env.DB) return c.json({ error: 'D1 database binding is not configured' }, 503);
+
+  const tier = body.tier;
+  if (!isPaidTierServer(tier)) return c.json({ error: 'Invalid tier' }, 400);
+
+  const billingCycle: 'monthly' | 'yearly' = body.billingCycle === 'yearly' ? 'yearly' : 'monthly';
+
+  // request.cf.country is provided by Cloudflare at the edge.
+  const country = String((c.req.raw as any)?.cf?.country || 'US');
+
+  const { amount, currency } = computeAuthoritativePrice(tier, billingCycle, country);
+  if (!(amount > 0)) return c.json({ error: 'Could not compute price' }, 500);
+
+  const resourceId = `tier:${tier}`;
+  const txRef = `sub_${userId}_${tier}_${Date.now()}_${crypto.randomUUID().slice(0, 8)}`;
+  const id = crypto.randomUUID();
+
+  // Record a pending purchase. The webhook later flips it to active after verifying.
+  await c.env.DB.prepare(
+    `INSERT INTO user_purchases (id, user_id, resource_id, tx_ref, amount, currency, status, purchased_at)
+     VALUES (?, ?, ?, ?, ?, ?, 'pending', CURRENT_TIMESTAMP)`
+  ).bind(id, userId, resourceId, txRef, amount, currency).run();
+
+  return c.json({
+    tx_ref: txRef,
+    amount,
+    currency,
+    billingCycle,
+    tier,
+    publicKey: c.env.VITE_FLUTTERWAVE_PUBLIC_KEY || undefined,
+  });
+});
+
+// Map a tier marker resource_id back to the tier (e.g. 'tier:pro' → 'pro').
+const tierFromResourceId = (resourceId: string): string =>
+  resourceId.startsWith('tier:') ? resourceId.slice('tier:'.length) : '';
+
+// POST /api/payments/flutterwave/webhook
+// Verifies the verif-hash header, re-verifies the transaction via Flutterwave's API,
+// confirms status + amount, then idempotently grants the subscription/entitlement.
+app.post('/api/payments/flutterwave/webhook', async (c) => {
+  const expectedHash = c.env.FLUTTERWAVE_WEBHOOK_HASH;
+  const signature = c.req.header('verif-hash') || '';
+  // Reject if the secret hash is not configured or does not match.
+  if (!expectedHash || signature !== expectedHash) {
+    return c.json({ error: 'invalid signature' }, 401);
+  }
+
+  if (!c.env.DB) return c.json({ error: 'D1 database binding is not configured' }, 503);
+  if (!c.env.FLUTTERWAVE_SECRET_KEY) return c.json({ error: 'payment verification not configured' }, 503);
+
+  const event = await c.req.json().catch(() => null) as Record<string, any> | null;
+  if (!event) return c.json({ error: 'invalid payload' }, 400);
+
+  // Flutterwave charge events: data.id (transaction id), data.tx_ref, data.status.
+  const data = (event.data || {}) as Record<string, any>;
+  const transactionId = data.id;
+  const txRef = String(data.tx_ref || '').trim();
+  const eventStatus = String(data.status || event.status || '').toLowerCase();
+
+  // Only act on successful charge events. Acknowledge everything else with 200 so
+  // Flutterwave does not retry, but do not grant access.
+  if (!transactionId || !txRef) return c.json({ received: true, ignored: 'missing id or tx_ref' });
+  if (eventStatus !== 'successful') return c.json({ received: true, ignored: `status=${eventStatus}` });
+
+  // Look up the pending purchase we created at intent time.
+  const purchase = await c.env.DB.prepare(
+    `SELECT * FROM user_purchases WHERE tx_ref = ? LIMIT 1`
+  ).bind(txRef).first<{
+    id: string; user_id: string; resource_id: string; tx_ref: string;
+    amount: number; currency: string; status: string;
+  }>();
+
+  if (!purchase) return c.json({ received: true, ignored: 'unknown tx_ref' });
+
+  // Idempotency: if already granted, acknowledge without re-granting.
+  if (purchase.status === 'active') return c.json({ received: true, idempotent: true });
+
+  // RE-VERIFY with Flutterwave's API — never trust the webhook body alone.
+  let verifyJson: Record<string, any> | null = null;
+  try {
+    const verifyRes = await fetch(
+      `https://api.flutterwave.com/v3/transactions/${encodeURIComponent(String(transactionId))}/verify`,
+      { headers: { Authorization: `Bearer ${c.env.FLUTTERWAVE_SECRET_KEY}` } },
+    );
+    verifyJson = await verifyRes.json().catch(() => null) as Record<string, any> | null;
+  } catch {
+    return c.json({ error: 'verification request failed' }, 502);
+  }
+
+  const verified = (verifyJson?.data || {}) as Record<string, any>;
+  const verifiedStatus = String(verified.status || '').toLowerCase();
+  const verifiedAmount = Number(verified.amount);
+  const verifiedCurrency = String(verified.currency || '').toUpperCase();
+  const verifiedTxRef = String(verified.tx_ref || '').trim();
+
+  // Confirm: API call succeeded, charge successful, tx_ref matches, amount matches
+  // (>= guards against rounding; currency must match what we recorded).
+  const apiOk = String(verifyJson?.status || '').toLowerCase() === 'success';
+  const amountOk = Number.isFinite(verifiedAmount) && verifiedAmount >= purchase.amount;
+  const currencyOk = verifiedCurrency === String(purchase.currency || '').toUpperCase();
+  const txRefOk = verifiedTxRef === txRef;
+
+  if (!apiOk || verifiedStatus !== 'successful' || !amountOk || !currencyOk || !txRefOk) {
+    // Mark the purchase failed (idempotent-safe) but acknowledge so FLW stops retrying.
+    await c.env.DB.prepare(
+      `UPDATE user_purchases SET status = 'failed' WHERE tx_ref = ? AND status = 'pending'`
+    ).bind(txRef).run();
+    return c.json({ received: true, verified: false });
+  }
+
+  const tier = tierFromResourceId(purchase.resource_id);
+  if (!isPaidTierServer(tier)) {
+    return c.json({ received: true, ignored: 'non-subscription purchase' });
+  }
+
+  const userId = purchase.user_id;
+
+  // Grant the subscription + entitlement. Done as a batch so partial writes don't
+  // leave the user half-granted. Idempotent on tx_ref via the purchase status guard.
+  const entitlementId = crypto.randomUUID();
+  await c.env.DB.batch([
+    // Upsert subscription → active for this tier.
+    c.env.DB.prepare(
+      `INSERT INTO user_subscriptions (user_id, tier, status, started_at, ends_at, updated_at)
+       VALUES (?, ?, 'active', CURRENT_TIMESTAMP, NULL, CURRENT_TIMESTAMP)
+       ON CONFLICT(user_id) DO UPDATE SET
+         tier = excluded.tier,
+         status = 'active',
+         started_at = COALESCE(user_subscriptions.started_at, CURRENT_TIMESTAMP),
+         updated_at = CURRENT_TIMESTAMP`
+    ).bind(userId, tier),
+    // Keep the denormalized users.tier in sync (best-effort; row may not exist).
+    c.env.DB.prepare(
+      `UPDATE users SET tier = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`
+    ).bind(tier, userId),
+    // Write the subscription entitlement keyed by the tier marker.
+    c.env.DB.prepare(
+      `INSERT INTO user_entitlements (id, user_id, resource_id, access_type, source, starts_at, ends_at, is_active)
+       VALUES (?, ?, ?, 'subscription_included', 'subscription', CURRENT_TIMESTAMP, NULL, 1)`
+    ).bind(entitlementId, userId, purchase.resource_id),
+    // Flip the purchase active (guarded so a concurrent webhook can't double-grant).
+    c.env.DB.prepare(
+      `UPDATE user_purchases SET status = 'active' WHERE tx_ref = ? AND status = 'pending'`
+    ).bind(txRef),
+  ]);
+
+  return c.json({ received: true, granted: true });
+});
+
+// GET /api/users/:userId/subscription
+// Returns the user's current subscription + active entitlements from D1.
+app.get('/api/users/:userId/subscription', async (c) => {
+  const userId = c.req.param('userId');
+  if (!isSafeId(userId)) return c.json({ error: 'Invalid user id' }, 400);
+  const denied = requireSelf(c, userId); if (denied) return denied;
+
+  if (!c.env.DB) {
+    return c.json({ tier: 'free', status: 'none', entitlements: [], source: 'fallback' });
+  }
+
+  const sub = await c.env.DB.prepare(
+    `SELECT tier, status, started_at, ends_at FROM user_subscriptions WHERE user_id = ? LIMIT 1`
+  ).bind(userId).first<{ tier: string; status: string; started_at: string | null; ends_at: string | null }>();
+
+  const entResult = await c.env.DB.prepare(
+    `SELECT id, user_id, resource_id, access_type, source, starts_at, ends_at, is_active
+     FROM user_entitlements
+     WHERE user_id = ? AND is_active = 1`
+  ).bind(userId).all<{
+    id: string; user_id: string; resource_id: string; access_type: string;
+    source: string; starts_at: string; ends_at: string | null; is_active: number;
+  }>();
+
+  const entitlements = entResult.results.map((e) => ({
+    id: e.id,
+    userId: e.user_id,
+    resourceId: e.resource_id,
+    accessType: e.access_type,
+    source: e.source,
+    startsAt: e.starts_at,
+    endsAt: e.ends_at,
+    isActive: e.is_active === 1,
+  }));
+
+  return c.json({
+    tier: sub?.tier || 'free',
+    status: sub?.status || 'none',
+    endsAt: sub?.ends_at || null,
+    entitlements,
+    source: 'd1',
+  });
 });
 
 export const onRequest = (context: any) =>

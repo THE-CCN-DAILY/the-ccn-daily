@@ -41,6 +41,7 @@ export const COUNTRY_MAP: Record<string, CountryPPP> = {
   'IN': { code: 'IN', tier: 'TIER_4', currency: 'INR', symbol: '₹' },
   'NG': { code: 'NG', tier: 'TIER_4', currency: 'NGN', symbol: '₦' },
   'KE': { code: 'KE', tier: 'TIER_4', currency: 'KES', symbol: 'KSh' },
+  'UG': { code: 'UG', tier: 'TIER_4', currency: 'UGX', symbol: 'USh' },
   'PH': { code: 'PH', tier: 'TIER_4', currency: 'PHP', symbol: '₱' },
 };
 
