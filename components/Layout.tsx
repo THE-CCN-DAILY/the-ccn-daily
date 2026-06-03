@@ -26,6 +26,8 @@ import {
   LayoutDashboard,
   Library,
   Menu,
+  PanelLeftClose,
+  PanelLeftOpen,
   MessageCircle,
   MessagesSquare,
   Newspaper,
@@ -115,6 +117,8 @@ const commandCenterGroups = ['Operate', 'Publish', 'Growth', 'Systems'];
 interface SidebarProps {
   className?: string;
   onNavigate?: () => void;
+  /** Desktop sidebar can collapse to an icon rail; the mobile drawer never collapses. */
+  collapsible?: boolean;
 }
 
 const sanctuaryGroupColors: Record<string, string> = {
@@ -134,12 +138,22 @@ const groupLabelStyle = (color: string): React.CSSProperties => ({
   color,
 });
 
-const Sidebar: React.FC<SidebarProps> = ({ className = '', onNavigate }) => {
+const Sidebar: React.FC<SidebarProps> = ({ className = '', onNavigate, collapsible = false }) => {
   const { user, loading, openSignIn, signOut } = useAuth();
 
   const [isStrategyMode, setIsStrategyMode] = React.useState(() => {
     return localStorage.getItem('phoenix_mode') === 'strategy';
   });
+
+  const [isCollapsed, setIsCollapsed] = React.useState(() => localStorage.getItem('phoenix_sidebar_collapsed') === '1');
+  const collapsed = collapsible && isCollapsed;
+  const toggleCollapsed = () => {
+    setIsCollapsed((prev) => {
+      const next = !prev;
+      localStorage.setItem('phoenix_sidebar_collapsed', next ? '1' : '0');
+      return next;
+    });
+  };
 
   const { notify } = useNotifications();
 
@@ -173,33 +187,52 @@ const Sidebar: React.FC<SidebarProps> = ({ className = '', onNavigate }) => {
 
   const activeItems = isStrategyMode ? filteredCommandCenterItems : filteredSanctuaryItems;
 
-  const baseLinkClasses = "flex min-w-0 items-center p-3 my-0.5 rounded-lg transition-all duration-200";
+  const baseLinkClasses = `flex min-w-0 items-center ${collapsed ? 'justify-center p-2.5' : 'p-3'} my-0.5 rounded-lg transition-all duration-200`;
   const inactiveLinkClasses = "text-brand-text-secondary hover:bg-brand-secondary hover:text-brand-text-primary";
   // Refined active state: accent-tinted fill + orange text + left accent line — inspired by Linear/Arc
-  const activeLinkClasses = "bg-brand-accent/[0.13] text-brand-accent font-semibold border-l-2 border-brand-accent pl-[10px]";
+  const activeLinkClasses = collapsed
+    ? "bg-brand-accent/[0.13] text-brand-accent"
+    : "bg-brand-accent/[0.13] text-brand-accent font-semibold border-l-2 border-brand-accent pl-[10px]";
 
   return (
-    <aside className={`w-64 bg-brand-dark flex-shrink-0 p-4 border-r border-brand-border flex flex-col ${className}`}>
-      <div className="flex flex-col gap-1 mb-6">
-        <CcnLogo size="sm" theme="auto" />
-        <p style={{ fontFamily: 'var(--sans-ui, "Inter Tight", -apple-system, sans-serif)', fontSize: '11px', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--gold-ds, #B7892E)', fontWeight: 600 }}>
-          {isStrategyMode ? 'Command Center' : 'Sanctuary'}
-        </p>
+    <aside className={`${collapsed ? 'w-[76px] p-2' : 'w-64 p-4'} bg-brand-dark flex-shrink-0 border-r border-brand-border flex flex-col transition-all duration-200 ${className}`}>
+      <div className={`mb-6 flex ${collapsed ? 'flex-col items-center gap-3' : 'items-start justify-between gap-2'}`}>
+        {!collapsed && (
+          <div className="flex flex-col gap-1 min-w-0">
+            <CcnLogo size="sm" theme="auto" />
+            <p style={{ fontFamily: 'var(--sans-ui, "Inter Tight", -apple-system, sans-serif)', fontSize: '11px', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--gold-ds, #B7892E)', fontWeight: 600 }}>
+              {isStrategyMode ? 'Command Center' : 'Sanctuary'}
+            </p>
+          </div>
+        )}
+        {collapsible && (
+          <button
+            type="button"
+            onClick={toggleCollapsed}
+            aria-label={collapsed ? 'Expand menu' : 'Collapse menu'}
+            title={collapsed ? 'Expand menu' : 'Collapse menu'}
+            className="p-2 rounded-lg text-brand-text-secondary hover:bg-brand-secondary hover:text-brand-text-primary transition-colors flex-shrink-0"
+          >
+            {collapsed ? <PanelLeftOpen className="h-5 w-5" /> : <PanelLeftClose className="h-5 w-5" />}
+          </button>
+        )}
       </div>
 
-      <div className="mb-6">
-        <button 
-          onClick={toggleMode}
-          className={`w-full p-1 rounded-full border border-brand-border flex items-center transition-all ${isStrategyMode ? 'bg-brand-accent/10 border-brand-accent/30' : 'bg-brand-secondary'}`}
-        >
-          <div className={`flex-1 py-1.5 rounded-full text-[12px] font-bold uppercase tracking-tighter transition-all ${!isStrategyMode ? 'bg-brand-accent text-white shadow-md' : 'text-brand-text-secondary'}`}>
-            Sanctuary
-          </div>
-          <div className={`flex-1 py-1.5 rounded-full text-[12px] font-bold uppercase tracking-tighter transition-all ${isStrategyMode ? 'bg-brand-accent text-white shadow-md' : 'text-brand-text-secondary'}`}>
-            Strategy
-          </div>
-        </button>
-      </div>
+      {!collapsed && (
+        <div className="mb-6">
+          <button
+            onClick={toggleMode}
+            className={`w-full p-1 rounded-full border border-brand-border flex items-center transition-all ${isStrategyMode ? 'bg-brand-accent/10 border-brand-accent/30' : 'bg-brand-secondary'}`}
+          >
+            <div className={`flex-1 py-1.5 rounded-full text-[12px] font-bold uppercase tracking-tighter transition-all ${!isStrategyMode ? 'bg-brand-accent text-white shadow-md' : 'text-brand-text-secondary'}`}>
+              Sanctuary
+            </div>
+            <div className={`flex-1 py-1.5 rounded-full text-[12px] font-bold uppercase tracking-tighter transition-all ${isStrategyMode ? 'bg-brand-accent text-white shadow-md' : 'text-brand-text-secondary'}`}>
+              Strategy
+            </div>
+          </button>
+        </div>
+      )}
 
       <nav className="flex-grow overflow-y-auto custom-scrollbar pr-2">
         {isStrategyMode ? (
@@ -210,21 +243,24 @@ const Sidebar: React.FC<SidebarProps> = ({ className = '', onNavigate }) => {
 
               return (
                 <div key={group} className="mb-4">
-                  <div className="mb-2 px-3">
-                    <p style={groupLabelStyle('var(--crimson, #8E1B1B)')}>
-                      {group}
-                    </p>
-                  </div>
+                  {!collapsed && (
+                    <div className="mb-2 px-3">
+                      <p style={groupLabelStyle('var(--crimson, #8E1B1B)')}>
+                        {group}
+                      </p>
+                    </div>
+                  )}
                   <ul>
                     {groupItems.map(item => (
                       <li key={item.to}>
                         <NavLink
                           to={item.to}
                           onClick={onNavigate}
+                          title={collapsed ? item.text : undefined}
                           className={({ isActive }) => `${baseLinkClasses} ${isActive ? activeLinkClasses : inactiveLinkClasses}`}
                         >
-                          <item.icon className="h-5 w-5 mr-3 flex-shrink-0" />
-                          <span className="min-w-0 truncate text-sm font-medium" title={item.text}>{item.text}</span>
+                          <item.icon className={`h-5 w-5 flex-shrink-0 ${collapsed ? '' : 'mr-3'}`} />
+                          {!collapsed && <span className="min-w-0 truncate text-sm font-medium" title={item.text}>{item.text}</span>}
                         </NavLink>
                       </li>
                     ))}
@@ -236,21 +272,24 @@ const Sidebar: React.FC<SidebarProps> = ({ className = '', onNavigate }) => {
         ) : (
           ['Read', 'Pray', 'Community', 'Live', 'Account'].map(group => (
             <div key={group} className="mb-4">
-              <div className="mb-2 px-3">
-                <p style={groupLabelStyle(sanctuaryGroupColors[group] ?? 'var(--crimson, #8E1B1B)')}>
-                  {group}
-                </p>
-              </div>
+              {!collapsed && (
+                <div className="mb-2 px-3">
+                  <p style={groupLabelStyle(sanctuaryGroupColors[group] ?? 'var(--crimson, #8E1B1B)')}>
+                    {group}
+                  </p>
+                </div>
+              )}
               <ul>
                 {filteredSanctuaryItems.filter(item => item.group === group).map(item => (
                   <li key={item.to}>
                     <NavLink
                       to={item.to}
                       onClick={onNavigate}
+                      title={collapsed ? item.text : undefined}
                       className={({ isActive }) => `${baseLinkClasses} ${isActive ? activeLinkClasses : inactiveLinkClasses}`}
                     >
-                      <item.icon className="h-5 w-5 mr-3 flex-shrink-0" />
-                      <span className="min-w-0 truncate text-sm font-medium" title={item.text}>{item.text}</span>
+                      <item.icon className={`h-5 w-5 flex-shrink-0 ${collapsed ? '' : 'mr-3'}`} />
+                      {!collapsed && <span className="min-w-0 truncate text-sm font-medium" title={item.text}>{item.text}</span>}
                     </NavLink>
                   </li>
                 ))}
@@ -262,25 +301,33 @@ const Sidebar: React.FC<SidebarProps> = ({ className = '', onNavigate }) => {
       <div className="mt-auto">
         <div className="p-2 my-2 border-t border-b border-brand-border">
           {loading ? (
-             <div className="h-10 flex items-center justify-center text-brand-text-secondary text-sm">Authenticating...</div>
+             <div className={`h-10 flex items-center justify-center text-brand-text-secondary text-sm ${collapsed ? '' : ''}`}>{collapsed ? '…' : 'Authenticating...'}</div>
           ) : user ? (
-            <div className="flex items-center">
-              <UserCircleIcon className="w-8 h-8 mr-3 text-brand-text-secondary"/>
-              <div className="flex-grow">
-                <p className="font-semibold text-sm text-brand-text-primary truncate">{user.displayName || (user.role === 'admin' || user.role === 'lead_developer' ? 'Founder' : 'Member')}</p>
-                <button onClick={signOut} className="text-xs text-brand-accent hover:underline">Sign Out</button>
+            collapsed ? (
+              <NavLink to="/app/settings" title={user.displayName || 'Account'} className="flex items-center justify-center py-1">
+                <UserCircleIcon className="w-8 h-8 text-brand-text-secondary hover:text-brand-accent transition-colors" />
+              </NavLink>
+            ) : (
+              <div className="flex items-center">
+                <UserCircleIcon className="w-8 h-8 mr-3 text-brand-text-secondary"/>
+                <div className="flex-grow">
+                  <p className="font-semibold text-sm text-brand-text-primary truncate">{user.displayName || (user.role === 'admin' || user.role === 'lead_developer' ? 'Founder' : 'Member')}</p>
+                  <button onClick={signOut} className="text-xs text-brand-accent hover:underline">Sign Out</button>
+                </div>
               </div>
-            </div>
+            )
           ) : (
-            <button onClick={openSignIn} className="w-full px-4 py-2 rounded-lg bg-brand-accent text-white font-semibold hover:bg-opacity-90 transition-opacity">
-              Sign In
+            <button onClick={openSignIn} title="Sign In" className={`rounded-lg bg-brand-accent text-white font-semibold hover:bg-opacity-90 transition-opacity ${collapsed ? 'w-full flex items-center justify-center py-2' : 'w-full px-4 py-2'}`}>
+              {collapsed ? <UserCircleIcon className="w-5 h-5" /> : 'Sign In'}
             </button>
           )}
         </div>
-        <ThemeSwitcher />
-        <div className="text-center text-xs text-brand-text-secondary pt-4">
-            <p>&copy; theccndaily 2026</p>
-        </div>
+        {!collapsed && <ThemeSwitcher />}
+        {!collapsed && (
+          <div className="text-center text-xs text-brand-text-secondary pt-4">
+              <p>&copy; theccndaily 2026</p>
+          </div>
+        )}
       </div>
     </aside>
   );
@@ -318,7 +365,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
   return (
     <div className="flex h-screen overflow-hidden bg-brand-dark">
-      <Sidebar className="hidden md:flex" />
+      <Sidebar className="hidden md:flex" collapsible />
 
       <div className="fixed inset-x-0 top-0 z-40 flex items-center justify-between border-b border-brand-border bg-brand-dark px-4 py-3 md:hidden">
         <button

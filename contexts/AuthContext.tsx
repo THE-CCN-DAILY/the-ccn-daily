@@ -24,6 +24,7 @@ interface AuthContextType {
   signInEmail: (email: string, password: string) => Promise<void>;
   signUpEmail: (email: string, password: string) => Promise<void>;
   sendPasswordReset: (email: string) => Promise<void>;
+  refreshUser: () => Promise<void>;
 }
 
 // Ministry owner accounts that always receive admin access on the frontend,
@@ -160,9 +161,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await firebaseResetPassword(email);
   }, []);
 
+  // Re-read the freshest Auth profile (e.g. after a photo/name update) so the UI
+  // reflects the change without a full reload.
+  const refreshUser = useCallback(async () => {
+    const current = getAuth().currentUser;
+    if (!current) return;
+    await current.reload();
+    const reloaded = getAuth().currentUser;
+    if (!reloaded) return;
+    setUser((prev) =>
+      prev
+        ? { ...prev, displayName: reloaded.displayName, photoURL: reloaded.photoURL, emailVerified: reloaded.emailVerified }
+        : prev,
+    );
+  }, []);
+
   const value = useMemo(
-    () => ({ user, loading, showSignIn, redirectError, openSignIn, closeSignIn, signIn, signOut, signInEmail, signUpEmail, sendPasswordReset }),
-    [user, loading, showSignIn, redirectError, openSignIn, closeSignIn, signIn, signOut, signInEmail, signUpEmail, sendPasswordReset],
+    () => ({ user, loading, showSignIn, redirectError, openSignIn, closeSignIn, signIn, signOut, signInEmail, signUpEmail, sendPasswordReset, refreshUser }),
+    [user, loading, showSignIn, redirectError, openSignIn, closeSignIn, signIn, signOut, signInEmail, signUpEmail, sendPasswordReset, refreshUser],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
