@@ -59,19 +59,28 @@ though logic is type-checked and low-risk.
 - Mux **dropped** (not re-provisioned) in favor of Cloudflare Stream.
 - Post-launch deploy discipline: no direct-to-prod once public; staging + your sign-off first; major updates fire in-app notifications. (Pre-launch now: autonomous prod promotion per your instruction.)
 
-## ▶️ RESUME HERE — payment loop finish (next session, cheap/fresh context)
-Backend payment loop is DONE + committed (9dcc603): `/api/payments/intent`, `/api/payments/flutterwave/webhook`
-(verifies verif-hash + re-verifies txn → writes subscription+entitlement), `GET /api/users/:userId/subscription`,
-D1 tables (user_subscriptions/entitlements/purchases). Both type-checks pass. NOT yet deployed.
-Remaining to make the founder's real-transaction test unlock content:
-1. **Client gate read-back** (3 files): `hooks/useEffectiveAccess.ts` → fetch `GET /api/users/:uid/subscription`
-   with `adminAuthHeaders()` (replace the stub fetchers); `hooks/usePremiumGate.ts` → for non-admins resolve
-   access from the real subscription/entitlements (keep admin bypass); `pages/PricingPage.tsx` → checkout calls
-   `/api/payments/intent` and uses the server amount/tx_ref (drop client-computed amount).
-2. **Apply D1 schema** to remote: `npx wrangler d1 execute project_phoenix_ccn_daily --remote --file=schema/d1-schema.sql`
-3. Build → deploy staging → deploy prod. (Live Flutterwave keys already in prod; webhook URL+hash set.)
-4. **Founder test:** subscribe to lowest tier with a real card → confirm entitlement row written + content unlocks
-   → refund from Flutterwave dashboard. Then C-1 media protection (gate /api/media by entitlement + signed URLs).
+## ▶️ RESUME HERE — payment loop LIVE; founder real-transaction test pending
+Backend payment loop DONE + committed (9dcc603). **Client gate read-back DONE + committed (3c356b0) + DEPLOYED
+to prod (2026-06-03).** Both type-checks pass; build green.
+- `hooks/useEffectiveAccess.ts` → real `getUserSubscription()` D1 readback (stub fetchers removed).
+- `hooks/usePremiumGate.ts` → non-admins unlock from an ACTIVE paid subscription (pro/max/partner), fail-closed
+  until readback resolves; admin bypass kept.
+- `pages/PricingPage.tsx` → checkout creates `/api/payments/intent` and launches Flutterwave with the server
+  amount/currency/tx_ref; client Firestore tier grant removed in favour of a post-webhook D1 readback poll +
+  refresh; real geo via Cloudflare `/cdn-cgi/trace` (was hardcoded US).
+- `services/entitlementService.ts` → `resolveAccess` now includes `partner` in subscription-included access.
+- D1 schema applied to **remote** (62 queries, 28 tables, idempotent). Staging + prod deployed. Prod routes
+  verified live: `GET /api/users/:id/subscription` → 401 without token (auth enforced), `POST /api/payments/intent`
+  → 400 on empty body (validation runs). theccndaily.com propagated.
+
+**NEXT — founder action:** subscribe to the lowest tier with a real card → confirm a `user_entitlements` row is
+written + premium content unlocks → refund from the Flutterwave dashboard. (Webhook may take a few seconds; the
+PricingPage poll waits ~10s then refreshes.) If content does NOT unlock, check: Flutterwave webhook URL/hash set
+in prod env, `FLUTTERWAVE_SECRET_KEY` present, and the webhook event reaching `/api/payments/flutterwave/webhook`.
+
+**THEN — C-1 media protection** (last critical): gate `/api/media/*` + content GETs by entitlement (signed R2
+URLs) — the real paywall. Until this lands, premium *gating* is enforced in the UI but media bytes are not yet
+entitlement-protected at the edge.
 
 ## ▶️ In progress / next (sequential core + isolated agents)
 - AppContext (`useAppData`) → User Library (+ notes, voice notes for paid) → public comments → user/admin Settings → update notifications → premium readers (EPUB engine, devotional scroll-back) → light/sepia contrast + typography pass → founder-gated builds (payment, Stream, Durable Objects chat/support, Vectorize).
