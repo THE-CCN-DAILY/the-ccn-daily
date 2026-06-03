@@ -12,7 +12,7 @@ ADMIN_EMAIL = "pastor.eryeza@gmail.com"
 # Flutterwave PUBLISHABLE public key — safe to commit (it ships in every client
 # checkout). The SECRET key (FLWSECK) and webhook hash are wrangler secrets, never here.
 # Returned by /api/payments/intent so the client uses one authoritative key.
-FLUTTERWAVE_PUBLIC_KEY = "FLWPUBK-2d4211f1a8007f2f64cbdf9e26194a23-X"
+FLUTTERWAVE_PUBLIC_KEY = "FLWPUBK-11618c011d36777393259ef9581bce5f-X"
 # Cloudflare Stream (VOD + live) — REST API, no binding required.
 #   CF_ACCOUNT_ID and CF_STREAM_TOKEN are SECRETS — set them via:
 #     wrangler secret put CF_ACCOUNT_ID
