@@ -18,13 +18,18 @@ import { useAuth } from '../contexts/AuthContext';
 import { useNotifications } from '../contexts/NotificationContext';
 import { useFlutterwave, closePaymentModal } from 'flutterwave-react-v3';
 import { db } from '../firebase';
-import { doc, setDoc, serverTimestamp, collection, query, where, getDocs, getDoc } from 'firebase/firestore';
-import { handleFirestoreError, OperationType } from '../utils/firestoreErrorHandler';
+import { doc, collection, query, where, getDocs, getDoc } from 'firebase/firestore';
 import { trackAnalyticsEvent, nowIso } from '../services/analyticsService';
 import { useExperiment } from '../hooks/useExperiment';
 import { getTierLabel } from '../types/pricing';
+import { createPaymentIntent, getUserSubscription, type PaymentIntentResult } from '../services/purchaseService';
 
 const DEFAULT_FLUTTERWAVE_KEY = (import.meta as any).env.VITE_FLUTTERWAVE_PUBLIC_KEY || 'FLWPUBK_TEST-SANDBOXDEMOKEY-X';
+
+// After a successful charge the Flutterwave webhook grants the entitlement server-side.
+// Poll the D1 readback a few times so the UI reflects the grant before refreshing.
+const READBACK_POLL_ATTEMPTS = 5;
+const READBACK_POLL_INTERVAL_MS = 2000;
 
 type PaidTier = 'pro' | 'max' | 'partner';
 
@@ -110,10 +115,11 @@ const PricingPage: React.FC = () => {
   const [selectedTier, setSelectedTier] = useState<PaidTier | null>(null);
   const [activeDiscount, setActiveDiscount] = useState<{ name: string; percentage: number; targetTier: string; targetBilling: string } | null>(null);
   const [flutterwaveKey, setFlutterwaveKey] = useState(DEFAULT_FLUTTERWAVE_KEY);
+  const [intent, setIntent] = useState<PaymentIntentResult | null>(null);
   const paywallVariant = useExperiment(user?.uid, 'paywall_layout_v1');
 
   useEffect(() => {
-    setUserCountry('US'); // Simulated geo for PPP
+    detectCountry(); // Real geo for PPP display (server re-derives geo authoritatively)
     fetchActiveDiscount();
     fetchPaymentSettings();
 
@@ -126,6 +132,20 @@ const PricingPage: React.FC = () => {
       experiments: { paywall_layout_v1: paywallVariant },
     });
   }, [billingCycle, paywallVariant]);
+
+  // Detect the visitor's country from Cloudflare's edge trace (same origin, no extra
+  // dependency). This is display-only for PPP; the server independently re-derives geo
+  // from request.cf.country when it computes the authoritative price.
+  const detectCountry = async () => {
+    try {
+      const res = await fetch('/cdn-cgi/trace');
+      const text = await res.text();
+      const match = text.match(/^loc=([A-Z]{2})$/m);
+      if (match?.[1]) setUserCountry(match[1]);
+    } catch {
+      // Keep the default country on failure.
+    }
+  };
 
   const fetchPaymentSettings = async () => {
     try {
@@ -217,11 +237,14 @@ const PricingPage: React.FC = () => {
     return Math.round(savings);
   };
 
+  // The amount, currency, tx_ref, and public key all come from the SERVER intent —
+  // the client never sets the price. Until an intent is created these are placeholders;
+  // payment is only ever launched after `intent` is populated (see the effect below).
   const handleFlutterPayment = useFlutterwave({
-    public_key: flutterwaveKey,
-    tx_ref: `sub_${Date.now()}`,
-    amount: selectedTier ? getAmount(selectedTier) : 0,
-    currency: 'USD',
+    public_key: intent?.publicKey || flutterwaveKey,
+    tx_ref: intent?.tx_ref || `sub_${Date.now()}`,
+    amount: intent?.amount ?? 0,
+    currency: intent?.currency || 'USD',
     payment_options: 'card,mobilemoney,ussd',
     customer: {
       email: user?.email || 'user@example.com',
@@ -235,7 +258,10 @@ const PricingPage: React.FC = () => {
     },
   });
 
-  const handleSubscribe = (tier: PaidTier) => {
+  // Step 1: create a SERVER-AUTHORITATIVE payment intent. The server computes the price
+  // and records a pending purchase keyed by its own tx_ref; the client only initializes
+  // Flutterwave with the returned values. The launch happens in the effect on `intent`.
+  const handleSubscribe = async (tier: PaidTier) => {
     if (!user) {
       notify('Please sign in to subscribe.', 'error');
       return;
@@ -262,62 +288,85 @@ const PricingPage: React.FC = () => {
       meta: { tier, billingCycle },
     });
 
-    setTimeout(() => {
-      handleFlutterPayment({
-        callback: async (response) => {
-          closePaymentModal();
-          if (response.status === 'successful') {
-            trackAnalyticsEvent({
-              name: 'purchase_completed',
-              userId: user?.uid,
-              tier: (user?.tier as any) || 'free',
-              route: '/pricing',
-              timestamp: nowIso(),
-              meta: { tier, billingCycle, tx_ref: response.tx_ref },
-            });
-            await updateUserTier(tier);
-          } else {
-            setIsProcessing(false);
-            trackAnalyticsEvent({
-              name: 'purchase_failed',
-              userId: user?.uid,
-              tier: (user?.tier as any) || 'free',
-              route: '/pricing',
-              timestamp: nowIso(),
-              meta: { tier, billingCycle, status: response.status },
-            });
-            notify('Payment was not successful. Please try again.', 'error');
-          }
-        },
-        onClose: () => {
-          setIsProcessing(false);
-        },
-      });
-    }, 100);
-  };
-
-  const updateUserTier = async (tier: PaidTier) => {
-    if (!user) return;
     try {
-      await setDoc(
-        doc(db, 'users', user.uid),
-        {
-          tier,
-          subscriptionStatus: 'active',
-          billingCycle,
-          updatedAt: serverTimestamp(),
-        },
-        { merge: true }
-      );
-
-      setIsProcessing(false);
-      notify(`Successfully subscribed to ${getTierLabel(tier)}!`, 'success');
-      window.location.reload();
+      const result = await createPaymentIntent({ userId: user.uid, tier, billingCycle });
+      setIntent(result); // the effect below launches Flutterwave with the server values
     } catch (error) {
-      handleFirestoreError(error, OperationType.UPDATE, `users/${user.uid}`);
       setIsProcessing(false);
+      setSelectedTier(null);
+      notify(error instanceof Error ? error.message : 'Could not start checkout. Please try again.', 'error');
+      trackAnalyticsEvent({
+        name: 'purchase_failed',
+        userId: user?.uid,
+        tier: (user?.tier as any) || 'free',
+        route: '/pricing',
+        timestamp: nowIso(),
+        meta: { tier, billingCycle, stage: 'intent' },
+      });
     }
   };
+
+  // Confirm access AFTER the server grants it. The Flutterwave webhook writes the
+  // subscription/entitlement to D1; poll the readback briefly, then refresh so the
+  // entitlement gates re-read from the server. The client never grants access itself.
+  const confirmAccess = async () => {
+    if (!user) return;
+    notify('Payment received. Unlocking your access…', 'success');
+    for (let attempt = 0; attempt < READBACK_POLL_ATTEMPTS; attempt++) {
+      try {
+        const sub = await getUserSubscription(user.uid);
+        if (sub.status === 'active') break;
+      } catch {
+        // keep polling — the webhook may not have landed yet
+      }
+      await new Promise((resolve) => setTimeout(resolve, READBACK_POLL_INTERVAL_MS));
+    }
+    setIsProcessing(false);
+    window.location.reload();
+  };
+
+  // Step 2: once a server intent exists, launch Flutterwave with the server-provided
+  // amount/currency/tx_ref. Access is NOT granted here — the verified webhook does that.
+  useEffect(() => {
+    if (!intent || !selectedTier) return;
+    const tier = selectedTier;
+
+    handleFlutterPayment({
+      callback: async (response) => {
+        closePaymentModal();
+        if (response.status === 'successful') {
+          trackAnalyticsEvent({
+            name: 'purchase_completed',
+            userId: user?.uid,
+            tier: (user?.tier as any) || 'free',
+            route: '/pricing',
+            timestamp: nowIso(),
+            meta: { tier, billingCycle, tx_ref: response.tx_ref },
+          });
+          await confirmAccess();
+        } else {
+          setIsProcessing(false);
+          trackAnalyticsEvent({
+            name: 'purchase_failed',
+            userId: user?.uid,
+            tier: (user?.tier as any) || 'free',
+            route: '/pricing',
+            timestamp: nowIso(),
+            meta: { tier, billingCycle, status: response.status },
+          });
+          notify('Payment was not successful. Please try again.', 'error');
+        }
+        setIntent(null);
+      },
+      onClose: () => {
+        setIsProcessing(false);
+        setIntent(null);
+      },
+    });
+    // handleFlutterPayment is rebuilt each render from the current intent; launching on
+    // [intent] captures the handler bound to these server values.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [intent]);
 
   return (
     <div className="max-w-6xl mx-auto pb-20 px-4">

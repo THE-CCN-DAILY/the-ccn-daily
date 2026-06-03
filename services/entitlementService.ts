@@ -46,7 +46,10 @@ export function resolveAccess(params: {
   }
 
   if (resource.accessLane === 'included' || resource.accessLane === 'hybrid') {
-    if (subscription.status === 'active' && (subscription.tier === 'pro' || subscription.tier === 'max')) {
+    if (
+      subscription.status === 'active' &&
+      (subscription.tier === 'pro' || subscription.tier === 'max' || subscription.tier === 'partner')
+    ) {
       return { canOpen: true, reason: 'subscription_included' };
     }
   }

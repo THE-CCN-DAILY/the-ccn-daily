@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { Resource, UserEntitlement, UserPurchase } from '../types/entitlements';
 import { resolveAccess, type UserSubscription } from '../services/entitlementService';
+import { getUserSubscription } from '../services/purchaseService';
 
 type UserLike = { uid: string } | null;
 
@@ -17,21 +18,6 @@ type EffectiveAccessHookResult = {
   ctaPrimary: 'Open' | 'Sign In' | 'Buy Once' | 'Upgrade Plan';
   ctaSecondary?: 'Buy Once' | 'Upgrade Plan';
 };
-
-async function fetchSubscription(_userId: string): Promise<UserSubscription> {
-  // TODO: replace with real fetch from Firestore
-  return { tier: 'free', status: 'active' };
-}
-
-async function fetchEntitlements(_userId: string): Promise<UserEntitlement[]> {
-  // TODO: replace with real fetch from Firestore
-  return [];
-}
-
-async function fetchPurchases(_userId: string): Promise<UserPurchase[]> {
-  // TODO: replace with real fetch from Firestore
-  return [];
-}
 
 export function useEffectiveAccess(user: UserLike, resource: Resource): EffectiveAccessHookResult {
   const [loading, setLoading] = useState(true);
@@ -50,18 +36,22 @@ export function useEffectiveAccess(user: UserLike, resource: Resource): Effectiv
 
       setLoading(true);
       try {
-        const [s, e, p] = await Promise.all([
-          fetchSubscription(user.uid),
-          fetchEntitlements(user.uid),
-          fetchPurchases(user.uid),
-        ]);
+        // Source of truth: the server reads the subscription + active entitlements
+        // back from D1 (written only by the verified Flutterwave webhook). One-time
+        // perpetual purchases are not yet returned here, so purchases stays empty
+        // until that readback lands.
+        const readback = await getUserSubscription(user.uid);
 
         if (!mounted) return;
-        setSubscription(s);
-        setEntitlements(e);
-        setPurchases(p);
+        setSubscription({
+          tier: readback.tier,
+          status: readback.status,
+          endsAt: readback.endsAt,
+        });
+        setEntitlements(readback.entitlements);
+        setPurchases([]);
       } catch {
-        // Access data unavailable — component renders with defaults
+        // Access data unavailable — component renders with defaults (locked)
       } finally {
         if (mounted) setLoading(false);
       }
