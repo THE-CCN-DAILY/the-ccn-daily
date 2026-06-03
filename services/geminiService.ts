@@ -1,6 +1,7 @@
 
 import type { DevotionalOutput, Message } from '../types';
 import { listJournalEntries } from './journalService';
+import { adminAuthHeaders } from './adminAuth';
 
 // 3-Lane AI Policy for Cost Governance, now routed through Cloudflare Pages.
 // LITE: default free-plan text generation.
@@ -38,9 +39,10 @@ type CloudflareAiPayload = {
 };
 
 export const generateCloudflareText = async (payload: CloudflareAiPayload): Promise<string> => {
+    const authHeaders = await adminAuthHeaders();
     const response = await fetch('/api/ai/generate', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authHeaders },
         body: JSON.stringify(payload),
     });
 

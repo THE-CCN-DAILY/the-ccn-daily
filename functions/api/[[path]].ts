@@ -685,6 +685,15 @@ const requireAdmin = (c: any) => {
   }, 401);
 };
 
+// SECURITY (C-2): Ensure the authenticated user can only read/write their own data.
+// Returns null (allow) when the token UID matches the requested userId.
+// Returns 401 when no token is present, 403 when a different user's token is present.
+const requireSelf = (c: any, userId: string) => {
+  const tokenUid = c.get('idTokenUid');
+  if (tokenUid === userId) return null;
+  return c.json({ error: 'forbidden' }, tokenUid ? 403 : 401);
+};
+
 const isLocalPreviewRequest = (c: any) => {
   // Preview auth must be EXPLICITLY opted in via an env var that is set ONLY in local
   // .dev.vars (never in production). Do NOT trust the Host header (spoofable) or CF_PAGES
@@ -840,6 +849,10 @@ app.get('/api/ai/diagnostics', (c) =>
 );
 
 app.post('/api/ai/generate', async (c) => {
+  // SECURITY (H-2): Require a verified Firebase ID token to prevent unauthenticated
+  // cost-abuse. Signed-in users get their UID from the auth middleware set above.
+  if (!c.get('idTokenUid')) return c.json({ error: 'Authentication required' }, 401);
+
   const body = await c.req.json();
   const feature = String(body.feature || 'general').trim();
   const prompt = String(body.prompt || '').trim();
@@ -1180,6 +1193,7 @@ app.post('/api/challenges/:id/participants', async (c) => {
   const body = await c.req.json();
   const userId = String(body.userId || '').trim();
   if (!isSafeId(userId)) return c.json({ error: 'Valid userId is required' }, 400);
+  const denied = requireSelf(c, userId); if (denied) return denied;
 
   const existing = await c.env.DB.prepare(
     `SELECT * FROM challenge_participants WHERE challenge_id = ? AND user_id = ? LIMIT 1`
@@ -1221,6 +1235,7 @@ app.post('/api/challenges/:id/modules/:moduleId/complete', async (c) => {
   const body = await c.req.json();
   const userId = String(body.userId || '').trim();
   if (!isSafeId(userId)) return c.json({ error: 'Valid userId is required' }, 400);
+  const denied = requireSelf(c, userId); if (denied) return denied;
 
   const participant = await c.env.DB.prepare(
     `SELECT * FROM challenge_participants WHERE challenge_id = ? AND user_id = ? LIMIT 1`
@@ -1456,6 +1471,7 @@ app.post('/api/courses/:id/modules/:moduleId/complete', async (c) => {
   const body = await c.req.json();
   const userId = String(body.userId || '').trim();
   if (!isSafeId(userId)) return c.json({ error: 'Valid userId is required' }, 400);
+  const denied = requireSelf(c, userId); if (denied) return denied;
 
   const existing = await c.env.DB.prepare(
     `SELECT * FROM course_progress WHERE course_id = ? AND user_id = ? LIMIT 1`
@@ -2416,6 +2432,7 @@ app.get('/api/media/*', async (c) => {
 app.get('/api/users/:userId/notifications', async (c) => {
   const userId = c.req.param('userId');
   if (!isSafeId(userId)) return c.json({ error: 'Invalid user id' }, 400);
+  const denied = requireSelf(c, userId); if (denied) return denied;
   if (!c.env.DB) return c.json({ notifications: [], source: 'fallback' });
 
   const result = await c.env.DB.prepare(
@@ -2431,6 +2448,7 @@ app.get('/api/users/:userId/notifications', async (c) => {
 app.post('/api/users/:userId/notifications', async (c) => {
   const userId = c.req.param('userId');
   if (!isSafeId(userId)) return c.json({ error: 'Invalid user id' }, 400);
+  const denied = requireSelf(c, userId); if (denied) return denied;
   if (!c.env.DB) return c.json({ error: 'D1 database binding is not configured' }, 503);
 
   const body = await c.req.json();
@@ -2464,6 +2482,7 @@ app.patch('/api/users/:userId/notifications/:id', async (c) => {
   const userId = c.req.param('userId');
   const id = c.req.param('id');
   if (!isSafeId(userId) || !isSafeId(id)) return c.json({ error: 'Invalid notification identifier' }, 400);
+  const denied = requireSelf(c, userId); if (denied) return denied;
   if (!c.env.DB) return c.json({ error: 'D1 database binding is not configured' }, 503);
 
   await c.env.DB.prepare(
@@ -2478,6 +2497,7 @@ app.patch('/api/users/:userId/notifications/:id', async (c) => {
 app.post('/api/users/:userId/notifications/mark-all-read', async (c) => {
   const userId = c.req.param('userId');
   if (!isSafeId(userId)) return c.json({ error: 'Invalid user id' }, 400);
+  const denied = requireSelf(c, userId); if (denied) return denied;
   if (!c.env.DB) return c.json({ error: 'D1 database binding is not configured' }, 503);
 
   await c.env.DB.prepare(
@@ -2513,6 +2533,7 @@ const ensureGamificationRow = async (db: D1DatabaseBinding, userId: string) => {
 app.get('/api/users/:userId/gamification', async (c) => {
   const userId = c.req.param('userId');
   if (!isSafeId(userId)) return c.json({ error: 'Invalid user id' }, 400);
+  const denied = requireSelf(c, userId); if (denied) return denied;
   if (!c.env.DB) {
     return c.json({
       gamification: {
@@ -2531,6 +2552,7 @@ app.get('/api/users/:userId/gamification', async (c) => {
 app.post('/api/users/:userId/gamification/events', async (c) => {
   const userId = c.req.param('userId');
   if (!isSafeId(userId)) return c.json({ error: 'Invalid user id' }, 400);
+  const denied = requireSelf(c, userId); if (denied) return denied;
   if (!c.env.DB) return c.json({ error: 'D1 database binding is not configured' }, 503);
 
   const body = await c.req.json();
@@ -2568,6 +2590,7 @@ app.post('/api/users/:userId/gamification/events', async (c) => {
 app.post('/api/users/:userId/gamification/redeem', async (c) => {
   const userId = c.req.param('userId');
   if (!isSafeId(userId)) return c.json({ error: 'Invalid user id' }, 400);
+  const denied = requireSelf(c, userId); if (denied) return denied;
   if (!c.env.DB) return c.json({ error: 'D1 database binding is not configured' }, 503);
 
   const body = await c.req.json();
@@ -2590,6 +2613,7 @@ app.get('/api/users/:userId/highlights', async (c) => {
   const userId = c.req.param('userId');
   const contentId = c.req.query('contentId') || '';
   if (!isSafeId(userId)) return c.json({ error: 'Invalid user id' }, 400);
+  const denied = requireSelf(c, userId); if (denied) return denied;
   if (!contentId) return c.json({ error: 'Missing contentId' }, 400);
   if (!c.env.DB) return c.json({ highlights: [], source: 'fallback' });
 
@@ -2605,6 +2629,7 @@ app.get('/api/users/:userId/highlights', async (c) => {
 app.post('/api/users/:userId/highlights', async (c) => {
   const userId = c.req.param('userId');
   if (!isSafeId(userId)) return c.json({ error: 'Invalid user id' }, 400);
+  const denied = requireSelf(c, userId); if (denied) return denied;
   if (!c.env.DB) return c.json({ error: 'D1 database binding is not configured' }, 503);
 
   const body = await c.req.json();
@@ -2654,6 +2679,7 @@ app.patch('/api/users/:userId/highlights/:id', async (c) => {
   const userId = c.req.param('userId');
   const id = c.req.param('id');
   if (!isSafeId(userId) || !isSafeId(id)) return c.json({ error: 'Invalid highlight identifier' }, 400);
+  const denied = requireSelf(c, userId); if (denied) return denied;
   if (!c.env.DB) return c.json({ error: 'D1 database binding is not configured' }, 503);
 
   const body = await c.req.json();
@@ -2686,6 +2712,7 @@ app.delete('/api/users/:userId/highlights/:id', async (c) => {
   const userId = c.req.param('userId');
   const id = c.req.param('id');
   if (!isSafeId(userId) || !isSafeId(id)) return c.json({ error: 'Invalid highlight identifier' }, 400);
+  const denied = requireSelf(c, userId); if (denied) return denied;
   if (!c.env.DB) return c.json({ error: 'D1 database binding is not configured' }, 503);
 
   await c.env.DB.prepare(`DELETE FROM highlights WHERE user_id = ? AND id = ?`).bind(userId, id).run();
@@ -2695,6 +2722,7 @@ app.delete('/api/users/:userId/highlights/:id', async (c) => {
 app.get('/api/users/:userId/journal', async (c) => {
   const userId = c.req.param('userId');
   if (!isSafeId(userId)) return c.json({ error: 'Invalid user id' }, 400);
+  const denied = requireSelf(c, userId); if (denied) return denied;
   if (!c.env.DB) return c.json({ entries: [], source: 'fallback' });
 
   const result = await c.env.DB.prepare(
@@ -2709,6 +2737,7 @@ app.get('/api/users/:userId/journal', async (c) => {
 app.post('/api/users/:userId/journal', async (c) => {
   const userId = c.req.param('userId');
   if (!isSafeId(userId)) return c.json({ error: 'Invalid user id' }, 400);
+  const denied = requireSelf(c, userId); if (denied) return denied;
   if (!c.env.DB) return c.json({ error: 'D1 database binding is not configured' }, 503);
 
   const body = await c.req.json();
@@ -2751,6 +2780,7 @@ app.delete('/api/users/:userId/journal/:id', async (c) => {
   const userId = c.req.param('userId');
   const id = c.req.param('id');
   if (!isSafeId(userId) || !isSafeId(id)) return c.json({ error: 'Invalid journal entry identifier' }, 400);
+  const denied = requireSelf(c, userId); if (denied) return denied;
   if (!c.env.DB) return c.json({ error: 'D1 database binding is not configured' }, 503);
 
   await c.env.DB.prepare(`DELETE FROM journal_entries WHERE user_id = ? AND id = ?`).bind(userId, id).run();

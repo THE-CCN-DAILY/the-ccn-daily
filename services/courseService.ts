@@ -83,6 +83,7 @@ export const completeCourseModule = async (courseId: string, moduleId: string, u
     `/api/courses/${encodeURIComponent(courseId)}/modules/${encodeURIComponent(moduleId)}/complete`,
     {
       method: 'POST',
+      headers: await adminAuthHeaders(),
       body: JSON.stringify({ userId }),
     }
   );

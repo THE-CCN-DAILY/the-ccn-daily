@@ -1,4 +1,5 @@
 import type { AppNotification } from '../contexts/NotificationContext';
+import { adminAuthHeaders } from './adminAuth';
 
 const requestJson = async <T>(url: string, init?: RequestInit): Promise<T> => {
   const response = await fetch(url, {
@@ -19,7 +20,8 @@ const requestJson = async <T>(url: string, init?: RequestInit): Promise<T> => {
 
 export const listNotifications = async (userId: string): Promise<AppNotification[]> => {
   const data = await requestJson<{ notifications: AppNotification[] }>(
-    `/api/users/${encodeURIComponent(userId)}/notifications`
+    `/api/users/${encodeURIComponent(userId)}/notifications`,
+    { headers: await adminAuthHeaders() }
   );
   return data.notifications;
 };
@@ -32,6 +34,7 @@ export const createNotification = async (
     `/api/users/${encodeURIComponent(userId)}/notifications`,
     {
       method: 'POST',
+      headers: await adminAuthHeaders(),
       body: JSON.stringify(notification),
     }
   );
@@ -41,13 +44,13 @@ export const createNotification = async (
 export const markNotificationRead = async (userId: string, notificationId: string): Promise<void> => {
   await requestJson<{ ok: true }>(
     `/api/users/${encodeURIComponent(userId)}/notifications/${encodeURIComponent(notificationId)}`,
-    { method: 'PATCH' }
+    { method: 'PATCH', headers: await adminAuthHeaders() }
   );
 };
 
 export const markNotificationsRead = async (userId: string): Promise<void> => {
   await requestJson<{ ok: true }>(
     `/api/users/${encodeURIComponent(userId)}/notifications/mark-all-read`,
-    { method: 'POST' }
+    { method: 'POST', headers: await adminAuthHeaders() }
   );
 };

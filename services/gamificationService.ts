@@ -1,4 +1,5 @@
 import type { PointEarningAction, UserStats } from '../types';
+import { adminAuthHeaders } from './adminAuth';
 
 export interface CloudflareGamification {
   userId: string;
@@ -25,7 +26,8 @@ const requestJson = async <T>(url: string, init?: RequestInit): Promise<T> => {
 
 export const getGamification = async (userId: string): Promise<CloudflareGamification | null> => {
   const data = await requestJson<{ gamification: CloudflareGamification | null }>(
-    `/api/users/${encodeURIComponent(userId)}/gamification`
+    `/api/users/${encodeURIComponent(userId)}/gamification`,
+    { headers: await adminAuthHeaders() }
   );
   return data.gamification;
 };
@@ -38,6 +40,7 @@ export const dispatchGamificationAction = async (
     `/api/users/${encodeURIComponent(userId)}/gamification/events`,
     {
       method: 'POST',
+      headers: await adminAuthHeaders(),
       body: JSON.stringify({ actionId }),
     }
   );
@@ -52,6 +55,7 @@ export const redeemGamificationReward = async (
     `/api/users/${encodeURIComponent(userId)}/gamification/redeem`,
     {
       method: 'POST',
+      headers: await adminAuthHeaders(),
       body: JSON.stringify({ cost }),
     }
   );

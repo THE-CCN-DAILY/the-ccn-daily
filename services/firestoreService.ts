@@ -1,4 +1,5 @@
 import type { Highlight } from '../types';
+import { adminAuthHeaders } from './adminAuth';
 
 const requestJson = async <T>(url: string, init?: RequestInit): Promise<T> => {
   const response = await fetch(url, {
@@ -22,7 +23,8 @@ const userHighlightsUrl = (userId: string, suffix = '') =>
 
 export const getHighlightsForContent = async (userId: string, contentId: string): Promise<Highlight[]> => {
   const data = await requestJson<{ highlights: Highlight[] }>(
-    `${userHighlightsUrl(userId)}?contentId=${encodeURIComponent(contentId)}`
+    `${userHighlightsUrl(userId)}?contentId=${encodeURIComponent(contentId)}`,
+    { headers: await adminAuthHeaders() }
   );
 
   return data.highlights.sort((a, b) => Date.parse(a.createdAt) - Date.parse(b.createdAt));
@@ -31,6 +33,7 @@ export const getHighlightsForContent = async (userId: string, contentId: string)
 export const saveHighlight = async (userId: string, highlight: Highlight): Promise<void> => {
   await requestJson<{ highlight: Highlight }>(userHighlightsUrl(userId), {
     method: 'POST',
+    headers: await adminAuthHeaders(),
     body: JSON.stringify(highlight),
   });
 };
@@ -38,6 +41,7 @@ export const saveHighlight = async (userId: string, highlight: Highlight): Promi
 export const deleteHighlight = async (userId: string, highlightId: string): Promise<void> => {
   await requestJson<{ ok: true }>(userHighlightsUrl(userId, `/${encodeURIComponent(highlightId)}`), {
     method: 'DELETE',
+    headers: await adminAuthHeaders(),
   });
 };
 
@@ -48,6 +52,7 @@ export const updateHighlight = async (
 ): Promise<void> => {
   await requestJson<{ highlight: Highlight }>(userHighlightsUrl(userId, `/${encodeURIComponent(highlightId)}`), {
     method: 'PATCH',
+    headers: await adminAuthHeaders(),
     body: JSON.stringify(data),
   });
 };

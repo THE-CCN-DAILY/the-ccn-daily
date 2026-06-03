@@ -84,6 +84,7 @@ export const joinChallenge = async (challengeId: string, userId: string) => {
     `/api/challenges/${encodeURIComponent(challengeId)}/participants`,
     {
       method: 'POST',
+      headers: await adminAuthHeaders(),
       body: JSON.stringify({ userId }),
     }
   );
@@ -94,6 +95,7 @@ export const completeChallengeModule = async (challengeId: string, moduleId: str
     `/api/challenges/${encodeURIComponent(challengeId)}/modules/${encodeURIComponent(moduleId)}/complete`,
     {
       method: 'POST',
+      headers: await adminAuthHeaders(),
       body: JSON.stringify({ userId }),
     }
   );
