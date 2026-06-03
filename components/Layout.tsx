@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'motion/react';
 import {
   Activity,
@@ -10,6 +10,7 @@ import {
   Calendar,
   CalendarCheck,
   CalendarDays,
+  ChevronLeft,
   Crown,
   FilePenLine,
   FolderOpen,
@@ -335,6 +336,20 @@ const Sidebar: React.FC<SidebarProps> = ({ className = '', onNavigate, collapsib
   );
 };
 
+const BackButton: React.FC<{ className?: string }> = ({ className = '' }) => {
+  const navigate = useNavigate();
+  return (
+    <button
+      type="button"
+      onClick={() => navigate(-1)}
+      aria-label="Go back"
+      className={`inline-flex items-center gap-1.5 rounded-lg border border-brand-border bg-brand-dark px-3 py-2 text-sm font-semibold text-brand-text-primary hover:border-brand-accent transition-colors ${className}`}
+    >
+      <ChevronLeft className="h-4 w-4" /> Back
+    </button>
+  );
+};
+
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const location = useLocation();
   const { currentTrack, isDetailedPlayerOpen } = useAudioPlayer();
@@ -346,8 +361,14 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     location.pathname.startsWith('/blog/');
 
   if (isPublicRoute) {
+    const showBack = location.pathname !== '/';
     return (
       <>
+        {showBack && (
+          <div className="fixed top-4 left-4 z-50">
+            <BackButton />
+          </div>
+        )}
         <AnimatePresence mode="wait">
           <motion.div
             key={location.pathname}
@@ -370,13 +391,16 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
       <Sidebar className="hidden md:flex" collapsible />
 
       <div className="fixed inset-x-0 top-0 z-40 flex items-center justify-between border-b border-brand-border bg-brand-dark px-4 py-3 md:hidden">
-        <button
-          type="button"
-          onClick={() => setIsMobileNavOpen(true)}
-          className="inline-flex items-center gap-2 border border-brand-border px-3 py-2 text-sm font-semibold text-brand-text-primary"
-        >
-          <Menu className="h-5 w-5" /> Menu
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setIsMobileNavOpen(true)}
+            className="inline-flex items-center gap-2 border border-brand-border px-3 py-2 text-sm font-semibold text-brand-text-primary"
+          >
+            <Menu className="h-5 w-5" /> Menu
+          </button>
+          <BackButton className="!px-2.5" />
+        </div>
         <NavLink to="/app/inbox" className="relative p-2 text-brand-text-secondary hover:text-brand-text-primary transition-colors">
           <BellIcon className="w-6 h-6" />
           {unreadCount > 0 && (
@@ -413,7 +437,8 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         </div>
         
         <div className="relative z-10 max-w-7xl mx-auto">
-          <div className="mb-4 hidden justify-end md:flex">
+          <div className="mb-4 hidden items-center justify-between md:flex">
+            <BackButton />
             <NavLink to="/app/inbox" className="relative p-2 text-brand-text-secondary hover:text-brand-text-primary transition-colors">
               <BellIcon className="w-6 h-6" />
               {unreadCount > 0 && (

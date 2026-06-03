@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import Card from '../components/Card';
 import { CheckIcon } from '../components/icons';
@@ -115,6 +116,7 @@ const OWNERSHIP_NOTES = [
 const PricingPage: React.FC = () => {
   const { user, openSignIn } = useAuth();
   const { notify } = useNotifications();
+  const navigate = useNavigate();
 
   const [userCountry, setUserCountry] = useState('US');
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
@@ -663,7 +665,10 @@ const PricingPage: React.FC = () => {
           <p className="text-sm text-brand-text-secondary mb-4">
             We believe everyone should have access to spiritual formation tools. If you cannot afford a subscription, please apply for our scholarship program or regional pricing.
           </p>
-          <button className="px-5 py-2 rounded-lg border border-brand-border text-brand-text-primary hover:bg-brand-secondary transition-colors">
+          <button
+            onClick={() => navigate('/app/help')}
+            className="px-5 py-2 rounded-lg border border-brand-border text-brand-text-primary hover:bg-brand-secondary transition-colors"
+          >
             Apply for Scholarship
           </button>
         </Card>
