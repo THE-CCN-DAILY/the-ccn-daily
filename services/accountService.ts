@@ -6,8 +6,22 @@ import {
   EmailAuthProvider,
 } from 'firebase/auth';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc } from 'firebase/firestore';
 import { db, storage } from '../firebase';
+
+/**
+ * Best-effort sync of a denormalized field onto the user's Firestore doc. The Auth
+ * profile is the source of truth; the Firestore copy is only for admin/leaderboard
+ * views. The users security rule whitelists specific fields (no updatedAt), so we keep
+ * the payload minimal and never let a Firestore failure break the Auth-side update.
+ */
+async function syncUserDoc(uid: string, data: Record<string, unknown>): Promise<void> {
+  try {
+    await setDoc(doc(db, 'users', uid), data, { merge: true });
+  } catch {
+    // Non-fatal: the Auth profile already updated; the denormalized copy can lag.
+  }
+}
 
 /** Max avatar upload size (2 MB) and accepted image types. */
 const MAX_AVATAR_BYTES = 2 * 1024 * 1024;
@@ -45,7 +59,7 @@ export async function uploadProfilePhoto(uid: string, file: File): Promise<strin
   const photoURL = await getDownloadURL(storageRef);
 
   await updateProfile(user, { photoURL });
-  await setDoc(doc(db, 'users', uid), { photoURL, updatedAt: serverTimestamp() }, { merge: true });
+  await syncUserDoc(uid, { photoURL });
 
   return photoURL;
 }
@@ -60,7 +74,7 @@ export async function updateDisplayName(uid: string, displayName: string): Promi
   if (!user) throw new Error('You are not signed in.');
 
   await updateProfile(user, { displayName: trimmed });
-  await setDoc(doc(db, 'users', uid), { displayName: trimmed, updatedAt: serverTimestamp() }, { merge: true });
+  await syncUserDoc(uid, { displayName: trimmed });
 }
 
 /**

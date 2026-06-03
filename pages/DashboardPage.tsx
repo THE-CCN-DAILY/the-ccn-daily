@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
+import AnnouncementBanner from '../components/AnnouncementBanner';
 import {
   Flame,
   BookOpen,
@@ -312,6 +313,9 @@ const DashboardPage: React.FC = () => {
   // ────────────────────────────────────────────────────────────────────────
   return (
     <div className="max-w-4xl mx-auto pb-24 px-0">
+
+      {/* Admin-authored promo banner (schedule + audience filtered) */}
+      <AnnouncementBanner />
 
       {/* ── 1. Greeting Header ─────────────────────────────────────────────── */}
       <motion.section

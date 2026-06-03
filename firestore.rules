@@ -305,6 +305,24 @@ service cloud.firestore {
              data.createdAt is timestamp;
     }
 
+    function isValidAnnouncement(data) {
+      return hasRequiredFields(['title', 'placement', 'audience', 'isActive', 'createdAt']) &&
+             data.title is string && data.title.size() > 0 && data.title.size() < 160 &&
+             data.placement in ['banner', 'sidebar'] &&
+             data.audience in ['all', 'free', 'paid'] &&
+             data.isActive is bool &&
+             data.createdAt is timestamp &&
+             (!('body' in data) || (data.body is string && data.body.size() < 2000)) &&
+             (!('imageUrl' in data) || (data.imageUrl is string && data.imageUrl.size() < 1000)) &&
+             (!('ctaLabel' in data) || (data.ctaLabel is string && data.ctaLabel.size() < 60)) &&
+             (!('ctaUrl' in data) || (data.ctaUrl is string && data.ctaUrl.size() < 1000)) &&
+             (!('style' in data) || data.style in ['default', 'seasonal', 'product', 'event']) &&
+             (!('startDate' in data) || data.startDate is timestamp) &&
+             (!('endDate' in data) || data.endDate is timestamp) &&
+             (!('priority' in data) || (data.priority is number)) &&
+             (!('updatedAt' in data) || data.updatedAt is timestamp);
+    }
+
     function isValidUserPurchase(data) {
       return hasRequiredFields(['userId', 'resourceId', 'txRef', 'status', 'purchasedAt']) &&
              data.userId is string && data.resourceId is string && data.txRef is string &&
@@ -558,6 +576,15 @@ service cloud.firestore {
     match /settings/{settingId} {
       allow read: if true;
       allow write: if isAdmin() && isValidDiscount(request.resource.data);
+    }
+
+    // Admin-authored promotional announcements (banners/sidebar promos). Public read so
+    // the dashboard can show active ones; the client filters by schedule + audience.
+    match /announcements/{announcementId} {
+      allow read: if true;
+      allow create: if isAdmin() && isValidAnnouncement(request.resource.data);
+      allow update: if isAdmin() && isValidAnnouncement(request.resource.data);
+      allow delete: if isAdmin();
     }
 
     match /resources/{resourceId} {
