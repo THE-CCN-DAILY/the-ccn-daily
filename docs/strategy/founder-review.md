@@ -3,6 +3,47 @@
 Everything done autonomously while you were away, what's deployed where, decisions I made,
 and items that need your eyes or action. Newest sections appended as work proceeds.
 
+## 🔴 ACTION REQUIRED — dashboard steps (Google sign-in won't work until these are done)
+Live-site corrections shipped to prod 2026-06-03 (commit 6e1631f). The branded Google
+redirect proxy is deployed and verified (the proxied `/__/auth/handler` returns 200), but
+Google will reject the sign-in until you complete these one-time console steps:
+1. **Firebase Console** → Authentication → Settings → **Authorized domains** → add `theccndaily.com`.
+2. **Google Cloud Console** (project ccn-daily) → APIs & Services → Credentials → your OAuth 2.0
+   Web client → **Authorized redirect URIs** → add `https://theccndaily.com/__/auth/handler`
+   (and `https://theccndaily.com` under Authorized JavaScript origins).
+3. **Google Cloud Console** → OAuth consent screen → set the **app name** to "THE CCN DAILY",
+   add the logo + homepage `https://theccndaily.com`, so the consent screen is branded.
+4. **Flutterwave** → confirm the account is **activated for LIVE** transactions and that
+   `FLWPUBK-…-X` is the correct live public key. (A `PBFPubKey` error also means the
+   account/key isn't live-activated.) The publishable key now lives in `wrangler.toml [vars]`;
+   the SECRET key + webhook hash remain wrangler secrets.
+5. If Cloudflare **Git auto-build** is enabled (separate from my `wrangler pages deploy`),
+   set `VITE_FIREBASE_AUTH_DOMAIN` and `VITE_FLUTTERWAVE_PUBLIC_KEY` in the Pages dashboard
+   env too, so CI builds match.
+
+After 1–3, test Google sign-in on theccndaily.com (mobile + desktop). After 4, retry a real
+small subscription → confirm content unlocks → refund.
+
+## ✅ Live-site corrections (2026-06-03, commit 6e1631f) — deployed prod
+- **Payments PBFPubKey:** server intent is the single source of the Flutterwave public key
+  (committed publishable key in wrangler.toml); removed the sandbox demo-key fallback so a
+  bad/unset key fails loudly instead of shipping a key Flutterwave rejects.
+- **Google sign-in:** `functions/_middleware.ts` proxies `/__/auth/*` + `/__/firebase/*` to
+  Firebase; authDomain = app host; switched popup→`signInWithRedirect` (mobile-safe + branded).
+  Proxy verified live (handler/iframe 200). **Blocked on the dashboard steps above.**
+- **Mobile "starts at bottom":** `ScrollToTop` resets window + the `<main>` scroller per route;
+  `scrollRestoration='manual'`; removed modal autoFocus jump.
+- **Text/icons too small:** global root font-size bump (106.25% desktop / 115% mobile).
+- **PPP everywhere + local currency:** ~80-country PPP map; prices display in the visitor's
+  local currency at standard rates with a "billed in USD" note (billing stays USD).
+
+### Known follow-ups (flagged, not yet fixed)
+- Promo discounts shown client-side are NOT applied to the server charge (server charges
+  base×PPP only). And yearly prices aren't PPP-adjusted client-side. Pricing-accuracy items
+  to reconcile so the displayed price always equals the charged USD.
+- Local exchange rates are a static standard table (label says "standard rates") — refresh
+  periodically or wire a rates API later.
+
 ## ✅ Done & deployed (this program)
 | Item | Commit | Where |
 |---|---|---|
