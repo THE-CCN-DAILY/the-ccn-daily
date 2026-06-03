@@ -89,7 +89,9 @@ const sanctuaryItems = [
   { to: '/app/inbox', text: 'Inbox & Updates', icon: Inbox, group: 'Account' },
   { to: '/app/settings', text: 'Settings', icon: Settings, group: 'Account' },
   { to: '/app/events', text: 'Live Events', icon: CalendarDays, group: 'Live' },
-  { to: '/app/live', text: 'Live Broadcast', icon: Radio, group: 'Live' },
+  // Hidden until Cloudflare Stream is enabled (video subscription). Route still exists for
+  // admin testing; restore this nav item once Stream is live.
+  // { to: '/app/live', text: 'Live Broadcast', icon: Radio, group: 'Live' },
   { to: '/give', text: 'Give', icon: HeartHandshake, group: 'Account' },
   { to: '/app/giving', text: 'Giving & Support', icon: HeartHandshake, group: 'Account' },
   { to: '/pricing', text: 'Upgrade Plan', icon: Crown, group: 'Account' },
