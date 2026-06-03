@@ -71,6 +71,7 @@ import BookReaderPage from './pages/BookReaderPage';
 import ReadingPlansPage from './pages/ReadingPlansPage';
 
 import ErrorBoundary from './components/ErrorBoundary';
+import ScrollToTop from './components/ScrollToTop';
 import SignInModal from './components/auth/SignInModal';
 
 import RequireAuth from './components/auth/RequireAuth';
@@ -95,6 +96,7 @@ const App: React.FC = () => {
               <RoadmapProvider>
                 <AudioPlayerProvider>
                   <HashRouter>
+                    <ScrollToTop />
                     <UpgradeModalProvider>
                       <Layout>
                         <SignInModal />

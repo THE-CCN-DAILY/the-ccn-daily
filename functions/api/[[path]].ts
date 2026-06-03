@@ -59,6 +59,8 @@ type Env = {
   //   returned by /api/payments/intent so the client initializes Flutterwave.
   FLUTTERWAVE_SECRET_KEY?: string;
   FLUTTERWAVE_WEBHOOK_HASH?: string;
+  // Publishable Flutterwave key (wrangler.toml [vars]); VITE_ name kept as a fallback.
+  FLUTTERWAVE_PUBLIC_KEY?: string;
   VITE_FLUTTERWAVE_PUBLIC_KEY?: string;
 };
 
@@ -3371,7 +3373,9 @@ app.post('/api/payments/intent', async (c) => {
     currency,
     billingCycle,
     tier,
-    publicKey: c.env.VITE_FLUTTERWAVE_PUBLIC_KEY || undefined,
+    // Server-authoritative public key. FLUTTERWAVE_PUBLIC_KEY is the committed
+    // (publishable) key in wrangler.toml [vars]; VITE_ name kept as a fallback.
+    publicKey: c.env.FLUTTERWAVE_PUBLIC_KEY || c.env.VITE_FLUTTERWAVE_PUBLIC_KEY || undefined,
   });
 });
 

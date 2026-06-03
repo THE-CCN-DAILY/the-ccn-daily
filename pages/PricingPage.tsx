@@ -13,18 +13,25 @@ import {
 const EASE = [0.22, 1, 0.36, 1] as [number, number, number, number];
 const fadeUp = { hidden: { opacity: 0, y: 24 }, visible: { opacity: 1, y: 0 } };
 const stagger = { hidden: {}, visible: { transition: { staggerChildren: 0.1, delayChildren: 0.05 } } };
-import { getLocalizedPrice } from '../utils/ppp';
+import { getLocalizedPrice, formatLocalPrice, isLocalCurrencyNonUsd } from '../utils/ppp';
 import { useAuth } from '../contexts/AuthContext';
 import { useNotifications } from '../contexts/NotificationContext';
 import { useFlutterwave, closePaymentModal } from 'flutterwave-react-v3';
 import { db } from '../firebase';
-import { doc, collection, query, where, getDocs, getDoc } from 'firebase/firestore';
+import { collection, query, where, getDocs } from 'firebase/firestore';
 import { trackAnalyticsEvent, nowIso } from '../services/analyticsService';
 import { useExperiment } from '../hooks/useExperiment';
 import { getTierLabel } from '../types/pricing';
 import { createPaymentIntent, getUserSubscription, type PaymentIntentResult } from '../services/purchaseService';
 
-const DEFAULT_FLUTTERWAVE_KEY = (import.meta as any).env.VITE_FLUTTERWAVE_PUBLIC_KEY || 'FLWPUBK_TEST-SANDBOXDEMOKEY-X';
+// Build-time fallback only. The authoritative key comes from the server intent
+// (/api/payments/intent). No hardcoded demo key — an unconfigured key must fail
+// loudly, never silently ship a sandbox key that Flutterwave rejects (PBFPubKey).
+const BUILD_FLUTTERWAVE_KEY = (import.meta as any).env.VITE_FLUTTERWAVE_PUBLIC_KEY || '';
+
+// A usable key is a real Flutterwave publishable key and NOT the old sandbox demo.
+const isUsableFlwKey = (key: string | undefined): key is string =>
+  !!key && /^FLWPUBK(_TEST)?-/.test(key) && !key.includes('SANDBOXDEMOKEY');
 
 // After a successful charge the Flutterwave webhook grants the entitlement server-side.
 // Poll the D1 readback a few times so the UI reflects the grant before refreshing.
@@ -114,14 +121,12 @@ const PricingPage: React.FC = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [selectedTier, setSelectedTier] = useState<PaidTier | null>(null);
   const [activeDiscount, setActiveDiscount] = useState<{ name: string; percentage: number; targetTier: string; targetBilling: string } | null>(null);
-  const [flutterwaveKey, setFlutterwaveKey] = useState(DEFAULT_FLUTTERWAVE_KEY);
   const [intent, setIntent] = useState<PaymentIntentResult | null>(null);
   const paywallVariant = useExperiment(user?.uid, 'paywall_layout_v1');
 
   useEffect(() => {
     detectCountry(); // Real geo for PPP display (server re-derives geo authoritatively)
     fetchActiveDiscount();
-    fetchPaymentSettings();
 
     trackAnalyticsEvent({
       name: 'paywall_viewed',
@@ -144,18 +149,6 @@ const PricingPage: React.FC = () => {
       if (match?.[1]) setUserCountry(match[1]);
     } catch {
       // Keep the default country on failure.
-    }
-  };
-
-  const fetchPaymentSettings = async () => {
-    try {
-      const docRef = doc(db, 'settings', 'payment_settings');
-      const docSnap = await getDoc(docRef);
-      if (docSnap.exists() && docSnap.data().flutterwavePublicKey) {
-        setFlutterwaveKey(docSnap.data().flutterwavePublicKey);
-      }
-    } catch (error) {
-      // silently handled
     }
   };
 
@@ -217,13 +210,11 @@ const PricingPage: React.FC = () => {
     return Number(finalPrice.toFixed(2));
   };
 
-  const formatPrice = (tier: PaidTier) => {
-    let currencySymbol = proPrice.currencySymbol;
-    if (tier === 'max') currencySymbol = maxPrice.currencySymbol;
-    if (tier === 'partner') currencySymbol = partnerPrice.currencySymbol;
-    const amount = getAmount(tier);
-    return `${currencySymbol}${amount}`;
-  };
+  // Display the price in the visitor's LOCAL currency (converted at standard rates).
+  // Billing is in USD (server-authoritative) — see the note under the billing toggle.
+  const formatPrice = (tier: PaidTier) => formatLocalPrice(getAmount(tier), userCountry);
+
+  const showsLocalCurrency = isLocalCurrencyNonUsd(userCountry);
 
   const getSavingsPercentage = (tier: PaidTier) => {
     const monthlyTotal = getAmount(tier) * (billingCycle === 'monthly' ? 1 : (tier === 'pro' ? 8.99 : tier === 'max' ? 14.99 : 24.99)) * 12;
@@ -241,7 +232,7 @@ const PricingPage: React.FC = () => {
   // the client never sets the price. Until an intent is created these are placeholders;
   // payment is only ever launched after `intent` is populated (see the effect below).
   const handleFlutterPayment = useFlutterwave({
-    public_key: intent?.publicKey || flutterwaveKey,
+    public_key: intent?.publicKey || BUILD_FLUTTERWAVE_KEY,
     tx_ref: intent?.tx_ref || `sub_${Date.now()}`,
     amount: intent?.amount ?? 0,
     currency: intent?.currency || 'USD',
@@ -330,6 +321,15 @@ const PricingPage: React.FC = () => {
   useEffect(() => {
     if (!intent || !selectedTier) return;
     const tier = selectedTier;
+
+    // Fail loudly if no real key reached us — never hand Flutterwave a bad key.
+    const effectiveKey = intent.publicKey || BUILD_FLUTTERWAVE_KEY;
+    if (!isUsableFlwKey(effectiveKey)) {
+      setIsProcessing(false);
+      setIntent(null);
+      notify('Payments are not configured yet. Please contact support.', 'error');
+      return;
+    }
 
     handleFlutterPayment({
       callback: async (response) => {
@@ -435,6 +435,13 @@ const PricingPage: React.FC = () => {
           </motion.div>
         )}
       </div>
+
+      {/* Local-currency clarity — prices display in the visitor's currency; billing is USD */}
+      {showsLocalCurrency && (
+        <p className="mb-6 text-center text-xs text-brand-text-secondary">
+          Prices shown in your local currency at standard exchange rates · billed securely in USD.
+        </p>
+      )}
 
       {/* ── Pricing cards ──────────────────────────────────────────── */}
       <motion.div

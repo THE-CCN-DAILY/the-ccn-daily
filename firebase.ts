@@ -9,11 +9,28 @@ import {
   sendPasswordResetEmail,
 } from 'firebase/auth';
 
+// Resolve the Firebase Auth domain.
+//
+// On any DEPLOYED host we use the app's own origin as the authDomain, because the
+// /__/auth/* and /__/firebase/* reverse-proxy (Cloudflare Pages Functions) serves
+// Firebase's auth handler from that same origin. This (a) brands the Google consent
+// screen as theccndaily.com instead of ccn-daily.firebaseapp.com and (b) keeps the
+// signInWithRedirect result cookie same-origin so redirect sign-in works (popups are
+// unreliable on mobile). On localhost there is no proxy, so we fall back to the
+// Firebase-hosted authDomain from env.
+const resolveAuthDomain = (): string | undefined => {
+  if (typeof window !== 'undefined' && window.location?.hostname) {
+    const host = window.location.hostname;
+    if (host !== 'localhost' && host !== '127.0.0.1') return host;
+  }
+  return import.meta.env.VITE_FIREBASE_AUTH_DOMAIN;
+};
+
 // Config is supplied at build time via VITE_ env vars.
 // Never import firebase-applet-config.json — it contains a plaintext API key.
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  authDomain: resolveAuthDomain(),
   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
   storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,

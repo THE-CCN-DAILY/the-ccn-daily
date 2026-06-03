@@ -17,9 +17,20 @@ const UpgradeModal: React.FC<UpgradeModalProps> = ({ isOpen, onClose, featureNam
     const navigate = useNavigate();
 
     useEffect(() => {
-        // In a real app, we would fetch the user's country via IP geolocation
-        // For this prototype, we'll simulate fetching it
-        setUserCountry('US'); 
+        // Real geo from Cloudflare's edge trace (same origin, no dependency) so prices
+        // show in the visitor's local currency. Billing remains USD.
+        let mounted = true;
+        (async () => {
+            try {
+                const res = await fetch('/cdn-cgi/trace');
+                const text = await res.text();
+                const match = text.match(/^loc=([A-Z]{2})$/m);
+                if (mounted && match?.[1]) setUserCountry(match[1]);
+            } catch {
+                // Keep default country on failure.
+            }
+        })();
+        return () => { mounted = false; };
     }, []);
 
     if (!isOpen) return null;
@@ -82,7 +93,7 @@ const UpgradeModal: React.FC<UpgradeModalProps> = ({ isOpen, onClose, featureNam
                                     )}
                                     <h3 className="text-xl font-bold text-brand-text-primary mb-2">Pro</h3>
                                     <div className="mb-6">
-                                        <span className="text-3xl font-black text-brand-text-primary">{proPrice.currencySymbol}{proPrice.discountedPriceUSD}</span>
+                                        <span className="text-3xl font-black text-brand-text-primary">{proPrice.formattedLocal}</span>
                                         <span className="text-brand-text-secondary">/mo</span>
                                     </div>
                                     
@@ -121,7 +132,7 @@ const UpgradeModal: React.FC<UpgradeModalProps> = ({ isOpen, onClose, featureNam
                                         Max <Crown className="w-5 h-5 text-secondary-purple" />
                                     </h3>
                                     <div className="mb-6">
-                                        <span className="text-3xl font-black text-brand-text-primary">{maxPrice.currencySymbol}{maxPrice.discountedPriceUSD}</span>
+                                        <span className="text-3xl font-black text-brand-text-primary">{maxPrice.formattedLocal}</span>
                                         <span className="text-brand-text-secondary">/mo</span>
                                     </div>
                                     

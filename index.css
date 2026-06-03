@@ -176,6 +176,16 @@
     font-family: var(--font-ui);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+
+    /* Root font-size drives every rem-based utility (text, icon, spacing sizes).
+       Bumping it scales the whole UI up proportionally. 106.25% = 17px base on
+       desktop; mobile goes larger because that's where text/icons read small. */
+    font-size: 106.25%;
+  }
+
+  /* Mobile: enlarge text, icons, and tap targets app-wide. */
+  @media (max-width: 640px) {
+    html { font-size: 115%; }
   }
 
   body {

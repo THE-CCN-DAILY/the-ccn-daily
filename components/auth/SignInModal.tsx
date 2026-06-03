@@ -237,7 +237,6 @@ const SignInModal: React.FC = () => {
                           value={email}
                           onChange={(e) => setEmail(e.target.value)}
                           required
-                          autoFocus
                           className={inputClass}
                         />
                         <input
@@ -349,7 +348,6 @@ const SignInModal: React.FC = () => {
                           value={resetEmail}
                           onChange={(e) => setResetEmail(e.target.value)}
                           required
-                          autoFocus
                           className={inputClass}
                         />
                         <button

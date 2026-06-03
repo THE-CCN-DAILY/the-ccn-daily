@@ -1,7 +1,7 @@
 import React, { createContext, useState, useContext, useEffect, useMemo, useCallback } from 'react';
 import {
   getAuth,
-  signInWithPopup,
+  signInWithRedirect,
   GoogleAuthProvider,
   onAuthStateChanged,
   signOut as firebaseSignOut,
@@ -117,16 +117,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const signIn = useCallback(async () => {
-    // Popup (not redirect): redirect loses its result on Cloudflare Pages because the
-    // cross-domain authDomain cookie is blocked by the browser, looping back to sign-in.
+    // Redirect (not popup): the /__/auth proxy serves Firebase's handler from our own
+    // origin, so the redirect-result cookie is same-origin and reliable — and it works
+    // on mobile, where popups are routinely blocked. The result is consumed by
+    // getRedirectResult on the next load (see the effect above).
     setRedirectError(null);
     try {
-      await signInWithPopup(getAuth(), new GoogleAuthProvider());
+      await signInWithRedirect(getAuth(), new GoogleAuthProvider());
     } catch (err: unknown) {
       const code = (err as { code?: string }).code ?? '';
-      if (code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request') {
-        return; // user dismissed the popup — not an error
-      }
       setRedirectError(
         code === 'auth/unauthorized-domain'
           ? 'Google sign-in is not enabled for this domain yet. Use email & password for now.'
