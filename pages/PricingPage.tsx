@@ -62,12 +62,13 @@ const PLAN_UI = {
     tagline: 'Go deeper — every day.',
     bullets: [
       'Everything in Foundation, plus:',
-      'Premium courses (growing library)',
-      'Full audiobook library — curated for your season',
+      'Full access to the premium course library — included & always growing',
+      'Full premium audiobook library — included',
+      'All premium reading plans & challenges',
       'Deeper study tools (Scripture-anchored, AI-assisted)',
       'Personalised daily devotionals',
       'Unlimited journaling with templates',
-      'Community rooms — up to 3 active challenges',
+      'Community rooms',
     ],
     support: '7-day free trial on annual plan.',
     howItWorks: 'One account, one person. Everything in Foundation stays with you — Growth adds the deeper tools above. Billed monthly or annually. The annual plan saves 44% and includes a 7-day trial before you\'re charged.',
@@ -648,12 +649,13 @@ const PricingPage: React.FC = () => {
         <motion.div variants={fadeUp} transition={{ duration: 0.5, ease: EASE }}>
           <div className="h-full rounded-2xl border-2 border-dashed border-brand-border bg-brand-dark/20 p-6 flex flex-col">
             <p className="text-xs font-semibold uppercase tracking-[0.14em] text-brand-accent mb-3">Add-Ons</p>
-            <h3 className="text-xl font-bold text-brand-text-primary mb-4">Own It Forever</h3>
+            <h3 className="text-xl font-bold text-brand-text-primary mb-2">Own It Forever</h3>
+            <p className="text-xs text-brand-text-secondary mb-4">
+              Your courses, audiobooks, plans, and challenges are all included in your subscription. These few extras are the only things sold separately — to keep beyond it.
+            </p>
             <ul className="space-y-2 text-sm text-brand-text-secondary flex-1">
               <li>• Books: single purchase, yours to keep</li>
-              <li>• Flagship Courses: single purchase with subscriber savings</li>
-              <li>• Full audiobook library — yours to keep as you grow</li>
-              <li>• Mentorship Session: subscriber discount at checkout</li>
+              <li>• 1:1 Mentorship Session: subscriber discount at checkout</li>
               <li>• Premium Event Ticket: 10–20% subscriber discount</li>
             </ul>
           </div>
