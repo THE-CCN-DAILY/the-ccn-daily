@@ -323,6 +323,17 @@ service cloud.firestore {
              (!('updatedAt' in data) || data.updatedAt is timestamp);
     }
 
+    function isValidScholarshipApplication(data) {
+      return hasRequiredFields(['applicantUid', 'applicantName', 'applicantEmail', 'reason', 'status', 'createdAt']) &&
+             data.applicantUid == request.auth.uid &&
+             data.applicantName is string && data.applicantName.size() < 120 &&
+             data.applicantEmail is string && data.applicantEmail.size() < 200 &&
+             data.reason is string && data.reason.size() > 0 && data.reason.size() < 2000 &&
+             data.status == 'pending' &&
+             data.createdAt is timestamp &&
+             (!('country' in data) || (data.country is string && data.country.size() < 80));
+    }
+
     function isValidUserPurchase(data) {
       return hasRequiredFields(['userId', 'resourceId', 'txRef', 'status', 'purchasedAt']) &&
              data.userId is string && data.resourceId is string && data.txRef is string &&
@@ -576,6 +587,14 @@ service cloud.firestore {
     match /settings/{settingId} {
       allow read: if true;
       allow write: if isAdmin() && isValidDiscount(request.resource.data);
+    }
+
+    // Scholarship applications — a user submits their own (pending); admins read all and
+    // review (accept/decline). The actual grant happens server-side via the admin API.
+    match /scholarshipApplications/{appId} {
+      allow read: if isAdmin() || (isAuthenticated() && resource.data.applicantUid == request.auth.uid);
+      allow create: if isAuthenticated() && isValidScholarshipApplication(request.resource.data);
+      allow update, delete: if isAdmin();
     }
 
     // Admin-authored promotional announcements (banners/sidebar promos). Public read so

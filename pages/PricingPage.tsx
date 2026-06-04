@@ -697,7 +697,7 @@ const PricingPage: React.FC = () => {
             We believe everyone should have access to spiritual formation tools. If you cannot afford a subscription, please apply for our scholarship program or regional pricing.
           </p>
           <button
-            onClick={() => navigate('/app/help')}
+            onClick={() => (user ? navigate('/app/scholarship') : openSignIn())}
             className="px-5 py-2 rounded-lg border border-brand-border text-brand-text-primary hover:bg-brand-secondary transition-colors"
           >
             Apply for Scholarship

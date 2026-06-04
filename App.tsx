@@ -65,6 +65,8 @@ import LeaderDashboardPage from './pages/LeaderDashboardPage';
 import ContentManagerPage from './pages/ContentManagerPage';
 import CommentModerationPage from './pages/CommentModerationPage';
 import AnnouncementsManagerPage from './pages/AnnouncementsManagerPage';
+import ScholarshipApplicationPage from './pages/ScholarshipApplicationPage';
+import ScholarshipReviewPage from './pages/ScholarshipReviewPage';
 import ChallengeModuleManagerPage from './pages/ChallengeModuleManagerPage';
 import CourseModuleManagerPage from './pages/CourseModuleManagerPage';
 import BooksLibraryPage from './pages/BooksLibraryPage';
@@ -132,6 +134,7 @@ const App: React.FC = () => {
                             <Route path="giving" element={<RequireAuth><GivingPage /></RequireAuth>} />
                             <Route path="help" element={<HelpPage />} />
                             <Route path="student-verify" element={<RequireAuth><StudentVerificationPage /></RequireAuth>} />
+                            <Route path="scholarship" element={<RequireAuth><ScholarshipApplicationPage /></RequireAuth>} />
                             <Route path="courses" element={<RequireAuth><CoursesPage /></RequireAuth>} />
                             <Route path="courses/:courseId" element={<RequireAuth><CoursePlayerPage /></RequireAuth>} />
                             <Route path="audiobook-library" element={<RequireAuth><AudiobookLibraryPage /></RequireAuth>} />
@@ -173,6 +176,7 @@ const App: React.FC = () => {
                             <Route path="content-manager" element={<RequireRole allowedRoles={['admin', 'lead_developer']}><ContentManagerPage /></RequireRole>} />
                             <Route path="comments" element={<RequireRole allowedRoles={['admin']}><CommentModerationPage /></RequireRole>} />
                             <Route path="announcements" element={<RequireRole allowedRoles={['admin']}><AnnouncementsManagerPage /></RequireRole>} />
+                            <Route path="scholarships" element={<RequireRole allowedRoles={['admin']}><ScholarshipReviewPage /></RequireRole>} />
                             <Route path="challenges/:challengeId/modules" element={<RequireRole allowedRoles={['admin', 'lead_developer']}><ChallengeModuleManagerPage /></RequireRole>} />
                             <Route path="courses/:courseId/modules" element={<RequireRole allowedRoles={['admin', 'lead_developer']}><CourseModuleManagerPage /></RequireRole>} />
                             <Route path="growth" element={<RequireRole allowedRoles={['admin']}><GrowthConsole /></RequireRole>} />

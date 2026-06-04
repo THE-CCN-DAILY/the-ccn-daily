@@ -3276,6 +3276,90 @@ app.post('/api/email/gift', async (c) => {
   }
 });
 
+// ── Scholarships (admin-decided) ───────────────────────────────────────────────
+// Admin accepts/declines a scholarship application. On accept we grant the tier in D1
+// for a fixed window (same entitlement path the payment webhook uses) and email the
+// applicant. On decline we email the reason. The Firestore application record + any
+// in-app notification are written by the admin client; this endpoint owns the D1 grant
+// + email (the parts the client cannot do).
+app.post('/api/admin/scholarship-decide', async (c) => {
+  const denied = requireAdmin(c); if (denied) return denied;
+
+  const body = await c.req.json().catch(() => ({} as Record<string, unknown>));
+  const decision = body.decision === 'accept' ? 'accept' : 'decline';
+  const email = String(body.email || '').trim();
+  const name = String(body.name || 'Friend').trim();
+  const declineReason = String(body.declineReason || '').trim();
+
+  if (decision === 'accept') {
+    if (!c.env.DB) return c.json({ error: 'D1 database binding is not configured' }, 503);
+    const userId = String(body.userId || '').trim();
+    if (!isSafeId(userId)) return c.json({ error: 'Invalid user id' }, 400);
+
+    const tier = body.tier === 'max' ? 'max' : body.tier === 'partner' ? 'partner' : 'pro';
+    const months = Number(body.months) > 0 ? Math.min(Math.floor(Number(body.months)), 24) : 6;
+    const ends = new Date();
+    ends.setMonth(ends.getMonth() + months);
+    const endsAt = ends.toISOString();
+    const resourceId = `tier:${tier}`;
+    const entitlementId = crypto.randomUUID();
+
+    await c.env.DB.batch([
+      c.env.DB.prepare(
+        `INSERT INTO user_subscriptions (user_id, tier, status, started_at, ends_at, updated_at)
+         VALUES (?, ?, 'active', CURRENT_TIMESTAMP, ?, CURRENT_TIMESTAMP)
+         ON CONFLICT(user_id) DO UPDATE SET
+           tier = excluded.tier, status = 'active',
+           started_at = COALESCE(user_subscriptions.started_at, CURRENT_TIMESTAMP),
+           ends_at = excluded.ends_at, updated_at = CURRENT_TIMESTAMP`
+      ).bind(userId, tier, endsAt),
+      c.env.DB.prepare(`UPDATE users SET tier = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`).bind(tier, userId),
+      c.env.DB.prepare(
+        `INSERT INTO user_entitlements (id, user_id, resource_id, access_type, source, starts_at, ends_at, is_active)
+         VALUES (?, ?, ?, 'subscription_included', 'scholarship', CURRENT_TIMESTAMP, ?, 1)`
+      ).bind(entitlementId, userId, resourceId, endsAt),
+    ]);
+
+    if (c.env.RESEND_API_KEY && email && isValidEmail(email)) {
+      const html = `
+        <div style="font-family:Georgia,serif;max-width:600px;margin:0 auto;background:#1a1210;color:#f0ebe4;padding:40px 32px;border-radius:12px">
+          <h2 style="color:#F27D26;font-size:22px;margin-bottom:8px">Your scholarship is approved 🎉</h2>
+          <p>Dear ${sanitizeInput(name)},</p>
+          <p>We're glad to welcome you. Your <strong>Growth (premium)</strong> access is now active for <strong>${months} months</strong> — full access to courses, audiobooks, study tools, and the growing library.</p>
+          <p>Log in to theccndaily.com and begin. May it deepen your walk.</p>
+          <p style="margin-top:32px;font-size:12px;color:#7a6a60">THE CCN DAILY — theccndaily.com</p>
+        </div>`;
+      await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${c.env.RESEND_API_KEY}` },
+        body: JSON.stringify({ from: 'gifts@theccndaily.com', to: [email], subject: 'Your CCN Daily scholarship is approved', html }),
+      }).catch(() => {});
+    }
+
+    return c.json({ decided: 'accept', tier, endsAt });
+  }
+
+  // Decline — email the reason (best-effort).
+  if (c.env.RESEND_API_KEY && email && isValidEmail(email)) {
+    const html = `
+      <div style="font-family:Georgia,serif;max-width:600px;margin:0 auto;background:#1a1210;color:#f0ebe4;padding:40px 32px;border-radius:12px">
+        <h2 style="color:#F27D26;font-size:22px;margin-bottom:8px">About your scholarship application</h2>
+        <p>Dear ${sanitizeInput(name)},</p>
+        <p>Thank you for applying. We're unable to approve your scholarship at this time.</p>
+        ${declineReason ? `<blockquote style="border-left:3px solid #F27D26;padding-left:16px;margin:20px 0;font-style:italic;color:#c8b89a">${sanitizeInput(declineReason)}</blockquote>` : ''}
+        <p>You're warmly welcome to continue on the free plan, and to apply again later.</p>
+        <p style="margin-top:32px;font-size:12px;color:#7a6a60">THE CCN DAILY — theccndaily.com</p>
+      </div>`;
+    await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${c.env.RESEND_API_KEY}` },
+      body: JSON.stringify({ from: 'gifts@theccndaily.com', to: [email], subject: 'Your CCN Daily scholarship application', html }),
+    }).catch(() => {});
+  }
+
+  return c.json({ decided: 'decline' });
+});
+
 // ── Payments → entitlements (server-authoritative) ─────────────────────────────
 // The CLIENT NEVER sets the price or grants access. Flow:
 //   1. POST /api/payments/intent  → server computes the authoritative price from
