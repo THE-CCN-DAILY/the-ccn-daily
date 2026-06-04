@@ -317,6 +317,7 @@ service cloud.firestore {
              (!('ctaLabel' in data) || (data.ctaLabel is string && data.ctaLabel.size() < 60)) &&
              (!('ctaUrl' in data) || (data.ctaUrl is string && data.ctaUrl.size() < 1000)) &&
              (!('style' in data) || data.style in ['default', 'seasonal', 'product', 'event']) &&
+             (!('mediaType' in data) || data.mediaType in ['image', 'video']) &&
              (!('startDate' in data) || data.startDate is timestamp) &&
              (!('endDate' in data) || data.endDate is timestamp) &&
              (!('priority' in data) || (data.priority is number)) &&

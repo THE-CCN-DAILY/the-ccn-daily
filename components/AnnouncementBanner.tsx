@@ -79,7 +79,11 @@ const AnnouncementBanner = () => {
 
         <div className="flex items-center gap-4 p-4 pl-6 sm:p-5 sm:pl-7">
           {current.imageUrl ? (
-            <img src={current.imageUrl} alt="" className="hidden sm:block h-16 w-16 rounded-xl object-cover flex-shrink-0" />
+            current.mediaType === 'video' ? (
+              <video src={current.imageUrl} className="hidden sm:block h-16 w-28 rounded-xl object-cover flex-shrink-0" muted autoPlay loop playsInline />
+            ) : (
+              <img src={current.imageUrl} alt="" className="hidden sm:block h-16 w-16 rounded-xl object-cover flex-shrink-0" />
+            )
           ) : (
             <div
               className="hidden sm:flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl"

@@ -1,6 +1,6 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { motion } from 'motion/react';
-import { Megaphone, Plus, Pencil, Trash2, Calendar, Eye, EyeOff } from 'lucide-react';
+import { Megaphone, Plus, Pencil, Trash2, Calendar, Eye, EyeOff, Upload } from 'lucide-react';
 import Card from '../components/Card';
 import { useNotifications } from '../contexts/NotificationContext';
 import {
@@ -9,8 +9,10 @@ import {
   updateAnnouncement,
   deleteAnnouncement,
   setAnnouncementActive,
+  uploadAnnouncementMedia,
   isLive,
   EMPTY_ANNOUNCEMENT,
+  ANNOUNCEMENT_MEDIA_SPECS,
   type Announcement,
   type AnnouncementInput,
   type AnnouncementPlacement,
@@ -42,8 +44,26 @@ const AnnouncementsManagerPage: React.FC = () => {
   const [form, setForm] = useState<AnnouncementInput>({ ...EMPTY_ANNOUNCEMENT });
   const [editingId, setEditingId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => subscribeAnnouncements(setItems), []);
+
+  const handleMediaUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    setUploading(true);
+    try {
+      const { url, mediaType } = await uploadAnnouncementMedia(file);
+      setForm((prev) => ({ ...prev, imageUrl: url, mediaType }));
+      notify('Media uploaded.', 'success');
+    } catch (err) {
+      notify(err instanceof Error ? err.message : 'Upload failed.', 'error');
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const set = <K extends keyof AnnouncementInput>(key: K, value: AnnouncementInput[K]) =>
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -53,7 +73,7 @@ const AnnouncementsManagerPage: React.FC = () => {
   const startEdit = (a: Announcement) => {
     setEditingId(a.id);
     setForm({
-      title: a.title, body: a.body, imageUrl: a.imageUrl, ctaLabel: a.ctaLabel, ctaUrl: a.ctaUrl,
+      title: a.title, body: a.body, imageUrl: a.imageUrl, mediaType: a.mediaType, ctaLabel: a.ctaLabel, ctaUrl: a.ctaUrl,
       placement: a.placement, style: a.style, audience: a.audience, isActive: a.isActive,
       startDate: a.startDate, endDate: a.endDate, priority: a.priority,
     });
@@ -124,8 +144,29 @@ const AnnouncementsManagerPage: React.FC = () => {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className={labelClass}>Image URL (optional)</label>
-              <input className={fieldClass} value={form.imageUrl} onChange={(e) => set('imageUrl', e.target.value)} placeholder="https://…" />
+              <label className={labelClass}>Media — image or video (optional)</label>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploading}
+                  className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold bg-brand-dark border border-brand-border text-brand-text-primary hover:border-brand-accent disabled:opacity-60 flex-shrink-0"
+                >
+                  <Upload className="w-4 h-4" /> {uploading ? 'Uploading…' : 'Upload'}
+                </button>
+                <input className={`${fieldClass} flex-1`} value={form.imageUrl} onChange={(e) => set('imageUrl', e.target.value)} placeholder="…or paste a URL" />
+              </div>
+              <p className="text-[11px] text-brand-text-secondary mt-1 leading-snug">
+                Image — {ANNOUNCEMENT_MEDIA_SPECS.image.hint}.<br />Video — {ANNOUNCEMENT_MEDIA_SPECS.video.hint}.
+              </p>
+              {form.imageUrl && (
+                <div className="mt-2">
+                  {form.mediaType === 'video'
+                    ? <video src={form.imageUrl} className="h-24 rounded-lg" muted controls />
+                    : <img src={form.imageUrl} alt="" className="h-24 rounded-lg object-cover" />}
+                </div>
+              )}
+              <input ref={fileInputRef} type="file" accept="image/*,video/*" onChange={handleMediaUpload} className="hidden" />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>

@@ -669,27 +669,12 @@ const PricingPage: React.FC = () => {
         </motion.div>
       </motion.div>
 
-      {/* ── Add-Ons ──────────────────────────────────────────────────── */}
+      {/* ── Mission-Access (scholarship) ─────────────────────────────── */}
       <motion.div
-        className="mt-10 grid grid-cols-1 lg:grid-cols-2 gap-6"
+        className="mt-10 grid grid-cols-1 gap-6"
         variants={stagger} initial="hidden" whileInView="visible"
         viewport={{ once: true, margin: '-40px' }}
       >
-        <motion.div variants={fadeUp} transition={{ duration: 0.5, ease: EASE }}>
-          <div className="h-full rounded-2xl border-2 border-dashed border-brand-border bg-brand-dark/20 p-6 flex flex-col">
-            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-brand-accent mb-3">Add-Ons</p>
-            <h3 className="text-xl font-bold text-brand-text-primary mb-2">Own It Forever</h3>
-            <p className="text-xs text-brand-text-secondary mb-4">
-              Your courses, audiobooks, plans, and challenges are all included in your subscription. These few extras are the only things sold separately — to keep beyond it.
-            </p>
-            <ul className="space-y-2 text-sm text-brand-text-secondary flex-1">
-              <li>• Books: single purchase, yours to keep</li>
-              <li>• 1:1 Mentorship Session: subscriber discount at checkout</li>
-              <li>• Premium Event Ticket: 10–20% subscriber discount</li>
-            </ul>
-          </div>
-        </motion.div>
-
         <motion.div variants={fadeUp} transition={{ duration: 0.5, ease: EASE }}>
         <Card className="border-brand-border bg-brand-dark/20 h-full">
           <h3 className="text-xl font-bold text-brand-text-primary mb-2">Mission-Access Lane</h3>
