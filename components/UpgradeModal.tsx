@@ -100,11 +100,11 @@ const UpgradeModal: React.FC<UpgradeModalProps> = ({ isOpen, onClose, featureNam
                                     <ul className="space-y-3 mb-8 flex-1">
                                         <li className="flex items-start gap-3 text-sm text-brand-text-secondary">
                                             <CheckIcon className="w-5 h-5 text-brand-accent flex-shrink-0" />
-                                            <span>Deeply personalized AI Devotionals</span>
+                                            <span>Deeply personalised devotionals</span>
                                         </li>
                                         <li className="flex items-start gap-3 text-sm text-brand-text-secondary">
                                             <CheckIcon className="w-5 h-5 text-brand-accent flex-shrink-0" />
-                                            <span>Unlimited AI Spiritual Coach (Kai)</span>
+                                            <span>Unlimited spiritual coaching (Kai)</span>
                                         </li>
                                         <li className="flex items-start gap-3 text-sm text-brand-text-secondary">
                                             <CheckIcon className="w-5 h-5 text-brand-accent flex-shrink-0" />

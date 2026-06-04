@@ -145,7 +145,7 @@ const appFeatures = [
   },
   {
     icon: BookOpen,
-    title: 'AI Study Companion',
+    title: 'Scripture Study Companion',
     description: 'Ask questions. Get answers grounded in Scripture, not speculation.',
   },
 ];

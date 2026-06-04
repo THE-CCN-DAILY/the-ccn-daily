@@ -9,6 +9,7 @@ import {
   Users as LucideUsers,
   ShieldCheck as LucideShieldCheck,
   Crown as LucideCrown,
+  ChevronDown,
 } from 'lucide-react';
 
 const EASE = [0.22, 1, 0.36, 1] as [number, number, number, number];
@@ -49,6 +50,7 @@ const PLAN_UI = {
       'Daily devotional + guided reflection',
       'Bible reader (all books and chapters)',
       'Weekly newsletter and podcast',
+      'Access to all free resources, books & plans as they are released',
       'Standard audiobook library',
       'Journaling and prayer wall',
       'One active challenge',
@@ -65,13 +67,13 @@ const PLAN_UI = {
       'Full access to the premium course library — included & always growing',
       'Full premium audiobook library — included',
       'All premium reading plans & challenges',
-      'Deeper study tools (Scripture-anchored, AI-assisted)',
+      'Deeper Scripture-anchored study tools',
       'Personalised daily devotionals',
       'Unlimited journaling with templates',
       'Community rooms',
     ],
-    support: '7-day free trial on annual plan.',
-    howItWorks: 'One account, one person. Everything in Foundation stays with you — Growth adds the deeper tools above. Billed monthly or annually. The annual plan saves 44% and includes a 7-day trial before you\'re charged.',
+    support: 'Cancel anytime.',
+    howItWorks: 'One account, one person. Everything in Foundation stays with you — Growth adds the deeper tools above. Billed monthly or annually, and the annual plan saves 44%.',
     cta: 'Choose Growth',
     badge: 'Most Popular',
   },
@@ -86,7 +88,7 @@ const PLAN_UI = {
       'Visual Sanctuary + cinematic backgrounds',
       'Shared challenge board and family dashboard',
     ],
-    support: '14-day free trial on annual plan.',
+    support: 'Cancel anytime.',
     howItWorks: 'You subscribe once, then invite up to 4 people in your household. Each person gets their own profile, their own devotional journey, their own formation path — all under one subscription. No separate billing for family members. The person who subscribes manages the household seats.',
     cta: 'Choose Family',
   },
@@ -100,7 +102,7 @@ const PLAN_UI = {
       'Group progress analytics',
       'Invite link with discount for your members',
     ],
-    support: '30-day pilot for approved cohorts.',
+    support: 'For approved cohort leaders.',
     howItWorks: 'This is your personal Growth account — everything in Growth applies to you, for your own formation. On top of that, you get a group dashboard to shepherd up to 30 people: shared challenges, assignment tools, and a discount invite link to share with your group. Your members subscribe independently through your link. You are not buying seats for others. You lead; they walk their own walk.',
     cta: 'Apply for Leader',
   },
@@ -113,6 +115,33 @@ const OWNERSHIP_NOTES = [
   'Always separate add-on: 1:1 mentorship.',
   'Events: free/open events + premium ticketed events (subscriber discounts).',
 ];
+
+// Collapsible "how it works" detail — tucked under a Learn more toggle and given a
+// distinct sunk surface so it reads as secondary to the headline plan info above.
+const PlanDetails: React.FC<{ text: string }> = ({ text }) => {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="mb-4">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="inline-flex items-center gap-1 text-xs font-semibold text-brand-accent hover:underline"
+        aria-expanded={open}
+      >
+        {open ? 'Hide details' : 'Learn more'}
+        <ChevronDown className={`w-3.5 h-3.5 transition-transform ${open ? 'rotate-180' : ''}`} />
+      </button>
+      {open && (
+        <p
+          className="mt-2 text-xs leading-relaxed text-brand-text-secondary rounded-lg p-3 border border-brand-border"
+          style={{ background: 'var(--bg-sunk)' }}
+        >
+          {text}
+        </p>
+      )}
+    </div>
+  );
+};
 
 const PricingPage: React.FC = () => {
   const { user, openSignIn } = useAuth();
@@ -481,7 +510,7 @@ const PricingPage: React.FC = () => {
             </ul>
 
             <p className="text-xs text-brand-text-secondary mb-2">{PLAN_UI.free.support}</p>
-            <p className="text-xs leading-relaxed text-brand-text-secondary mb-4">{PLAN_UI.free.howItWorks}</p>
+            <PlanDetails text={PLAN_UI.free.howItWorks} />
 
             <button
               disabled
@@ -528,7 +557,7 @@ const PricingPage: React.FC = () => {
             </ul>
 
             <p className="text-xs text-brand-text-secondary mb-2">{PLAN_UI.pro.support}</p>
-            <p className="text-xs leading-relaxed text-brand-text-secondary mb-4">{PLAN_UI.pro.howItWorks}</p>
+            <PlanDetails text={PLAN_UI.pro.howItWorks} />
 
             <button
               onClick={() => handleSubscribe('pro')}
@@ -577,7 +606,7 @@ const PricingPage: React.FC = () => {
             </ul>
 
             <p className="text-xs text-brand-text-secondary mb-2">{PLAN_UI.max.support}</p>
-            <p className="text-xs leading-relaxed text-brand-text-secondary mb-4">{PLAN_UI.max.howItWorks}</p>
+            <PlanDetails text={PLAN_UI.max.howItWorks} />
 
             <button
               onClick={() => handleSubscribe('max')}
@@ -622,7 +651,7 @@ const PricingPage: React.FC = () => {
             </ul>
 
             <p className="text-xs text-brand-text-secondary mb-2">{PLAN_UI.partner.support}</p>
-            <p className="text-xs leading-relaxed text-brand-text-secondary mb-4">{PLAN_UI.partner.howItWorks}</p>
+            <PlanDetails text={PLAN_UI.partner.howItWorks} />
 
             <button
               onClick={() => handleSubscribe('partner')}

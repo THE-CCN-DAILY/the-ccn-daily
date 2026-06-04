@@ -180,7 +180,7 @@ const TheCommunity: React.FC = () => {
                                 <div>
                                     <h2 className="text-2xl font-bold text-brand-text-primary">Lumina Daily Digest</h2>
                                     <p className="text-sm text-brand-text-secondary">
-                                        AI-synthesised insights from The Community · {new Date().toLocaleDateString()}
+                                        Synthesised insights from The Community · {new Date().toLocaleDateString()}
                                     </p>
                                 </div>
                             </div>

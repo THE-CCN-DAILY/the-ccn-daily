@@ -77,7 +77,7 @@ const CancellationPreview: React.FC<Props> = ({
       <div className="p-6 rounded-xl bg-brand-accent/5 border border-brand-accent/20">
         <h4 className="font-bold text-brand-accent mb-2 uppercase text-xs tracking-widest">Feature limits after downgrade</h4>
         <p className="text-sm text-brand-text-secondary leading-relaxed">
-          Your AI Coach will revert to basic guidance, and daily message limits will apply. 
+          Your Coach will revert to basic guidance, and daily message limits will apply.
           You'll also lose access to premium audio narration and cinematic backgrounds.
         </p>
       </div>

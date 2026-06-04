@@ -58,7 +58,7 @@ const DevotionalGeneratorPage: React.FC = () => {
 
     const userTier = user.tier || 'free';
     if (!getTierFeatures(userTier).canGeneratePersonalizedDevotionals) {
-        openUpgradeModal('Deeply Personalized AI Devotionals', 'pro');
+        openUpgradeModal('Deeply Personalised Devotionals', 'pro');
         return;
     }
 

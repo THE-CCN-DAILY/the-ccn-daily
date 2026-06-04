@@ -212,7 +212,7 @@ const ExpertCouncilPage: React.FC = () => {
         <div className="flex items-start gap-3 rounded-xl bg-amber-500/10 border border-amber-500/30 px-4 py-3 max-w-2xl">
           <Info className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
           <p className="text-sm text-amber-700 leading-relaxed">
-            These responses are AI-generated reflections grounded in Scripture and theology.
+            These responses are automatically generated reflections grounded in Scripture and theology.
             They are not real people and do not replace pastoral counsel.
           </p>
         </div>
@@ -252,7 +252,7 @@ const ExpertCouncilPage: React.FC = () => {
                         {expert.name}
                       </h3>
                       <p className="text-xs text-brand-text-secondary leading-snug">
-                        AI reflection · {expert.role}
+                        Reflection · {expert.role}
                       </p>
                       <span
                         className={`inline-block text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full mt-0.5 ${expert.badge}`}
@@ -295,7 +295,7 @@ const ExpertCouncilPage: React.FC = () => {
                           {selectedExpert.role}
                         </p>
                         <p className="text-xs text-brand-text-secondary">
-                          AI reflection
+                          Reflection
                         </p>
                       </div>
                     </div>
@@ -308,7 +308,7 @@ const ExpertCouncilPage: React.FC = () => {
                     <div className="flex justify-start">
                       <div className="bg-brand-secondary px-4 py-3 rounded-2xl rounded-tl-none max-w-[82%]">
                         <p className="text-sm text-brand-text-primary leading-relaxed">
-                          Hello! I'm an AI reflection offering a {selectedExpert.role.toLowerCase().replace(' perspective', '')} perspective. What question can I help you explore today?
+                          Hello! I'm a guided reflection offering a {selectedExpert.role.toLowerCase().replace(' perspective', '')} perspective. What question can I help you explore today?
                         </p>
                       </div>
                     </div>
