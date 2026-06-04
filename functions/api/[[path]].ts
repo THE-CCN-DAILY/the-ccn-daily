@@ -62,6 +62,9 @@ type Env = {
   // Publishable Flutterwave key (wrangler.toml [vars]); VITE_ name kept as a fallback.
   FLUTTERWAVE_PUBLIC_KEY?: string;
   VITE_FLUTTERWAVE_PUBLIC_KEY?: string;
+  // Comma-separated extra admin emails to receive attention alerts (beyond the
+  // ministry allowlist). Set via wrangler/dashboard; safe to leave unset.
+  ADMIN_NOTIFY_EMAILS?: string;
 };
 
 const app = new Hono<{
@@ -3358,6 +3361,61 @@ app.post('/api/admin/scholarship-decide', async (c) => {
   }
 
   return c.json({ decided: 'decline' });
+});
+
+// POST /api/scholarship-submitted — called by the applicant right after they create
+// their application. Sends them an acknowledgement, and alerts admins that something
+// needs review IN THE DASHBOARD (no applicant data in the alert — the dashboard is the
+// system of record). The applicant email is taken from the verified token, never the
+// body, so this can't be used to email arbitrary addresses.
+app.post('/api/scholarship-submitted', async (c) => {
+  const applicantEmail = (c.get('idTokenEmail') || '').trim();
+  const uid = c.get('idTokenUid');
+  if (!uid || !applicantEmail) return c.json({ error: 'unauthorized' }, 401);
+
+  if (!c.env.RESEND_API_KEY) return c.json({ ok: true, source: 'no-op' });
+
+  const body = await c.req.json().catch(() => ({} as Record<string, unknown>));
+  const name = sanitizeInput(String(body.name || 'Friend').trim().slice(0, 120));
+  const sendEmail = (to: string[], subject: string, html: string) =>
+    fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${c.env.RESEND_API_KEY}` },
+      body: JSON.stringify({ from: 'gifts@theccndaily.com', to, subject, html }),
+    }).catch(() => {});
+
+  // 1. Acknowledge to the applicant.
+  if (isValidEmail(applicantEmail)) {
+    await sendEmail(
+      [applicantEmail],
+      'We received your scholarship application',
+      `<div style="font-family:Georgia,serif;max-width:600px;margin:0 auto;background:#1a1210;color:#f0ebe4;padding:40px 32px;border-radius:12px">
+        <h2 style="color:#F27D26;font-size:22px;margin-bottom:8px">Thank you, ${name}.</h2>
+        <p>We've received your scholarship application and our team will review it soon. We'll email you with the outcome.</p>
+        <p>Grace and peace,<br/>THE CCN DAILY</p>
+        <p style="margin-top:32px;font-size:12px;color:#7a6a60">theccndaily.com</p>
+      </div>`,
+    );
+  }
+
+  // 2. Attention-only alert to admins — points to the dashboard, carries no applicant data.
+  const extras = String(c.env.ADMIN_NOTIFY_EMAILS || '')
+    .split(',').map((s) => s.trim()).filter(Boolean);
+  const recipients = [...new Set([...ADMIN_EMAILS, ...extras])].filter(isValidEmail);
+  if (recipients.length) {
+    await sendEmail(
+      recipients,
+      'New scholarship application — review needed',
+      `<div style="font-family:Georgia,serif;max-width:600px;margin:0 auto;background:#1a1210;color:#f0ebe4;padding:40px 32px;border-radius:12px">
+        <h2 style="color:#F27D26;font-size:22px;margin-bottom:8px">A scholarship application needs review</h2>
+        <p>A new application has been submitted. Open the dashboard to review and decide.</p>
+        <p><a href="https://theccndaily.com/#/studio/scholarships" style="color:#F27D26">Review in the dashboard →</a></p>
+        <p style="margin-top:32px;font-size:12px;color:#7a6a60">You're receiving this because you help steward CCN Daily. Details stay in the app.</p>
+      </div>`,
+    );
+  }
+
+  return c.json({ ok: true });
 });
 
 // ── Payments → entitlements (server-authoritative) ─────────────────────────────

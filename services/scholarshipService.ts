@@ -71,6 +71,19 @@ export async function submitApplication(input: { country: string; reason: string
     status: 'pending',
     createdAt: serverTimestamp(),
   });
+
+  // Best-effort: acknowledge to the applicant + alert admins to review IN THE DASHBOARD.
+  // The server takes the applicant email from the verified token, not from us.
+  try {
+    const headers = await adminAuthHeaders();
+    await fetch('/api/scholarship-submitted', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...headers },
+      body: JSON.stringify({ name: user.displayName || 'Applicant' }),
+    });
+  } catch {
+    // Non-fatal — the application is already recorded and visible in the dashboard.
+  }
 }
 
 /** The signed-in user's most recent application (to show status / prevent dupes). */
