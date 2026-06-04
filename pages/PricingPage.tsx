@@ -715,7 +715,10 @@ const PricingPage: React.FC = () => {
         <p className="text-brand-text-secondary mb-6 max-w-2xl mx-auto">
           Bless someone with premium formation tools, courses, and community access.
         </p>
-        <button className="px-8 py-3 rounded-xl bg-brand-secondary text-brand-text-primary font-bold border border-brand-border hover:bg-brand-dark transition-colors">
+        <button
+          onClick={() => navigate('/app/help')}
+          className="px-8 py-3 rounded-xl bg-brand-secondary text-brand-text-primary font-bold border border-brand-border hover:bg-brand-dark transition-colors"
+        >
           Gift a Subscription
         </button>
       </motion.div>
