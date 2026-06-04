@@ -10,15 +10,15 @@ interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
 const Card = React.forwardRef<HTMLDivElement, CardProps>(({ children, className = '', ...props }, ref) => {
   const cardStyle: React.CSSProperties = {
     // Default to global variables, but allow reader-specific variables to override
-    backgroundColor: `rgb(var(--reader-bg, var(--surface-raw)))`,
+    backgroundColor: `var(--reader-bg, var(--bg-card))`,
     borderColor: `rgb(var(--reader-border, var(--color-brand-border)))`,
     // Inner top highlight simulates ambient light from above — depth without heavy shadow
-    boxShadow: 'var(--card-shine)',
+    boxShadow: 'var(--sh-card, var(--card-shine))',
   };
 
   return (
     // FIX: Spread the rest of the props onto the div.
-    <div ref={ref} {...props} style={{ ...cardStyle, ...props.style }} className={`rounded-2xl border p-6 ${className}`}>
+    <div ref={ref} {...props} style={{ ...cardStyle, ...props.style }} className={`rounded-lg border p-6 ${className}`}>
       {children}
     </div>
   );

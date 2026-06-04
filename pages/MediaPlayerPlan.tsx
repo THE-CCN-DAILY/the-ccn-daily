@@ -34,10 +34,10 @@ const planData: FeatureCategory[] = [
   },
     {
     id: 'cat-3',
-    title: 'AI-Powered Discovery',
-    description: 'Using Cloudflare-routed AI services to make content more accessible and personalized.',
+    title: 'Guided Discovery',
+    description: 'Using background services to make content more accessible and personally useful.',
     features: [
-      { id: 'f31', title: 'AI-Generated Summaries', description: 'Provide a concise, AI-generated summary and list of key takeaways for each episode, available before listening.', icon: FileText },
+      { id: 'f31', title: 'Episode Summaries', description: 'Provide a concise summary and list of key takeaways for each episode, available before listening.', icon: FileText },
       { id: 'f32', title: 'Thematic Search', description: 'Allow users to search for a topic (e.g., "forgiveness") and find all podcast episodes that discuss it, with timestamps.', icon: Search },
       { id: 'f33', title: 'Personalized Recommendations', description: 'Suggest other podcast episodes or even book chapters based on a user\'s listening history and saved notes.', icon: Headphones },
     ],

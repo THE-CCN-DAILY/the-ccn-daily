@@ -420,14 +420,14 @@ const PricingPage: React.FC = () => {
           initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, ease: EASE }}
         >
-          Invest in your formation
+          Support your daily formation
         </motion.p>
         <motion.h1
           className="relative font-display text-4xl font-bold text-brand-text-primary md:text-5xl"
           initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.55, delay: 0.08, ease: EASE }}
         >
-          Choose Your Growth Path
+          Choose Your Daily Rhythm
         </motion.h1>
         <motion.p
           className="relative mx-auto mt-5 max-w-2xl text-lg leading-relaxed text-brand-text-secondary"
@@ -454,7 +454,7 @@ const PricingPage: React.FC = () => {
             className={`flex items-center gap-2 rounded-full px-6 py-2 text-sm font-bold transition-colors ${billingCycle === 'yearly' ? 'bg-brand-accent text-white' : 'text-brand-text-secondary hover:text-brand-text-primary'}`}
           >
             Yearly
-            <span className="rounded-full bg-green-500/20 px-2 py-0.5 text-[12px] text-green-400">Save up to 44%</span>
+            <span className="rounded-sm border border-brand-border bg-brand-secondary px-2 py-0.5 text-[12px] text-brand-text-secondary">Best value</span>
           </button>
         </motion.div>
 
@@ -669,28 +669,6 @@ const PricingPage: React.FC = () => {
         </motion.div>
       </motion.div>
 
-      {/* ── Mission-Access (scholarship) ─────────────────────────────── */}
-      <motion.div
-        className="mt-10 grid grid-cols-1 gap-6"
-        variants={stagger} initial="hidden" whileInView="visible"
-        viewport={{ once: true, margin: '-40px' }}
-      >
-        <motion.div variants={fadeUp} transition={{ duration: 0.5, ease: EASE }}>
-        <Card className="border-brand-border bg-brand-dark/20 h-full">
-          <h3 className="text-xl font-bold text-brand-text-primary mb-2">Mission-Access Lane</h3>
-          <p className="text-sm text-brand-text-secondary mb-4">
-            We believe everyone should have access to spiritual formation tools. If you cannot afford a subscription, please apply for our scholarship program or regional pricing.
-          </p>
-          <button
-            onClick={() => (user ? navigate('/app/scholarship') : openSignIn())}
-            className="px-5 py-2 rounded-lg border border-brand-border text-brand-text-primary hover:bg-brand-secondary transition-colors"
-          >
-            Apply for Scholarship
-          </button>
-        </Card>
-        </motion.div>
-      </motion.div>
-
       <motion.div
         className="mt-12 bg-brand-dark rounded-2xl p-8 border border-brand-border text-center"
         variants={fadeUp} initial="hidden" whileInView="visible"
@@ -698,7 +676,7 @@ const PricingPage: React.FC = () => {
       >
         <h3 className="text-2xl font-bold text-brand-text-primary mb-4">Gift a Growth Path</h3>
         <p className="text-brand-text-secondary mb-6 max-w-2xl mx-auto">
-          Bless someone with premium formation tools, courses, and community access.
+          Give someone courses, audio, guided Scripture practice, and a quieter place to grow.
         </p>
         <button
           onClick={() => navigate('/app/help')}
@@ -716,12 +694,13 @@ const PricingPage: React.FC = () => {
       >
         <p className="text-sm text-brand-text-secondary">
           Are you a university student?{' '}
-          <a
-            href="#/app/student-verify"
+          <button
+            type="button"
+            onClick={() => (user ? navigate('/app/scholarship') : openSignIn())}
             className="text-brand-accent font-semibold hover:underline"
           >
-            Apply for 6 months free Premium →
-          </a>
+            Apply for six months of Growth access →
+          </button>
         </p>
       </motion.div>
     </div>

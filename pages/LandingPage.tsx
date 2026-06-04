@@ -615,10 +615,10 @@ const LandingPage: React.FC = () => {
         <section className="mx-auto max-w-6xl px-6 py-20 md:py-28" ref={featuresRef}>
           <Reveal className="mb-14 max-w-2xl">
             <p className="mb-4 text-xs font-semibold uppercase tracking-[0.12em] text-brand-accent">
-              Kickstart your spiritual flow
+              A quieter way to begin
             </p>
             <h2 className="font-display text-4xl font-bold leading-tight">
-              Built for formation, content, community, leadership, and administration.
+              One rhythm for Scripture, prayer, learning, and shared encouragement.
             </h2>
           </Reveal>
 
@@ -821,7 +821,7 @@ const LandingPage: React.FC = () => {
                 key={i}
                 className="inline-flex items-center gap-3 whitespace-nowrap px-8 text-sm font-serif text-amber-50/90"
               >
-                <span className="text-amber-200/50 text-base">🔥</span>
+                <span className="text-amber-200/50 text-base" aria-hidden>✦</span>
                 <em>{verse.text}</em>
                 <span className="text-amber-200/60 text-xs not-italic font-sans tracking-wide">
                   {verse.ref}

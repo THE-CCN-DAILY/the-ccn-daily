@@ -18,8 +18,8 @@ interface Suggestion {
 const suggestions: Suggestion[] = [
     {
         id: 's1',
-        title: 'Sentient Memory Chatbot',
-        description: 'Upgrade "Kai" to use long-term context memory. It will remember previous prayers, journal entries, and life events to provide truly personalized guidance.',
+        title: 'Prayer Memory',
+        description: 'Let Kai draw on prior prayers, journal entries, and life events so guidance feels continuous without becoming noisy.',
         icon: SoundWaveIcon,
         iconName: 'SoundWaveIcon',
         benefit: 'Deepens user emotional connection and spiritual continuity.',
@@ -27,8 +27,8 @@ const suggestions: Suggestion[] = [
     },
     {
         id: 's2',
-        title: 'Virtual Expert Council',
-        description: 'A dedicated team of AI personas — counsellors, Biblical scholars, and spiritual mentors — speaking into your situation from different angles.',
+        title: 'Expert Council',
+        description: 'A dedicated set of pastoral, biblical, and care-oriented lenses speaking into a situation from different angles.',
         icon: TeamIcon,
         iconName: 'TeamIcon',
         benefit: 'Provides holistic care (Mind, Body, Spirit) in one interface.',
@@ -36,8 +36,8 @@ const suggestions: Suggestion[] = [
     },
     {
         id: 's3',
-        title: 'Video Intelligence Engine',
-        description: 'Process uploaded or linked videos (sermons, teachings) to automatically generate summaries, key takeaways, and actionable prayer points.',
+        title: 'Teaching Notes Engine',
+        description: 'Process uploaded or linked sermons and teachings into summaries, key takeaways, and actionable prayer points.',
         icon: Lightbulb,
         iconName: 'Lightbulb',
         benefit: 'Transforms passive watching into active spiritual growth.',
@@ -68,7 +68,7 @@ const SentinelSuggestions: React.FC = () => {
                 </div>
                 <div>
                     <h2 className="text-2xl font-bold text-brand-text-primary">Sentinel Strategic Recommendations</h2>
-                    <p className="text-sm text-brand-text-secondary">AI-driven insights to elevate the app's impact and efficiency.</p>
+                    <p className="text-sm text-brand-text-secondary">Background recommendations to strengthen care, content, and stewardship.</p>
                 </div>
             </div>
 

@@ -32,11 +32,11 @@ const initialPhases: PlanPhase[] = [
   },
   {
     id: 'phase-5',
-    title: 'Phase 5: The Sentient & Grounded Experience',
+    title: 'Phase 5: Guided Prayer & Grounded Care',
     progress: 100,
-    description: 'Leveraging the latest 2025 AI models for real-time companionship.',
+    description: 'Prayerful guidance, Scripture-aware reflection, and global intercession support.',
     tasks: [
-        { id: 't51', title: 'Gemini Live: Kai', description: 'Real-time spoken guidance during prayer.', icon: SoundWaveIcon, status: 'Completed' },
+        { id: 't51', title: 'Kai Prayer Companion', description: 'Real-time spoken guidance during prayer.', icon: SoundWaveIcon, status: 'Completed' },
         { id: 't52', title: 'Grounded Intercession', description: 'Search-grounded global prayer suggestions.', icon: SearchIcon, status: 'Completed' },
         { id: 't53', title: 'Substack Devotional Sync', description: 'Automated ingestion of themes from theccndaily.substack.com.', icon: ReaderIcon, status: 'Completed' },
         { id: 't55', title: 'The Sanctuary Timer', description: 'Animated, musical, and extendable sessions.', icon: SoundWaveIcon, status: 'Completed' },
@@ -50,8 +50,8 @@ const initialPhases: PlanPhase[] = [
     tasks: [
         { id: 'n01', title: 'Multimodal Challenge Creator', description: 'Admin tool to generate challenges from books, newsletters, or URLs (Nas.io logic).', icon: GamificationIcon, status: 'Completed' },
         { id: 'n02', title: 'Grace Link (Frictionless Sharing)', description: 'Instant URL-based spiritual gift sharing and access without app-download barriers.', icon: Share2, status: 'Completed' },
-        { id: 'n03', title: 'Lumina (The Community Summarizer)', description: 'AI-driven community conversation and prayer request digests for The Community.', icon: AiIcon, status: 'Completed' },
-        { id: 'n04', title: 'Expert Council Portal', description: 'Multi-persona AI guidance (Mental Health, Biblical Scholars).', icon: CommunityIcon, status: 'Completed' },
+        { id: 'n03', title: 'Community Digest', description: 'Conversation and prayer request summaries for The Community.', icon: AiIcon, status: 'Completed' },
+        { id: 'n04', title: 'Expert Council Portal', description: 'Guided reflections from pastoral, biblical, and care-oriented lenses.', icon: CommunityIcon, status: 'Completed' },
     ],
   },
   {
@@ -60,7 +60,7 @@ const initialPhases: PlanPhase[] = [
     progress: 100,
     description: 'Cinematic video and adaptive audio environments.',
     tasks: [
-        { id: 't61', title: 'Veo Cinematic Sanctuaries', description: 'Generative high-fidelity video backgrounds.', icon: Film, status: 'Completed' },
+        { id: 't61', title: 'Cinematic Sanctuaries', description: 'High-fidelity visual prayer backgrounds.', icon: Film, status: 'Completed' },
         { id: 't62', title: 'Adaptive Audio (Lyria)', description: 'Real-time score generation based on mood.', icon: SoundWaveIcon, status: 'Completed' },
     ],
   },

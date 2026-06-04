@@ -1,5 +1,5 @@
-// Mock service for Atmospheric AI Music.
-// In a real application, this would use Google's Lyria model via Genkit
+// Mock service for atmospheric prayer music.
+// In a real application, this would use a production audio provider
 // to generate real-time ambient music based on a mood analysis of the content.
 
 import type { Mood } from '../types';

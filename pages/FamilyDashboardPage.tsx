@@ -85,29 +85,33 @@ const FamilyDashboardPage: React.FC = () => {
   return (
     <div className="max-w-5xl mx-auto pb-20">
       <motion.div
-        className="mb-8"
+        className="mb-8 rounded-lg border border-brand-border p-7 md:p-9"
+        style={{
+          background: 'linear-gradient(135deg, var(--bg-card) 0%, var(--bg-paper) 68%, color-mix(in srgb, var(--gold-ds) 8%, var(--bg-card)) 100%)',
+          boxShadow: 'var(--sh-card)',
+        }}
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: EASE }}
       >
-        <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ fontFamily: 'var(--sans-ui)', color: 'var(--gold-ds, #B7892E)' }}>Account</p>
-        <h1 className="text-4xl font-black text-brand-text-primary mb-2" style={{ fontFamily: 'var(--serif-display)' }}>
-          Family Dashboard
+        <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ fontFamily: 'var(--sans-ui)', color: 'var(--gold-ds, #B7892E)' }}>Household formation</p>
+        <h1 className="text-4xl font-semibold text-brand-text-primary mb-2" style={{ fontFamily: 'var(--serif-display)' }}>
+          Family Table
         </h1>
-        <p className="text-brand-text-secondary">Invite family members to your shared plan and grow together in faith.</p>
+        <p className="text-brand-text-secondary max-w-2xl">Invite your household into one shared rhythm of Scripture, prayer, courses, and encouragement.</p>
       </motion.div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Left Column: Plan & Invites */}
         <div className="lg:col-span-1 space-y-8">
-          <Card className="border-brand-border bg-brand-dark/30">
+          <Card className="border-brand-border bg-brand-dark/20">
             <h2 className="text-lg font-bold text-brand-text-primary mb-4 flex items-center gap-2">
               <HeartHandshake className="w-5 h-5 text-brand-accent" />
-              Family Plan
+              Household Seats
             </h2>
             <div className="mb-6">
               <div className="flex justify-between text-sm mb-2">
-                <span className="text-brand-text-secondary">Seats Used</span>
+                  <span className="text-brand-text-secondary">Seats in use</span>
                 <span className="font-bold text-brand-text-primary">{usedSeats} / {maxSeats}</span>
               </div>
               <div className="w-full bg-brand-dark rounded-full h-2.5">
@@ -134,7 +138,7 @@ const FamilyDashboardPage: React.FC = () => {
               <button
                 type="submit"
                 disabled={isInviting || usedSeats >= maxSeats}
-                className="w-full py-3 bg-brand-accent text-white rounded-lg font-bold hover:bg-opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="w-full py-3 bg-brand-accent text-white rounded-md font-semibold hover:bg-opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {isInviting ? 'Sending...' : (
                   <>
@@ -146,10 +150,10 @@ const FamilyDashboardPage: React.FC = () => {
             </form>
           </Card>
 
-          <Card className="border-brand-border bg-brand-dark/30">
+          <Card className="border-brand-border bg-brand-dark/20">
             <h2 className="text-lg font-bold text-brand-text-primary mb-4 flex items-center gap-2">
               <GamificationIcon className="w-5 h-5 text-brand-accent" />
-              Family Activity
+              Household Activity
             </h2>
             <div className="space-y-4">
               <div className="p-3 rounded-lg bg-brand-dark border border-brand-border">
@@ -166,9 +170,9 @@ const FamilyDashboardPage: React.FC = () => {
 
         {/* Right Column: Member List */}
         <div className="lg:col-span-2">
-          <Card className="border-brand-border bg-brand-dark/30 h-full">
+          <Card className="border-brand-border bg-brand-dark/20 h-full">
             <h2 className="text-xl font-bold text-brand-text-primary mb-6 border-b border-brand-border pb-4">
-              Family Members
+              People at the Table
             </h2>
             
             <div className="space-y-4">

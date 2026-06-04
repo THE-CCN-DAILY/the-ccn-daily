@@ -19,12 +19,12 @@ const VisualSanctuary: React.FC = () => {
         if (!prompt.trim()) return;
         setIsGenerating(true);
         setGeneratedUrl(null);
-        setProgressMsg('Connecting to Veo Cinematic Engine...');
+        setProgressMsg('Preparing your visual sanctuary...');
         try {
             const url = await generateSanctuaryVideo(prompt, (msg) => setProgressMsg(msg));
             setGeneratedUrl(url);
         } catch (e) {
-            notify("Video generation failed. Ensure your API key is active and supports Veo.", "error");
+            notify("The visual sanctuary could not be prepared. Please try again later.", "error");
         } finally {
             setIsGenerating(false);
             setProgressMsg('');

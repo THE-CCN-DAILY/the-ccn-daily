@@ -28,7 +28,7 @@ const VoiceCompanion: React.FC = () => {
 
   const startSession = async () => {
     if (!canUseLiveVoice) {
-      openUpgradeModal('Live Voice Companion', 'max');
+      openUpgradeModal('Guided Voice Prayer', 'max');
       return;
     }
 
@@ -72,7 +72,7 @@ const VoiceCompanion: React.FC = () => {
         <h1 className="text-4xl font-black text-brand-text-primary mb-2 flex items-center gap-3"
           style={{ fontFamily: 'var(--font-display)' }}>
           <Mic className="w-9 h-9 text-brand-accent" />
-          Kai — Sentient Guide
+          Kai — Prayer Companion
         </h1>
         <p className="text-brand-text-secondary">
           A calm voice companion for prayerful reflection, Scripture-aware listening, and gentle next steps.

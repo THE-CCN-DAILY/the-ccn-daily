@@ -90,10 +90,10 @@ const DevotionalCard: React.FC<DevotionalCardProps> = ({ devotional, loading, da
 
   return (
     <div
-      className="w-full rounded-2xl overflow-hidden"
+      className="w-full rounded-lg overflow-hidden"
       style={{
         background: 'var(--bg-deep)',
-        boxShadow: '0 2px 6px rgba(0,0,0,.12), 0 20px 60px rgba(0,0,0,.18)',
+        boxShadow: '0 1px 2px rgba(42,28,21,.10), 0 18px 44px rgba(42,28,21,.14)',
       }}
     >
       {loading ? (
@@ -312,14 +312,18 @@ const DashboardPage: React.FC = () => {
 
   // ────────────────────────────────────────────────────────────────────────
   return (
-    <div className="max-w-4xl mx-auto pb-24 px-0">
+    <div className="max-w-5xl mx-auto pb-24 px-0">
 
       {/* Admin-authored promo banner (schedule + audience filtered) */}
       <AnnouncementBanner />
 
       {/* ── 1. Greeting Header ─────────────────────────────────────────────── */}
       <motion.section
-        className="mb-12 pt-2"
+        className="mb-12 overflow-hidden rounded-lg border border-brand-border p-7 md:p-9"
+        style={{
+          background: 'linear-gradient(135deg, var(--bg-card) 0%, var(--bg-paper) 62%, color-mix(in srgb, var(--gold-ds) 9%, var(--bg-card)) 100%)',
+          boxShadow: 'var(--sh-card)',
+        }}
         initial={{ opacity: 0, y: 18 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: EASE }}
@@ -333,7 +337,7 @@ const DashboardPage: React.FC = () => {
             lineHeight: 1.6,
             color: 'var(--fg-3)',
           }}
-          className="mb-4 max-w-xl"
+          className="mb-4 max-w-2xl"
         >
           &ldquo;{prayerPrompt}&rdquo;
         </p>
@@ -415,7 +419,7 @@ const DashboardPage: React.FC = () => {
             >
               <Link
                 to={card.route}
-                className="flex flex-col gap-3 p-5 rounded-xl border border-brand-border transition-colors duration-200 w-48 group"
+                className="flex flex-col gap-3 p-5 rounded-lg border border-brand-border transition-colors duration-200 w-48 group"
                 style={{
                   background: 'var(--bg-card)',
                   boxShadow: 'var(--sh-card)',
@@ -461,8 +465,8 @@ const DashboardPage: React.FC = () => {
         {/* Streak counter */}
         <motion.div variants={fadeUp}>
           <div
-            className="h-full rounded-2xl border border-brand-border p-6 flex flex-col justify-between"
-            style={{ background: 'rgb(var(--surface-raw))' }}
+            className="h-full rounded-lg border border-brand-border p-6 flex flex-col justify-between"
+            style={{ background: 'var(--bg-card)', boxShadow: 'var(--sh-card)' }}
           >
             <div className="flex items-start justify-between mb-4">
               <div>

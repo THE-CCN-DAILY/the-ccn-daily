@@ -28,10 +28,10 @@ interface OnboardingData {
 // ─── Constants ───────────────────────────────────────────────────────────────
 
 const FAITH_OPTIONS: { value: FaithJourney; icon: string; label: string }[] = [
-  { value: 'beginning', icon: '🌱', label: 'Just beginning — curious about faith' },
-  { value: 'growing', icon: '📖', label: 'Growing — reading Scripture regularly' },
-  { value: 'established', icon: '🔥', label: 'Established — walking with God for years' },
-  { value: 'leading', icon: '🤝', label: 'Leading — I disciple others' },
+  { value: 'beginning', icon: '✦', label: 'Just beginning — curious about faith' },
+  { value: 'growing', icon: '✧', label: 'Growing — reading Scripture regularly' },
+  { value: 'established', icon: '❦', label: 'Established — walking with God for years' },
+  { value: 'leading', icon: '✚', label: 'Leading — I disciple others' },
 ];
 
 const INTEREST_OPTIONS: string[] = [

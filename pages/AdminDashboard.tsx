@@ -526,16 +526,22 @@ const AdminDashboard: React.FC = () => {
 
     return (
         <div className="max-w-6xl mx-auto pb-20">
-            <header className="mb-10 pt-2">
-                <p className="ds-eyebrow mb-3">Operator Console</p>
+            <header
+                className="mb-10 rounded-lg border border-brand-border p-7 md:p-9"
+                style={{
+                    background: 'linear-gradient(135deg, var(--bg-card) 0%, var(--bg-paper) 64%, color-mix(in srgb, var(--crimson) 6%, var(--bg-card)) 100%)',
+                    boxShadow: 'var(--sh-card)',
+                }}
+            >
+                <p className="ds-eyebrow mb-3">Stewardship console</p>
                 <h1
                     className="font-semibold text-brand-text-primary mb-2"
                     style={{ fontFamily: 'var(--serif-display)', fontSize: 'clamp(2rem, 5vw, 3.25rem)', lineHeight: 1.05 }}
                 >
-                    Nexus Admin Hub
+                    Founder Dashboard
                 </h1>
                 <p className="text-base text-brand-text-secondary max-w-xl">
-                    Global Command Center for THE CCN DAILY.
+                    A calm place to tend members, content, payments, and launch signals for THE CCN DAILY.
                 </p>
             </header>
 
@@ -545,14 +551,14 @@ const AdminDashboard: React.FC = () => {
                 <StatCard title="Media Storage" value="R2 pending" change="Binding required for uploads" icon={DbIcon} />
             </div>
 
-            <div className="flex flex-wrap gap-4 mb-6">
+            <div className="flex flex-wrap gap-2 mb-6 rounded-lg border border-brand-border bg-brand-dark/30 p-2">
                 {(['users', 'inbox', 'challenges', 'broadcasts', 'events', 'payments', 'discounts', 'tenancy', 'resources', 'budget', 'landscape'] as const).map((tab) => (
                     <button
                         key={tab}
                         onClick={() => setActiveTab(tab)}
-                        className={`px-5 py-2 rounded-full text-sm font-bold border transition-all ${activeTab === tab ? 'bg-brand-accent text-white border-brand-accent shadow-sm' : 'bg-brand-dark text-brand-text-secondary border-brand-border hover:text-brand-text-primary hover:border-brand-border-strong'}`}
+                        className={`px-4 py-2 rounded-md text-sm font-semibold border transition-all ${activeTab === tab ? 'bg-brand-secondary text-brand-text-primary border-brand-border-strong shadow-sm' : 'bg-transparent text-brand-text-secondary border-transparent hover:text-brand-text-primary hover:border-brand-border'}`}
                     >
-                        {tab === 'challenges' ? 'AI Course Studio' : tab === 'tenancy' ? 'Multi-Tenant (P7)' : tab === 'budget' ? 'AI Budget' : tab === 'landscape' ? 'Landscape' : tab.charAt(0).toUpperCase() + tab.slice(1)}
+                        {tab === 'challenges' ? 'Course Studio' : tab === 'tenancy' ? 'Tenancy' : tab === 'budget' ? 'Compute Costs' : tab === 'landscape' ? 'Landscape' : tab.charAt(0).toUpperCase() + tab.slice(1)}
                     </button>
                 ))}
             </div>
@@ -642,7 +648,7 @@ const AdminDashboard: React.FC = () => {
                         <div className="space-y-6">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <Card className="p-6">
-                                    <h3 className="text-xl font-semibold text-brand-text-primary mb-4" style={{ fontFamily: 'var(--serif-display)' }}>AI Cost Overview (Last 30 Days)</h3>
+                                    <h3 className="text-xl font-semibold text-brand-text-primary mb-4" style={{ fontFamily: 'var(--serif-display)' }}>Compute Cost Overview (Last 30 Days)</h3>
                                     {loadingBudget ? (
                                         <SpinnerIcon className="w-8 h-8 animate-spin text-brand-accent" />
                                     ) : (
@@ -653,7 +659,7 @@ const AdminDashboard: React.FC = () => {
                                             >
                                                 ${usageStats?.totalCost.toFixed(4) || '0.0000'}
                                             </div>
-                                            <p className="text-sm text-brand-text-secondary">Estimated platform cost for AI operations.</p>
+                                            <p className="text-sm text-brand-text-secondary">Estimated platform cost for background generation and assistive services.</p>
                                         </>
                                     )}
                                 </Card>
@@ -674,7 +680,7 @@ const AdminDashboard: React.FC = () => {
                             </div>
 
                             <Card className="p-6">
-                                <h3 className="text-xl font-semibold text-brand-text-primary mb-4" style={{ fontFamily: 'var(--serif-display)' }}>Recent AI Operations</h3>
+                                <h3 className="text-xl font-semibold text-brand-text-primary mb-4" style={{ fontFamily: 'var(--serif-display)' }}>Recent Background Operations</h3>
                                 <div className="overflow-x-auto">
                                     <table className="w-full text-left">
                                         <thead>

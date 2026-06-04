@@ -31,7 +31,7 @@ const VoiceCompanionDrawer: React.FC<VoiceCompanionDrawerProps> = ({ isOpen, onC
   const startSession = async () => {
     if (!user) return;
     if (!canUseLiveVoice) {
-      openUpgradeModal('Live Voice Companion', 'max');
+      openUpgradeModal('Guided Voice Prayer', 'max');
       return;
     }
     setIsActive(true);
@@ -104,7 +104,7 @@ const VoiceCompanionDrawer: React.FC<VoiceCompanionDrawerProps> = ({ isOpen, onC
             {/* Header */}
             <div className="relative z-10 flex items-center justify-between px-6 pt-5 pb-3">
               <div>
-                <p style={{ fontFamily: 'var(--sans-ui, "Inter Tight", -apple-system, sans-serif)', fontSize: '11px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--crimson, #8E1B1B)' }}>Kai — Sentient Guide</p>
+                <p style={{ fontFamily: 'var(--sans-ui, "Inter Tight", -apple-system, sans-serif)', fontSize: '11px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--crimson, #8E1B1B)' }}>Kai — Prayer Companion</p>
                 {stepContext && (
                   <p style={{ fontFamily: 'var(--serif-body, "EB Garamond", "Garamond", Georgia, serif)', fontSize: '14px', lineHeight: 1.5, color: 'var(--fg-3, #8A7A6A)', marginTop: '0.125rem' }}>Praying through: {stepContext}</p>
                 )}

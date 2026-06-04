@@ -100,15 +100,15 @@ const UpgradeModal: React.FC<UpgradeModalProps> = ({ isOpen, onClose, featureNam
                                     <ul className="space-y-3 mb-8 flex-1">
                                         <li className="flex items-start gap-3 text-sm text-brand-text-secondary">
                                             <CheckIcon className="w-5 h-5 text-brand-accent flex-shrink-0" />
-                                            <span>Deeply personalised devotionals</span>
+                                            <span>Daily reflections shaped around your walk with God</span>
                                         </li>
                                         <li className="flex items-start gap-3 text-sm text-brand-text-secondary">
                                             <CheckIcon className="w-5 h-5 text-brand-accent flex-shrink-0" />
-                                            <span>Unlimited spiritual coaching (Kai)</span>
+                                            <span>Guided prayer and Scripture-aware reflection</span>
                                         </li>
                                         <li className="flex items-start gap-3 text-sm text-brand-text-secondary">
                                             <CheckIcon className="w-5 h-5 text-brand-accent flex-shrink-0" />
-                                            <span>Premium Audio Narration & Adaptive Music</span>
+                                            <span>Premium audio narration and quiet prayer music</span>
                                         </li>
                                         <li className="flex items-start gap-3 text-sm text-brand-text-secondary">
                                             <CheckIcon className="w-5 h-5 text-brand-accent flex-shrink-0" />
@@ -143,11 +143,11 @@ const UpgradeModal: React.FC<UpgradeModalProps> = ({ isOpen, onClose, featureNam
                                         </li>
                                         <li className="flex items-start gap-3 text-sm text-brand-text-secondary">
                                             <CheckIcon className="w-5 h-5 text-secondary-purple flex-shrink-0" />
-                                            <span>Live Voice Companion</span>
+                                            <span>Guided voice prayer</span>
                                         </li>
                                         <li className="flex items-start gap-3 text-sm text-brand-text-secondary">
                                             <CheckIcon className="w-5 h-5 text-secondary-purple flex-shrink-0" />
-                                            <span>Veo Cinematic Video Backgrounds</span>
+                                            <span>Quiet visual prayer spaces</span>
                                         </li>
                                         <li className="flex items-start gap-3 text-sm text-brand-text-secondary">
                                             <CheckIcon className="w-5 h-5 text-secondary-purple flex-shrink-0" />

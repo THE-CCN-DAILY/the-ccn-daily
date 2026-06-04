@@ -42,7 +42,7 @@ const DynamicTheming: React.FC = () => {
     <div>
       <h1 className="text-4xl font-bold text-brand-text-primary mb-2">Dynamic Theming Engine</h1>
       <p className="text-lg text-brand-text-secondary mb-8">
-        AI-driven mood analysis that dynamically shifts the app's ambient theme color based on your content.
+        Background mood analysis that gently shifts the app's ambient theme color based on your devotional content.
       </p>
 
       <Card>

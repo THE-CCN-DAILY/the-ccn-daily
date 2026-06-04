@@ -90,56 +90,60 @@ const LeaderDashboardPage: React.FC = () => {
   return (
     <div className="max-w-6xl mx-auto pb-20">
       <motion.div
-        className="mb-8 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4"
+        className="mb-8 rounded-lg border border-brand-border p-7 md:p-9 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4"
+        style={{
+          background: 'linear-gradient(135deg, var(--bg-card) 0%, var(--bg-paper) 68%, color-mix(in srgb, var(--sage) 9%, var(--bg-card)) 100%)',
+          boxShadow: 'var(--sh-card)',
+        }}
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: EASE }}
       >
         <div>
-          <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ fontFamily: 'var(--sans-ui)', color: 'var(--gold-ds, #B7892E)' }}>Account</p>
-          <h1 className="text-4xl font-black text-brand-text-primary mb-2" style={{ fontFamily: 'var(--serif-display)' }}>
-            Leader Dashboard
+          <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ fontFamily: 'var(--sans-ui)', color: 'var(--gold-ds, #B7892E)' }}>Group stewardship</p>
+          <h1 className="text-4xl font-semibold text-brand-text-primary mb-2" style={{ fontFamily: 'var(--serif-display)' }}>
+            Leader Table
           </h1>
-          <p className="text-brand-text-secondary">Manage your group, assign content, and track member engagement.</p>
+          <p className="text-brand-text-secondary max-w-2xl">Guide your group with shared Scripture practice, gentle accountability, and clear next steps.</p>
         </div>
-        <button className="flex-shrink-0 px-6 py-2.5 bg-brand-accent text-white font-bold rounded-full hover:bg-opacity-90 transition-colors self-start sm:self-auto">
-          Assign Content
+        <button className="flex-shrink-0 px-6 py-2.5 bg-brand-accent text-white font-semibold rounded-md hover:bg-opacity-90 transition-colors self-start sm:self-auto">
+          Assign Practice
         </button>
       </motion.div>
 
       {/* Analytics Overview */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <Card className="border-brand-border bg-brand-dark/30">
+        <Card className="border-brand-border bg-brand-dark/20">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 rounded-full bg-brand-accent/20 flex items-center justify-center">
               <UserIcon className="w-6 h-6 text-brand-accent" />
             </div>
             <div>
-              <p className="text-sm text-brand-text-secondary">Total Members</p>
+              <p className="text-sm text-brand-text-secondary">People walking together</p>
               <h3 className="text-2xl font-bold text-brand-text-primary">{members.length}</h3>
             </div>
           </div>
         </Card>
         
-        <Card className="border-brand-border bg-brand-dark/30">
+        <Card className="border-brand-border bg-brand-dark/20">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 rounded-full bg-status-success/20 flex items-center justify-center">
               <ChartBarIcon className="w-6 h-6 text-status-success" />
             </div>
             <div>
-              <p className="text-sm text-brand-text-secondary">Avg. Engagement</p>
+              <p className="text-sm text-brand-text-secondary">Shared participation</p>
               <h3 className="text-2xl font-bold text-brand-text-primary">75%</h3>
             </div>
           </div>
         </Card>
 
-        <Card className="border-brand-border bg-brand-dark/30">
+        <Card className="border-brand-border bg-brand-dark/20">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 rounded-full bg-brand-secondary flex items-center justify-center">
               <ReaderIcon className="w-6 h-6 text-brand-text-primary" />
             </div>
             <div>
-              <p className="text-sm text-brand-text-secondary">Active Assignments</p>
+              <p className="text-sm text-brand-text-secondary">Active practices</p>
               <h3 className="text-2xl font-bold text-brand-text-primary">2</h3>
             </div>
           </div>
@@ -149,10 +153,10 @@ const LeaderDashboardPage: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Left Column: Invites & Active Content */}
         <div className="lg:col-span-1 space-y-8">
-          <Card className="border-brand-border bg-brand-dark/30">
+          <Card className="border-brand-border bg-brand-dark/20">
             <h2 className="text-lg font-bold text-brand-text-primary mb-4 flex items-center gap-2">
               <PlusIcon className="w-5 h-5 text-brand-accent" />
-              Invite to Group
+              Invite someone
             </h2>
             <form onSubmit={handleInvite} className="space-y-4">
               <div>
@@ -175,7 +179,7 @@ const LeaderDashboardPage: React.FC = () => {
             </form>
           </Card>
 
-          <Card className="border-brand-border bg-brand-dark/30">
+          <Card className="border-brand-border bg-brand-dark/20">
             <h2 className="text-lg font-bold text-brand-text-primary mb-4 flex items-center gap-2">
               <Lightbulb className="w-5 h-5 text-brand-accent" />
               Current Assignments

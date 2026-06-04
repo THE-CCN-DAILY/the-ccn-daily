@@ -117,7 +117,7 @@ const VisionaryLab: React.FC = () => {
         <Card className="flex flex-col border-brand-accent/30 bg-brand-accent/5">
             <h2 className="text-xl font-bold text-brand-text-primary mb-4 flex items-center">
                 <FlaskConical className="w-6 h-6 mr-2 text-brand-accent animate-pulse"/>
-                Cinematic Sanctuary (Veo 3.1)
+                Cinematic Sanctuary
             </h2>
             <p className="text-xs text-brand-text-secondary mb-4 uppercase tracking-widest font-black">Phase 6 Immersion</p>
             <textarea 

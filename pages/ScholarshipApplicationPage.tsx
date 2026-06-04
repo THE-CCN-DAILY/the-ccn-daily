@@ -56,13 +56,13 @@ const ScholarshipApplicationPage: React.FC = () => {
   return (
     <div className="max-w-2xl mx-auto pb-24 px-4">
       <motion.div className="mb-8" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: EASE }}>
-        <p className="text-xs font-bold uppercase tracking-widest text-brand-accent mb-2">Mission-Access Lane</p>
+        <p className="text-xs font-bold uppercase tracking-widest text-brand-accent mb-2">Sponsored access</p>
         <h1 className="text-4xl font-black text-brand-text-primary inline-flex items-center gap-3" style={{ fontFamily: 'var(--serif-display)' }}>
           <HeartHandshake className="w-8 h-8 text-brand-accent" /> Scholarship
         </h1>
         <p className="text-sm text-brand-text-secondary mt-2">
-          We believe cost should never keep anyone from formation. If you cannot afford a subscription, apply below —
-          approved applicants receive {SCHOLARSHIP_MONTHS} months of Growth (premium), free.
+          We believe cost should never keep anyone from formation. If a subscription is out of reach right now, apply below.
+          Approved applicants receive {SCHOLARSHIP_MONTHS} months of Growth access.
         </p>
       </motion.div>
 

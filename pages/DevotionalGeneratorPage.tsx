@@ -152,7 +152,7 @@ const DevotionalGeneratorPage: React.FC = () => {
                 </div>
                 <div className="p-3 bg-brand-accent/5 rounded border border-brand-accent/10">
                     <p className="text-xs text-brand-text-secondary italic">
-                        The Genkit Orchestrator will fetch your recent notes to personalize this devotional.
+                        Your recent notes can help prepare a reflection that fits your current season.
                     </p>
                 </div>
             </div>
@@ -161,7 +161,7 @@ const DevotionalGeneratorPage: React.FC = () => {
               disabled={isLoading || !!dailyDevotional} 
               className="w-full mt-6 px-4 py-2 rounded-lg bg-brand-accent text-white font-semibold flex items-center justify-center disabled:bg-opacity-50 disabled:cursor-not-allowed"
             >
-                {isLoading ? <SpinnerIcon className="w-5 h-5" /> : dailyDevotional ? 'Generated for Today' : canGenerate ? <><PenLine className="w-5 h-5 mr-2"/> Generate Devotional</> : <><LockIcon className="w-5 h-5 mr-2"/> Access Devotionals</>}
+                {isLoading ? <SpinnerIcon className="w-5 h-5" /> : dailyDevotional ? 'Prepared for Today' : canGenerate ? <><PenLine className="w-5 h-5 mr-2"/> Prepare Devotional</> : <><LockIcon className="w-5 h-5 mr-2"/> Access Devotionals</>}
             </button>
             {dailyDevotional && (
                  <button

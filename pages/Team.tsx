@@ -25,8 +25,8 @@ const teamData: TeamMember[] = [
     focus: 'Moving data, edge APIs, and operational dashboards onto Cloudflare services.'
   },
   {
-    name: 'AI Integration Expert',
-    role: 'AI Lead',
+    name: 'Background Services Expert',
+    role: 'Formation Systems Lead',
     avatarUrl: 'https://picsum.photos/seed/ai/200',
     focus: 'Implementing Cloudflare-routed reasoning and carefully gated multimodal flows.'
   }
@@ -34,12 +34,12 @@ const teamData: TeamMember[] = [
 
 const briefings = [
     {
-        owner: 'AI Lead',
-        target: 'Phase 5: Sentience & Grounding',
+        owner: 'Formation Systems Lead',
+        target: 'Phase 5: Guided Prayer & Grounded Care',
         status: '75%',
         plan: [
             'Pivoting devotional engine to source primary themes from https://theccndaily.substack.com/.',
-            'Connect Kai (Sentient Guide) to User Journal context with long-term memory.',
+            'Connect Kai Prayer Companion to user journal context with long-term memory.',
             'Migrate Grounded Intercession to Prayer Wall (Live)'
         ],
         icon: AiIcon
@@ -60,7 +60,7 @@ const briefings = [
         target: 'Phase 6: Multi-Sensory immersion',
         status: '15%',
         plan: [
-            'Prototyping Veo-3.1 dynamic video backgrounds',
+            'Prototyping cinematic visual prayer backgrounds',
             'Haptic feedback integration for prayer breathing',
             'Adaptive UI based on "Sentinel Mood Analysis"'
         ],
