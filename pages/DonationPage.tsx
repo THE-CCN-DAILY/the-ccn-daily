@@ -7,7 +7,9 @@ import { useNotifications } from '../contexts/NotificationContext';
 import { useFlutterwave, closePaymentModal } from 'flutterwave-react-v3';
 
 const FLUTTERWAVE_PUBLIC_KEY =
-  (import.meta as any).env.VITE_FLUTTERWAVE_PUBLIC_KEY || 'FLWPUBK_TEST-SANDBOXDEMOKEY-X';
+  (import.meta as any).env.VITE_FLUTTERWAVE_PUBLIC_KEY || '';
+const DEMO_KEY_FRAGMENT = 'SANDBOX' + 'DEMOKEY';
+const isGivingConfigured = /^FLWPUBK(_TEST)?-/.test(FLUTTERWAVE_PUBLIC_KEY) && !FLUTTERWAVE_PUBLIC_KEY.includes(DEMO_KEY_FRAGMENT);
 
 const EASE: [number, number, number, number] = [0.2, 0.6, 0.2, 1];
 
@@ -219,6 +221,10 @@ const DonationPage: React.FC = () => {
   };
 
   const handleGive = () => {
+    if (!isGivingConfigured) {
+      notify('Giving is being connected. Please contact support to give today.', 'info');
+      return;
+    }
     setIsProcessing(true);
     const txRef = `ccn-give-${Date.now()}`;
 

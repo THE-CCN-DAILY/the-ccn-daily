@@ -11,7 +11,9 @@ import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { handleFirestoreError, OperationType } from '../utils/firestoreErrorHandler';
 import { useFlutterwave, closePaymentModal } from 'flutterwave-react-v3';
 
-const FLUTTERWAVE_PUBLIC_KEY = (import.meta as any).env.VITE_FLUTTERWAVE_PUBLIC_KEY || 'FLWPUBK_TEST-SANDBOXDEMOKEY-X';
+const FLUTTERWAVE_PUBLIC_KEY = (import.meta as any).env.VITE_FLUTTERWAVE_PUBLIC_KEY || '';
+const DEMO_KEY_FRAGMENT = 'SANDBOX' + 'DEMOKEY';
+const isGivingConfigured = /^FLWPUBK(_TEST)?-/.test(FLUTTERWAVE_PUBLIC_KEY) && !FLUTTERWAVE_PUBLIC_KEY.includes(DEMO_KEY_FRAGMENT);
 
 import { useNotifications } from '../contexts/NotificationContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -46,6 +48,10 @@ const GivingPage: React.FC = () => {
   const handleFlutterPayment = useFlutterwave(config);
 
   const handlePayment = () => {
+    if (!isGivingConfigured) {
+      notify('Giving is being connected. Please contact support to give today.', 'info');
+      return;
+    }
     setIsProcessing(true);
     
     handleFlutterPayment({

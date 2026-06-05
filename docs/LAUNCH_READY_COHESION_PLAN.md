@@ -126,8 +126,8 @@ Required before production:
 - Latest pushed branch: `phase-e-visual-authoring`
 - Latest functional checkpoint: `e4c8d7b feat: complete voice and visual prayer surfaces`
 - Latest deployed staging alias: `https://staging.project-phoenix-ccn-daily.pages.dev/`
-- Latest staging deployment URL: `https://d5780ef3.project-phoenix-ccn-daily.pages.dev`
-- Current in-progress checkpoint: expert review consolidation, launch-readiness audit updates, and remaining signed-in dashboard/admin QA.
+- Latest staging deployment URL: `https://9b9f15f7.project-phoenix-ccn-daily.pages.dev`
+- Current in-progress checkpoint: books/catalog source-of-truth alignment, donation safety cleanup, and remaining signed-in dashboard/admin QA.
 - Verified gates at checkpoint:
   - `npm run lint` passed
   - `npm run build` passed
@@ -152,6 +152,9 @@ Required before production:
 - Daily Journey includes Scripture, prayer, devotional, journaling, declaration, further study, and Prayer Companion access.
 - Prayer Companion has working browser speech/type flow and does not depend on an external voice provider.
 - Visual Sanctuary has a working interactive atmosphere and does not depend on cinematic video generation.
+- Member Books Library now reads the Cloudflare/D1 catalog first for published books, with Firestore as a fallback.
+- Hosted ebook files open as real browser/download editions instead of a parser-pending placeholder.
+- Giving pages no longer ship the Flutterwave sandbox demo key as a fallback; missing configuration stops payment launch with a clear message.
 - Admin content, announcement, scholarship review, diagnostics, growth, release ops, and role-gated studio routes exist.
 - Cloudflare Pages Functions, D1-backed subscription/payment readback, R2 upload path, and Workers background service routing are present.
 
@@ -165,8 +168,8 @@ Required before production:
 
 ### Feature Integration Findings
 
-- Books are split between Firestore reads and D1 catalog APIs. The launch catalog must have one source of truth, otherwise an admin can publish a book that members never see.
-- Donations are not yet as server-authoritative as subscriptions. Giving flows still need a payment intent, verified webhook, and server readback before production donation launch.
+- Books are now member-visible from the D1 catalog first, but admin write surfaces still need consolidation so all book creation paths use the same catalog service.
+- Donations are safer because sandbox fallback keys were removed, but they are not yet as server-authoritative as subscriptions. Giving flows still need a payment intent, verified webhook, and server readback before production donation launch.
 - Admin resource uploads are detached from the D1 content catalog. Resource Manager should either write through the same catalog service or be clearly limited to a non-public holding area.
 - Settings can display a stale plan label if Firestore user role data and D1 subscription data disagree. Access gates are stronger than the label, but the label affects trust.
 - Prayer Circle is device-local while Prayer Wall is API-backed. This is acceptable only if Prayer Circle remains positioned as a personal practice rather than a cross-device prayer record.

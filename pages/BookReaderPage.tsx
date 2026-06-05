@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { ArrowLeft, BookOpen, Headphones, ShoppingBag, ExternalLink } from 'lucide-react';
+import { ArrowLeft, BookOpen, Download, Headphones, ShoppingBag, ExternalLink } from 'lucide-react';
 import Card from '../components/Card';
-import ContentDisplay from '../components/reader/ContentDisplay';
 import { useAudioPlayer } from '../contexts/AudioPlayerContext';
 import { getBook } from '../services/booksService';
 import type { Book, BookVariant } from '../types';
@@ -90,33 +89,32 @@ const BookReaderPage: React.FC = () => {
       setMode('listening');
     }
   };
-
-  // Reading mode — use ContentDisplay
   if (mode === 'reading' && activeVariant?.fileUrl) {
     return (
-      <div className="h-full flex flex-col">
-        <div className="flex items-center gap-3 px-4 py-2.5 border-b border-brand-border flex-shrink-0">
+      <div className="max-w-2xl mx-auto py-16 px-4">
+        <Card className="text-center">
           <button
             onClick={() => setMode('info')}
-            className="flex items-center gap-1.5 text-sm text-brand-text-secondary hover:text-brand-accent transition-colors"
+            className="mb-6 inline-flex items-center gap-1.5 text-sm text-brand-text-secondary transition-colors hover:text-brand-accent"
           >
             <ArrowLeft className="w-4 h-4" /> Back to Book
           </button>
-          <span className="text-brand-text-secondary">·</span>
-          <span className="text-sm font-semibold text-brand-text-primary truncate">{book.title}</span>
-          {activeVariant.languageName && (
-            <span className="text-xs px-2 py-0.5 rounded-full border border-brand-border text-brand-text-secondary">
-              {activeVariant.languageName}
-            </span>
-          )}
-        </div>
-        <div className="flex-1 min-h-0 p-4">
-          <ContentDisplay
-            contentId={`book-${book.id}-${activeVariant.id}`}
-            initialContent={`<p>Loading content from: ${activeVariant.fileUrl}</p><p>EPUB rendering integration pending — content will stream here when the EPUB parser is connected.</p>`}
-            title={book.title}
-          />
-        </div>
+          <BookOpen className="mx-auto mb-4 h-12 w-12 text-brand-accent" />
+          <p className="mb-2 text-xs font-bold uppercase tracking-widest text-brand-accent">Reader</p>
+          <h1 className="mb-3 text-3xl font-semibold text-brand-text-primary" style={{ fontFamily: 'var(--serif-display)' }}>{book.title}</h1>
+          <p className="mx-auto mb-6 max-w-md text-sm leading-relaxed text-brand-text-secondary">
+            This edition is hosted as a file. Open it in your browser or download it for quiet reading on your preferred device.
+          </p>
+          <a
+            href={activeVariant.fileUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-brand-accent px-5 py-3 text-sm font-bold text-white transition-opacity hover:opacity-90"
+          >
+            <Download className="h-4 w-4" />
+            Open Edition
+          </a>
+        </Card>
       </div>
     );
   }

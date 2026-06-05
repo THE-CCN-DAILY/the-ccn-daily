@@ -7,7 +7,56 @@ import type { Book, ReadingPlan } from '../types';
 
 // ─── Books ──────────────────────────────────────────────────────────────────
 
-export const listBooks = async (publishedOnly = false): Promise<Book[]> => {
+
+type CatalogBook = {
+  id: string;
+  title: string;
+  description?: string;
+  author?: string;
+  fileUrl?: string;
+  coverUrl?: string;
+  status?: 'draft' | 'published' | 'archived';
+  isPremium?: boolean;
+  price?: number;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+const mapCatalogBook = (book: CatalogBook): Book => ({
+  id: book.id,
+  title: book.title,
+  author: book.author || 'THE CCN DAILY',
+  coverUrl: book.coverUrl,
+  description: book.description || '',
+  category: book.isPremium ? 'Premium Library' : 'Library',
+  status: book.status === 'draft' ? 'draft' : 'published',
+  variants: book.fileUrl ? [{
+    id: `${book.id}-ebook`,
+    type: 'ebook',
+    format: book.fileUrl.toLowerCase().includes('.pdf') ? 'pdf' : 'epub',
+    fileUrl: book.fileUrl,
+    price: book.price || 0,
+    currency: 'USD',
+    isFree: !book.isPremium && !book.price,
+  }] : [],
+  purchaseLinks: [],
+  createdAt: book.createdAt,
+  updatedAt: book.updatedAt,
+});
+
+const listCatalogBooks = async (): Promise<Book[] | null> => {
+  try {
+    const response = await fetch('/api/books');
+    if (!response.ok) return null;
+    const data = await response.json() as { books?: CatalogBook[] };
+    if (!Array.isArray(data.books)) return null;
+    return data.books.map(mapCatalogBook);
+  } catch {
+    return null;
+  }
+};
+
+const listFirestoreBooks = async (publishedOnly = false): Promise<Book[]> => {
   try {
     const q = publishedOnly
       ? query(collection(db, 'books'), where('status', '==', 'published'), orderBy('createdAt', 'desc'))
@@ -19,7 +68,19 @@ export const listBooks = async (publishedOnly = false): Promise<Book[]> => {
   }
 };
 
+export const listBooks = async (publishedOnly = false): Promise<Book[]> => {
+  if (publishedOnly) {
+    const catalogBooks = await listCatalogBooks();
+    if (catalogBooks && catalogBooks.length > 0) return catalogBooks;
+  }
+  return listFirestoreBooks(publishedOnly);
+};
+
 export const getBook = async (id: string): Promise<Book | null> => {
+  const catalogBooks = await listCatalogBooks();
+  const catalogBook = catalogBooks?.find(book => book.id === id);
+  if (catalogBook) return catalogBook;
+
   try {
     const snap = await getDoc(doc(db, 'books', id));
     return snap.exists() ? ({ id: snap.id, ...snap.data() } as Book) : null;
@@ -27,7 +88,6 @@ export const getBook = async (id: string): Promise<Book | null> => {
     return null;
   }
 };
-
 export const saveBook = async (book: Omit<Book, 'id' | 'createdAt' | 'updatedAt'>): Promise<string> => {
   const ref = await addDoc(collection(db, 'books'), {
     ...book,
