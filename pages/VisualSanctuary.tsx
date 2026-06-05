@@ -1,130 +1,155 @@
-
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { motion } from 'motion/react';
 import Card from '../components/Card';
-import { Wand2 } from 'lucide-react';
-import { SpinnerIcon, PaintBrushIcon, DownloadIcon, ChevronLeftIcon } from '../components/icons';
-import { generateSanctuaryVideo } from '../services/geminiService';
+import { Download, Moon, Pause, Play, Sparkles, Sunrise, Waves } from 'lucide-react';
 
-import { useNotifications } from '../contexts/NotificationContext';
+const themes = [
+  {
+    id: 'dawn',
+    name: 'Dawn',
+    icon: Sunrise,
+    prompt: 'A quiet hillside at dawn with warm light, still air, and space to breathe.',
+    palette: ['#30120B', '#8E1B1B', '#F27D26', '#FFD08A'],
+    prayer: 'Lord, let the morning teach my heart to begin again with You.',
+  },
+  {
+    id: 'still-water',
+    name: 'Still Water',
+    icon: Waves,
+    prompt: 'A peaceful lake at blue hour with soft ripples and a gentle horizon.',
+    palette: ['#071113', '#12343B', '#2E7780', '#BDE7DF'],
+    prayer: 'Lead me beside still waters and restore what has been scattered in me.',
+  },
+  {
+    id: 'night-watch',
+    name: 'Night Watch',
+    icon: Moon,
+    prompt: 'A quiet night sky over a chapel garden with candlelight and deep rest.',
+    palette: ['#08070A', '#1C1727', '#5E3C72', '#F1C27D'],
+    prayer: 'Keep watch with me, Lord, and settle my soul in Your peace.',
+  },
+];
+
+const hashPrompt = (value: string) => Array.from(value).reduce((sum, char) => sum + char.charCodeAt(0), 0);
 
 const VisualSanctuary: React.FC = () => {
-    const { notify } = useNotifications();
-    const [prompt, setPrompt] = useState('A serene garden at sunset with golden light filtering through ancient oak trees, extremely peaceful and spiritual.');
-    const [isGenerating, setIsGenerating] = useState(false);
-    const [progressMsg, setProgressMsg] = useState('');
-    const [generatedUrl, setGeneratedUrl] = useState<string | null>(null);
+  const [prompt, setPrompt] = useState(themes[0].prompt);
+  const [themeId, setThemeId] = useState(themes[0].id);
+  const [isBreathing, setIsBreathing] = useState(true);
+  const [minutes, setMinutes] = useState(5);
+  const activeTheme = themes.find(theme => theme.id === themeId) || themes[0];
 
-    const handleGenerate = async () => {
-        if (!prompt.trim()) return;
-        setIsGenerating(true);
-        setGeneratedUrl(null);
-        setProgressMsg('Preparing your visual sanctuary...');
-        try {
-            const url = await generateSanctuaryVideo(prompt, (msg) => setProgressMsg(msg));
-            setGeneratedUrl(url);
-        } catch (e) {
-            notify("The visual sanctuary could not be prepared. Please try again later.", "error");
-        } finally {
-            setIsGenerating(false);
-            setProgressMsg('');
-        }
+  const scene = useMemo(() => {
+    const seed = hashPrompt(prompt + themeId);
+    const offset = seed % 32;
+    const [deep, mid, ember, light] = activeTheme.palette;
+    return {
+      background: `
+        radial-gradient(circle at ${28 + offset}% ${24 + (offset % 12)}%, ${light}55 0, transparent 18rem),
+        radial-gradient(circle at ${70 - (offset % 20)}% 66%, ${ember}44 0, transparent 22rem),
+        linear-gradient(150deg, ${deep} 0%, ${mid} 48%, ${ember} 100%)
+      `,
+      light,
+      ember,
     };
+  }, [activeTheme, prompt, themeId]);
 
-    return (
-        <div className="max-w-5xl mx-auto h-[calc(100vh-8rem)] flex flex-col">
-            <motion.div
-                className="mb-8"
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-            >
-                <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ fontFamily: 'var(--sans-ui)', color: 'var(--crimson, #8E1B1B)' }}>Pray</p>
-                <h1 className="text-4xl font-black text-brand-text-primary mb-2" style={{ fontFamily: 'var(--serif-display)' }}>
-                    Visual Sanctuary
-                </h1>
-                <p className="text-brand-text-secondary">A space for meditation, sacred imagery, and visual prayer.</p>
-            </motion.div>
+  const downloadSanctuary = () => {
+    const text = [
+      'THE CCN DAILY - Visual Sanctuary',
+      '',
+      `Theme: ${activeTheme.name}`,
+      `Prayer time: ${minutes} minutes`,
+      `Prompt: ${prompt}`,
+      '',
+      activeTheme.prayer,
+    ].join('\n');
+    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = 'ccn-daily-visual-sanctuary.txt';
+    anchor.click();
+    URL.revokeObjectURL(url);
+  };
 
-            <div className="flex-1 grid grid-cols-1 lg:grid-cols-4 gap-6 min-h-0">
-                <div className="lg:col-span-1 space-y-6">
-                    <Card className="h-full">
-                        <h2 className="text-lg font-bold text-brand-text-primary mb-4">Design Space</h2>
-                        <p className="text-xs text-brand-text-secondary mb-4">Describe the atmosphere you want to inhabit in prayer — the light, the place, the sacred mood.</p>
-                        <textarea 
-                            value={prompt}
-                            onChange={(e) => setPrompt(e.target.value)}
-                            className="w-full h-32 p-3 bg-brand-secondary border border-brand-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-accent"
-                            placeholder="e.g., Mount Zion at dawn..."
-                        />
-                        <button 
-                            onClick={handleGenerate}
-                            disabled={true}
-                            className="w-full mt-4 py-3 bg-brand-secondary text-brand-text-secondary rounded-xl font-bold flex items-center justify-center gap-2 cursor-not-allowed opacity-75"
-                        >
-                            <Wand2 className="w-5 h-5"/> Premium Feature
-                        </button>
+  return (
+    <div className="mx-auto flex min-h-[calc(100vh-8rem)] max-w-6xl flex-col pb-10">
+      <motion.div className="mb-8" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}>
+        <p className="mb-2 text-xs font-bold uppercase tracking-widest text-brand-accent">Pray</p>
+        <h1 className="mb-2 text-4xl font-black text-brand-text-primary" style={{ fontFamily: 'var(--serif-display)' }}>Visual Sanctuary</h1>
+        <p className="text-brand-text-secondary">An interactive prayer atmosphere with breathing rhythm, devotional focus, and downloadable reflection.</p>
+      </motion.div>
 
-                        <div className="mt-8 pt-8 border-t border-brand-border">
-                            <h3 className="text-xs font-black uppercase text-brand-text-secondary tracking-widest mb-4">Premium access</h3>
-                            <div className="p-4 bg-brand-accent/10 rounded-xl border border-brand-accent/30">
-                                <p className="text-[12px] font-bold text-brand-accent mb-1">Cinematic sanctuary video</p>
-                                <p className="text-[12px] text-brand-text-secondary leading-tight">Video generation is currently reserved for Premium members to ensure sustainable resource allocation.</p>
-                            </div>
-                        </div>
-                    </Card>
-                </div>
+      <div className="grid flex-1 grid-cols-1 gap-6 lg:grid-cols-4">
+        <Card className="space-y-6 lg:col-span-1">
+          <div>
+            <h2 className="mb-3 text-lg font-bold text-brand-text-primary">Design Space</h2>
+            <p className="mb-4 text-xs leading-relaxed text-brand-text-secondary">Choose an atmosphere or write your own. The sanctuary updates immediately.</p>
+            <textarea
+              value={prompt}
+              onChange={event => setPrompt(event.target.value)}
+              className="h-32 w-full rounded-xl border border-brand-border bg-brand-secondary p-3 text-sm text-brand-text-primary outline-none focus:ring-2 focus:ring-brand-accent"
+            />
+          </div>
 
-                <div className="lg:col-span-3">
-                    <Card className="h-full flex flex-col items-center justify-center relative overflow-hidden group p-0 border-none bg-brand-dark">
-                        {!generatedUrl && !isGenerating && (
-                            <div className="text-center p-12 max-w-md">
-                                <div className="mb-6 inline-flex items-center px-3 py-1 rounded-full bg-brand-accent/10 text-brand-accent text-xs font-bold uppercase tracking-wider border border-brand-accent/20">
-                                    Premium Tier
-                                </div>
-                                <div className="w-20 h-20 bg-brand-accent/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                                    <PaintBrushIcon className="w-10 h-10 text-brand-accent opacity-20"/>
-                                </div>
-                                <h3 className="text-xl font-bold text-brand-text-primary mb-2">Awaiting Vision</h3>
-                                <p className="text-sm text-brand-text-secondary leading-relaxed">Cinematic sanctuary generation is reserved for premium members while we keep the free plan stable and useful.</p>
-                            </div>
-                        )}
+          <div className="grid grid-cols-3 gap-2">
+            {themes.map(theme => {
+              const Icon = theme.icon;
+              return (
+                <button
+                  key={theme.id}
+                  onClick={() => {
+                    setThemeId(theme.id);
+                    setPrompt(theme.prompt);
+                  }}
+                  className={`rounded-xl border px-3 py-3 text-xs font-bold transition-colors ${themeId === theme.id ? 'border-brand-accent bg-brand-accent text-white' : 'border-brand-border bg-brand-secondary text-brand-text-secondary'}`}
+                >
+                  <Icon className="mx-auto mb-1 h-4 w-4" />
+                  {theme.name}
+                </button>
+              );
+            })}
+          </div>
 
-                        {isGenerating && (
-                            <div className="text-center">
-                                <div className="relative w-24 h-24 mx-auto mb-6">
-                                    <div className="absolute inset-0 border-4 border-brand-accent/20 rounded-full"></div>
-                                    <div className="absolute inset-0 border-t-4 border-brand-accent rounded-full animate-spin"></div>
-                                    <Wand2 className="w-8 h-8 text-brand-accent absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 animate-pulse"/>
-                                </div>
-                                <p className="text-brand-accent font-black uppercase tracking-[0.2em] text-xs mb-2">Architecting Sanctuary...</p>
-                                <p className="text-brand-text-secondary text-xs">{progressMsg}</p>
-                            </div>
-                        )}
+          <label className="block">
+            <span className="mb-2 block text-xs font-black uppercase tracking-widest text-brand-text-secondary">Prayer minutes</span>
+            <input type="range" min="2" max="20" value={minutes} onChange={event => setMinutes(Number(event.target.value))} className="w-full accent-brand-accent" />
+            <span className="mt-1 block text-sm font-bold text-brand-text-primary">{minutes} minutes</span>
+          </label>
 
-                        {generatedUrl && (
-                            <div className="w-full h-full animate-fade-in relative group">
-                                <video src={generatedUrl} autoPlay loop muted playsInline className="w-full h-full object-cover" />
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-8">
-                                    <div className="flex justify-between items-center">
-                                        <div>
-                                            <p className="text-white font-bold text-lg">Your Spiritual Space</p>
-                                            <p className="text-white/80 text-xs truncate max-w-md">{prompt}</p>
-                                        </div>
-                                        <div className="flex gap-2">
-                                            <a href={generatedUrl} target="_blank" rel="noreferrer" className="p-3 bg-white/20 backdrop-blur-md rounded-full text-white hover:bg-white/40">
-                                                <DownloadIcon className="w-5 h-5"/>
-                                            </a>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-                    </Card>
-                </div>
+          <div className="flex gap-2">
+            <button onClick={() => setIsBreathing(value => !value)} className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-brand-accent px-4 py-3 text-sm font-bold text-white">
+              {isBreathing ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+              {isBreathing ? 'Pause' : 'Begin'}
+            </button>
+            <button onClick={downloadSanctuary} className="rounded-xl border border-brand-border bg-brand-secondary px-4 py-3 text-brand-text-primary" aria-label="Download sanctuary reflection">
+              <Download className="h-4 w-4" />
+            </button>
+          </div>
+        </Card>
+
+        <Card className="relative min-h-[32rem] overflow-hidden border-none p-0 lg:col-span-3">
+          <div className="absolute inset-0" style={{ background: scene.background }} />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0,rgba(0,0,0,0.34)_72%)]" />
+          <motion.div
+            className="absolute left-1/2 top-1/2 h-48 w-48 -translate-x-1/2 -translate-y-1/2 rounded-full"
+            style={{ background: `radial-gradient(circle, ${scene.light}cc 0%, ${scene.ember}55 42%, transparent 70%)` }}
+            animate={isBreathing ? { scale: [1, 1.28, 1], opacity: [0.75, 1, 0.75] } : { scale: 1, opacity: 0.8 }}
+            transition={{ duration: 6, repeat: isBreathing ? Infinity : 0, ease: 'easeInOut' }}
+          />
+          <div className="absolute inset-x-8 bottom-8 z-10 max-w-2xl">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-bold uppercase tracking-widest text-white backdrop-blur-md">
+              <Sparkles className="h-3.5 w-3.5" />
+              {activeTheme.name} sanctuary
             </div>
-        </div>
-    );
+            <h2 className="mb-3 text-3xl font-semibold leading-tight text-white" style={{ fontFamily: 'var(--serif-display)' }}>{activeTheme.prayer}</h2>
+            <p className="max-w-xl text-sm leading-relaxed text-white/80">{prompt}</p>
+          </div>
+        </Card>
+      </div>
+    </div>
+  );
 };
 
 export default VisualSanctuary;

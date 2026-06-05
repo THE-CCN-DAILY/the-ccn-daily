@@ -1,9 +1,10 @@
 
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import Card from '../components/Card';
-import { FlaskConical } from 'lucide-react';
-import { AiIcon, SpinnerIcon, SearchIcon, SoundWaveIcon, CheckIcon, MicrophoneIcon } from '../components/icons';
-import { getGroundedPrayerTopics, getDeepTheologicalInsight, generateSanctuaryVideo } from '../services/geminiService';
+import { Sparkles } from 'lucide-react';
+import { AiIcon, SpinnerIcon, SearchIcon } from '../components/icons';
+import { getGroundedPrayerTopics, getDeepTheologicalInsight } from '../services/geminiService';
 import { useAuth } from '../contexts/AuthContext';
 import { useNotifications } from '../contexts/NotificationContext';
 
@@ -15,12 +16,6 @@ const VisionaryLab: React.FC = () => {
   const [deepQuestion, setDeepQuestion] = useState('');
   const [deepInsight, setDeepInsight] = useState('');
   const [isThinking, setIsThinking] = useState(false);
-
-  // Cinematic Video State
-  const [videoPrompt, setVideoPrompt] = useState('A drone shot of a peaceful lighthouse on a rugged cliff at dawn with crashing waves');
-  const [videoUrl, setVideoUrl] = useState<string | null>(null);
-  const [videoStatus, setVideoStatus] = useState('');
-  const [isVideoLoading, setIsVideoLoading] = useState(false);
 
   const handleTestGrounding = async () => {
     if (!user) return;
@@ -49,39 +44,11 @@ const VisionaryLab: React.FC = () => {
     }
   };
 
-  const handleGenerateVideo = async () => {
-    if (!user) return;
-    // @ts-ignore
-    const hasKey = await window.aistudio.hasSelectedApiKey();
-    if (!hasKey) {
-        // @ts-ignore
-        await window.aistudio.openSelectKey();
-        return; // Proceed assuming user will re-trigger
-    }
-
-    setIsVideoLoading(true);
-    setVideoUrl(null);
-    try {
-        const url = await generateSanctuaryVideo(videoPrompt, (msg) => setVideoStatus(msg), user.role as any);
-        setVideoUrl(url);
-    } catch (e: any) {
-        if (e.message?.includes("Requested entity was not found")) {
-            // @ts-ignore
-            await window.aistudio.openSelectKey();
-        } else {
-            notify("Video generation error. Check console.", "error");
-        }
-    } finally {
-        setIsVideoLoading(false);
-        setVideoStatus('');
-    }
-  };
-
   return (
     <div className="max-w-6xl mx-auto pb-20">
       <h1 className="text-4xl font-bold text-brand-text-primary mb-2">Visionary Tech Lab</h1>
       <p className="text-lg text-brand-text-secondary mb-8">
-        Prototyping Phase 5 & 6: Grounding, Deep Reasoning, and Cinematic Motion.
+        Launch tools for grounded prayer insight, deep study, and the live sanctuary experience.
       </p>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
@@ -113,41 +80,20 @@ const VisionaryLab: React.FC = () => {
           </div>
         </Card>
 
-        {/* Cinematic Video Demo (PHASE 6) */}
-        <Card className="flex flex-col border-brand-accent/30 bg-brand-accent/5">
+        <Card className="flex flex-col justify-between border-brand-accent/30 bg-brand-accent/5">
             <h2 className="text-xl font-bold text-brand-text-primary mb-4 flex items-center">
-                <FlaskConical className="w-6 h-6 mr-2 text-brand-accent animate-pulse"/>
-                Cinematic Sanctuary
+                <Sparkles className="w-6 h-6 mr-2 text-brand-accent"/>
+                Visual Sanctuary
             </h2>
-            <p className="text-xs text-brand-text-secondary mb-4 uppercase tracking-widest font-black">Phase 6 Immersion</p>
-            <textarea 
-                value={videoPrompt}
-                onChange={(e) => setVideoPrompt(e.target.value)}
-                className="w-full h-24 p-3 bg-brand-dark border border-brand-border rounded-lg text-brand-text-primary text-sm focus:outline-none focus:ring-2 focus:ring-brand-accent mb-4"
-                placeholder="Describe your meditation cinematic..."
-            />
-            <button 
-                onClick={handleGenerateVideo}
-                disabled={isVideoLoading}
-                className="w-full py-3 rounded-lg bg-brand-accent text-white font-bold flex items-center justify-center gap-2 hover:bg-opacity-90 disabled:opacity-50"
+            <p className="text-sm text-brand-text-secondary leading-relaxed mb-6">
+                The launch version is a provider-independent prayer atmosphere with breathing rhythm, themed scenes, and downloadable reflection notes.
+            </p>
+            <Link
+                to="/app/visual-sanctuary"
+                className="w-full py-3 rounded-lg bg-brand-accent text-white font-bold flex items-center justify-center gap-2 hover:bg-opacity-90"
             >
-                {isVideoLoading ? <SpinnerIcon className="w-5 h-5"/> : 'Generate Cinematic Motion'}
-            </button>
-
-            <div className="mt-4 flex-1 bg-brand-dark rounded-lg border border-brand-border overflow-hidden min-h-[200px] flex items-center justify-center relative">
-                {isVideoLoading && (
-                    <div className="text-center p-4">
-                        <div className="w-12 h-12 border-t-2 border-brand-accent rounded-full animate-spin mx-auto mb-3"></div>
-                        <p className="text-xs text-brand-accent font-bold animate-pulse uppercase tracking-widest">{videoStatus}</p>
-                    </div>
-                )}
-                {videoUrl && (
-                    <video src={videoUrl} controls autoPlay loop className="w-full h-full object-cover" />
-                )}
-                {!videoUrl && !isVideoLoading && (
-                    <p className="text-[12px] text-brand-text-secondary italic">Enter prompt to architect motion sanctuary.</p>
-                )}
-            </div>
+                Open Visual Sanctuary
+            </Link>
         </Card>
       </div>
 

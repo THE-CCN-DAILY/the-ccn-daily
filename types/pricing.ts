@@ -51,7 +51,6 @@ export interface TierFeatures {
   canUsePremiumAudioNarration: boolean;
   canUseAdaptiveMusic: boolean;
   canUseLiveVoiceCompanion: boolean;
-  canUseVeoCinematicBackgrounds: boolean;
   canUseGroundedIntercession: boolean;
 
   // Quotas Map
@@ -61,7 +60,6 @@ export interface TierFeatures {
     verseExplainers: QuotaPolicy;
     studyPlanGenerations: QuotaPolicy;
     quoteImageGenerations: QuotaPolicy;
-    cinematicVideoGenerations: QuotaPolicy;
     ttsMinutes: QuotaPolicy;
     courseSummaryGenerations: QuotaPolicy;
     audiobookAiCompanionPrompts: QuotaPolicy;
@@ -109,7 +107,6 @@ export const TIER_CONFIGS: Record<SubscriptionTier, TierConfig> = {
       canUsePremiumAudioNarration: false,
       canUseAdaptiveMusic: false,
       canUseLiveVoiceCompanion: false,
-      canUseVeoCinematicBackgrounds: false,
       canUseGroundedIntercession: false,
       quotas: {
         aiChatMessages: DEFAULT_QUOTA,
@@ -117,7 +114,6 @@ export const TIER_CONFIGS: Record<SubscriptionTier, TierConfig> = {
         verseExplainers: DEFAULT_QUOTA,
         studyPlanGenerations: DEFAULT_QUOTA,
         quoteImageGenerations: DEFAULT_QUOTA,
-        cinematicVideoGenerations: DEFAULT_QUOTA,
         ttsMinutes: DEFAULT_QUOTA,
         courseSummaryGenerations: DEFAULT_QUOTA,
         audiobookAiCompanionPrompts: DEFAULT_QUOTA,
@@ -154,7 +150,6 @@ export const TIER_CONFIGS: Record<SubscriptionTier, TierConfig> = {
       canUsePremiumAudioNarration: false,
       canUseAdaptiveMusic: false,
       canUseLiveVoiceCompanion: false,
-      canUseVeoCinematicBackgrounds: false,
       canUseGroundedIntercession: false,
       quotas: {
         aiChatMessages: { limit: 10, reset: 'daily', mode: 'soft', overagePackEligible: true },
@@ -162,7 +157,6 @@ export const TIER_CONFIGS: Record<SubscriptionTier, TierConfig> = {
         verseExplainers: { limit: 5, reset: 'daily', mode: 'soft', overagePackEligible: false },
         studyPlanGenerations: DEFAULT_QUOTA,
         quoteImageGenerations: DEFAULT_QUOTA,
-        cinematicVideoGenerations: DEFAULT_QUOTA,
         ttsMinutes: DEFAULT_QUOTA,
         courseSummaryGenerations: DEFAULT_QUOTA,
         audiobookAiCompanionPrompts: DEFAULT_QUOTA,
@@ -199,7 +193,6 @@ export const TIER_CONFIGS: Record<SubscriptionTier, TierConfig> = {
       canUsePremiumAudioNarration: true,
       canUseAdaptiveMusic: true,
       canUseLiveVoiceCompanion: false,
-      canUseVeoCinematicBackgrounds: false,
       canUseGroundedIntercession: false,
       quotas: {
         aiChatMessages: UNLIMITED_QUOTA,
@@ -207,7 +200,6 @@ export const TIER_CONFIGS: Record<SubscriptionTier, TierConfig> = {
         verseExplainers: UNLIMITED_QUOTA,
         studyPlanGenerations: { limit: 2, reset: 'monthly', mode: 'hard', overagePackEligible: true },
         quoteImageGenerations: { limit: 10, reset: 'monthly', mode: 'soft', overagePackEligible: true },
-        cinematicVideoGenerations: DEFAULT_QUOTA,
         ttsMinutes: { limit: 30, reset: 'monthly', mode: 'soft', overagePackEligible: true },
         courseSummaryGenerations: { limit: 5, reset: 'monthly', mode: 'soft', overagePackEligible: false },
         audiobookAiCompanionPrompts: { limit: 50, reset: 'monthly', mode: 'soft', overagePackEligible: true },
@@ -244,7 +236,6 @@ export const TIER_CONFIGS: Record<SubscriptionTier, TierConfig> = {
       canUsePremiumAudioNarration: true,
       canUseAdaptiveMusic: true,
       canUseLiveVoiceCompanion: true,
-      canUseVeoCinematicBackgrounds: true,
       canUseGroundedIntercession: true,
       quotas: {
         aiChatMessages: UNLIMITED_QUOTA,
@@ -252,7 +243,6 @@ export const TIER_CONFIGS: Record<SubscriptionTier, TierConfig> = {
         verseExplainers: UNLIMITED_QUOTA,
         studyPlanGenerations: { limit: 10, reset: 'monthly', mode: 'soft', overagePackEligible: true },
         quoteImageGenerations: { limit: 50, reset: 'monthly', mode: 'soft', overagePackEligible: true },
-        cinematicVideoGenerations: { limit: 5, reset: 'monthly', mode: 'hard', overagePackEligible: true },
         ttsMinutes: { limit: 120, reset: 'monthly', mode: 'soft', overagePackEligible: true },
         courseSummaryGenerations: UNLIMITED_QUOTA,
         audiobookAiCompanionPrompts: UNLIMITED_QUOTA,
@@ -289,7 +279,6 @@ export const TIER_CONFIGS: Record<SubscriptionTier, TierConfig> = {
       canUsePremiumAudioNarration: true,
       canUseAdaptiveMusic: true,
       canUseLiveVoiceCompanion: true,
-      canUseVeoCinematicBackgrounds: true,
       canUseGroundedIntercession: true,
       quotas: {
         aiChatMessages: UNLIMITED_QUOTA,
@@ -297,7 +286,6 @@ export const TIER_CONFIGS: Record<SubscriptionTier, TierConfig> = {
         verseExplainers: UNLIMITED_QUOTA,
         studyPlanGenerations: UNLIMITED_QUOTA,
         quoteImageGenerations: UNLIMITED_QUOTA,
-        cinematicVideoGenerations: { limit: 15, reset: 'monthly', mode: 'soft', overagePackEligible: true },
         ttsMinutes: { limit: 300, reset: 'monthly', mode: 'soft', overagePackEligible: true },
         courseSummaryGenerations: UNLIMITED_QUOTA,
         audiobookAiCompanionPrompts: UNLIMITED_QUOTA,

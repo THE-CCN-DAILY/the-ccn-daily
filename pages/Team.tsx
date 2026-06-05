@@ -39,7 +39,7 @@ const briefings = [
         status: '75%',
         plan: [
             'Pivoting devotional engine to source primary themes from https://theccndaily.substack.com/.',
-            'Connect Kai Prayer Companion to user journal context with long-term memory.',
+            'Tighten journal, prayer wall, and guided journey continuity for the live member experience.',
             'Migrate Grounded Intercession to Prayer Wall (Live)'
         ],
         icon: AiIcon
@@ -60,7 +60,7 @@ const briefings = [
         target: 'Phase 6: Multi-Sensory immersion',
         status: '15%',
         plan: [
-            'Prototyping cinematic visual prayer backgrounds',
+            'Refining devotional audio, reading, and journaling flow polish',
             'Haptic feedback integration for prayer breathing',
             'Adaptive UI based on "Sentinel Mood Analysis"'
         ],

@@ -78,7 +78,7 @@ const CancellationPreview: React.FC<Props> = ({
         <h4 className="font-bold text-brand-accent mb-2 uppercase text-xs tracking-widest">Feature limits after downgrade</h4>
         <p className="text-sm text-brand-text-secondary leading-relaxed">
           Your Coach will revert to basic guidance, and daily message limits will apply.
-          You'll also lose access to premium audio narration and cinematic backgrounds.
+          You'll also lose access to premium audio narration, courses, reading plans, and challenge archives.
         </p>
       </div>
 

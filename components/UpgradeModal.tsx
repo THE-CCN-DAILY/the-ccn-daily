@@ -147,7 +147,7 @@ const UpgradeModal: React.FC<UpgradeModalProps> = ({ isOpen, onClose, featureNam
                                         </li>
                                         <li className="flex items-start gap-3 text-sm text-brand-text-secondary">
                                             <CheckIcon className="w-5 h-5 text-secondary-purple flex-shrink-0" />
-                                            <span>Quiet visual prayer spaces</span>
+                                            <span>Visual Sanctuary prayer space</span>
                                         </li>
                                         <li className="flex items-start gap-3 text-sm text-brand-text-secondary">
                                             <CheckIcon className="w-5 h-5 text-secondary-purple flex-shrink-0" />

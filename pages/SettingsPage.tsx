@@ -222,10 +222,13 @@ const SettingsPage: React.FC = () => {
           <Row title="Autoplay audio" desc="Start audio automatically where available.">
             <Toggle on={playback.autoplayAudio} onClick={() => togglePlayback('autoplayAudio')} label="Autoplay audio" />
           </Row>
-          <Row title="Voice notes" desc="Record spoken notes on any content.">
-            <span className="inline-flex items-center gap-1.5 text-xs font-bold text-brand-accent">
-              <Mic className="w-3.5 h-3.5" /> Premium · in preparation
-            </span>
+          <Row title="Prayer voice" desc="Open the guided voice prayer companion.">
+            <Link
+              to="/app/prayer-companion"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-brand-border px-3 py-2 text-xs font-bold text-brand-text-primary transition-colors hover:bg-brand-secondary"
+            >
+              <Mic className="w-3.5 h-3.5" /> Open companion
+            </Link>
           </Row>
         </Card>
 

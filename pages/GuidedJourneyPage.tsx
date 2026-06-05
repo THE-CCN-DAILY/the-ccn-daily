@@ -362,9 +362,9 @@ const StepContent: React.FC<{ stepIndex: number; onComplete: () => void; devotio
                         </motion.button>
                         <button
                             onClick={() => onOpenVoice(journeySteps[stepIndex]?.name || 'Daily Journey')}
-                            className="flex items-center gap-2 text-xs font-bold text-brand-text-secondary hover:text-brand-accent transition-colors"
+                            className="flex items-center gap-2 text-xs font-bold text-brand-text-secondary transition-colors hover:text-brand-accent"
                         >
-                            <MicrophoneIcon className="w-3.5 h-3.5" />
+                            <MicrophoneIcon className="h-3.5 w-3.5" />
                             Pray Aloud
                         </button>
                     </div>

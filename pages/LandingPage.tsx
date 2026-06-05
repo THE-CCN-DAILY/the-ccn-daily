@@ -374,7 +374,7 @@ const LandingPage: React.FC = () => {
     : 'radial-gradient(ellipse 80% 60% at 50% 0%, rgba(242,125,38,0.06) 0%, transparent 70%)';
 
   return (
-    <div className="min-h-screen bg-brand-secondary text-brand-text-primary">
+    <div className="min-h-screen overflow-x-hidden bg-brand-secondary text-brand-text-primary">
 
       {/* ── Header ─────────────────────────────────────────────────────────── */}
       <motion.header
@@ -383,7 +383,7 @@ const LandingPage: React.FC = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, ease: 'easeOut' }}
       >
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-4 sm:px-6">
           <Link to="/" aria-label="THE CCN DAILY — home">
             <CcnLogo size="md" theme="auto" />
           </Link>
@@ -396,14 +396,14 @@ const LandingPage: React.FC = () => {
           {user ? (
             <Link
               to="/app/guided-journey"
-              className="flex items-center gap-2 border border-brand-border px-4 py-2 text-sm font-semibold text-brand-text-primary transition-colors hover:bg-brand-dark"
+              className="flex shrink-0 items-center gap-2 rounded-md border border-brand-border px-3 py-2 text-xs font-semibold text-brand-text-primary transition-colors hover:bg-brand-dark sm:px-4 sm:text-sm"
             >
               Open app <ArrowRight className="h-3.5 w-3.5" />
             </Link>
           ) : (
             <button
               onClick={openSignIn}
-              className="flex items-center gap-2 border border-brand-border px-4 py-2 text-sm font-semibold text-brand-text-primary transition-colors hover:bg-brand-dark"
+              className="flex shrink-0 items-center gap-2 rounded-md border border-brand-border px-3 py-2 text-xs font-semibold text-brand-text-primary transition-colors hover:bg-brand-dark sm:px-4 sm:text-sm"
             >
               Sign in <ArrowRight className="h-3.5 w-3.5" />
             </button>
@@ -437,7 +437,7 @@ const LandingPage: React.FC = () => {
             <SunriseEmblem className="h-full w-full" />
           </motion.div>
 
-          <div className="mx-auto grid max-w-6xl gap-12 px-6 py-[4.5rem] lg:grid-cols-[1.05fr_0.95fr] lg:py-28">
+          <div className="mx-auto grid max-w-6xl gap-12 px-4 py-[4.5rem] sm:px-6 lg:grid-cols-[1.05fr_0.95fr] lg:py-28">
 
             {/* Left — copy */}
             <motion.div
@@ -454,7 +454,7 @@ const LandingPage: React.FC = () => {
 
               <motion.h1
                 variants={fadeUp}
-                className="font-display text-5xl font-semibold leading-[1.02] text-brand-text-primary md:text-6xl lg:text-[4.25rem]"
+                className="max-w-[11ch] font-display text-4xl font-semibold leading-[1.04] text-brand-text-primary sm:max-w-xl sm:text-5xl md:text-6xl lg:text-[4.25rem]"
               >
                 Daily Scripture for the workday soul.
               </motion.h1>

@@ -25,7 +25,6 @@ export const CAPABILITIES: Record<string, Capability> = {
     deepStudy: { feature: 'Deep Theological Study', minTier: 'max', model: PRO_MODEL },
     groundedPrayer: { feature: 'Grounded Prayer Topics', minTier: 'pro', model: FLASH_MODEL },
     quoteImage: { feature: 'AI Quote Image', minTier: 'pro', model: FLASH_MODEL },
-    sanctuaryVideo: { feature: 'AI Cinematic Video', minTier: 'max', model: PRO_MODEL },
 };
 
 type CloudflareAiPayload = {
@@ -313,16 +312,4 @@ export const generatePersonalizedDevotional = async (userId: string, name: strin
     } catch {
         throw new Error("Failed to generate personalized devotional.");
     }
-};
-
-/**
- * Long-running AI video remains gated until the production provider and budget
- * are explicitly approved.
- */
-export const generateSanctuaryVideo = async (prompt: string, onProgress: (msg: string) => void, userTier: UserTier = 'free'): Promise<string> => {
-    const { allowed, message } = checkCapability('sanctuaryVideo', userTier);
-    if (!allowed) throw new Error(message);
-
-    // Video generation is temporarily disabled to save costs.
-    throw new Error("PREMIUM_FEATURE: AI Cinematic Video generation is currently reserved for Max members to ensure sustainable growth.");
 };

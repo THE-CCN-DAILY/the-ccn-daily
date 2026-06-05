@@ -22,7 +22,7 @@ export const runTechSentinelAudit = async (currentRoadmap: any): Promise<TechAud
     Look for:
     1. Cloudflare-native capabilities that can replace older vendor-specific assumptions.
     2. Cost optimization that keeps the app viable on free or low-cost tiers.
-    3. Practical multimodal opportunities that should be gated until provider and budget are approved.
+    3. Practical multimodal opportunities that can be supported by the current release experience.
     
     Return a JSON array of specific, actionable tech updates to make the app better and more affordable.
     Each update must be an object with these fields:
