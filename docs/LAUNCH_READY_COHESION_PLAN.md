@@ -12,7 +12,7 @@ The design base is `D:\THE CCN DAILY\Design systems\The CCN Daily Design System`
 
 ### Feature Integrity
 
-Launchable foundations are present: routing, auth, roles, public content, Cloudflare Pages Functions, D1-backed subscriptions, Flutterwave webhook verification, RSS proxying, courses/challenges, community routes, and admin tools.
+Launchable foundations are present: routing, auth, roles, public content, Cloudflare Pages Functions, D1-backed subscriptions, Flutterwave webhook verification, RSS proxying, courses/challenges, community routes, prayer/visual formation surfaces, and admin tools.
 
 Main launch risk: several polished surfaces still rely on different data sources or mock/local state. Books, announcements, scholarships, donations, highlights, settings, and some dashboards are split across Firestore and D1/Cloudflare.
 
@@ -124,9 +124,59 @@ Required before production:
 ## Current Evidence
 
 - Latest pushed branch: `phase-e-visual-authoring`
-- Latest design checkpoint: `a500d7b style: polish launch surfaces and readiness plan`
-- Current in-progress checkpoint: copy and route cleanup for Devotional Prep, Quote Graphics, Grace Links, Prayer Companion, Course Studio, Expert Council, diagnostics, and launch checklist.
+- Latest functional checkpoint: `e4c8d7b feat: complete voice and visual prayer surfaces`
+- Latest deployed staging alias: `https://staging.project-phoenix-ccn-daily.pages.dev/`
+- Latest staging deployment URL: `https://d5780ef3.project-phoenix-ccn-daily.pages.dev`
+- Current in-progress checkpoint: expert review consolidation, launch-readiness audit updates, and remaining signed-in dashboard/admin QA.
 - Verified gates at checkpoint:
   - `npm run lint` passed
   - `npm run build` passed
-  - forbidden phrase scan returned no matches for the highest-risk public/model terms
+  - `npm run cf:typecheck` passed
+  - Wrangler staging deploy passed
+  - forbidden phrase scan returned no matches for the highest-risk unfinished feature terms across app code, except internal/admin-only background technology references that remain under review
+
+## Current Expert Meeting Notes
+
+### Convened Review Team
+
+- Product theologian and pastoral copy lead: checks whether each feature serves Scripture, prayer, formation, and community rather than novelty.
+- Premium devotional UX lead: checks whether screens feel like a calm reading desk and stewardship console instead of a busy SaaS bundle.
+- Feature integration lead: checks whether routes, data stores, entitlements, and dashboard promises behave as one product.
+- Cloudflare launch architect: checks the free or underused platform strengths that can make the app faster, safer, and cheaper.
+- Release QA lead: checks public copy, build gates, staging deployment, and visual QA coverage before production.
+
+### What Is Functioning Today
+
+- Public landing, pricing, newsletter, podcast, giving, and sign-in routes are present.
+- Student access is connected through the subtle pricing link rather than a competing pricing card.
+- Daily Journey includes Scripture, prayer, devotional, journaling, declaration, further study, and Prayer Companion access.
+- Prayer Companion has working browser speech/type flow and does not depend on an external voice provider.
+- Visual Sanctuary has a working interactive atmosphere and does not depend on cinematic video generation.
+- Admin content, announcement, scholarship review, diagnostics, growth, release ops, and role-gated studio routes exist.
+- Cloudflare Pages Functions, D1-backed subscription/payment readback, R2 upload path, and Workers background service routing are present.
+
+### Remaining Cohesion Risks
+
+- Some docs and internal admin strategy pages still describe background technology as a differentiator; public app surfaces should keep selling Scripture, practice, audio, courses, prayer, and community.
+- Data source boundaries are still mixed: Firestore remains in auth/content/community/settings/scholarship flows while D1 backs selected Cloudflare endpoints and subscription readback.
+- Family and leader dashboards need end-to-end member/seat/group workflows verified with real data, not only visual polish.
+- Donations need the same server-authoritative intent/webhook/readback rigor as subscriptions.
+- Visual QA still needs signed-in screenshots for dashboard, admin dashboard, family dashboard, leader dashboard, scholarship application/review, Prayer Companion, and Visual Sanctuary.
+
+### Feature Integration Findings
+
+- Books are split between Firestore reads and D1 catalog APIs. The launch catalog must have one source of truth, otherwise an admin can publish a book that members never see.
+- Donations are not yet as server-authoritative as subscriptions. Giving flows still need a payment intent, verified webhook, and server readback before production donation launch.
+- Admin resource uploads are detached from the D1 content catalog. Resource Manager should either write through the same catalog service or be clearly limited to a non-public holding area.
+- Settings can display a stale plan label if Firestore user role data and D1 subscription data disagree. Access gates are stronger than the label, but the label affects trust.
+- Prayer Circle is device-local while Prayer Wall is API-backed. This is acceptable only if Prayer Circle remains positioned as a personal practice rather than a cross-device prayer record.
+- Courses and challenges are the strongest integrated content lanes, with API-backed user pages and module managers. Remaining hardening is mostly around admin listing and draft expectations.
+- Dashboard is visually cohesive but still more of a portal than a state hub; continue cards should eventually read real course/challenge/reading progress.
+
+### Immediate Launch Plan
+
+1. Finish signed-in visual QA and copy QA on the member dashboards, admin dashboards, scholarship flow, Prayer Companion, and Visual Sanctuary.
+2. Make donations server-authoritative like subscriptions, with a payment intent, webhook verification, and entitlement/readback proof.
+3. Pick and document the source of truth for each data domain: books, announcements, donations, highlights, scholarships, settings, household seats, and group cohorts.
+4. Add Turnstile and durable rate limiting to public submissions and high-cost background routes.
+5. Add Cloudflare cache/KV strategy for public RSS/content and move D1 schema changes into migrations.

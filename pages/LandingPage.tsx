@@ -94,7 +94,7 @@ const channels = [
   {
     icon: CalendarDays,
     title: 'Events',
-    text: 'Live moments, gatherings, and ministry rhythms as they come online.',
+    text: 'Live moments, gatherings, and ministry rhythms gathered in one quiet place.',
     to: '/app/events',
   },
 ];
@@ -146,7 +146,7 @@ const appFeatures = [
   {
     icon: BookOpen,
     title: 'Scripture Study Companion',
-    description: 'Ask questions. Get answers grounded in Scripture, not speculation.',
+    description: 'Study with Scripture-anchored guidance, context, and careful reflection.',
   },
 ];
 

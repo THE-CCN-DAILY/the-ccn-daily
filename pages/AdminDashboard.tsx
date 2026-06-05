@@ -1009,8 +1009,8 @@ const AdminDashboard: React.FC = () => {
                                                     className="w-full bg-brand-dark border border-brand-border rounded-xl p-3 text-brand-text-primary focus:border-brand-accent outline-none"
                                                 >
                                                     <option value="all">All Paid Plans</option>
-                                                    <option value="pro">Pro Only</option>
-                                                    <option value="max">Max Only</option>
+                                                    <option value="pro">Growth Only</option>
+                                                    <option value="max">Family Only</option>
                                                 </select>
                                             </div>
                                             <div>
@@ -1125,8 +1125,8 @@ const AdminDashboard: React.FC = () => {
                                                     className="w-full bg-brand-dark border border-brand-border rounded-xl p-3 text-brand-text-primary focus:border-brand-accent outline-none disabled:opacity-50"
                                                 >
                                                     <option value="free">Free Tier</option>
-                                                    <option value="pro">Pro Tier</option>
-                                                    <option value="max">Max Tier</option>
+                                                    <option value="pro">Growth Tier</option>
+                                                    <option value="max">Family Tier</option>
                                                 </select>
                                             </div>
                                         </div>

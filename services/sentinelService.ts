@@ -43,7 +43,7 @@ export const runTechSentinelAudit = async (currentRoadmap: any): Promise<TechAud
     });
 
     if (!responseText) {
-      console.warn("Sentinel: AI response text is empty.");
+      console.warn("Sentinel: background response text is empty.");
       return [];
     }
     
@@ -53,7 +53,7 @@ export const runTechSentinelAudit = async (currentRoadmap: any): Promise<TechAud
       const parsed = JSON.parse(cleanText);
       return Array.isArray(parsed) ? parsed : [];
     } catch (parseError) {
-      console.error("Sentinel: Failed to parse AI response:", responseText);
+      console.error("Sentinel: Failed to parse background response:", responseText);
       return [];
     }
   } catch (error) {

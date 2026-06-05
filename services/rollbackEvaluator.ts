@@ -33,7 +33,7 @@ export function evaluateRollback(metrics: CurrentMetrics): RollbackDecision {
     reasons.push(`Churn spike ${(metrics.churnDeltaPct * 100).toFixed(1)}% > ${(g.churnSpikePctMax * 100).toFixed(1)}%`);
   }
   if (metrics.aiCostDeltaPct > g.aiCostSpikePctMax) {
-    reasons.push(`AI cost spike ${(metrics.aiCostDeltaPct * 100).toFixed(1)}% > ${(g.aiCostSpikePctMax * 100).toFixed(1)}%`);
+    reasons.push(`Background-service cost spike ${(metrics.aiCostDeltaPct * 100).toFixed(1)}% > ${(g.aiCostSpikePctMax * 100).toFixed(1)}%`);
   }
   if (metrics.grossMarginByTier.pro < g.grossMarginMinByTier.pro) {
     reasons.push(`Pro gross margin ${metrics.grossMarginByTier.pro.toFixed(2)} < ${g.grossMarginMinByTier.pro}`);

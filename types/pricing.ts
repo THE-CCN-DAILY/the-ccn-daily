@@ -43,7 +43,7 @@ export interface TierFeatures {
   canPostToPrayerWall: boolean;
   canSharePremiumContent: boolean;
 
-  // AI & Compute
+  // Background Services & Compute
   aiCoachAccess: 'none' | 'basic' | 'unlimited';
   dailyAiMessageLimit: number; // Legacy, kept for compatibility
   canGeneratePersonalizedDevotionals: boolean;

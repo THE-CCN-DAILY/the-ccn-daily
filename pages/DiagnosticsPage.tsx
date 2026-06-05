@@ -18,7 +18,7 @@ const DiagnosticsPage: React.FC = () => {
             if (!response.ok) throw new Error('Failed to fetch diagnostics');
             const data = await response.json();
             
-            // Check if user has selected an API key via AI Studio
+            // Check whether the desktop helper has a selected key.
             if (window.aistudio) {
                 data.hasSelectedApiKey = await window.aistudio.hasSelectedApiKey();
             }
@@ -151,7 +151,7 @@ const DiagnosticsPage: React.FC = () => {
                                         </div>
                                     </div>
                                     
-                                    {/* Cloudflare AI binding note */}
+                                    {/* Cloudflare background-service binding note */}
                                     <div className="mt-4 p-3 bg-brand-accent/5 border border-brand-accent/20 rounded-lg">
                                         <p className="text-xs text-brand-text-secondary mb-2">
                                             Local preview can use fallback output. Production should bind Cloudflare background services before enabling paid premium workflows.

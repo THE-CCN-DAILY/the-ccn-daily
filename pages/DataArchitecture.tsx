@@ -21,7 +21,7 @@ const schema: FirestoreCollection[] = [
         fields: [
           { name: 'contentId', type: 'reference', description: 'Pointer to course/book' },
           { name: 'text', type: 'string', description: 'The note content itself' },
-          { name: 'tags', type: 'array', description: 'AI-generated tags' },
+          { name: 'tags', type: 'array', description: 'Background service tags' },
           { name: 'createdAt', type: 'timestamp', description: 'When the note was saved' },
         ],
       },

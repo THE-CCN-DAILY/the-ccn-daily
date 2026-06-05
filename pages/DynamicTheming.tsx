@@ -40,7 +40,7 @@ const DynamicTheming: React.FC = () => {
 
   return (
     <div>
-      <h1 className="text-4xl font-bold text-brand-text-primary mb-2">Dynamic Theming Engine</h1>
+      <h1 className="text-4xl font-bold text-brand-text-primary mb-2">Devotional Atmosphere</h1>
       <p className="text-lg text-brand-text-secondary mb-8">
         Background mood analysis that gently shifts the app's ambient theme color based on your devotional content.
       </p>
@@ -52,7 +52,7 @@ const DynamicTheming: React.FC = () => {
                 Select a Devotional Mood
             </h2>
             <p className="text-brand-text-secondary max-w-2xl mx-auto mb-6">
-                Click a button below to simulate the mood of a daily devotional. Observe how the background "aurora" effect across the entire app smoothly transitions to a matching color.
+                Choose the tone of a daily devotional and watch the app settle into a matching ambient color.
             </p>
             
             <div className="flex flex-wrap justify-center gap-4 mb-8">
@@ -85,10 +85,10 @@ const DynamicTheming: React.FC = () => {
       <Card className="mt-8">
         <h3 className="text-xl font-bold text-brand-text-primary mb-2 flex items-center">
             <Palette className="w-5 h-5 mr-2 text-brand-accent"/>
-            How It Will Work
+            How It Works
         </h3>
         <p className="text-brand-text-secondary">
-            In the final implementation, the daily devotional will be reviewed for its primary mood, such as joyful, reflective, or encouraging. The app will then securely update a value in Firestore and apply the corresponding theme color for that day, creating a shared, dynamic experience.
+            The daily devotional carries a primary mood, such as joyful, reflective, or encouraging. The app applies the corresponding atmosphere for that day, creating a shared devotional experience without distracting from the reading.
         </p>
       </Card>
     </div>

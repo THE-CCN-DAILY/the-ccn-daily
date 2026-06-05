@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import Card from '../components/Card';
@@ -55,8 +55,8 @@ const PLAN_UI = {
       'Journaling and prayer wall',
       'One active challenge',
     ],
-    support: 'Free forever. No card required.',
-    howItWorks: 'No card needed. Create an account and everything here is yours — immediately, indefinitely. When you\'re ready to go deeper, Growth is one step away.',
+    support: 'Begin without a card.',
+    howItWorks: 'Create an account and begin the daily rhythm. When you\'re ready to go deeper, Growth is one step away.',
     cta: 'Current Plan',
   },
   pro: {

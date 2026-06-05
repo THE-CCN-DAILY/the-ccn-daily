@@ -1,15 +1,15 @@
-// Mock Text-to-Speech service to simulate calling a premium AI voice API.
+// Mock Text-to-Speech service to simulate premium narration.
 
 /**
- * In a real application, this service would use the Google AI SDK
- * to call the Text-to-Speech API. It would send the text and selected
- * voice, and receive an audio stream in response.
+ * In a real application, this service would call a server-side narration
+ * route. It would send the text and selected voice, and receive an audio
+ * stream in response.
  *
  * For this prototype, we will return a pre-recorded, high-quality
  * audio file to demonstrate the difference in user experience.
  */
 
-// Using distinct, short, self-contained audio clips to represent different AI voices.
+// Using distinct, short, self-contained audio clips to represent different narration voices.
 // This avoids network errors in the sandbox and provides clear audible feedback for voice selection.
 const voiceAudioMap = {
     Zephyr: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',

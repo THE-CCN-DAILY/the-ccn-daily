@@ -66,7 +66,7 @@ const UpgradeModal: React.FC<UpgradeModalProps> = ({ isOpen, onClose, featureNam
                             <div>
                                 <h2 className="text-2xl font-bold text-brand-text-primary flex items-center gap-2">
                                     <LockIcon className="w-6 h-6 text-brand-accent" />
-                                    Access {featureName || 'Premium Features'}
+                                    Access {featureName || 'Growth Tools'}
                                 </h2>
                                 <p className="text-sm text-brand-text-secondary mt-1">
                                     Choose the plan that fits where you are right now.
@@ -84,14 +84,14 @@ const UpgradeModal: React.FC<UpgradeModalProps> = ({ isOpen, onClose, featureNam
                         <div className="p-6 overflow-y-auto flex-1">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 
-                                {/* Pro Tier */}
+                                {/* Growth plan */}
                                 <div className={`relative p-6 rounded-xl border-2 ${requiredTier === 'pro' ? 'border-brand-accent bg-brand-accent/5' : 'border-brand-border bg-brand-dark/30'} flex flex-col`}>
                                     {requiredTier === 'pro' && (
                                         <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-brand-accent text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
                                             Required
                                         </div>
                                     )}
-                                    <h3 className="text-xl font-bold text-brand-text-primary mb-2">Pro</h3>
+                                    <h3 className="text-xl font-bold text-brand-text-primary mb-2">Growth</h3>
                                     <div className="mb-6">
                                         <span className="text-3xl font-black text-brand-text-primary">{proPrice.formattedLocal}</span>
                                         <span className="text-brand-text-secondary">/mo</span>
@@ -112,16 +112,16 @@ const UpgradeModal: React.FC<UpgradeModalProps> = ({ isOpen, onClose, featureNam
                                         </li>
                                         <li className="flex items-start gap-3 text-sm text-brand-text-secondary">
                                             <CheckIcon className="w-5 h-5 text-brand-accent flex-shrink-0" />
-                                            <span>Access to Premium Courses</span>
+                                            <span>Access to the course library</span>
                                         </li>
                                     </ul>
                                     
                                     <button onClick={handleUpgradeClick} className="w-full py-3 rounded-lg bg-brand-accent text-white font-bold hover:bg-opacity-90 transition-colors">
-                                        Upgrade to Pro
+                                        Choose Growth
                                     </button>
                                 </div>
 
-                                {/* Max Tier */}
+                                {/* Family plan */}
                                 <div className={`relative p-6 rounded-xl border-2 ${requiredTier === 'max' ? 'border-secondary-purple bg-secondary-purple/5' : 'border-brand-border bg-brand-dark/30'} flex flex-col`}>
                                     {requiredTier === 'max' && (
                                         <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-secondary-purple text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
@@ -129,7 +129,7 @@ const UpgradeModal: React.FC<UpgradeModalProps> = ({ isOpen, onClose, featureNam
                                         </div>
                                     )}
                                     <h3 className="text-xl font-bold text-brand-text-primary flex items-center gap-2">
-                                        Max <Crown className="w-5 h-5 text-secondary-purple" />
+                                        Family <Crown className="w-5 h-5 text-secondary-purple" />
                                     </h3>
                                     <div className="mb-6">
                                         <span className="text-3xl font-black text-brand-text-primary">{maxPrice.formattedLocal}</span>
@@ -139,7 +139,7 @@ const UpgradeModal: React.FC<UpgradeModalProps> = ({ isOpen, onClose, featureNam
                                     <ul className="space-y-3 mb-8 flex-1">
                                         <li className="flex items-start gap-3 text-sm text-brand-text-secondary">
                                             <CheckIcon className="w-5 h-5 text-secondary-purple flex-shrink-0" />
-                                            <span className="font-bold text-brand-text-primary">Everything in Pro, plus:</span>
+                                            <span className="font-bold text-brand-text-primary">Everything in Growth, plus:</span>
                                         </li>
                                         <li className="flex items-start gap-3 text-sm text-brand-text-secondary">
                                             <CheckIcon className="w-5 h-5 text-secondary-purple flex-shrink-0" />
@@ -160,7 +160,7 @@ const UpgradeModal: React.FC<UpgradeModalProps> = ({ isOpen, onClose, featureNam
                                     </ul>
                                     
                                     <button onClick={handleUpgradeClick} className="w-full py-3 rounded-lg bg-secondary-purple text-white font-bold hover:bg-opacity-90 transition-colors">
-                                        Upgrade to Max
+                                        Choose Family
                                     </button>
                                 </div>
 

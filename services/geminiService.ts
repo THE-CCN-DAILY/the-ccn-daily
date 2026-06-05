@@ -3,9 +3,9 @@ import type { DevotionalOutput, Message } from '../types';
 import { listJournalEntries } from './journalService';
 import { adminAuthHeaders } from './adminAuth';
 
-// 3-Lane AI Policy for Cost Governance, now routed through Cloudflare Pages.
+// 3-lane background-service policy for cost governance, now routed through Cloudflare Pages.
 // LITE: default free-plan text generation.
-// FLASH: richer text reasoning while staying in Workers AI.
+// FLASH: richer text reasoning while staying in Cloudflare background services.
 // PRO: reserved for max/admin flows and mapped server-side when a stronger model is configured.
 export const LITE_MODEL = '@cf/meta/llama-3.1-8b-instruct';
 export const FLASH_MODEL = '@cf/meta/llama-3.1-8b-instruct';
@@ -20,11 +20,11 @@ export interface Capability {
 }
 
 export const CAPABILITIES: Record<string, Capability> = {
-    coach: { feature: 'AI Spiritual Coach', minTier: 'free', model: LITE_MODEL },
+    coach: { feature: 'Study Companion', minTier: 'free', model: LITE_MODEL },
     devotional: { feature: 'Personalized Devotional', minTier: 'pro', model: LITE_MODEL },
     deepStudy: { feature: 'Deep Theological Study', minTier: 'max', model: PRO_MODEL },
     groundedPrayer: { feature: 'Grounded Prayer Topics', minTier: 'pro', model: FLASH_MODEL },
-    quoteImage: { feature: 'AI Quote Image', minTier: 'pro', model: FLASH_MODEL },
+    quoteImage: { feature: 'Quote Image', minTier: 'pro', model: FLASH_MODEL },
 };
 
 type CloudflareAiPayload = {
@@ -47,7 +47,7 @@ export const generateCloudflareText = async (payload: CloudflareAiPayload): Prom
 
     if (!response.ok) {
         const body = await response.json().catch(() => ({}));
-        throw new Error(body.message || body.error || `AI request failed (${response.status})`);
+        throw new Error(body.message || body.error || `Background service request failed (${response.status})`);
     }
 
     const data = await response.json() as { text?: string };
@@ -95,9 +95,9 @@ export const getAiCoachResponse = async (newMessage: string, history: Message[],
 };
 
 /**
- * Uses the Cloudflare AI proxy for prayer prompts. Live web grounding is not
+ * Uses the Cloudflare background-service proxy for prayer prompts. Live web grounding is not
  * available in the free local preview, so the server returns responsible
- * fallback topics when Workers AI is not bound.
+ * fallback topics when background services are not bound.
  */
 export const getGroundedPrayerTopics = async (userTier: UserTier = 'free', userId: string = 'anonymous'): Promise<any[]> => {
     const { allowed, message } = checkCapability('groundedPrayer', userTier);
@@ -142,7 +142,7 @@ export const generateQuoteImage = async (prompt: string, userTier: UserTier = 'f
     if (!allowed) throw new Error(message);
 
     // Image generation is temporarily disabled to save costs.
-    throw new Error("PREMIUM_FEATURE: AI Image generation is currently reserved for Pro members to ensure sustainable growth.");
+    throw new Error("PREMIUM_FEATURE: Quote image creation is available on Growth and above.");
 };
 
 export const generateTagsForNote = async (noteText: string): Promise<string[]> => {
@@ -164,11 +164,11 @@ export const generateTagsForNote = async (noteText: string): Promise<string[]> =
 /**
  * PASTORAL VOICE SYSTEM INSTRUCTION — Pastor Eryeza's Voice
  *
- * Applied across all AI-user communication in the app. Encodes:
+ * Applied across all background-service communication in the app. Encodes:
  * pastoral voice, humanized communication, theological guardrails,
  * biblical interpreter framework, cross-domain wisdom, and gospel edge.
  *
- * Every AI feature that speaks to a user references this constant.
+ * Every assisted feature that speaks to a user references this constant.
  */
 export const PASTORAL_VOICE_SYSTEM_INSTRUCTION = `
 ### VOICE & PERSONA ###
@@ -249,7 +249,7 @@ You must embody the persona of Pastor Eryeza, a warm, wise, and encouraging past
 
 ### WRITING PROCESS & RULES ###
 1.  **Inspiration**: You will be given a theme, sometimes inspired by a recent podcast or newsletter. Use ONLY the core theme as a starting point.
-2.  **Originality**: You MUST write a completely new and original devotional message. You are strictly forbidden from summarizing or rephrasing any source material provided. The content must be 100% human-written in style and pass AI detection tools.
+2.  **Originality**: You MUST write a completely new and original devotional message. You are strictly forbidden from summarizing or rephrasing any source material provided. The content must feel pastorally authored, concrete, and free of generic machine phrasing.
 3.  **Personalization**: If provided, weave the user's name (e.g., {{userName}}) and personal context (e.g., {{userContext}}) into the devotional, especially in the practical application part, to make the message feel direct and personal.
 4.  **Scripture**: All Bible verses must be from the New King James Version (NKJV) and cited correctly (e.g., John 3:16, NKJV). Include an opening verse.
 5.  **Prayer Point of View (CRITICAL)**: The prayer must be written in the first person, as a prayer for the user to speak themselves. For example: "Father, I thank you..." not "Father, I pray for {{userName}}...".
@@ -277,7 +277,7 @@ You are strictly forbidden from using the following in your writing. Adherence i
 /**
  * The "Refinery" for complex backend logic.
  * This now uses the Cloudflare/D1 journal service for user context and
- * sends generation through the Cloudflare Pages AI proxy.
+ * sends generation through the Cloudflare Pages background-service proxy.
  */
 export const generatePersonalizedDevotional = async (userId: string, name: string, userTier: UserTier = 'free'): Promise<DevotionalOutput> => {
     const { allowed, message } = checkCapability('devotional', userTier);
@@ -307,7 +307,7 @@ export const generatePersonalizedDevotional = async (userId: string, name: strin
             systemInstruction: DEVOTIONAL_SYSTEM_INSTRUCTION,
         });
 
-        if (!text) throw new Error("No response from AI");
+        if (!text) throw new Error("No response from background service");
         return JSON.parse(text) as DevotionalOutput;
     } catch {
         throw new Error("Failed to generate personalized devotional.");

@@ -42,7 +42,7 @@ const RoadmapEvolution: React.FC = () => {
         <div>
           <h1 className="text-4xl font-bold text-brand-text-primary mb-2 text-dynamic-accent">Roadmap Evolution</h1>
           <p className="text-lg text-brand-text-secondary">
-            The Sentinel monitors the AI horizon to keep THE CCN DAILY ahead of what matters.
+            The Sentinel monitors platform shifts, cost pressure, and ministry workflows so THE CCN DAILY stays ready for what matters.
           </p>
         </div>
         <button 
@@ -57,7 +57,7 @@ const RoadmapEvolution: React.FC = () => {
       {isAuditing ? (
         <div className="py-20 text-center">
           <SpinnerIcon className="w-12 h-12 text-brand-accent mx-auto mb-4"/>
-          <p className="text-brand-text-secondary animate-pulse">Analyzing tech trends and token costs...</p>
+          <p className="text-brand-text-secondary animate-pulse">Reviewing platform trends and operating costs...</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

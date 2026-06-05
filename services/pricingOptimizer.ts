@@ -37,7 +37,7 @@ export function generatePricingRecommendations(metrics: TierMetrics[]): PricingR
         id: `gm_warn_${m.tier}`,
         severity: 'warning',
         message: `${m.tier.toUpperCase()} margin is moderate (${gm.toFixed(1)}%).`,
-        action: 'Tune AI limits or increase annual plan adoption.',
+        action: 'Tune background-service limits or increase annual plan adoption.',
       });
     }
 
