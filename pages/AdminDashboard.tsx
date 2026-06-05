@@ -545,18 +545,18 @@ const AdminDashboard: React.FC = () => {
                 </p>
             </header>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            <div className="grid grid-cols-1 gap-4 mb-8 md:grid-cols-3">
                 <StatCard title="Total Members" value={userStats.total} change={`${userStats.active30d} active in 30 days`} icon={UserIcon} />
                 <StatCard title="Admin Operators" value={userStats.admins} change="D1 role source" icon={CommunityIcon} />
                 <StatCard title="Media Storage" value="R2 pending" change="Binding required for uploads" icon={DbIcon} />
             </div>
 
-            <div className="flex flex-wrap gap-2 mb-6 rounded-lg border border-brand-border bg-brand-dark/30 p-2">
+            <div className="mb-6 grid grid-cols-2 gap-1 rounded-lg border border-brand-border bg-brand-dark/30 p-1.5 sm:grid-cols-3 lg:grid-cols-6">
                 {(['users', 'inbox', 'challenges', 'broadcasts', 'events', 'payments', 'discounts', 'tenancy', 'resources', 'budget', 'landscape'] as const).map((tab) => (
                     <button
                         key={tab}
                         onClick={() => setActiveTab(tab)}
-                        className={`px-4 py-2 rounded-md text-sm font-semibold border transition-all ${activeTab === tab ? 'bg-brand-secondary text-brand-text-primary border-brand-border-strong shadow-sm' : 'bg-transparent text-brand-text-secondary border-transparent hover:text-brand-text-primary hover:border-brand-border'}`}
+                        className={`rounded-md border px-3 py-2 text-xs font-semibold transition-colors ${activeTab === tab ? 'bg-brand-secondary text-brand-text-primary border-brand-border-strong shadow-sm' : 'bg-transparent text-brand-text-secondary border-transparent hover:text-brand-text-primary hover:border-brand-border'}`}
                     >
                         {tab === 'challenges' ? 'Course Studio' : tab === 'tenancy' ? 'Tenancy' : tab === 'budget' ? 'Compute Costs' : tab === 'landscape' ? 'Landscape' : tab.charAt(0).toUpperCase() + tab.slice(1)}
                     </button>

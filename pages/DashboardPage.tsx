@@ -165,7 +165,7 @@ const DevotionalCard: React.FC<DevotionalCardProps> = ({ devotional, loading, da
           {/* CTA */}
           <Link
             to="/app/guided-journey"
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold transition-all hover:gap-3"
+            className="inline-flex items-center gap-2 rounded-md px-5 py-2.5 text-sm font-semibold transition-colors hover:opacity-90"
             style={{
               fontFamily: 'var(--sans-ui)',
               background: 'var(--ember)',
@@ -319,7 +319,7 @@ const DashboardPage: React.FC = () => {
 
       {/* ── 1. Greeting Header ─────────────────────────────────────────────── */}
       <motion.section
-        className="mb-12 overflow-hidden rounded-lg border border-brand-border p-7 md:p-9"
+        className="mb-10 overflow-hidden rounded-lg border border-brand-border p-7 md:p-9"
         style={{
           background: 'linear-gradient(135deg, var(--bg-card) 0%, var(--bg-paper) 62%, color-mix(in srgb, var(--gold-ds) 9%, var(--bg-card)) 100%)',
           boxShadow: 'var(--sh-card)',
@@ -372,7 +372,7 @@ const DashboardPage: React.FC = () => {
 
       {/* ── 2. Today's Featured Devotional ────────────────────────────────── */}
       <motion.section
-        className="mb-12"
+        className="mb-10"
         initial={{ opacity: 0, y: 22 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.55, ease: EASE, delay: 0.08 }}
@@ -386,7 +386,7 @@ const DashboardPage: React.FC = () => {
 
       {/* ── 3. Continue Where You Left Off ────────────────────────────────── */}
       <motion.section
-        className="mb-12"
+        className="mb-10"
         initial={{ opacity: 0, y: 18 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: EASE, delay: 0.18 }}
@@ -413,7 +413,7 @@ const DashboardPage: React.FC = () => {
           {CONTINUE_CARDS.map((card) => (
             <motion.div
               key={card.route}
-              whileHover={{ y: -3, scale: 1.02 }}
+              whileHover={{ y: -2 }}
               transition={{ duration: 0.22, ease: EASE }}
               className="flex-shrink-0"
             >
@@ -456,7 +456,7 @@ const DashboardPage: React.FC = () => {
 
       {/* ── 4. Community & Momentum ───────────────────────────────────────── */}
       <motion.section
-        className="mb-12 grid grid-cols-1 md:grid-cols-2 gap-5"
+        className="mb-10 grid grid-cols-1 gap-5 md:grid-cols-2"
         variants={stagger}
         initial="hidden"
         whileInView="visible"

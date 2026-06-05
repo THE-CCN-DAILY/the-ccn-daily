@@ -100,9 +100,9 @@ const channels = [
 ];
 
 const stats = [
-  { icon: Globe, value: '40+', label: 'Countries' },
-  { icon: Flame, value: 'Daily', label: 'New devotionals' },
-  { icon: Clock, value: 'Your pace', label: 'Your rhythm' },
+  { icon: Globe, value: '40+', label: 'Countries reached' },
+  { icon: Flame, value: 'Daily', label: 'Scripture rhythm' },
+  { icon: Clock, value: '10 min', label: 'Morning reset' },
 ];
 
 const todayItems = [
@@ -414,17 +414,17 @@ const LandingPage: React.FC = () => {
       <main>
 
         {/* ── Hero ───────────────────────────────────────────────────────────── */}
-        <section className="grain relative overflow-hidden">
+        <section className="grain relative overflow-hidden border-b border-brand-border">
           {/* Ambient glow */}
           {/* Ambient glow — theme-aware, parallaxes upward on scroll */}
           <motion.div
-            className="pointer-events-none absolute inset-x-0 -top-40 h-[600px] opacity-30"
+            className="pointer-events-none absolute inset-x-0 -top-44 h-[520px] opacity-20"
             aria-hidden
             style={{ background: heroAmbient, y: ambientGlowY }}
           />
           {/* Large decorative emblem — parallax layer, moves at 40% scroll rate */}
           <motion.div
-            className="pointer-events-none absolute -right-16 -top-16 h-[520px] w-[520px]"
+            className="pointer-events-none absolute -right-20 -top-20 h-[420px] w-[420px]"
             aria-hidden
             style={{ y: emblemY, scale: emblemScale, opacity: theme === 'dark' ? 0.12 : 0.07 }}
             initial={{ opacity: 0, scale: 0.92, rotate: -4 }}
@@ -437,7 +437,7 @@ const LandingPage: React.FC = () => {
             <SunriseEmblem className="h-full w-full" />
           </motion.div>
 
-          <div className="mx-auto grid max-w-6xl gap-12 px-6 py-20 lg:grid-cols-[1.1fr_0.9fr] lg:py-32">
+          <div className="mx-auto grid max-w-6xl gap-12 px-6 py-[4.5rem] lg:grid-cols-[1.05fr_0.95fr] lg:py-28">
 
             {/* Left — copy */}
             <motion.div
@@ -449,48 +449,40 @@ const LandingPage: React.FC = () => {
                 variants={fadeUp}
                 className="mb-5 text-xs font-semibold uppercase tracking-[0.12em] text-brand-accent"
               >
-                Rooted in Christ. Renewed daily.
+                THE CCN DAILY
               </motion.p>
 
               <motion.h1
                 variants={fadeUp}
-                className="font-display text-5xl font-bold leading-[1.05] text-brand-text-primary md:text-6xl lg:text-[4rem]"
+                className="font-display text-5xl font-semibold leading-[1.02] text-brand-text-primary md:text-6xl lg:text-[4.25rem]"
               >
-                A quiet daily rhythm for Scripture, prayer, and formation.
+                Daily Scripture for the workday soul.
               </motion.h1>
 
               <motion.p
                 variants={fadeUp}
                 className="mt-7 max-w-xl text-[1.125rem] leading-[1.8] text-brand-text-secondary"
               >
-                Scripture, audio devotionals, and spiritual formation — for people who want to go deep, not just get through the day.
+                Begin with Scripture, prayer, audio devotionals, and guided reflection before the day starts making its demands.
               </motion.p>
 
               <motion.div
                 variants={fadeUp}
                 className="mt-10 flex flex-col gap-3 sm:flex-row"
               >
-                <motion.div
-                  whileHover={{ scale: 1.03, boxShadow: '0 0 28px rgba(242,125,38,0.40)' }}
-                  whileTap={{ scale: 0.97 }}
-                  transition={{ type: 'spring', stiffness: 380, damping: 24 }}
-                >
+                <motion.div whileTap={{ scale: 0.99 }}>
                   <Link
                     to="/app/guided-journey"
-                    className="group flex items-center justify-center gap-2 bg-brand-accent px-7 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-brand-cta-light"
+                    className="group flex items-center justify-center gap-2 rounded-md bg-brand-accent px-7 py-3.5 text-sm font-semibold text-white shadow-[0_14px_34px_rgba(94,15,15,0.18)] transition-colors hover:bg-brand-cta-light"
                   >
-                    Begin your daily formation
+                    Open today&apos;s journey
                     <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
                   </Link>
                 </motion.div>
-                <motion.div
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  transition={{ type: 'spring', stiffness: 380, damping: 28 }}
-                >
+                <motion.div whileTap={{ scale: 0.99 }}>
                   <Link
                     to="/newsletter"
-                    className="flex items-center justify-center border border-brand-border px-7 py-3.5 text-sm font-semibold text-brand-text-primary transition-colors hover:bg-brand-dark"
+                    className="flex items-center justify-center rounded-md border border-brand-border px-7 py-3.5 text-sm font-semibold text-brand-text-primary transition-colors hover:bg-brand-dark"
                   >
                     Read latest letter
                   </Link>
@@ -523,24 +515,22 @@ const LandingPage: React.FC = () => {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.7, delay: 0.35, ease: EASE }}
-              className="relative rounded-2xl border border-brand-border bg-brand-dark p-8 lg:self-start overflow-hidden"
+              className="relative overflow-hidden rounded-lg border border-brand-border bg-brand-secondary p-7 shadow-[0_18px_54px_rgba(42,28,21,0.13)] lg:self-start"
             >
-              {/* Subtle inner glow */}
               <div
-                className="pointer-events-none absolute inset-0 opacity-10"
+                className="pointer-events-none absolute -right-16 -top-20 h-64 w-64 opacity-[0.08]"
                 aria-hidden
-                style={{
-                  background: 'radial-gradient(ellipse 80% 60% at 50% 0%, rgb(242 125 38) 0%, transparent 70%)',
-                }}
-              />
+              >
+                <img src="/flame-transparent.png" alt="" className="h-full w-full object-contain" />
+              </div>
 
-              <p className="relative mb-3 text-[0.7rem] font-semibold uppercase tracking-[0.12em] text-brand-text-secondary">
-                Today inside the sanctuary
+              <p className="relative mb-3 text-[0.7rem] font-semibold uppercase tracking-[0.12em] text-brand-accent">
+                Today&apos;s quiet table
               </p>
 
               {/* Verse preview */}
               <blockquote className="scripture-quote relative mb-6 text-sm">
-                "{dailyVerse.text}"
+                &ldquo;{dailyVerse.text}&rdquo;
                 <cite>{dailyVerse.ref}</cite>
               </blockquote>
 
@@ -548,16 +538,16 @@ const LandingPage: React.FC = () => {
                 Prepare your heart before the day takes your attention.
               </h2>
 
-              <div className="relative mt-7 space-y-4 border-t border-brand-border pt-7">
+              <div className="relative mt-7 grid gap-3 border-t border-brand-border pt-6 sm:grid-cols-2 lg:grid-cols-1">
                 {todayItems.map(([Icon, label], i) => (
                   <motion.div
                     key={label as string}
-                    initial={{ opacity: 0, x: -8 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.55 + i * 0.08, duration: 0.4 }}
-                    className="flex items-center gap-3.5 text-brand-text-secondary"
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 + i * 0.04, duration: 0.3 }}
+                    className="flex items-center gap-3 rounded-md border border-brand-border/70 bg-brand-dark/25 p-3 text-brand-text-secondary"
                   >
-                    <div className="flex h-7 w-7 items-center justify-center rounded-md border border-brand-border bg-brand-secondary">
+                    <div className="flex h-7 w-7 items-center justify-center rounded-md border border-brand-border bg-brand-dark/50">
                       <Icon className="h-3.5 w-3.5 text-brand-accent" />
                     </div>
                     <span className="text-sm">{label as string}</span>
@@ -569,15 +559,14 @@ const LandingPage: React.FC = () => {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.85 }}
-                whileHover={{ scale: 1.02, transition: { type: 'spring', stiffness: 380, damping: 26 } }}
-                whileTap={{ scale: 0.97 }}
+                whileTap={{ scale: 0.99 }}
                 className="relative mt-7"
               >
                 <Link
                   to="/app/guided-journey"
-                  className="block w-full border border-brand-accent bg-brand-accent/10 py-3 text-center text-xs font-semibold uppercase tracking-widest text-brand-accent transition-colors hover:bg-brand-accent hover:text-white"
+                  className="block w-full rounded-md border border-brand-accent bg-brand-accent/10 py-3 text-center text-xs font-semibold uppercase tracking-widest text-brand-accent transition-colors hover:bg-brand-accent hover:text-white"
                 >
-                  Enter sanctuary →
+                  Enter the journey
                 </Link>
               </motion.div>
             </motion.aside>
@@ -1053,42 +1042,33 @@ const LandingPage: React.FC = () => {
             />
 
             <div className="relative mx-auto max-w-6xl px-6 py-24 text-center md:py-36">
-              <p className="mb-4 text-xs font-semibold uppercase tracking-[0.14em] text-brand-accent">
-                Begin for free
-              </p>
               <h2
                 className="font-display text-4xl font-bold leading-tight md:text-5xl lg:text-6xl"
                 style={{ color: cta.headingColor }}
               >
-                New mercies.<br className="hidden sm:block" /> Every day.
+                New mercies wait<br className="hidden sm:block" /> in the morning.
               </h2>
               <p
                 className="mx-auto mt-6 max-w-xl text-lg leading-relaxed"
                 style={{ color: cta.bodyColor }}
               >
                 Scripture-anchored. Distraction-free. A space to meet God before the world makes its demands.
-                Start free — go deeper when you're ready.
+                Begin free and go deeper when you are ready.
               </p>
               <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
-                <motion.div
-                  whileHover={{ scale: 1.04, transition: { type: 'spring', stiffness: 360, damping: 22 } }}
-                  whileTap={{ scale: 0.97 }}
-                >
+                <motion.div whileTap={{ scale: 0.99 }}>
                   <Link
                     to="/app/guided-journey"
-                    className="group flex items-center gap-2 bg-brand-accent px-8 py-4 text-sm font-semibold text-white transition-all hover:opacity-90 hover:shadow-[0_0_40px_rgba(242,125,38,0.5)]"
+                    className="group flex items-center gap-2 rounded-md bg-brand-accent px-8 py-4 text-sm font-semibold text-white transition-colors hover:bg-brand-cta-light"
                   >
-                    Begin your daily formation
+                    Open today&apos;s journey
                     <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
                   </Link>
                 </motion.div>
-                <motion.div
-                  whileHover={{ scale: 1.02, transition: { type: 'spring', stiffness: 360, damping: 26 } }}
-                  whileTap={{ scale: 0.98 }}
-                >
+                <motion.div whileTap={{ scale: 0.99 }}>
                   <Link
                     to="/pricing"
-                    className="flex items-center gap-2 border px-8 py-4 text-sm font-semibold transition-colors"
+                    className="flex items-center gap-2 rounded-md border px-8 py-4 text-sm font-semibold transition-colors"
                     style={{ borderColor: cta.btnBorderColor, color: cta.btnTextColor }}
                   >
                     View plans
