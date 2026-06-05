@@ -107,7 +107,7 @@ const commandCenterItems = [
   { to: '/studio/scholarships', text: 'Scholarships', icon: HeartHandshake, group: 'Operate' },
   { to: '/studio/blog', text: 'Blog Studio', icon: FilePenLine, group: 'Publish' },
   { to: '/studio/announcements', text: 'Announcements', icon: Megaphone, group: 'Growth' },
-  { to: '/studio/devotional-generator', text: 'Devotional Generator', icon: BookPlus, group: 'Publish' },
+  { to: '/studio/devotional-generator', text: 'Devotional Prep', icon: BookPlus, group: 'Publish' },
   { to: '/studio/quote-generator', text: 'Quote Graphics', icon: ImagePlus, group: 'Publish' },
   { to: '/studio/growth', text: 'Growth Console', icon: TrendingUp, group: 'Growth' },
   { to: '/studio/roles', text: 'Roles & Permissions', icon: ShieldCheck, group: 'Systems' },

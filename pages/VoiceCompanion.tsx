@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import Card from '../components/Card';
 import { Mic } from 'lucide-react';
 import { SoundWaveIcon, MicrophoneIcon, StopIcon, LockIcon } from '../components/icons';
-import { connectToSentientGuide } from '../services/liveService';
+import { connectToPrayerCompanion } from '../services/liveService';
 import { useAuth } from '../contexts/AuthContext';
 import { useUpgradeModal } from '../contexts/UpgradeModalContext';
 import { getTierFeatures } from '../types/pricing';
@@ -35,7 +35,7 @@ const VoiceCompanion: React.FC = () => {
     setIsActive(true);
     setStatus('Connecting…');
     try {
-      const session = await connectToSentientGuide({
+      const session = await connectToPrayerCompanion({
         onAudioData: () => {},
         onTranscription: (text, isUser) => {
           setTranscript(prev => {

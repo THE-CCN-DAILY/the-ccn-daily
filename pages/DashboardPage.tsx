@@ -586,7 +586,7 @@ const DashboardPage: React.FC = () => {
                     color: 'var(--fg-3)',
                   }}
                 >
-                  Latest episode coming soon.
+                  The next episode will appear here when it is published.
                 </p>
               )}
             </div>

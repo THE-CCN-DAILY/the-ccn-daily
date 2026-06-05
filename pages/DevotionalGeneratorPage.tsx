@@ -52,13 +52,13 @@ const DevotionalGeneratorPage: React.FC = () => {
 
   const handleGenerate = async () => {
     if (!user) {
-        setError("Please sign in to generate a personalized devotional.");
+        setError("Please sign in to prepare a devotional.");
         return;
     }
 
     const userTier = user.tier || 'free';
     if (!getTierFeatures(userTier).canGeneratePersonalizedDevotionals) {
-        openUpgradeModal('Deeply Personalised Devotionals', 'pro');
+        openUpgradeModal('Personal Devotionals', 'pro');
         return;
     }
 
@@ -184,14 +184,14 @@ const DevotionalGeneratorPage: React.FC = () => {
               <Card className="h-full flex flex-col items-center justify-center text-center" style={{ background: 'var(--bg-paper, #F6EFE1)', boxShadow: 'var(--sh-card, 0 1px 2px rgba(42,28,21,.06), 0 8px 24px rgba(42,28,21,.05))' }}>
                   <PenLine className="w-16 h-16 text-brand-text-secondary/30 mb-4"/>
                   <h3 style={{ fontFamily: 'var(--serif-display, "Cormorant Garamond", "Didot", Georgia, serif)', fontWeight: 600, fontSize: '1.4rem', lineHeight: 1.2, color: 'var(--fg-1, #2A1C15)', marginBottom: '0.5rem' }}>Your Personal Devotional Awaits</h3>
-                  <p style={{ fontFamily: 'var(--serif-body, "EB Garamond", "Garamond", Georgia, serif)', fontSize: '17px', lineHeight: 1.7, color: 'var(--fg-2, #5B4A3C)' }}>Click the generate button to create a unique reflection for today.</p>
+                  <p style={{ fontFamily: 'var(--serif-body, "EB Garamond", "Garamond", Georgia, serif)', fontSize: '17px', lineHeight: 1.7, color: 'var(--fg-2, #5B4A3C)' }}>Prepare a Scripture-rooted reflection for today.</p>
               </Card>
           )}
 
           {isLoading && (
               <Card className="h-full flex flex-col items-center justify-center text-center" style={{ background: 'var(--bg-paper, #F6EFE1)', boxShadow: 'var(--sh-card, 0 1px 2px rgba(42,28,21,.06), 0 8px 24px rgba(42,28,21,.05))' }}>
                   <SpinnerIcon className="w-12 h-12 text-brand-accent mb-4"/>
-                  <p style={{ fontFamily: 'var(--serif-body, "EB Garamond", "Garamond", Georgia, serif)', fontSize: '17px', lineHeight: 1.7, color: 'var(--fg-2, #5B4A3C)' }}>Crafting a personal message...</p>
+                  <p style={{ fontFamily: 'var(--serif-body, "EB Garamond", "Garamond", Georgia, serif)', fontSize: '17px', lineHeight: 1.7, color: 'var(--fg-2, #5B4A3C)' }}>Preparing a personal message...</p>
               </Card>
           )}
           

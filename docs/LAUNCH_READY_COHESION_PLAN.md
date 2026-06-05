@@ -1,6 +1,6 @@
 # THE CCN DAILY Launch-Ready Cohesion Plan
 
-Last updated: 2026-06-04
+Last updated: 2026-06-05
 
 ## Direction
 
@@ -60,7 +60,7 @@ Done:
 
 Next:
 
-- Rework landing hero and final CTA into a more distinctive “killer” first viewport with less glow, more paper/light/reading-desk atmosphere.
+- Continue visual QA on signed-in screens that require auth state: dashboard, admin dashboard, family dashboard, leader dashboard, and scholarship.
 - Continue card cleanup on pricing, dashboard strips, family/leader member rows, admin tables, and upgrade modal.
 - Tune dark mode toward candlelit browns, lifted shadows, crimson/ember restraint.
 - Reduce pill-shaped controls where they are not primary subscription CTAs.
@@ -77,7 +77,7 @@ Done:
 
 Next:
 
-- Audit all user-visible routes for “AI,” “generate,” “unlock,” “personalized,” “premium tools,” and tech-first wording.
+- Continue the user-visible copy audit for “generate,” “prototype,” “coming soon,” and tech-first wording.
 - Convert admin labels from operational jargon to stewardship language while preserving clarity.
 - Polish landing/pricing headlines for warmer specificity.
 
@@ -124,9 +124,9 @@ Required before production:
 ## Current Evidence
 
 - Latest pushed branch: `phase-e-visual-authoring`
-- Latest design checkpoint: `6198193 style: align launch surfaces with devotional brand`
+- Latest design checkpoint: `a500d7b style: polish launch surfaces and readiness plan`
+- Current in-progress checkpoint: copy and route cleanup for Devotional Prep, Quote Graphics, Grace Links, Prayer Companion, Course Studio, Expert Council, diagnostics, and launch checklist.
 - Verified gates at checkpoint:
   - `npm run lint` passed
   - `npm run build` passed
   - forbidden phrase scan returned no matches for the highest-risk public/model terms
-

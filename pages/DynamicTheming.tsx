@@ -88,7 +88,7 @@ const DynamicTheming: React.FC = () => {
             How It Will Work
         </h3>
         <p className="text-brand-text-secondary">
-            In the final implementation, a Genkit flow will run each time the daily devotional is generated. This flow will analyze the text to determine its primary mood (e.g., joyful, reflective, encouraging). It will then securely update a value in Firestore, and the app will automatically apply the corresponding theme color for all users that day, creating a shared, dynamic experience.
+            In the final implementation, the daily devotional will be reviewed for its primary mood, such as joyful, reflective, or encouraging. The app will then securely update a value in Firestore and apply the corresponding theme color for that day, creating a shared, dynamic experience.
         </p>
       </Card>
     </div>

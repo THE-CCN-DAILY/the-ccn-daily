@@ -224,7 +224,7 @@ const SettingsPage: React.FC = () => {
           </Row>
           <Row title="Voice notes" desc="Record spoken notes on any content.">
             <span className="inline-flex items-center gap-1.5 text-xs font-bold text-brand-accent">
-              <Mic className="w-3.5 h-3.5" /> Premium Â· coming soon
+              <Mic className="w-3.5 h-3.5" /> Premium · in preparation
             </span>
           </Row>
         </Card>

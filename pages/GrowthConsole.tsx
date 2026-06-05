@@ -2,7 +2,7 @@ import React from 'react';
 import GrowthDashboard from '../components/admin/GrowthDashboard';
 
 const GrowthConsole: React.FC = () => {
-  // Demo data — connect to analytics service when ready
+  // Sample data until analytics service is connected.
   return (
     <div className="max-w-6xl mx-auto pb-20">
       <h1 className="text-4xl font-bold text-brand-text-primary mb-2">Growth Console</h1>
@@ -19,7 +19,7 @@ const GrowthConsole: React.FC = () => {
           {
             id: 'gm_warn_max',
             severity: 'warning',
-            message: 'MAX plan AI cost is trending high.',
+            message: 'MAX plan background service cost is trending high.',
             action: 'Lower cinematic quota or introduce add-on credits.',
           },
           {

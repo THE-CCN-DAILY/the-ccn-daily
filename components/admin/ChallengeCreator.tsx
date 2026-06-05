@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import Card from '../Card';
 import { Wand2 } from 'lucide-react';
-import { ReaderIcon, SoundWaveIcon, SpinnerIcon, AiIcon } from '../icons';
+import { ReaderIcon, SoundWaveIcon, SpinnerIcon } from '../icons';
 import { useNotifications } from '../../contexts/NotificationContext';
 import { generateCloudflareText } from '../../services/geminiService';
 import { publishChallenge } from '../../services/challengeService';
@@ -49,7 +49,7 @@ const ChallengeCreator: React.FC = () => {
             const result = JSON.parse(cleanText || '{}');
             setGeneratedChallenge(result);
         } catch {
-            notify('Failed to generate course. Please try again.', 'error');
+            notify('Failed to prepare course. Please try again.', 'error');
         } finally {
             setIsGenerating(false);
         }
@@ -81,11 +81,11 @@ const ChallengeCreator: React.FC = () => {
             <Card>
                 <div className="flex items-center gap-3 mb-6">
                     <div className="p-2 bg-brand-accent/20 rounded-lg">
-                        <AiIcon className="w-6 h-6 text-brand-accent" />
+                        <Wand2 className="w-6 h-6 text-brand-accent" />
                     </div>
                     <div>
-                        <h2 className="text-xl font-bold text-brand-text-primary">AI Course & Challenge Studio</h2>
-                        <p className="text-sm text-brand-text-secondary">Transform newsletters or books into interactive courses and guided challenges through the Cloudflare AI pipeline.</p>
+                        <h2 className="text-xl font-bold text-brand-text-primary">Course & Challenge Studio</h2>
+                        <p className="text-sm text-brand-text-secondary">Transform newsletters or books into interactive courses and guided challenges.</p>
                     </div>
                 </div>
 
@@ -102,7 +102,7 @@ const ChallengeCreator: React.FC = () => {
                                     {type === 'Newsletter' && <SoundWaveIcon className="w-5 h-5" />}
                                     {type === 'Book' && <ReaderIcon className="w-5 h-5" />}
                                     {type === 'URL' && <Wand2 className="w-5 h-5" />}
-                                    {type === 'Manual' && <AiIcon className="w-5 h-5" />}
+                                    {type === 'Manual' && <Wand2 className="w-5 h-5" />}
                                     {type}
                                 </button>
                             ))}
@@ -127,9 +127,9 @@ const ChallengeCreator: React.FC = () => {
                         className="w-full py-4 bg-brand-accent text-white rounded-xl font-bold flex items-center justify-center gap-2 hover:scale-[1.02] transition-transform disabled:opacity-50 disabled:scale-100"
                     >
                         {isGenerating ? (
-                            <><SpinnerIcon className="w-5 h-5" /> Analyzing Source & Generating Interactive Curriculum...</>
+                            <><SpinnerIcon className="w-5 h-5" /> Preparing Interactive Curriculum...</>
                         ) : (
-                            <><Wand2 className="w-5 h-5" /> Generate Course/Challenge with AI</>
+                            <><Wand2 className="w-5 h-5" /> Prepare Course/Challenge</>
                         )}
                     </button>
                 </div>
@@ -139,7 +139,7 @@ const ChallengeCreator: React.FC = () => {
                 <Card className="border-2 border-brand-accent/30 animate-fade-in-up">
                     <div className="flex justify-between items-start mb-6">
                         <div>
-                            <span className="text-[12px] font-black bg-brand-accent/10 text-brand-accent px-2 py-1 rounded uppercase tracking-widest">AI Draft Generated</span>
+                            <span className="text-[12px] font-black bg-brand-accent/10 text-brand-accent px-2 py-1 rounded uppercase tracking-widest">Draft Prepared</span>
                             <h3 className="text-2xl font-bold text-brand-text-primary mt-2">{generatedChallenge.title}</h3>
                             <p className="text-brand-text-secondary">{generatedChallenge.description}</p>
                         </div>

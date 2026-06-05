@@ -85,7 +85,6 @@ import NewsletterPage from './pages/NewsletterPage';
 import HelpPage from './pages/HelpPage';
 import OnboardingPage from './pages/OnboardingPage';
 import DonationPage from './pages/DonationPage';
-import StudentVerificationPage from './pages/StudentVerificationPage';
 import PlannerPage from './pages/PlannerPage';
 
 const App: React.FC = () => {
@@ -125,7 +124,7 @@ const App: React.FC = () => {
                             <Route path="testimonies" element={<RequireAuth><TestimoniesPage /></RequireAuth>} />
                             <Route path="gamification" element={<RequireAuth><GamificationPage /></RequireAuth>} />
                             <Route path="grace-link" element={<RequireAuth><GraceLinkPage /></RequireAuth>} />
-                            <Route path="sentient-guide" element={<RequireAuth><VoiceCompanion /></RequireAuth>} />
+                            <Route path="prayer-companion" element={<RequireAuth><VoiceCompanion /></RequireAuth>} />
                             <Route path="visual-sanctuary" element={<RequireAuth><VisualSanctuary /></RequireAuth>} />
                             <Route path="inbox" element={<RequireAuth><InboxPage /></RequireAuth>} />
                             <Route path="newsletters" element={<RequireAuth><NewsletterPage /></RequireAuth>} />
@@ -133,7 +132,6 @@ const App: React.FC = () => {
                             <Route path="live" element={<RequireAuth><LiveStreamPage /></RequireAuth>} />
                             <Route path="giving" element={<RequireAuth><GivingPage /></RequireAuth>} />
                             <Route path="help" element={<HelpPage />} />
-                            <Route path="student-verify" element={<RequireAuth><StudentVerificationPage /></RequireAuth>} />
                             <Route path="scholarship" element={<RequireAuth><ScholarshipApplicationPage /></RequireAuth>} />
                             <Route path="courses" element={<RequireAuth><CoursesPage /></RequireAuth>} />
                             <Route path="courses/:courseId" element={<RequireAuth><CoursePlayerPage /></RequireAuth>} />

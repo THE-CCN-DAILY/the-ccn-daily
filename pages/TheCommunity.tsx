@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import Card from '../components/Card';
 import { MessageCircle } from 'lucide-react';
-import { PrayingHandsIcon, SendIcon, UserIcon, SearchIcon, SpinnerIcon, AiIcon, CommunityIcon } from '../components/icons';
+import { PrayingHandsIcon, SendIcon, UserIcon, SearchIcon, SpinnerIcon, CommunityIcon } from '../components/icons';
 import { useGamification } from '../contexts/GamificationContext';
 import { getGroundedPrayerTopics } from '../services/geminiService';
 import { useAuth } from '../contexts/AuthContext';
@@ -22,7 +22,7 @@ const TheCommunity: React.FC = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [loadError, setLoadError] = useState('');
 
-    // Grounded AI state
+    // Background topic state
     const [groundedTopics, setGroundedTopics] = useState<{ title: string; snippet: string }[]>([]);
     const [isFetchingGrounded, setIsFetchingGrounded] = useState(false);
 
@@ -152,7 +152,7 @@ const TheCommunity: React.FC = () => {
                         onClick={() => setActiveTab('lumina')}
                         className={`px-5 py-2 rounded-full text-sm font-bold transition-all flex items-center gap-2 ${activeTab === 'lumina' ? 'bg-brand-accent text-white shadow-lg' : 'text-brand-text-secondary hover:text-brand-text-primary'}`}
                     >
-                        <AiIcon className="w-4 h-4" /> Lumina Digest
+                        <SearchIcon className="w-4 h-4" /> Lumina Digest
                     </button>
                     <button
                         onClick={() => setActiveTab('wall')}
@@ -175,7 +175,7 @@ const TheCommunity: React.FC = () => {
                         <Card className="border-2 border-brand-accent/30 bg-gradient-to-br from-brand-dark to-brand-accent/5">
                             <div className="flex items-center gap-4 mb-6">
                                 <div className="w-12 h-12 rounded-full bg-brand-accent/20 flex items-center justify-center border border-brand-accent/50">
-                                    <AiIcon className="w-6 h-6 text-brand-accent" />
+                                    <SearchIcon className="w-6 h-6 text-brand-accent" />
                                 </div>
                                 <div>
                                     <h2 className="text-2xl font-bold text-brand-text-primary">Lumina Daily Digest</h2>

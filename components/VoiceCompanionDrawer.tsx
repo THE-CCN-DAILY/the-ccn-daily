@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { SoundWaveIcon, MicrophoneIcon, StopIcon } from './icons';
-import { connectToSentientGuide } from '../services/liveService';
+import { connectToPrayerCompanion } from '../services/liveService';
 import { useAuth } from '../contexts/AuthContext';
 import { useUpgradeModal } from '../contexts/UpgradeModalContext';
 import { getTierFeatures } from '../types/pricing';
@@ -37,7 +37,7 @@ const VoiceCompanionDrawer: React.FC<VoiceCompanionDrawerProps> = ({ isOpen, onC
     setIsActive(true);
     setStatus('Connecting…');
     try {
-      const session = await connectToSentientGuide({
+      const session = await connectToPrayerCompanion({
         onAudioData: () => {},
         onTranscription: (text: string, isUser: boolean) => {
           setTranscript(prev => {

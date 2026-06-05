@@ -99,14 +99,14 @@ const GraceLinkModal: React.FC<{
                             disabled={isGenerating}
                             className="w-full py-3 rounded-xl bg-brand-accent hover:bg-opacity-90 text-white font-bold shadow-md disabled:bg-opacity-50 flex items-center justify-center gap-2 transition-all"
                         >
-                            {isGenerating ? <><SpinnerIcon className="w-5 h-5"/> Generating Secure Link...</> : <><Gift className="w-5 h-5"/> Generate Grace Link</>}
+                            {isGenerating ? <><SpinnerIcon className="w-5 h-5"/> Preparing Secure Link...</> : <><Gift className="w-5 h-5"/> Prepare Grace Link</>}
                         </button>
                     </div>
                 ) : (
                     <div className="space-y-6 animate-fade-in">
                         <div className="bg-brand-dark p-4 rounded-xl border border-brand-accent/30 text-center">
                             <CheckIcon className="w-12 h-12 text-status-success mx-auto mb-2"/>
-                            <p className="text-sm font-bold text-brand-text-primary mb-1">Link Generated Successfully</p>
+                            <p className="text-sm font-bold text-brand-text-primary mb-1">Link Ready to Share</p>
                             <p className="text-xs text-brand-text-secondary">Ready to share via WhatsApp, iMessage, or Social Media.</p>
                         </div>
 
@@ -170,7 +170,7 @@ const GraceLinkPage: React.FC = () => {
                                 className="w-full px-4 py-3 rounded-xl bg-brand-secondary border border-brand-border text-brand-text-primary font-bold hover:bg-brand-accent hover:text-white hover:border-brand-accent transition-all flex items-center justify-center gap-2"
                             >
                                 <Link2 className="w-5 h-5"/>
-                                {item.isPremium ? 'Purchase & Share Link' : 'Generate Share Link'}
+                                {item.isPremium ? 'Purchase & Share Link' : 'Prepare Share Link'}
                             </button>
                         </div>
                     </Card>

@@ -4,9 +4,9 @@ export interface LiveSessionCallbacks {
   onError: (msg: string) => void;
 }
 
-export const connectToSentientGuide = async (callbacks: LiveSessionCallbacks) => {
+export const connectToPrayerCompanion = async (callbacks: LiveSessionCallbacks) => {
   const message =
-    'Live voice guidance is paused while the app moves to Cloudflare-native AI. Text AI routes are active; realtime audio needs an approved provider and budget.';
+    'Live voice prayer is paused while the voice provider and budget are finalized.';
   callbacks.onError(message);
   throw new Error(message);
 };

@@ -3,7 +3,7 @@ import { motion } from 'motion/react';
 import { Player } from '@remotion/player';
 import Card from '../components/Card';
 import { Quote } from 'lucide-react';
-import { AiIcon, SpinnerIcon, ShareIcon, DownloadIcon, CheckIcon, LockIcon } from '../components/icons';
+import { SpinnerIcon, ShareIcon, DownloadIcon, CheckIcon, LockIcon } from '../components/icons';
 import { generateQuoteImage } from '../services/geminiService';
 import { useAuth } from '../contexts/AuthContext';
 import { useUpgradeModal } from '../contexts/UpgradeModalContext';
@@ -54,7 +54,7 @@ const QuoteGeneratorPage: React.FC = () => {
 
   const handleGenerate = async () => {
     if (!canGenerateQuoteImages) {
-      openUpgradeModal('AI Quote Image Generation', 'pro');
+      openUpgradeModal('Premium Quote Backgrounds', 'pro');
       return;
     }
     setIsLoading(true);
@@ -69,7 +69,7 @@ const QuoteGeneratorPage: React.FC = () => {
       if (msg.includes('PREMIUM_FEATURE')) {
         setError(msg.replace('PREMIUM_FEATURE: ', ''));
       } else {
-        setError('AI image generation is currently unavailable. Please try again later.');
+        setError('Premium quote backgrounds are currently unavailable. Please try again later.');
       }
     } finally {
       setIsLoading(false);
@@ -119,7 +119,7 @@ const QuoteGeneratorPage: React.FC = () => {
 
       {/* ── Tab switcher ────────────────────────────────────────────── */}
       <div className="mb-8 inline-flex rounded-sm border border-brand-border overflow-hidden">
-        {([['video', '🎬 Animated Video Card'], ['image', '🖼 Static Image']] as [Tab, string][]).map(([tab, label]) => (
+        {([['video', 'Animated Video Card'], ['image', 'Static Image']] as [Tab, string][]).map(([tab, label]) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -246,7 +246,7 @@ const QuoteGeneratorPage: React.FC = () => {
           <div className="space-y-6">
             <Card>
               <h2 className="mb-4 flex items-center text-xl font-bold text-brand-text-primary">
-                <AiIcon className="mr-2 h-6 w-6 text-brand-accent" />
+                <Quote className="mr-2 h-6 w-6 text-brand-accent" />
                 Compose Your Quote
               </h2>
               <div className="space-y-4">
@@ -278,8 +278,8 @@ const QuoteGeneratorPage: React.FC = () => {
                   className={`flex w-full items-center justify-center gap-2 rounded-sm py-3 font-bold transition-colors ${canGenerateQuoteImages ? 'bg-brand-accent text-white hover:bg-opacity-90' : 'bg-brand-secondary text-brand-text-secondary hover:bg-brand-border'}`}
                 >
                   {canGenerateQuoteImages
-                    ? <><Quote className="h-5 w-5" /> Generate Image</>
-                    : <><LockIcon className="h-5 w-5" /> Access Image Generation</>}
+                    ? <><Quote className="h-5 w-5" /> Prepare Image</>
+                    : <><LockIcon className="h-5 w-5" /> Access Quote Backgrounds</>}
                 </button>
                 {error && (
                   <div className="rounded-sm border border-brand-accent/20 bg-brand-accent/10 p-3 text-xs text-brand-accent">
@@ -303,8 +303,8 @@ const QuoteGeneratorPage: React.FC = () => {
                   <Quote className="mx-auto mb-4 h-16 w-16 text-brand-text-secondary/20" />
                   <p className="mx-auto max-w-xs italic text-brand-text-secondary">
                     {canGenerateQuoteImages
-                      ? 'Ready to generate your visual inspiration.'
-                      : 'AI Visual Generation is a premium feature. Switch to the Video Card tab for free animated cards.'}
+                      ? 'Ready to prepare your visual inspiration.'
+                      : 'Premium quote backgrounds are available on Growth. Switch to the Video Card tab for free animated cards.'}
                   </p>
                 </div>
               )}
@@ -316,7 +316,7 @@ const QuoteGeneratorPage: React.FC = () => {
               )}
               {generatedImageUrl && (
                 <div className="relative h-full w-full animate-fade-in-up">
-                  <img src={generatedImageUrl} className="h-full w-full rounded-sm object-cover" alt="AI Generated Background" />
+                  <img src={generatedImageUrl} className="h-full w-full rounded-sm object-cover" alt="Prepared quote background" />
                   <div className="absolute inset-0 flex flex-col items-center justify-center rounded-sm bg-black/40 p-12 text-center">
                     <p className="font-serif text-2xl font-bold leading-relaxed text-white drop-shadow-md md:text-3xl">
                       "{quoteText}"
@@ -337,7 +337,7 @@ const QuoteGeneratorPage: React.FC = () => {
               )}
             </Card>
             <p className="mt-4 text-center text-xs italic text-brand-text-secondary">
-              Premium image generation is gated until the production AI budget and provider limits are confirmed.
+              Premium quote backgrounds are gated until production limits and costs are confirmed.
             </p>
           </div>
         </div>

@@ -56,9 +56,9 @@ const ChatWithTeam: React.FC = () => {
 
   return (
     <div className="flex flex-col h-[calc(100vh-4rem)]">
-      <h1 className="text-4xl font-bold text-brand-text-primary mb-2">AI Team Coach</h1>
+      <h1 className="text-4xl font-bold text-brand-text-primary mb-2">Team Counsel</h1>
       <p className="text-lg text-brand-text-secondary mb-8">
-        An AI coach with persistent context — continue conversations across sessions.
+        A private strategy room with memory for leadership, product, and launch conversations.
       </p>
 
     <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-6 min-h-0">
@@ -114,7 +114,7 @@ const ChatWithTeam: React.FC = () => {
                 <ClockIcon className="w-5 h-5 mr-2 text-brand-accent" />
                 Conversation History
             </h3>
-            <p className="text-sm text-brand-text-secondary mb-4">The AI Coach now remembers key topics from your past conversations to provide a more continuous experience.</p>
+            <p className="text-sm text-brand-text-secondary mb-4">This room keeps key topics from past conversations so the work can continue with context.</p>
             <div className="flex-1 overflow-y-auto -mr-3 pr-3 space-y-3">
                 {mockHistory.map((item, index) => (
                      <div key={index} className="p-3 bg-brand-secondary/50 rounded-lg text-sm text-brand-text-secondary">

@@ -6,8 +6,8 @@ import { SpinnerIcon, CheckIcon, XMarkIcon } from '../components/icons/index';
 const DiagnosticsPage: React.FC = () => {
     const [status, setStatus] = useState<any>(null);
     const [loading, setLoading] = useState(true);
-    const [testingAi, setTestingAi] = useState(false);
-    const [aiTestResult, setAiTestResult] = useState<any>(null);
+    const [testingBackgroundServices, setTestingBackgroundServices] = useState(false);
+    const [backgroundTestResult, setBackgroundTestResult] = useState<any>(null);
     const [error, setError] = useState<string | null>(null);
 
     const checkSystem = async () => {
@@ -31,9 +31,9 @@ const DiagnosticsPage: React.FC = () => {
         }
     };
 
-    const runAiTest = async () => {
-        setTestingAi(true);
-        setAiTestResult(null);
+    const runBackgroundServiceTest = async () => {
+        setTestingBackgroundServices(true);
+        setBackgroundTestResult(null);
         try {
             const response = await fetch('/api/ai/generate', {
                 method: 'POST',
@@ -44,22 +44,22 @@ const DiagnosticsPage: React.FC = () => {
                     model: status?.model || '@cf/meta/llama-3.1-8b-instruct',
                 }),
             });
-            if (!response.ok) throw new Error(`Cloudflare AI route failed (${response.status})`);
+            if (!response.ok) throw new Error(`Background service route failed (${response.status})`);
             const data = await response.json();
 
-            setAiTestResult({
+            setBackgroundTestResult({
                 status: data.fallback ? 'fallback' : 'connected',
                 response: data.text || 'No response',
                 timestamp: new Date().toISOString()
             });
         } catch (err: any) {
-            setAiTestResult({
+            setBackgroundTestResult({
                 status: 'failed',
                 error: err.message,
                 timestamp: new Date().toISOString()
             });
         } finally {
-            setTestingAi(false);
+            setTestingBackgroundServices(false);
         }
     };
 
@@ -87,7 +87,7 @@ const DiagnosticsPage: React.FC = () => {
     return (
         <div className="max-w-4xl mx-auto py-12">
             <h1 className="text-4xl font-bold text-brand-text-primary mb-2">System Diagnostics</h1>
-            <p className="text-brand-text-secondary mb-8">Verifying Cloudflare Pages, D1, and Workers AI readiness.</p>
+            <p className="text-brand-text-secondary mb-8">Verifying Cloudflare Pages, D1, and background service readiness.</p>
 
             {loading ? (
                 <div className="flex flex-col items-center justify-center py-20">
@@ -107,9 +107,9 @@ const DiagnosticsPage: React.FC = () => {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <StatusItem label="Cloudflare D1" value={status.database} />
                     <StatusItem 
-                        label="Workers AI" 
-                        value={aiTestResult?.status || 'awaiting test'} 
-                        errorMsg={aiTestResult?.error} 
+                        label="Background Services"
+                        value={backgroundTestResult?.status || 'awaiting test'}
+                        errorMsg={backgroundTestResult?.error}
                     />
                     <StatusItem label="Pages Runtime" value={status.cloudflarePages === 'connected' ? 'active' : 'error'} />
                     
@@ -120,7 +120,7 @@ const DiagnosticsPage: React.FC = () => {
                                     <h3 className="text-lg font-bold text-brand-text-primary">Enterprise Optimization</h3>
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         <div className="flex items-center justify-between text-sm p-2 bg-brand-secondary rounded">
-                                            <span className="text-brand-text-secondary">AI Source</span>
+                                            <span className="text-brand-text-secondary">Service Source</span>
                                             <span className="font-mono text-brand-accent font-bold">{status.apiKeySource}</span>
                                         </div>
                                         <div className="flex items-center justify-between text-sm p-2 bg-brand-secondary rounded">
@@ -130,7 +130,7 @@ const DiagnosticsPage: React.FC = () => {
                                             </span>
                                         </div>
                                         <div className="flex items-center justify-between text-sm p-2 bg-brand-secondary rounded">
-                                            <span className="text-brand-text-secondary">Workers AI</span>
+                                            <span className="text-brand-text-secondary">Background Services</span>
                                             <span className={status.workersAi === 'connected' ? 'text-status-success font-bold' : 'text-brand-text-secondary'}>
                                                 {status.workersAi === 'connected' ? 'BOUND' : 'LOCAL FALLBACK'}
                                             </span>
@@ -154,22 +154,22 @@ const DiagnosticsPage: React.FC = () => {
                                     {/* Cloudflare AI binding note */}
                                     <div className="mt-4 p-3 bg-brand-accent/5 border border-brand-accent/20 rounded-lg">
                                         <p className="text-xs text-brand-text-secondary mb-2">
-                                            Local preview can use fallback output. Production should bind Cloudflare Workers AI before enabling paid AI workflows.
+                                            Local preview can use fallback output. Production should bind Cloudflare background services before enabling paid premium workflows.
                                         </p>
                                         <p className="text-xs font-bold text-brand-accent flex items-center gap-1">
-                                            <Activity className="w-3 h-3" /> Cloudflare-native AI path active
+                                            <Activity className="w-3 h-3" /> Cloudflare-native background path active
                                         </p>
                                     </div>
                                 </div>
                                 
                                 <div className="flex flex-col gap-3 min-w-[200px]">
                                     <button 
-                                        onClick={runAiTest} 
-                                        disabled={testingAi}
+                                        onClick={runBackgroundServiceTest}
+                                        disabled={testingBackgroundServices}
                                         className="px-6 py-3 bg-brand-accent text-white rounded-lg font-bold hover:bg-opacity-90 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                                     >
-                                        {testingAi ? <SpinnerIcon className="w-4 h-4" /> : <Activity className="w-4 h-4" />}
-                                        {testingAi ? 'Testing...' : 'Run AI Connectivity Test'}
+                                        {testingBackgroundServices ? <SpinnerIcon className="w-4 h-4" /> : <Activity className="w-4 h-4" />}
+                                        {testingBackgroundServices ? 'Testing...' : 'Run Background Service Test'}
                                     </button>
                                     <button 
                                         onClick={checkSystem} 
@@ -180,15 +180,15 @@ const DiagnosticsPage: React.FC = () => {
                                 </div>
                             </div>
                             
-                            {aiTestResult && (
-                                <div className={`mt-6 p-4 rounded-lg border ${aiTestResult.status === 'connected' || aiTestResult.status === 'fallback' ? 'bg-green-500/10 border-green-500/20 text-green-400' : 'bg-red-500/10 border-red-500/20 text-red-400'}`}>
+                            {backgroundTestResult && (
+                                <div className={`mt-6 p-4 rounded-lg border ${backgroundTestResult.status === 'connected' || backgroundTestResult.status === 'fallback' ? 'bg-green-500/10 border-green-500/20 text-green-400' : 'bg-red-500/10 border-red-500/20 text-red-400'}`}>
                                     <p className="text-xs font-bold uppercase tracking-widest mb-1">Test Result</p>
                                     <p className="text-sm">
-                                        {aiTestResult.status === 'connected'
-                                            ? 'Success: Workers AI responded.'
-                                            : aiTestResult.status === 'fallback'
-                                                ? 'Local fallback responded. Bind Workers AI in production for real model output.'
-                                                : `Error: ${aiTestResult.error}`}
+                                        {backgroundTestResult.status === 'connected'
+                                            ? 'Success: background service responded.'
+                                            : backgroundTestResult.status === 'fallback'
+                                                ? 'Local fallback responded. Bind production services before paid workflows go live.'
+                                                : `Error: ${backgroundTestResult.error}`}
                                     </p>
                                 </div>
                             )}
