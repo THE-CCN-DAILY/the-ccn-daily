@@ -6,7 +6,8 @@ import Card from '../components/Card';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme, type Theme } from '../contexts/ThemeContext';
 import { useNotifications } from '../contexts/NotificationContext';
-import { getTierLabel } from '../types/pricing';
+import { getTierLabel, type SubscriptionTier } from '../types/pricing';
+import { getUserSubscription } from '../services/purchaseService';
 import {
   uploadProfilePhoto,
   updateDisplayName,
@@ -73,6 +74,8 @@ const SettingsPage: React.FC = () => {
 
   const [notifPrefs, setNotifPrefs] = useState<NotificationPrefs>(DEFAULT_NOTIFICATION_PREFS);
   const [playback, setPlayback] = useState<PlaybackPrefs>(getPlaybackPrefs());
+  const [trustedTier, setTrustedTier] = useState<SubscriptionTier>('free');
+  const [planStatus, setPlanStatus] = useState<'checking' | 'synced' | 'offline'>('checking');
   const isAdmin = user?.role === 'admin';
 
   // ── Profile editing state ──────────────────────────────────────────────────
@@ -141,7 +144,35 @@ const SettingsPage: React.FC = () => {
     }
   };
 
-  const currentTierLabel = getTierLabel((user?.tier as any) || 'free');
+  const authTier = ((user?.tier as SubscriptionTier | undefined) || 'free');
+  const currentTierLabel = getTierLabel(trustedTier);
+  const isPaidTier = trustedTier === 'pro' || trustedTier === 'max' || trustedTier === 'partner';
+
+  useEffect(() => {
+    if (!user?.uid) {
+      setTrustedTier('free');
+      setPlanStatus('synced');
+      return;
+    }
+
+    let cancelled = false;
+    setPlanStatus('checking');
+    setTrustedTier(authTier);
+
+    getUserSubscription(user.uid)
+      .then((subscription) => {
+        if (cancelled) return;
+        setTrustedTier(subscription.tier || 'free');
+        setPlanStatus('synced');
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setTrustedTier(authTier);
+        setPlanStatus('offline');
+      });
+
+    return () => { cancelled = true; };
+  }, [authTier, user?.uid]);
 
   useEffect(() => {
     if (user?.uid) loadNotificationPrefs(user.uid).then(setNotifPrefs).catch(() => {});
@@ -239,6 +270,13 @@ const SettingsPage: React.FC = () => {
             <div className="min-w-0">
               <p className="text-sm text-brand-text-secondary">Your current plan</p>
               <p className="text-lg font-bold text-brand-text-primary">{currentTierLabel}</p>
+              <p className="mt-1 text-xs text-brand-text-secondary">
+                {planStatus === 'checking'
+                  ? 'Checking your access...'
+                  : planStatus === 'synced'
+                  ? 'Synced with your subscription record.'
+                  : 'Showing your saved account record until subscription sync returns.'}
+              </p>
             </div>
             <Link
               to="/pricing"
@@ -246,7 +284,7 @@ const SettingsPage: React.FC = () => {
               style={{ backgroundColor: 'var(--ember)' }}
             >
               <Crown className="w-4 h-4" />
-              {(user?.tier && user.tier !== 'free') ? 'Manage Plan' : 'Upgrade Plan'}
+              {isPaidTier ? 'Manage Plan' : 'Upgrade Plan'}
             </Link>
           </div>
         </Card>

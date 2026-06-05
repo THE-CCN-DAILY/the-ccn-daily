@@ -11,6 +11,8 @@ import {
 import { doc, getDoc } from 'firebase/firestore';
 import { db, isFirebaseConfigured, signInWithEmail, signUpWithEmail, resetPassword as firebaseResetPassword } from '../firebase';
 import type { AppUser } from '../types';
+import type { SubscriptionTier } from '../types/pricing';
+import { getUserSubscription } from '../services/purchaseService';
 
 interface AuthContextType {
   user: AppUser | null;
@@ -35,6 +37,20 @@ const ADMIN_EMAILS = ['pastor.eryeza@gmail.com', 'ccndaily@gmail.com'];
 let verificationSent = false;
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+const readTrustedTier = async (
+  userId: string,
+  fallbackTier: SubscriptionTier,
+  role: AppUser['role'],
+): Promise<SubscriptionTier> => {
+  if (role === 'admin' || role === 'lead_developer') return 'max';
+  try {
+    const subscription = await getUserSubscription(userId);
+    return subscription.status === 'active' ? subscription.tier : 'free';
+  } catch {
+    return fallbackTier;
+  }
+};
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<AppUser | null>(null);
@@ -83,10 +99,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         let role: AppUser['role'] = 'user';
+        let storedTier: SubscriptionTier = 'free';
         try {
           const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
           if (userDoc.exists()) {
-            role = (userDoc.data().role as AppUser['role']) ?? 'user';
+            const data = userDoc.data();
+            role = (data.role as AppUser['role']) ?? 'user';
+            storedTier = (data.tier as SubscriptionTier) ?? 'free';
           }
         } catch {
           // Firestore unavailable — default role is safe
@@ -105,6 +124,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           sendEmailVerification(firebaseUser).catch(() => {});
         }
 
+        const tier = await readTrustedTier(firebaseUser.uid, storedTier, role);
+
         setUser({
           uid: firebaseUser.uid,
           email: firebaseUser.email,
@@ -113,6 +134,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           emailVerified: firebaseUser.emailVerified,
           isAnonymous: firebaseUser.isAnonymous,
           role,
+          tier,
         });
       } else {
         setUser(null);
@@ -169,12 +191,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await current.reload();
     const reloaded = getAuth().currentUser;
     if (!reloaded) return;
+    const tier = await readTrustedTier(reloaded.uid, (user?.tier as SubscriptionTier) || 'free', user?.role || 'user');
     setUser((prev) =>
       prev
-        ? { ...prev, displayName: reloaded.displayName, photoURL: reloaded.photoURL, emailVerified: reloaded.emailVerified }
+        ? { ...prev, displayName: reloaded.displayName, photoURL: reloaded.photoURL, emailVerified: reloaded.emailVerified, tier }
         : prev,
     );
-  }, []);
+  }, [user?.role, user?.tier]);
 
   const value = useMemo(
     () => ({ user, loading, showSignIn, redirectError, openSignIn, closeSignIn, signIn, signOut, signInEmail, signUpEmail, sendPasswordReset, refreshUser }),
