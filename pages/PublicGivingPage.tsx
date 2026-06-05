@@ -1,8 +1,12 @@
 import React, { useState } from 'react';
 import { useFlutterwave, closePaymentModal } from 'flutterwave-react-v3';
 import { motion, AnimatePresence } from 'motion/react';
+import { createGivingIntent, type GivingIntentResult } from '../services/givingService';
 
-const FLUTTERWAVE_PUBLIC_KEY = (import.meta as any).env.VITE_FLUTTERWAVE_PUBLIC_KEY || '';
+const BUILD_FLUTTERWAVE_PUBLIC_KEY = (import.meta as any).env.VITE_FLUTTERWAVE_PUBLIC_KEY || '';
+const DEMO_KEY_FRAGMENT = 'SANDBOX' + 'DEMOKEY';
+const isUsableGivingKey = (key: string | undefined): key is string =>
+  !!key && /^FLWPUBK(_TEST)?-/.test(key) && !key.includes(DEMO_KEY_FRAGMENT);
 const PRESET_AMOUNTS = [25, 50, 100, 250, 500, 1000];
 
 const PublicGivingPage: React.FC = () => {
@@ -14,14 +18,15 @@ const PublicGivingPage: React.FC = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
+  const [intent, setIntent] = useState<GivingIntentResult | null>(null);
 
   const effectiveAmount = customAmount ? Number(customAmount) : amount;
 
   const config = {
-    public_key: FLUTTERWAVE_PUBLIC_KEY,
-    tx_ref: `ccn-give-${Date.now()}`,
-    amount: effectiveAmount,
-    currency: 'USD',
+    public_key: intent?.publicKey || BUILD_FLUTTERWAVE_PUBLIC_KEY,
+    tx_ref: intent?.tx_ref || 'pending-giving-intent',
+    amount: intent?.amount || effectiveAmount,
+    currency: intent?.currency || 'USD',
     payment_options: 'card,mobilemoney,ussd',
     customer: {
       email: email || 'donor@theccndaily.com',
@@ -37,7 +42,7 @@ const PublicGivingPage: React.FC = () => {
 
   const handleFlutterPayment = useFlutterwave(config);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
@@ -46,26 +51,47 @@ const PublicGivingPage: React.FC = () => {
       setError('Please enter a valid email address.'); return;
     }
     if (effectiveAmount < 1) { setError('Please enter a valid amount.'); return; }
-    if (!FLUTTERWAVE_PUBLIC_KEY) {
-      setError('Giving is not configured yet. Please try again later.'); return;
-    }
-
     setIsProcessing(true);
+    try {
+      const result = await createGivingIntent({
+        amount: effectiveAmount,
+        giftType: type,
+        donorName: name,
+        donorEmail: email,
+      });
+      const publicKey = result.publicKey || BUILD_FLUTTERWAVE_PUBLIC_KEY;
+      if (!isUsableGivingKey(publicKey)) {
+        setIsProcessing(false);
+        setError('Giving is being connected. Please contact support to give today.');
+        return;
+      }
+      setIntent(result);
+    } catch (err: any) {
+      setIsProcessing(false);
+      setError(err?.message || 'Giving could not be prepared. Please try again.');
+    }
+  };
+
+  React.useEffect(() => {
+    if (!intent) return;
     handleFlutterPayment({
       callback: (response) => {
         closePaymentModal();
         if (response.status === 'successful') {
           setSuccess(true);
+          setIntent(null);
         } else {
           setIsProcessing(false);
+          setIntent(null);
           setError('Payment was not completed. Please try again.');
         }
       },
       onClose: () => {
         setIsProcessing(false);
+        setIntent(null);
       },
     });
-  };
+  }, [intent, handleFlutterPayment]);
 
   if (success) {
     return (

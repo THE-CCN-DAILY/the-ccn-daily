@@ -11,9 +11,6 @@ import { getTierFeatures } from '../types/pricing';
 import { useNotifications } from '../contexts/NotificationContext';
 import { VerseCard, type VerseCardProps } from '../remotion/VerseCard';
 
-const DEFAULT_FLUTTERWAVE_KEY = (import.meta as any).env.VITE_FLUTTERWAVE_PUBLIC_KEY || 'FLWPUBK_TEST-SANDBOXDEMOKEY-X';
-void DEFAULT_FLUTTERWAVE_KEY;
-
 type Tab = 'image' | 'video';
 type VideoTheme = 'dark' | 'light' | 'sepia';
 type VideoFormat = 'portrait' | 'square' | 'landscape';

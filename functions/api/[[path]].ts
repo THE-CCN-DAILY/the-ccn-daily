@@ -1,4 +1,4 @@
-import { Hono } from 'hono';
+﻿import { Hono } from 'hono';
 import { SignJWT, jwtVerify, createRemoteJWKSet } from 'jose';
 
 type D1PreparedStatement = {
@@ -3521,6 +3521,52 @@ app.post('/api/payments/intent', async (c) => {
   });
 });
 
+// POST /api/giving/intent
+// Creates a server-owned amount and tx_ref before the client opens Flutterwave.
+// The webhook can verify the transaction against this pending row without granting
+// subscription access because donation rows use resource_id = donation:*.
+app.post('/api/giving/intent', async (c) => {
+  const body = await c.req.json().catch(() => ({} as Record<string, unknown>));
+  const amount = Number(body.amount);
+  if (!Number.isFinite(amount) || amount < 1) return c.json({ error: 'Invalid giving amount' }, 400);
+  if (amount > 100000) return c.json({ error: 'Giving amount is too large' }, 400);
+
+  const userId = String(body.userId || '').trim();
+  if (userId) {
+    if (!isSafeId(userId)) return c.json({ error: 'Invalid user id' }, 400);
+    const denied = requireSelf(c, userId); if (denied) return denied;
+  }
+
+  const donorEmail = String(body.donorEmail || '').trim();
+  if (donorEmail && !isValidEmail(donorEmail)) return c.json({ error: 'Invalid donor email' }, 400);
+  if (!c.env.DB) return c.json({ error: 'D1 database binding is not configured' }, 503);
+
+  const giftType = body.giftType === 'monthly' ? 'monthly' : 'one-time';
+  const currency = 'USD';
+  const safeAmount = Number(amount.toFixed(2));
+  const txRef = `give_${userId || 'guest'}_${Date.now()}_${crypto.randomUUID().slice(0, 8)}`;
+  const id = crypto.randomUUID();
+
+  await c.env.DB.prepare(
+    `INSERT INTO user_purchases (id, user_id, resource_id, tx_ref, amount, currency, status, purchased_at)
+     VALUES (?, ?, ?, ?, ?, ?, 'pending', CURRENT_TIMESTAMP)`
+  ).bind(
+    id,
+    userId || `guest:${crypto.randomUUID()}`,
+    `donation:${giftType}`,
+    txRef,
+    safeAmount,
+    currency
+  ).run();
+
+  return c.json({
+    tx_ref: txRef,
+    amount: safeAmount,
+    currency,
+    giftType,
+    publicKey: c.env.FLUTTERWAVE_PUBLIC_KEY || c.env.VITE_FLUTTERWAVE_PUBLIC_KEY || undefined,
+  });
+});
 // Map a tier marker resource_id back to the tier (e.g. 'tier:pro' → 'pro').
 const tierFromResourceId = (resourceId: string): string =>
   resourceId.startsWith('tier:') ? resourceId.slice('tier:'.length) : '';

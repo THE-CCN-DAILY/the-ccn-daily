@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import Card from '../components/Card';
 import { CreditCardIcon, DbIcon, CheckIcon } from '../components/icons';
@@ -10,10 +10,12 @@ import { db } from '../firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { handleFirestoreError, OperationType } from '../utils/firestoreErrorHandler';
 import { useFlutterwave, closePaymentModal } from 'flutterwave-react-v3';
+import { createGivingIntent, type GivingIntentResult } from '../services/givingService';
 
-const FLUTTERWAVE_PUBLIC_KEY = (import.meta as any).env.VITE_FLUTTERWAVE_PUBLIC_KEY || '';
+const BUILD_FLUTTERWAVE_PUBLIC_KEY = (import.meta as any).env.VITE_FLUTTERWAVE_PUBLIC_KEY || '';
 const DEMO_KEY_FRAGMENT = 'SANDBOX' + 'DEMOKEY';
-const isGivingConfigured = /^FLWPUBK(_TEST)?-/.test(FLUTTERWAVE_PUBLIC_KEY) && !FLUTTERWAVE_PUBLIC_KEY.includes(DEMO_KEY_FRAGMENT);
+const isUsableGivingKey = (key: string | undefined): key is string =>
+  !!key && /^FLWPUBK(_TEST)?-/.test(key) && !key.includes(DEMO_KEY_FRAGMENT);
 
 import { useNotifications } from '../contexts/NotificationContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -25,13 +27,14 @@ const GivingPage: React.FC = () => {
   const [type, setType] = useState<'one-time' | 'monthly'>('monthly');
   const [isProcessing, setIsProcessing] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [intent, setIntent] = useState<GivingIntentResult | null>(null);
 
   // Flutterwave configuration
   const config = {
-    public_key: FLUTTERWAVE_PUBLIC_KEY,
-    tx_ref: Date.now().toString(),
-    amount: amount,
-    currency: 'USD',
+    public_key: intent?.publicKey || BUILD_FLUTTERWAVE_PUBLIC_KEY,
+    tx_ref: intent?.tx_ref || 'pending-giving-intent',
+    amount: intent?.amount || amount,
+    currency: intent?.currency || 'USD',
     payment_options: 'card,mobilemoney,ussd',
     customer: {
       email: user?.email || 'donor@example.com',
@@ -47,35 +50,57 @@ const GivingPage: React.FC = () => {
 
   const handleFlutterPayment = useFlutterwave(config);
 
-  const handlePayment = () => {
-    if (!isGivingConfigured) {
-      notify('Giving is being connected. Please contact support to give today.', 'info');
-      return;
-    }
+  const handlePayment = async () => {
     setIsProcessing(true);
-    
+    try {
+      const result = await createGivingIntent({
+        amount,
+        giftType: type,
+        donorName: user?.displayName || 'Generous Donor',
+        donorEmail: user?.email || undefined,
+        userId: user?.uid,
+      });
+      const publicKey = result.publicKey || BUILD_FLUTTERWAVE_PUBLIC_KEY;
+      if (!isUsableGivingKey(publicKey)) {
+        setIsProcessing(false);
+        notify('Giving is being connected. Please contact support to give today.', 'info');
+        return;
+      }
+      setIntent(result);
+    } catch (error: any) {
+      setIsProcessing(false);
+      notify(error?.message || 'Giving could not be prepared. Please try again.', 'error');
+    }
+  };
+
+  useEffect(() => {
+    if (!intent) return;
     handleFlutterPayment({
       callback: async (response) => {
          closePaymentModal();
          if (response.status === 'successful') {
-             await recordDonation();
+             await recordDonation(intent.tx_ref);
+             setIntent(null);
          } else {
              setIsProcessing(false);
+             setIntent(null);
              notify('Payment was not successful. Please try again.', 'error');
          }
       },
       onClose: () => {
         setIsProcessing(false);
+        setIntent(null);
       },
     });
-  };
+  }, [intent, handleFlutterPayment]);
 
-  const recordDonation = async () => {
+  const recordDonation = async (txRef: string) => {
     try {
       await addDoc(collection(db, 'donations'), {
         amount,
         type,
         method: 'flutterwave',
+        txRef,
         userUid: user?.uid || null,
         userEmail: user?.email || null,
         status: 'completed',

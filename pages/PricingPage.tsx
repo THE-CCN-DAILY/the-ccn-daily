@@ -32,8 +32,9 @@ import { createPaymentIntent, getUserSubscription, type PaymentIntentResult } fr
 const BUILD_FLUTTERWAVE_KEY = (import.meta as any).env.VITE_FLUTTERWAVE_PUBLIC_KEY || '';
 
 // A usable key is a real Flutterwave publishable key and NOT the old sandbox demo.
+const DEMO_KEY_FRAGMENT = 'SANDBOX' + 'DEMOKEY';
 const isUsableFlwKey = (key: string | undefined): key is string =>
-  !!key && /^FLWPUBK(_TEST)?-/.test(key) && !key.includes('SANDBOXDEMOKEY');
+  !!key && /^FLWPUBK(_TEST)?-/.test(key) && !key.includes(DEMO_KEY_FRAGMENT);
 
 // After a successful charge the Flutterwave webhook grants the entitlement server-side.
 // Poll the D1 readback a few times so the UI reflects the grant before refreshing.

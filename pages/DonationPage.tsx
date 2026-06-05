@@ -5,11 +5,13 @@ import { db } from '../firebase';
 import { useAuth } from '../contexts/AuthContext';
 import { useNotifications } from '../contexts/NotificationContext';
 import { useFlutterwave, closePaymentModal } from 'flutterwave-react-v3';
+import { createGivingIntent, type GivingIntentResult } from '../services/givingService';
 
-const FLUTTERWAVE_PUBLIC_KEY =
+const BUILD_FLUTTERWAVE_PUBLIC_KEY =
   (import.meta as any).env.VITE_FLUTTERWAVE_PUBLIC_KEY || '';
 const DEMO_KEY_FRAGMENT = 'SANDBOX' + 'DEMOKEY';
-const isGivingConfigured = /^FLWPUBK(_TEST)?-/.test(FLUTTERWAVE_PUBLIC_KEY) && !FLUTTERWAVE_PUBLIC_KEY.includes(DEMO_KEY_FRAGMENT);
+const isUsableGivingKey = (key: string | undefined): key is string =>
+  !!key && /^FLWPUBK(_TEST)?-/.test(key) && !key.includes(DEMO_KEY_FRAGMENT);
 
 const EASE: [number, number, number, number] = [0.2, 0.6, 0.2, 1];
 
@@ -155,6 +157,7 @@ const DonationPage: React.FC = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [showThankYou, setShowThankYou] = useState(false);
   const [previousDonation, setPreviousDonation] = useState<{ amount: number; tier: string } | null>(null);
+  const [intent, setIntent] = useState<GivingIntentResult | null>(null);
 
   useEffect(() => {
     if (!user?.uid) return;
@@ -185,10 +188,10 @@ const DonationPage: React.FC = () => {
     : (selectedTier?.amount ?? 25);
 
   const flutterwaveConfig = {
-    public_key: FLUTTERWAVE_PUBLIC_KEY,
-    tx_ref: `ccn-give-${Date.now()}`,
-    amount: effectiveAmount,
-    currency: 'USD',
+    public_key: intent?.publicKey || BUILD_FLUTTERWAVE_PUBLIC_KEY,
+    tx_ref: intent?.tx_ref || 'pending-giving-intent',
+    amount: intent?.amount || effectiveAmount,
+    currency: intent?.currency || 'USD',
     payment_options: 'card,mobilemoney,ussd',
     customer: {
       email: user?.email || 'donor@theccndaily.com',
@@ -220,31 +223,51 @@ const DonationPage: React.FC = () => {
     }
   };
 
-  const handleGive = () => {
-    if (!isGivingConfigured) {
-      notify('Giving is being connected. Please contact support to give today.', 'info');
-      return;
-    }
+  const handleGive = async () => {
     setIsProcessing(true);
-    const txRef = `ccn-give-${Date.now()}`;
+    try {
+      const result = await createGivingIntent({
+        amount: effectiveAmount,
+        giftType,
+        donorName: user?.displayName || 'Generous Steward',
+        donorEmail: user?.email || undefined,
+        userId: user?.uid,
+      });
+      const publicKey = result.publicKey || BUILD_FLUTTERWAVE_PUBLIC_KEY;
+      if (!isUsableGivingKey(publicKey)) {
+        setIsProcessing(false);
+        notify('Giving is being connected. Please contact support to give today.', 'info');
+        return;
+      }
+      setIntent(result);
+    } catch (error: any) {
+      setIsProcessing(false);
+      notify(error?.message || 'Giving could not be prepared. Please try again.', 'error');
+    }
+  };
 
+  useEffect(() => {
+    if (!intent) return;
     handleFlutterPayment({
       callback: async (response) => {
         closePaymentModal();
         if (response.status === 'successful') {
-          await recordDonation(txRef);
+          await recordDonation(intent.tx_ref);
           setIsProcessing(false);
           setShowThankYou(true);
+          setIntent(null);
         } else {
           setIsProcessing(false);
+          setIntent(null);
           notify('Payment was not completed. Please try again.', 'error');
         }
       },
       onClose: () => {
         setIsProcessing(false);
+        setIntent(null);
       },
     });
-  };
+  }, [intent, handleFlutterPayment]);
 
   const handleShare = async () => {
     try {
