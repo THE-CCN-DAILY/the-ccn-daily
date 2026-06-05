@@ -103,7 +103,7 @@ const TREND_SUGGESTIONS = [
   {
     title: 'Email digest re-engagement for lapsed users',
     detail:
-      'Users who haven\'t opened the app in 14 days respond well to a single "You left something unfinished" email that links to their last journal entry or half-completed challenge. Avoid generic re-engagement copy.',
+      'Users who haven\'t opened the app in 14 days respond well to a single gentle return email that links to their last journal entry or recent challenge. Avoid generic re-engagement copy.',
     urgency: 'Medium',
     color: '#f59e0b',
   },

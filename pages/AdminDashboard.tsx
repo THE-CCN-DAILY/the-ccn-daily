@@ -887,7 +887,7 @@ const AdminDashboard: React.FC = () => {
                                                 value={flutterwaveKey}
                                                 onChange={(e) => setFlutterwaveKey(e.target.value)}
                                                 className="w-full bg-brand-dark border border-brand-border rounded-xl p-3 text-brand-text-primary focus:border-brand-accent outline-none font-mono text-sm" 
-                                                placeholder="FLWPUBK_TEST-..."
+                                                placeholder="FLWPUBK-..."
                                             />
                                             <p className="text-[12px] text-brand-text-secondary mt-2 italic">
                                                 This key is used for client-side payment initialization. Keep it secure.

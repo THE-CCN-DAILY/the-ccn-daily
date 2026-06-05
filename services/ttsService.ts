@@ -1,27 +1,75 @@
-// Mock Text-to-Speech service to simulate premium narration.
+export type NarratorVoice = 'Zephyr' | 'Nova' | 'Kore';
 
-/**
- * In a real application, this service would call a server-side narration
- * route. It would send the text and selected voice, and receive an audio
- * stream in response.
- *
- * For this prototype, we will return a pre-recorded, high-quality
- * audio file to demonstrate the difference in user experience.
- */
+export interface ReaderNarrationController {
+  pause: () => void;
+  resume: () => void;
+  stop: () => void;
+}
 
-// Using distinct, short, self-contained audio clips to represent different narration voices.
-// This avoids network errors in the sandbox and provides clear audible feedback for voice selection.
-const voiceAudioMap = {
-    Zephyr: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
-    Nova: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3',
-    Kore: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3',
+type NarrationEvents = {
+  onStart?: () => void;
+  onPause?: () => void;
+  onResume?: () => void;
+  onEnd?: () => void;
+  onError?: () => void;
 };
 
+const voiceProfiles: Record<NarratorVoice, { rate: number; pitch: number; preferredIndex: number }> = {
+  Zephyr: { rate: 0.92, pitch: 1.04, preferredIndex: 0 },
+  Nova: { rate: 0.98, pitch: 1.0, preferredIndex: 1 },
+  Kore: { rate: 0.88, pitch: 0.92, preferredIndex: 2 },
+};
 
-export const getPremiumTtsAudio = async (text: string, voice: 'Zephyr' | 'Nova' | 'Kore'): Promise<string> => {
-    // Simulate network delay
-    await new Promise(resolve => setTimeout(resolve, 800));
+const loadVoices = async (): Promise<SpeechSynthesisVoice[]> => {
+  if (!('speechSynthesis' in window)) return [];
 
-    // Return the specific audio file for the selected voice.
-    return voiceAudioMap[voice];
+  const existing = window.speechSynthesis.getVoices();
+  if (existing.length) return existing;
+
+  return new Promise((resolve) => {
+    const timeout = window.setTimeout(() => resolve(window.speechSynthesis.getVoices()), 500);
+    window.speechSynthesis.onvoiceschanged = () => {
+      window.clearTimeout(timeout);
+      resolve(window.speechSynthesis.getVoices());
+    };
+  });
+};
+
+export const startReaderNarration = async (
+  text: string,
+  voice: NarratorVoice,
+  events: NarrationEvents = {},
+): Promise<ReaderNarrationController> => {
+  if (!('speechSynthesis' in window) || !('SpeechSynthesisUtterance' in window)) {
+    throw new Error('Narration is not supported in this browser.');
+  }
+
+  const trimmedText = text.trim();
+  if (!trimmedText) throw new Error('There is no text to read.');
+
+  window.speechSynthesis.cancel();
+
+  const profile = voiceProfiles[voice];
+  const voices = await loadVoices();
+  const englishVoices = voices.filter((availableVoice) =>
+    availableVoice.lang.toLowerCase().startsWith('en')
+  );
+
+  const utterance = new SpeechSynthesisUtterance(trimmedText);
+  utterance.rate = profile.rate;
+  utterance.pitch = profile.pitch;
+  utterance.voice = englishVoices[profile.preferredIndex] || englishVoices[0] || voices[0] || null;
+  utterance.onstart = () => events.onStart?.();
+  utterance.onpause = () => events.onPause?.();
+  utterance.onresume = () => events.onResume?.();
+  utterance.onend = () => events.onEnd?.();
+  utterance.onerror = () => events.onError?.();
+
+  window.speechSynthesis.speak(utterance);
+
+  return {
+    pause: () => window.speechSynthesis.pause(),
+    resume: () => window.speechSynthesis.resume(),
+    stop: () => window.speechSynthesis.cancel(),
+  };
 };

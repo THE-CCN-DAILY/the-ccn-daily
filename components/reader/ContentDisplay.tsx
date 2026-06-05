@@ -10,7 +10,7 @@ import ReaderFooter from '../ReaderFooter';
 import type { Highlight, ReaderSettings } from '../../types';
 import useMediaQuery from '../../hooks/useMediaQuery';
 import HighlightActionPopover from './HighlightActionPopover';
-import { getPremiumTtsAudio } from '../../services/ttsService';
+import { startReaderNarration, type ReaderNarrationController } from '../../services/ttsService';
 import VoiceSelectionPopover from './VoiceSelectionPopover';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotifications } from '../../contexts/NotificationContext';
@@ -54,7 +54,7 @@ const ContentDisplay: React.FC<ContentDisplayProps> = ({ contentId, initialConte
 
   const readerCardRef = useRef<HTMLDivElement>(null);
   const articleRef = useRef<HTMLDivElement>(null);
-  const ttsAudioRef = useRef<HTMLAudioElement | null>(null);
+  const narrationRef = useRef<ReaderNarrationController | null>(null);
   
   useEffect(() => {
     if (user) {
@@ -72,12 +72,8 @@ const ContentDisplay: React.FC<ContentDisplayProps> = ({ contentId, initialConte
 
   useEffect(() => {
     return () => {
-      const audio = ttsAudioRef.current;
-      if (audio) {
-        audio.pause();
-        audio.src = '';
-        ttsAudioRef.current = null;
-      }
+      narrationRef.current?.stop();
+      narrationRef.current = null;
       setIsReadingAloud(false);
     };
   }, [contentId]);
@@ -85,56 +81,44 @@ const ContentDisplay: React.FC<ContentDisplayProps> = ({ contentId, initialConte
   const handleSettingsChange = (newSettings: Partial<ReaderSettings>) => {
       setSettings(prev => ({ ...prev, ...newSettings }));
       if (newSettings.narratorVoice && isReadingAloud) {
-          const audio = ttsAudioRef.current;
-          if (audio) {
-            audio.pause();
-            audio.src = '';
-          }
+          narrationRef.current?.stop();
+          narrationRef.current = null;
+          setIsReadingAloud(false);
       }
   };
   
   const handleToggleReadAloud = async () => {
     if (!articleRef.current) return;
-    const audio = ttsAudioRef.current;
+    const narration = narrationRef.current;
 
-    if (audio && !audio.paused) {
-      audio.pause();
+    if (narration && isReadingAloud) {
+      narration.pause();
       return;
     }
 
-    if (audio) {
-      if (audio.ended) audio.currentTime = 0;
-      audio.play().catch(() => { /* autoplay blocked — user interaction required */ });
+    if (narration) {
+      narration.resume();
       return;
     }
 
     try {
       const textToSpeak = articleRef.current.innerText;
-      const audioUrl = await getPremiumTtsAudio(textToSpeak, settings.narratorVoice);
-      const newAudio = new Audio();
-      
-      const handleCanPlay = () => {
-        newAudio.play().catch(err => {
-          if (err.name !== 'AbortError') {
-            notify("Sorry, an audio playback error occurred.", "error");
-          }
-        });
-      };
-
-      newAudio.addEventListener('canplay', handleCanPlay, { once: true });
-      newAudio.onplay = () => setIsReadingAloud(true);
-      newAudio.onpause = () => setIsReadingAloud(false);
-      newAudio.onended = () => setIsReadingAloud(false);
-      newAudio.onerror = () => {
-        notify("Sorry, an audio playback error occurred.", "error");
-        setIsReadingAloud(false);
-        ttsAudioRef.current = null;
-      };
-
-      newAudio.src = audioUrl;
-      ttsAudioRef.current = newAudio;
+      narrationRef.current = await startReaderNarration(textToSpeak, settings.narratorVoice, {
+        onStart: () => setIsReadingAloud(true),
+        onPause: () => setIsReadingAloud(false),
+        onResume: () => setIsReadingAloud(true),
+        onEnd: () => {
+          setIsReadingAloud(false);
+          narrationRef.current = null;
+        },
+        onError: () => {
+          notify("Sorry, narration could not be played in this browser.", "error");
+          setIsReadingAloud(false);
+          narrationRef.current = null;
+        },
+      });
     } catch (error) {
-      notify("Sorry, the premium audio narration could not be played.", "error");
+      notify(error instanceof Error ? error.message : "Sorry, narration could not be played.", "error");
       setIsReadingAloud(false);
     }
   };

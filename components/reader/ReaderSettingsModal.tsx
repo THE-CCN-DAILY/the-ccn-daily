@@ -8,11 +8,10 @@ interface ReaderSettingsModalProps {
     onClose: () => void;
 }
 
-// FIX: Add `as const` to ensure `font.class` is typed as a literal, not a generic string.
 const fonts = [
     { name: 'Serif', class: 'font-serif' },
     { name: 'Sans-serif', class: 'font-sans' },
-    { name: 'Dyslexic Friendly', class: 'font-mono' }, // Using mono as a proxy for this prototype
+    { name: 'Dyslexia Friendly', class: 'font-readable' },
 ] as const;
 
 const fontSizes = [14, 16, 18, 20, 24];

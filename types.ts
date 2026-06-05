@@ -83,7 +83,7 @@ export interface Highlight {
 }
 
 export interface ReaderSettings {
-  fontFamily: 'font-serif' | 'font-sans' | 'font-mono';
+  fontFamily: 'font-serif' | 'font-sans' | 'font-readable';
   fontSize: number; // This is an index for an array of sizes
   lineSpacing: 'tight' | 'normal' | 'relaxed' | 'loose';
   theme: Theme;

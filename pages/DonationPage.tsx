@@ -5,7 +5,11 @@ import { db } from '../firebase';
 import { useAuth } from '../contexts/AuthContext';
 import { useNotifications } from '../contexts/NotificationContext';
 import { useFlutterwave, closePaymentModal } from 'flutterwave-react-v3';
-import { createGivingIntent, type GivingIntentResult } from '../services/givingService';
+import {
+  createGivingIntent,
+  waitForGivingConfirmation,
+  type GivingIntentResult,
+} from '../services/givingService';
 
 const BUILD_FLUTTERWAVE_PUBLIC_KEY =
   (import.meta as any).env.VITE_FLUTTERWAVE_PUBLIC_KEY || '';
@@ -252,9 +256,19 @@ const DonationPage: React.FC = () => {
       callback: async (response) => {
         closePaymentModal();
         if (response.status === 'successful') {
-          await recordDonation(intent.tx_ref);
+          const status = await waitForGivingConfirmation(intent.tx_ref);
+          if (status.status === 'active') {
+            await recordDonation(intent.tx_ref);
+            setShowThankYou(true);
+          } else {
+            notify(
+              status.status === 'failed'
+                ? 'Payment could not be verified. Please contact support with your transaction reference.'
+                : 'Payment was received by Flutterwave and is still confirming. Please refresh in a moment.',
+              status.status === 'failed' ? 'error' : 'info',
+            );
+          }
           setIsProcessing(false);
-          setShowThankYou(true);
           setIntent(null);
         } else {
           setIsProcessing(false);

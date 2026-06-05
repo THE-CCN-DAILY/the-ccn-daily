@@ -1,7 +1,11 @@
 import React, { useState } from 'react';
 import { useFlutterwave, closePaymentModal } from 'flutterwave-react-v3';
 import { motion, AnimatePresence } from 'motion/react';
-import { createGivingIntent, type GivingIntentResult } from '../services/givingService';
+import {
+  createGivingIntent,
+  waitForGivingConfirmation,
+  type GivingIntentResult,
+} from '../services/givingService';
 
 const BUILD_FLUTTERWAVE_PUBLIC_KEY = (import.meta as any).env.VITE_FLUTTERWAVE_PUBLIC_KEY || '';
 const DEMO_KEY_FRAGMENT = 'SANDBOX' + 'DEMOKEY';
@@ -75,10 +79,20 @@ const PublicGivingPage: React.FC = () => {
   React.useEffect(() => {
     if (!intent) return;
     handleFlutterPayment({
-      callback: (response) => {
+      callback: async (response) => {
         closePaymentModal();
         if (response.status === 'successful') {
-          setSuccess(true);
+          const status = await waitForGivingConfirmation(intent.tx_ref);
+          if (status.status === 'active') {
+            setSuccess(true);
+          } else {
+            setIsProcessing(false);
+            setError(
+              status.status === 'failed'
+                ? 'Payment could not be verified. Please contact support with your transaction reference.'
+                : 'Payment was received by Flutterwave and is still confirming. Please refresh in a moment.',
+            );
+          }
           setIntent(null);
         } else {
           setIsProcessing(false);

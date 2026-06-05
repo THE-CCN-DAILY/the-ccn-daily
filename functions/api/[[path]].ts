@@ -3567,6 +3567,46 @@ app.post('/api/giving/intent', async (c) => {
     publicKey: c.env.FLUTTERWAVE_PUBLIC_KEY || c.env.VITE_FLUTTERWAVE_PUBLIC_KEY || undefined,
   });
 });
+
+// GET /api/giving/status/:txRef
+// Lets the client read back the server-verified donation state after Flutterwave
+// calls the webhook. This endpoint intentionally returns no donor identity.
+app.get('/api/giving/status/:txRef', async (c) => {
+  const txRef = c.req.param('txRef');
+  if (!isSafeId(txRef) || !txRef.startsWith('give_')) {
+    return c.json({ error: 'Invalid giving reference' }, 400);
+  }
+  if (!c.env.DB) return c.json({ error: 'D1 database binding is not configured' }, 503);
+
+  const purchase = await c.env.DB.prepare(
+    `SELECT tx_ref, resource_id, amount, currency, status
+     FROM user_purchases
+     WHERE tx_ref = ? AND resource_id LIKE 'donation:%'
+     LIMIT 1`
+  ).bind(txRef).first<{
+    tx_ref: string;
+    resource_id: string;
+    amount: number;
+    currency: string;
+    status: string;
+  }>();
+
+  if (!purchase) return c.json({ tx_ref: txRef, status: 'unknown' });
+
+  const giftType = purchase.resource_id === 'donation:monthly' ? 'monthly' : 'one-time';
+  const status =
+    purchase.status === 'active' || purchase.status === 'failed' || purchase.status === 'pending'
+      ? purchase.status
+      : 'unknown';
+
+  return c.json({
+    tx_ref: purchase.tx_ref,
+    status,
+    amount: Number(purchase.amount || 0),
+    currency: purchase.currency || 'USD',
+    giftType,
+  });
+});
 // Map a tier marker resource_id back to the tier (e.g. 'tier:pro' → 'pro').
 const tierFromResourceId = (resourceId: string): string =>
   resourceId.startsWith('tier:') ? resourceId.slice('tier:'.length) : '';
@@ -3643,6 +3683,13 @@ app.post('/api/payments/flutterwave/webhook', async (c) => {
       `UPDATE user_purchases SET status = 'failed' WHERE tx_ref = ? AND status = 'pending'`
     ).bind(txRef).run();
     return c.json({ received: true, verified: false });
+  }
+
+  if (purchase.resource_id.startsWith('donation:')) {
+    await c.env.DB.prepare(
+      `UPDATE user_purchases SET status = 'active' WHERE tx_ref = ? AND status = 'pending'`
+    ).bind(txRef).run();
+    return c.json({ received: true, donationRecorded: true });
   }
 
   const tier = tierFromResourceId(purchase.resource_id);

@@ -77,7 +77,7 @@ Done:
 
 Next:
 
-- Continue the user-visible copy audit for “generate,” “prototype,” “coming soon,” and tech-first wording.
+- Continue the user-visible copy audit for tech-first wording and any labels that imply a feature is not usable today.
 - Convert admin labels from operational jargon to stewardship language while preserving clarity.
 - Polish landing/pricing headlines for warmer specificity.
 
@@ -124,16 +124,17 @@ Required before production:
 ## Current Evidence
 
 - Latest pushed branch: `phase-e-visual-authoring`
-- Latest functional checkpoint: `e4c8d7b feat: complete voice and visual prayer surfaces`
+- Latest functional checkpoint: `f20a618 feat: create server-owned giving intents`
 - Latest deployed staging alias: `https://staging.project-phoenix-ccn-daily.pages.dev/`
-- Latest staging deployment URL: `https://be648eb3.project-phoenix-ccn-daily.pages.dev`
-- Current in-progress checkpoint: books/catalog source-of-truth alignment, server-created giving intents, and remaining signed-in dashboard/admin QA.
+- Latest staging deployment URL: `https://96469d2b.project-phoenix-ccn-daily.pages.dev`
+- Current in-progress checkpoint: donation webhook completion/readback, books/admin catalog consolidation, and remaining signed-in dashboard/admin QA.
 - Verified gates at checkpoint:
   - `npm run lint` passed
   - `npm run build` passed
   - `npm run cf:typecheck` passed
   - Wrangler staging deploy passed
-  - forbidden phrase scan returned no matches for the highest-risk unfinished feature terms across app code, except internal/admin-only background technology references that remain under review
+  - `GET /api/giving/status/give_missing` on staging returned `200` with `status: "unknown"`, confirming the giving readback route is live
+  - forbidden phrase scan returned no public “coming soon” labels in the reviewed app surfaces; remaining internal/admin technology references are being reviewed for clarity
 
 ## Current Expert Meeting Notes
 
@@ -153,8 +154,9 @@ Required before production:
 - Prayer Companion has working browser speech/type flow and does not depend on an external voice provider.
 - Visual Sanctuary has a working interactive atmosphere and does not depend on cinematic video generation.
 - Member Books Library now reads the Cloudflare/D1 catalog first for published books, with Firestore as a fallback.
-- Hosted ebook files open as real browser/download editions instead of a parser-pending placeholder.
+- Hosted ebook files open as real browser/download editions.
 - Giving pages now request a server-created donation intent before opening Flutterwave, so amount, currency, public key, and tx_ref come from Cloudflare rather than the browser.
+- Donation webhooks now mark verified giving rows active without granting subscription entitlements, and giving pages wait for Cloudflare/D1 readback before showing thank-you states.
 - Giving pages no longer ship the Flutterwave sandbox demo key as a fallback; missing configuration stops payment launch with a clear message.
 - Admin content, announcement, scholarship review, diagnostics, growth, release ops, and role-gated studio routes exist.
 - Cloudflare Pages Functions, D1-backed subscription/payment readback, R2 upload path, and Workers background service routing are present.
@@ -164,13 +166,13 @@ Required before production:
 - Some docs and internal admin strategy pages still describe background technology as a differentiator; public app surfaces should keep selling Scripture, practice, audio, courses, prayer, and community.
 - Data source boundaries are still mixed: Firestore remains in auth/content/community/settings/scholarship flows while D1 backs selected Cloudflare endpoints and subscription readback.
 - Family and leader dashboards need end-to-end member/seat/group workflows verified with real data, not only visual polish.
-- Donations need the same server-authoritative intent/webhook/readback rigor as subscriptions.
+- Donations still need donor receipt emails, admin giving reports, and a dedicated long-term giving table, but the live gift confirmation path now uses server-authoritative intent, webhook verification, and readback.
 - Visual QA still needs signed-in screenshots for dashboard, admin dashboard, family dashboard, leader dashboard, scholarship application/review, Prayer Companion, and Visual Sanctuary.
 
 ### Feature Integration Findings
 
 - Books are now member-visible from the D1 catalog first, but admin write surfaces still need consolidation so all book creation paths use the same catalog service.
-- Donations are safer because sandbox fallback keys were removed and giving now starts with a server-created intent. Remaining production hardening: donation-specific webhook completion, durable donation readback, and donor receipt/admin reporting.
+- Donations are safer because sandbox fallback keys were removed, giving starts with a server-created intent, the webhook completes donation rows after verification, and clients read back verified status before showing success. Remaining production hardening: donor receipt/admin reporting and a dedicated giving ledger.
 - Admin resource uploads are detached from the D1 content catalog. Resource Manager should either write through the same catalog service or be clearly limited to a non-public holding area.
 - Settings can display a stale plan label if Firestore user role data and D1 subscription data disagree. Access gates are stronger than the label, but the label affects trust.
 - Prayer Circle is device-local while Prayer Wall is API-backed. This is acceptable only if Prayer Circle remains positioned as a personal practice rather than a cross-device prayer record.
@@ -180,7 +182,7 @@ Required before production:
 ### Immediate Launch Plan
 
 1. Finish signed-in visual QA and copy QA on the member dashboards, admin dashboards, scholarship flow, Prayer Companion, and Visual Sanctuary.
-2. Complete donations after the new server intent: donation-specific webhook completion, receipt/readback proof, and admin reporting.
+2. Complete donation operations after verified gift confirmation: donor receipts, admin reporting, and a dedicated giving ledger.
 3. Pick and document the source of truth for each data domain: books, announcements, donations, highlights, scholarships, settings, household seats, and group cohorts.
 4. Add Turnstile and durable rate limiting to public submissions and high-cost background routes.
 5. Add Cloudflare cache/KV strategy for public RSS/content and move D1 schema changes into migrations.

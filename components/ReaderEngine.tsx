@@ -28,8 +28,6 @@ const ReaderEngine: React.FC<ReaderEngineProps> = ({ articleRef, initialContent,
             return <div dangerouslySetInnerHTML={{ __html: initialContent }} />;
         }
         let content = initialContent;
-        // A more robust solution for a production app would use range-based highlighting to avoid issues with repeated text.
-        // For this prototype, string replacement demonstrates the feature effectively.
         // Sorting by length prevents smaller highlights from breaking larger ones during replacement.
         [...highlights]
             .sort((a, b) => b.text.length - a.text.length)
