@@ -126,8 +126,8 @@ Required before production:
 - Latest pushed branch: `phase-e-visual-authoring`
 - Latest functional checkpoint: `8da3e06 feat: complete giving and reader media flows`
 - Latest deployed staging alias: `https://staging.project-phoenix-ccn-daily.pages.dev/`
-- Latest staging deployment URL: `https://917c80d1.project-phoenix-ccn-daily.pages.dev`
-- Current in-progress checkpoint: D1-backed account plan labels, books/admin catalog consolidation, and remaining signed-in dashboard/admin QA.
+- Latest staging deployment URL: `https://bebdb1a3.project-phoenix-ccn-daily.pages.dev`
+- Current in-progress checkpoint: books/admin catalog consolidation and remaining signed-in dashboard/admin QA.
 - Verified gates at checkpoint:
   - `npm run lint` passed
   - `npm run build` passed
@@ -135,6 +135,7 @@ Required before production:
   - Wrangler staging deploy passed
   - `GET /api/giving/status/give_missing` on staging returned `200` with `status: "unknown"`, confirming the giving readback route is live
   - Auth/Settings tier readback build deployed to staging at `https://917c80d1.project-phoenix-ccn-daily.pages.dev`
+  - Books Library admin catalog consolidation build deployed to staging at `https://bebdb1a3.project-phoenix-ccn-daily.pages.dev`
   - forbidden phrase scan returned no public “coming soon” labels in the reviewed app surfaces; remaining internal/admin technology references are being reviewed for clarity
 
 ## Current Expert Meeting Notes
@@ -160,6 +161,7 @@ Required before production:
 - Donation webhooks now mark verified giving rows active without granting subscription entitlements, and giving pages wait for Cloudflare/D1 readback before showing thank-you states.
 - Giving pages no longer ship the Flutterwave sandbox demo key as a fallback; missing configuration stops payment launch with a clear message.
 - Account settings and app-level user tier hydration now prefer D1 subscription readback, so plan labels and access-sensitive surfaces no longer rely only on stale Firestore profile data.
+- Books Library admin writes now go through the Cloudflare/D1 books catalog first, with Firestore kept only as a compatibility fallback for older records.
 - Admin content, announcement, scholarship review, diagnostics, growth, release ops, and role-gated studio routes exist.
 - Cloudflare Pages Functions, D1-backed subscription/payment readback, R2 upload path, and Workers background service routing are present.
 
@@ -173,7 +175,7 @@ Required before production:
 
 ### Feature Integration Findings
 
-- Books are now member-visible from the D1 catalog first, but admin write surfaces still need consolidation so all book creation paths use the same catalog service.
+- Books are now member-visible from the D1 catalog first, and the Books Library admin surface writes through the same Cloudflare catalog service. Remaining hardening is richer metadata migration for multi-format/POD purchase links.
 - Donations are safer because sandbox fallback keys were removed, giving starts with a server-created intent, the webhook completes donation rows after verification, and clients read back verified status before showing success. Remaining production hardening: donor receipt/admin reporting and a dedicated giving ledger.
 - Admin resource uploads are detached from the D1 content catalog. Resource Manager should either write through the same catalog service or be clearly limited to a non-public holding area.
 - Settings plan labels now read from D1 subscription state first. Remaining work is to complete the same source-of-truth decision for every settings preference domain.
