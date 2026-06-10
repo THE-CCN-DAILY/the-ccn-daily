@@ -438,6 +438,27 @@ CREATE TABLE IF NOT EXISTS group_assignments (
 
 CREATE INDEX IF NOT EXISTS idx_group_assignments_leader_created ON group_assignments(leader_id, created_at DESC);
 
+-- Abuse protection ----------------------------------------------------------
+-- Durable fixed-window rate limit counters shared across worker isolates.
+CREATE TABLE IF NOT EXISTS rate_limit_hits (
+  scope TEXT NOT NULL,
+  bucket_key TEXT NOT NULL,
+  window_start INTEGER NOT NULL,
+  hits INTEGER NOT NULL DEFAULT 0,
+  PRIMARY KEY (scope, bucket_key, window_start)
+);
+
+-- Contact / help form submissions written by /api/contact.
+CREATE TABLE IF NOT EXISTS help_messages (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  email TEXT NOT NULL,
+  category TEXT NOT NULL,
+  message TEXT NOT NULL,
+  ip_hint TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
 INSERT OR IGNORE INTO blog_posts (
   id,
   slug,

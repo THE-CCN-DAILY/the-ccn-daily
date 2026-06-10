@@ -65,6 +65,9 @@ type Env = {
   // Comma-separated extra admin emails to receive attention alerts (beyond the
   // ministry allowlist). Set via wrangler/dashboard; safe to leave unset.
   ADMIN_NOTIFY_EMAILS?: string;
+  // Cloudflare Turnstile secret (wrangler secret). When unset, Turnstile
+  // verification is skipped and D1 rate limiting remains the abuse floor.
+  TURNSTILE_SECRET_KEY?: string;
 };
 
 const app = new Hono<{
@@ -768,6 +771,97 @@ const requireAdmin = (c: any) => {
   }, 401);
 };
 
+// ─── Abuse protection: durable rate limiting + Turnstile ─────────────────────
+// Rate limits are stored in D1 (fixed-window counters) so they survive isolate
+// recycling and apply across all edge locations sharing the database. The table
+// self-provisions like the other ensure* tables, so deploys never depend on a
+// separate schema apply.
+
+const ensureRateLimitTable = async (db: D1DatabaseBinding) => {
+  await db.prepare(
+    `CREATE TABLE IF NOT EXISTS rate_limit_hits (
+      scope TEXT NOT NULL,
+      bucket_key TEXT NOT NULL,
+      window_start INTEGER NOT NULL,
+      hits INTEGER NOT NULL DEFAULT 0,
+      PRIMARY KEY (scope, bucket_key, window_start)
+    )`
+  ).run();
+};
+
+const requestIp = (c: any) =>
+  c.req.header('CF-Connecting-IP') || c.req.header('x-forwarded-for') || 'unknown';
+
+// Returns null when the request is allowed, or a 429 JSON response when the
+// fixed-window limit is exceeded. Fails open (allows) if D1 is unavailable so
+// an infrastructure hiccup never blocks legitimate ministry traffic.
+const enforceRateLimit = async (
+  c: any,
+  scope: string,
+  key: string,
+  limit: number,
+  windowSeconds: number,
+) => {
+  const db: D1DatabaseBinding | undefined = c.env.DB;
+  if (!db) return null;
+
+  try {
+    await ensureRateLimitTable(db);
+    const nowSeconds = Math.floor(Date.now() / 1000);
+    const windowStart = Math.floor(nowSeconds / windowSeconds) * windowSeconds;
+
+    const row = await db.prepare(
+      `INSERT INTO rate_limit_hits (scope, bucket_key, window_start, hits)
+       VALUES (?, ?, ?, 1)
+       ON CONFLICT(scope, bucket_key, window_start) DO UPDATE SET hits = hits + 1
+       RETURNING hits`
+    ).bind(scope, key, windowStart).first<{ hits: number }>();
+
+    // Opportunistic cleanup of expired windows (~5% of requests).
+    if (Math.random() < 0.05) {
+      await db.prepare(
+        `DELETE FROM rate_limit_hits WHERE window_start < ?`
+      ).bind(nowSeconds - windowSeconds * 2).run();
+    }
+
+    if (Number(row?.hits || 0) > limit) {
+      const retryAfter = windowStart + windowSeconds - nowSeconds;
+      return c.json(
+        { error: 'Too many requests. Please wait a moment and try again.' },
+        429,
+        { 'Retry-After': String(Math.max(1, retryAfter)) },
+      );
+    }
+  } catch (error) {
+    console.error('Rate limit check failed', error);
+  }
+
+  return null;
+};
+
+// Verifies a Cloudflare Turnstile token when TURNSTILE_SECRET_KEY is configured.
+// When the secret is not set (e.g. before the widget is provisioned in the
+// dashboard) verification is skipped so the route keeps working — rate limiting
+// above remains the durable floor either way.
+const verifyTurnstile = async (c: any, token: unknown): Promise<boolean> => {
+  const secret = c.env.TURNSTILE_SECRET_KEY;
+  if (!secret) return true;
+  if (typeof token !== 'string' || !token) return false;
+
+  try {
+    const response = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ secret, response: token, remoteip: requestIp(c) }),
+    });
+    const outcome = await response.json() as { success?: boolean };
+    return outcome.success === true;
+  } catch (error) {
+    console.error('Turnstile verification failed', error);
+    return false;
+  }
+};
+
 // SECURITY (C-2): Ensure the authenticated user can only read/write their own data.
 // Returns null (allow) when the token UID matches the requested userId.
 // Returns 401 when no token is present, 403 when a different user's token is present.
@@ -935,6 +1029,10 @@ app.post('/api/ai/generate', async (c) => {
   // SECURITY (H-2): Require a verified Firebase ID token to prevent unauthenticated
   // cost-abuse. Signed-in users get their UID from the auth middleware set above.
   if (!c.get('idTokenUid')) return c.json({ error: 'Authentication required' }, 401);
+
+  // Per-user quota: caps Workers AI cost even from signed-in accounts.
+  const limited = await enforceRateLimit(c, 'ai-generate', String(c.get('idTokenUid')), 30, 600);
+  if (limited) return limited;
 
   const body = await c.req.json();
   const feature = String(body.feature || 'general').trim();
@@ -1801,6 +1899,9 @@ app.get('/api/community/prayer-requests', async (c) => {
 app.post('/api/community/prayer-requests', async (c) => {
   if (!c.env.DB) return c.json({ error: 'D1 database binding is not configured' }, 503);
 
+  const limited = await enforceRateLimit(c, 'prayer-request', requestIp(c), 5, 600);
+  if (limited) return limited;
+
   const body = await c.req.json();
   const text = String(body.text || '').trim();
   const isAnonymous = Boolean(body.isAnonymous);
@@ -1846,6 +1947,9 @@ app.post('/api/community/prayer-requests/:id/pray', async (c) => {
   const id = c.req.param('id');
   if (!isSafeId(id)) return c.json({ error: 'Invalid prayer request id' }, 400);
   if (!c.env.DB) return c.json({ error: 'D1 database binding is not configured' }, 503);
+
+  const limited = await enforceRateLimit(c, 'prayer-tap', requestIp(c), 30, 600);
+  if (limited) return limited;
 
   const body = await c.req.json().catch(() => ({}));
   const userId = String(body.userId || 'anonymous').trim() || 'anonymous';
@@ -3515,20 +3619,26 @@ app.post('/api/contact', async (c) => {
   const origin = c.req.header('origin') ?? '';
   const productionOrigin = c.env.PRODUCTION_ORIGIN ?? 'https://theccndaily.com';
   const allowedOrigins = [productionOrigin, 'http://localhost:5173', 'http://localhost:8788'];
-  if (!allowedOrigins.some(o => origin.startsWith(o))) {
+  const isPagesPreview = /^https:\/\/[a-z0-9-]+\.project-phoenix-ccn-daily\.pages\.dev$/.test(origin);
+  if (!isPagesPreview && !allowedOrigins.some(o => origin.startsWith(o))) {
     return c.json({ error: 'Forbidden' }, 403);
   }
 
-  // ── Rate limiting by IP hash (60 s window per IP)
-  const ip = c.req.header('CF-Connecting-IP') ?? c.req.header('x-forwarded-for') ?? 'unknown';
-  // Simple in-memory rate limit for the worker — CF Workers are single-threaded per isolate
-  // For production, use CF KV. For now, we rely on client-side rate limiting + this validation.
+  // ── Durable rate limiting (D1 fixed window, shared across isolates)
+  const ip = requestIp(c);
+  const limited = await enforceRateLimit(c, 'contact', ip, 3, 600);
+  if (limited) return limited;
 
   let body: Record<string, unknown>;
   try {
     body = await c.req.json();
   } catch {
     return c.json({ error: 'Invalid request body' }, 400);
+  }
+
+  // ── Turnstile (enforced once TURNSTILE_SECRET_KEY is provisioned)
+  if (!(await verifyTurnstile(c, body.turnstileToken))) {
+    return c.json({ error: 'Verification failed. Please refresh and try again.' }, 403);
   }
 
   const name     = typeof body.name     === 'string' ? body.name.trim()     : '';
@@ -3547,6 +3657,17 @@ app.post('/api/contact', async (c) => {
   if (db) {
     try {
       await db.prepare(
+        `CREATE TABLE IF NOT EXISTS help_messages (
+          id TEXT PRIMARY KEY,
+          name TEXT NOT NULL,
+          email TEXT NOT NULL,
+          category TEXT NOT NULL,
+          message TEXT NOT NULL,
+          ip_hint TEXT,
+          created_at TEXT NOT NULL DEFAULT (datetime('now'))
+        )`
+      ).run();
+      await db.prepare(
         `INSERT INTO help_messages (id, name, email, category, message, ip_hint, created_at)
          VALUES (lower(hex(randomblob(8))), ?, ?, ?, ?, ?, datetime('now'))`
       ).bind(
@@ -3556,12 +3677,43 @@ app.post('/api/contact', async (c) => {
         sanitizeInput(message),
         ip.slice(0, 8) // store only first octet hint, not full IP
       ).run();
-    } catch {
-      // Table may not exist yet — still return success so user isn't blocked
+    } catch (error) {
+      console.error('Help message write failed', error);
+      return c.json({ error: 'Your message could not be saved. Please try again.' }, 500);
     }
   }
 
   return c.json({ success: true });
+});
+
+// Admin: read contact/help submissions stored in D1 by /api/contact.
+app.get('/api/admin/help-messages', async (c) => {
+  const denied = requireAdmin(c); if (denied) return denied;
+  if (!c.env.DB) return c.json({ messages: [], source: 'fallback' });
+
+  try {
+    const result = await c.env.DB.prepare(
+      `SELECT id, name, email, category, message, created_at
+       FROM help_messages
+       ORDER BY created_at DESC
+       LIMIT 200`
+    ).all<{ id: string; name: string; email: string; category: string; message: string; created_at: string }>();
+
+    return c.json({
+      messages: result.results.map((row) => ({
+        id: row.id,
+        name: row.name,
+        email: row.email,
+        category: row.category,
+        message: row.message,
+        createdAt: row.created_at,
+      })),
+      source: 'd1',
+    });
+  } catch {
+    // Table may not exist until the first submission arrives.
+    return c.json({ messages: [], source: 'd1' });
+  }
 });
 
 // ── Email: gift notification ───────────────────────────────────────────────
@@ -3572,6 +3724,9 @@ app.post('/api/email/gift', async (c) => {
   if (!isLocal && origin !== production) {
     return c.json({ error: 'Forbidden' }, 403);
   }
+
+  const limited = await enforceRateLimit(c, 'email-gift', requestIp(c), 5, 3600);
+  if (limited) return limited;
 
   let body: Record<string, unknown>;
   try {
@@ -3726,6 +3881,10 @@ app.post('/api/scholarship-submitted', async (c) => {
   const applicantEmail = (c.get('idTokenEmail') || '').trim();
   const uid = c.get('idTokenUid');
   if (!uid || !applicantEmail) return c.json({ error: 'unauthorized' }, 401);
+
+  // Caps acknowledgement/alert email volume per applicant (Resend cost + admin noise).
+  const limited = await enforceRateLimit(c, 'scholarship-submit', String(uid), 3, 3600);
+  if (limited) return limited;
 
   if (!c.env.RESEND_API_KEY) return c.json({ ok: true, source: 'no-op' });
 

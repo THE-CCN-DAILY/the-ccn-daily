@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Card from '../components/Card';
 import ChallengeCreator from '../components/admin/ChallengeCreator';
 import { UserIcon, PlusCircleIcon, ChatBubbleLeftRightIcon, PencilIcon, SpeakerWaveIcon, ReaderIcon, EllipsisHorizontalIcon, CommunityIcon, DbIcon, TrophyIcon, SpinnerIcon, CalendarIcon } from '../components/icons';
@@ -68,6 +68,7 @@ const AdminDashboard: React.FC = () => {
 
     // Inbox state
     const [inboxMessages, setInboxMessages] = useState<any[]>([]);
+    const [helpFormMessages, setHelpFormMessages] = useState<any[]>([]);
     const [loadingInbox, setLoadingInbox] = useState(true);
 
     // Resource Management State
@@ -302,6 +303,7 @@ const AdminDashboard: React.FC = () => {
                 const messages = snapshot.docs.map(doc => ({
                     id: doc.id,
                     ...doc.data(),
+                    sortTs: doc.data().receivedAt?.toDate()?.getTime() ?? 0,
                     receivedAt: doc.data().receivedAt?.toDate()?.toLocaleString() || 'N/A'
                 }));
                 setInboxMessages(messages);
@@ -310,6 +312,30 @@ const AdminDashboard: React.FC = () => {
                 handleFirestoreError(error, OperationType.LIST, 'inbox');
                 setLoadingInbox(false);
             }));
+
+            // Contact/help form submissions stored in D1 by the Cloudflare worker.
+            (async () => {
+                try {
+                    const response = await fetch('/api/admin/help-messages', {
+                        headers: await adminAuthHeaders(),
+                    });
+                    if (!response.ok) return;
+                    const data = await response.json();
+                    setHelpFormMessages((data.messages || []).map((msg: any) => {
+                        const parsed = Date.parse(msg.createdAt || '');
+                        return {
+                            id: `help_${msg.id}`,
+                            subject: `${msg.category} — ${msg.name}`,
+                            from: msg.email,
+                            text: msg.message,
+                            sortTs: Number.isNaN(parsed) ? 0 : parsed,
+                            receivedAt: Number.isNaN(parsed) ? 'N/A' : new Date(parsed).toLocaleString(),
+                        };
+                    }));
+                } catch {
+                    // Help-form fetch is additive; the Firestore inbox still renders.
+                }
+            })();
         }
 
         if (activeTab === 'discounts' || activeTab === 'payments') {
@@ -524,6 +550,12 @@ const AdminDashboard: React.FC = () => {
         }
     };
 
+    // Unified inbox: Resend webhook emails (Firestore) + contact form submissions (D1).
+    const combinedInbox = useMemo(
+        () => [...inboxMessages, ...helpFormMessages].sort((a, b) => (b.sortTs || 0) - (a.sortTs || 0)),
+        [inboxMessages, helpFormMessages]
+    );
+
     return (
         <div className="max-w-6xl mx-auto pb-20">
             <header
@@ -614,20 +646,20 @@ const AdminDashboard: React.FC = () => {
                     ) : activeTab === 'inbox' ? (
                         <Card className="animate-fade-in">
                             <h2 className="text-2xl font-semibold text-brand-text-primary mb-4" style={{ fontFamily: 'var(--serif-display)' }}>Support Inbox</h2>
-                            <p className="text-sm text-brand-text-secondary mb-6">Incoming emails received via Resend Webhooks.</p>
-                            
+                            <p className="text-sm text-brand-text-secondary mb-6">Messages from the in-app contact form and incoming emails.</p>
+
                             <div className="space-y-4">
                                 {loadingInbox ? (
                                     <div className="p-8 text-center text-brand-text-secondary">
                                         <SpinnerIcon className="w-8 h-8 mx-auto mb-4 animate-spin text-brand-accent" />
                                         <p>Loading messages...</p>
                                     </div>
-                                ) : inboxMessages.length === 0 ? (
+                                ) : combinedInbox.length === 0 ? (
                                     <div className="p-8 text-center border border-dashed border-brand-border rounded-xl bg-brand-secondary/30">
                                         <p className="text-brand-text-secondary">No messages in your inbox.</p>
                                     </div>
                                 ) : (
-                                    inboxMessages.map((msg) => (
+                                    combinedInbox.map((msg) => (
                                         <div key={msg.id} className="p-4 border border-brand-border rounded-xl bg-brand-secondary/30 hover:bg-brand-secondary/50 transition-colors">
                                             <div className="flex justify-between items-start mb-2">
                                                 <div>

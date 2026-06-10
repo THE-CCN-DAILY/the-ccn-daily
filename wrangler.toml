@@ -13,6 +13,11 @@ ADMIN_EMAIL = "pastor.eryeza@gmail.com"
 # checkout). The SECRET key (FLWSECK) and webhook hash are wrangler secrets, never here.
 # Returned by /api/payments/intent so the client uses one authoritative key.
 FLUTTERWAVE_PUBLIC_KEY = "FLWPUBK-11618c011d36777393259ef9581bce5f-X"
+# Cloudflare Turnstile (bot protection on public forms) — REST API, no binding.
+#   Create a widget at dash.cloudflare.com → Turnstile, then:
+#     wrangler pages secret put TURNSTILE_SECRET_KEY   # server-side siteverify secret
+#   and set VITE_TURNSTILE_SITE_KEY (build-time env var) to the widget site key.
+#   Until both are set, forms still work: D1 rate limiting stays the abuse floor.
 # Cloudflare Stream (VOD + live) — REST API, no binding required.
 #   CF_ACCOUNT_ID and CF_STREAM_TOKEN are SECRETS — set them via:
 #     wrangler secret put CF_ACCOUNT_ID

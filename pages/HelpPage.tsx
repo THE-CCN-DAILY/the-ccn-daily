@@ -5,8 +5,7 @@ import { CheckIcon } from '../components/icons';
 import { HelpCircle, Mail, MessageSquare, ChevronDown } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNotifications } from '../contexts/NotificationContext';
-import { db } from '../firebase';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import TurnstileWidget, { isTurnstileEnabled } from '../components/TurnstileWidget';
 
 const EASE = [0.22, 1, 0.36, 1] as [number, number, number, number];
 
@@ -51,6 +50,7 @@ const HelpPage: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted]   = useState(false);
   const [fieldError, setFieldError] = useState('');
+  const [turnstileToken, setTurnstileToken] = useState('');
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -92,18 +92,36 @@ const HelpPage: React.FC = () => {
       return;
     }
 
+    if (isTurnstileEnabled && !turnstileToken) {
+      setFieldError('Please complete the verification check before sending.');
+      return;
+    }
+
     // ── 4. Submit ─────────────────────────────────────────────────────────
+    // Goes through the Cloudflare worker: server-side validation, Turnstile
+    // verification, durable rate limiting, and D1 storage for the admin inbox.
     setSubmitting(true);
     try {
-      await addDoc(collection(db, 'helpMessages'), {
-        name:     sanitize(trimmedName),
-        email:    sanitize(trimmedEmail),
-        category,
-        message:  sanitize(trimmedMessage),
-        userUid:  user?.uid ?? null,
-        status:   'new',
-        createdAt: serverTimestamp(),
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name:    sanitize(trimmedName),
+          email:   sanitize(trimmedEmail),
+          category,
+          message: sanitize(trimmedMessage),
+          turnstileToken,
+        }),
       });
+
+      if (response.status === 429) {
+        setFieldError('You have sent several messages recently. Please wait a few minutes and try again.');
+        return;
+      }
+      if (!response.ok) {
+        const body = await response.json().catch(() => ({} as { error?: string }));
+        throw new Error(body.error || `Request failed (${response.status})`);
+      }
 
       localStorage.setItem(RATE_LIMIT_KEY, String(Date.now()));
       setSubmitted(true);
@@ -302,6 +320,9 @@ const HelpPage: React.FC = () => {
                   <span>{fieldError}</span>
                 </motion.div>
               )}
+
+              {/* Verification (renders only when Turnstile is configured) */}
+              <TurnstileWidget onToken={setTurnstileToken} className="flex justify-center" />
 
               {/* Submit */}
               <button
