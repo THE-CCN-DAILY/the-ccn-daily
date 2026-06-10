@@ -346,6 +346,41 @@ type UserRow = {
   last_active_at?: string | null;
 };
 
+type HouseholdMemberRow = {
+  id: string;
+  owner_id: string;
+  name: string;
+  email: string;
+  role: 'owner' | 'member' | 'pending';
+  status: 'active' | 'pending';
+  joined_at?: string | null;
+  invited_at?: string | null;
+  updated_at?: string | null;
+};
+
+type GroupMemberRow = {
+  id: string;
+  leader_id: string;
+  name: string;
+  email: string;
+  role: 'leader' | 'member' | 'pending';
+  status: 'active' | 'pending';
+  engagement_score: number;
+  last_active_at?: string | null;
+  invited_at?: string | null;
+  updated_at?: string | null;
+};
+
+type GroupAssignmentRow = {
+  id: string;
+  leader_id: string;
+  title: string;
+  assignment_type: 'devotional' | 'course' | 'challenge' | 'practice';
+  progress: number;
+  created_at?: string | null;
+  updated_at?: string | null;
+};
+
 type AiUsageRow = {
   id: string;
   user_id?: string | null;
@@ -651,6 +686,41 @@ const mapUser = (row: UserRow) => ({
   createdAt: row.created_at || undefined,
   updatedAt: row.updated_at || undefined,
   lastActiveAt: row.last_active_at || undefined,
+});
+
+const mapHouseholdMember = (row: HouseholdMemberRow) => ({
+  id: row.id,
+  ownerId: row.owner_id,
+  name: row.name,
+  email: row.email,
+  role: row.role,
+  status: row.status,
+  joinedAt: row.joined_at || undefined,
+  invitedAt: row.invited_at || undefined,
+  updatedAt: row.updated_at || undefined,
+});
+
+const mapGroupMember = (row: GroupMemberRow) => ({
+  id: row.id,
+  leaderId: row.leader_id,
+  name: row.name,
+  email: row.email,
+  role: row.role,
+  status: row.status,
+  engagementScore: Number(row.engagement_score || 0),
+  lastActiveAt: row.last_active_at || undefined,
+  invitedAt: row.invited_at || undefined,
+  updatedAt: row.updated_at || undefined,
+});
+
+const mapGroupAssignment = (row: GroupAssignmentRow) => ({
+  id: row.id,
+  leaderId: row.leader_id,
+  title: row.title,
+  type: row.assignment_type,
+  progress: Number(row.progress || 0),
+  createdAt: row.created_at || undefined,
+  updatedAt: row.updated_at || undefined,
 });
 
 const estimateAiCost = (model = '', units = 0) => {
@@ -2427,6 +2497,290 @@ app.delete('/api/admin/content/:type/:id', async (c) => {
           : 'courses';
 
   await c.env.DB.prepare(`DELETE FROM ${table} WHERE id = ?`).bind(id).run();
+  return c.json({ ok: true });
+});
+
+const HOUSEHOLD_MAX_SEATS = 5;
+
+const ensureHouseholdTables = async (db: D1DatabaseBinding) => {
+  await db.batch([
+    db.prepare(
+      `CREATE TABLE IF NOT EXISTS household_members (
+        id TEXT PRIMARY KEY,
+        owner_id TEXT NOT NULL,
+        name TEXT NOT NULL,
+        email TEXT NOT NULL,
+        role TEXT NOT NULL DEFAULT 'member',
+        status TEXT NOT NULL DEFAULT 'active',
+        joined_at TEXT,
+        invited_at TEXT,
+        updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+      )`
+    ),
+    db.prepare(`CREATE UNIQUE INDEX IF NOT EXISTS idx_household_members_owner_email ON household_members(owner_id, email)`),
+    db.prepare(`CREATE INDEX IF NOT EXISTS idx_household_members_owner ON household_members(owner_id, role, updated_at DESC)`),
+    db.prepare(
+      `CREATE TABLE IF NOT EXISTS group_members (
+        id TEXT PRIMARY KEY,
+        leader_id TEXT NOT NULL,
+        name TEXT NOT NULL,
+        email TEXT NOT NULL,
+        role TEXT NOT NULL DEFAULT 'member',
+        status TEXT NOT NULL DEFAULT 'active',
+        engagement_score INTEGER NOT NULL DEFAULT 0,
+        last_active_at TEXT,
+        invited_at TEXT,
+        updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+      )`
+    ),
+    db.prepare(`CREATE UNIQUE INDEX IF NOT EXISTS idx_group_members_leader_email ON group_members(leader_id, email)`),
+    db.prepare(`CREATE INDEX IF NOT EXISTS idx_group_members_leader ON group_members(leader_id, role, updated_at DESC)`),
+    db.prepare(
+      `CREATE TABLE IF NOT EXISTS group_assignments (
+        id TEXT PRIMARY KEY,
+        leader_id TEXT NOT NULL,
+        title TEXT NOT NULL,
+        assignment_type TEXT NOT NULL DEFAULT 'practice',
+        progress INTEGER NOT NULL DEFAULT 0,
+        created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+      )`
+    ),
+    db.prepare(`CREATE INDEX IF NOT EXISTS idx_group_assignments_leader_created ON group_assignments(leader_id, created_at DESC)`),
+  ]);
+};
+
+const fallbackNameFromEmail = (email: string) => {
+  const local = email.split('@')[0] || 'Member';
+  return local
+    .split(/[._-]+/)
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ') || 'Member';
+};
+
+const ensureHouseholdOwner = async (db: D1DatabaseBinding, userId: string, c: any) => {
+  const email = String(c.get('idTokenEmail') || '').trim().toLowerCase();
+  const name = email ? fallbackNameFromEmail(email) : 'You';
+  await db.prepare(
+    `INSERT INTO household_members (id, owner_id, name, email, role, status, joined_at, updated_at)
+     VALUES (?, ?, ?, ?, 'owner', 'active', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+     ON CONFLICT(owner_id, email) DO UPDATE SET
+       name = CASE WHEN household_members.role = 'owner' THEN excluded.name ELSE household_members.name END,
+       status = 'active',
+       joined_at = COALESCE(household_members.joined_at, CURRENT_TIMESTAMP),
+       updated_at = CURRENT_TIMESTAMP`
+  ).bind(`owner_${userId}`, userId, name, email || `${userId}@local.ccn`).run();
+};
+
+const ensureGroupLeader = async (db: D1DatabaseBinding, userId: string, c: any) => {
+  const email = String(c.get('idTokenEmail') || '').trim().toLowerCase();
+  const name = email ? fallbackNameFromEmail(email) : 'You';
+  await db.prepare(
+    `INSERT INTO group_members (
+      id, leader_id, name, email, role, status, engagement_score, last_active_at, updated_at
+    ) VALUES (?, ?, ?, ?, 'leader', 'active', 100, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+    ON CONFLICT(leader_id, email) DO UPDATE SET
+      name = CASE WHEN group_members.role = 'leader' THEN excluded.name ELSE group_members.name END,
+      status = 'active',
+      engagement_score = 100,
+      last_active_at = COALESCE(group_members.last_active_at, CURRENT_TIMESTAMP),
+      updated_at = CURRENT_TIMESTAMP`
+  ).bind(`leader_${userId}`, userId, name, email || `${userId}@local.ccn`).run();
+};
+
+app.get('/api/users/:userId/household/members', async (c) => {
+  const userId = c.req.param('userId');
+  if (!isSafeId(userId)) return c.json({ error: 'Invalid user id' }, 400);
+  const denied = requireSelf(c, userId); if (denied) return denied;
+  if (!c.env.DB) return c.json({ members: [], maxSeats: HOUSEHOLD_MAX_SEATS, source: 'fallback' });
+
+  await ensureHouseholdTables(c.env.DB);
+  await ensureHouseholdOwner(c.env.DB, userId, c);
+
+  const result = await c.env.DB.prepare(
+    `SELECT * FROM household_members
+     WHERE owner_id = ?
+     ORDER BY CASE role WHEN 'owner' THEN 0 WHEN 'member' THEN 1 ELSE 2 END, COALESCE(joined_at, invited_at, updated_at) ASC`
+  ).bind(userId).all<HouseholdMemberRow>();
+
+  return c.json({ members: result.results.map(mapHouseholdMember), maxSeats: HOUSEHOLD_MAX_SEATS, source: 'd1' });
+});
+
+app.post('/api/users/:userId/household/invites', async (c) => {
+  const userId = c.req.param('userId');
+  if (!isSafeId(userId)) return c.json({ error: 'Invalid user id' }, 400);
+  const denied = requireSelf(c, userId); if (denied) return denied;
+  if (!c.env.DB) return c.json({ error: 'D1 database binding is not configured' }, 503);
+
+  const body = await c.req.json().catch(() => ({} as Record<string, unknown>));
+  const email = String(body.email || '').trim().toLowerCase();
+  const name = sanitizeInput(String(body.name || fallbackNameFromEmail(email)).trim().slice(0, 120));
+  if (!email || !isValidEmail(email)) return c.json({ error: 'Valid email is required' }, 400);
+
+  await ensureHouseholdTables(c.env.DB);
+  await ensureHouseholdOwner(c.env.DB, userId, c);
+
+  const seatCount = await c.env.DB.prepare(
+    `SELECT COUNT(*) as count FROM household_members WHERE owner_id = ?`
+  ).bind(userId).first<{ count: number }>();
+  if (Number(seatCount?.count || 0) >= HOUSEHOLD_MAX_SEATS) {
+    return c.json({ error: 'No available household seats' }, 409);
+  }
+
+  const id = `house_${crypto.randomUUID()}`;
+  await c.env.DB.prepare(
+    `INSERT INTO household_members (id, owner_id, name, email, role, status, invited_at, updated_at)
+     VALUES (?, ?, ?, ?, 'pending', 'pending', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+     ON CONFLICT(owner_id, email) DO UPDATE SET
+       name = excluded.name,
+       role = CASE WHEN household_members.role = 'owner' THEN 'owner' ELSE 'pending' END,
+       status = CASE WHEN household_members.role = 'owner' THEN 'active' ELSE 'pending' END,
+       invited_at = CURRENT_TIMESTAMP,
+       updated_at = CURRENT_TIMESTAMP`
+  ).bind(id, userId, name || 'Pending Invite', email).run();
+
+  const member = await c.env.DB.prepare(
+    `SELECT * FROM household_members WHERE owner_id = ? AND email = ? LIMIT 1`
+  ).bind(userId, email).first<HouseholdMemberRow>();
+
+  return c.json({ member: member ? mapHouseholdMember(member) : null, source: 'd1' });
+});
+
+app.delete('/api/users/:userId/household/members/:id', async (c) => {
+  const userId = c.req.param('userId');
+  const id = c.req.param('id');
+  if (!isSafeId(userId) || !isSafeId(id)) return c.json({ error: 'Invalid household identifier' }, 400);
+  const denied = requireSelf(c, userId); if (denied) return denied;
+  if (!c.env.DB) return c.json({ error: 'D1 database binding is not configured' }, 503);
+
+  await ensureHouseholdTables(c.env.DB);
+  await c.env.DB.prepare(
+    `DELETE FROM household_members WHERE owner_id = ? AND id = ? AND role != 'owner'`
+  ).bind(userId, id).run();
+
+  return c.json({ ok: true });
+});
+
+app.get('/api/users/:userId/group/overview', async (c) => {
+  const userId = c.req.param('userId');
+  if (!isSafeId(userId)) return c.json({ error: 'Invalid user id' }, 400);
+  const denied = requireSelf(c, userId); if (denied) return denied;
+  if (!c.env.DB) return c.json({ members: [], assignments: [], source: 'fallback' });
+
+  await ensureHouseholdTables(c.env.DB);
+  await ensureGroupLeader(c.env.DB, userId, c);
+
+  const [members, assignments] = await Promise.all([
+    c.env.DB.prepare(
+      `SELECT * FROM group_members
+       WHERE leader_id = ?
+       ORDER BY CASE role WHEN 'leader' THEN 0 WHEN 'member' THEN 1 ELSE 2 END, COALESCE(last_active_at, invited_at, updated_at) DESC`
+    ).bind(userId).all<GroupMemberRow>(),
+    c.env.DB.prepare(
+      `SELECT * FROM group_assignments
+       WHERE leader_id = ?
+       ORDER BY created_at DESC`
+    ).bind(userId).all<GroupAssignmentRow>(),
+  ]);
+
+  return c.json({
+    members: members.results.map(mapGroupMember),
+    assignments: assignments.results.map(mapGroupAssignment),
+    source: 'd1',
+  });
+});
+
+app.post('/api/users/:userId/group/invites', async (c) => {
+  const userId = c.req.param('userId');
+  if (!isSafeId(userId)) return c.json({ error: 'Invalid user id' }, 400);
+  const denied = requireSelf(c, userId); if (denied) return denied;
+  if (!c.env.DB) return c.json({ error: 'D1 database binding is not configured' }, 503);
+
+  const body = await c.req.json().catch(() => ({} as Record<string, unknown>));
+  const email = String(body.email || '').trim().toLowerCase();
+  const name = sanitizeInput(String(body.name || fallbackNameFromEmail(email)).trim().slice(0, 120));
+  if (!email || !isValidEmail(email)) return c.json({ error: 'Valid email is required' }, 400);
+
+  await ensureHouseholdTables(c.env.DB);
+  await ensureGroupLeader(c.env.DB, userId, c);
+
+  const id = `group_${crypto.randomUUID()}`;
+  await c.env.DB.prepare(
+    `INSERT INTO group_members (
+      id, leader_id, name, email, role, status, engagement_score, invited_at, updated_at
+    ) VALUES (?, ?, ?, ?, 'pending', 'pending', 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+    ON CONFLICT(leader_id, email) DO UPDATE SET
+      name = excluded.name,
+      role = CASE WHEN group_members.role = 'leader' THEN 'leader' ELSE 'pending' END,
+      status = CASE WHEN group_members.role = 'leader' THEN 'active' ELSE 'pending' END,
+      invited_at = CURRENT_TIMESTAMP,
+      updated_at = CURRENT_TIMESTAMP`
+  ).bind(id, userId, name || 'Pending Invite', email).run();
+
+  const member = await c.env.DB.prepare(
+    `SELECT * FROM group_members WHERE leader_id = ? AND email = ? LIMIT 1`
+  ).bind(userId, email).first<GroupMemberRow>();
+
+  return c.json({ member: member ? mapGroupMember(member) : null, source: 'd1' });
+});
+
+app.delete('/api/users/:userId/group/members/:id', async (c) => {
+  const userId = c.req.param('userId');
+  const id = c.req.param('id');
+  if (!isSafeId(userId) || !isSafeId(id)) return c.json({ error: 'Invalid group member identifier' }, 400);
+  const denied = requireSelf(c, userId); if (denied) return denied;
+  if (!c.env.DB) return c.json({ error: 'D1 database binding is not configured' }, 503);
+
+  await ensureHouseholdTables(c.env.DB);
+  await c.env.DB.prepare(
+    `DELETE FROM group_members WHERE leader_id = ? AND id = ? AND role != 'leader'`
+  ).bind(userId, id).run();
+
+  return c.json({ ok: true });
+});
+
+app.post('/api/users/:userId/group/assignments', async (c) => {
+  const userId = c.req.param('userId');
+  if (!isSafeId(userId)) return c.json({ error: 'Invalid user id' }, 400);
+  const denied = requireSelf(c, userId); if (denied) return denied;
+  if (!c.env.DB) return c.json({ error: 'D1 database binding is not configured' }, 503);
+
+  const body = await c.req.json().catch(() => ({} as Record<string, unknown>));
+  const title = sanitizeInput(String(body.title || '').trim().slice(0, 160));
+  const type = ['devotional', 'course', 'challenge', 'practice'].includes(String(body.type))
+    ? String(body.type)
+    : 'practice';
+  if (!title) return c.json({ error: 'Assignment title is required' }, 400);
+
+  await ensureHouseholdTables(c.env.DB);
+  await ensureGroupLeader(c.env.DB, userId, c);
+
+  const id = `assign_${crypto.randomUUID()}`;
+  await c.env.DB.prepare(
+    `INSERT INTO group_assignments (id, leader_id, title, assignment_type, progress, created_at, updated_at)
+     VALUES (?, ?, ?, ?, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`
+  ).bind(id, userId, title, type).run();
+
+  const assignment = await c.env.DB.prepare(
+    `SELECT * FROM group_assignments WHERE leader_id = ? AND id = ? LIMIT 1`
+  ).bind(userId, id).first<GroupAssignmentRow>();
+
+  return c.json({ assignment: assignment ? mapGroupAssignment(assignment) : null, source: 'd1' });
+});
+
+app.delete('/api/users/:userId/group/assignments/:id', async (c) => {
+  const userId = c.req.param('userId');
+  const id = c.req.param('id');
+  if (!isSafeId(userId) || !isSafeId(id)) return c.json({ error: 'Invalid assignment identifier' }, 400);
+  const denied = requireSelf(c, userId); if (denied) return denied;
+  if (!c.env.DB) return c.json({ error: 'D1 database binding is not configured' }, 503);
+
+  await ensureHouseholdTables(c.env.DB);
+  await c.env.DB.prepare(
+    `DELETE FROM group_assignments WHERE leader_id = ? AND id = ?`
+  ).bind(userId, id).run();
+
   return c.json({ ok: true });
 });
 

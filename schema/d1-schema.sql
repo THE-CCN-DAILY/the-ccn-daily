@@ -390,6 +390,54 @@ CREATE TABLE IF NOT EXISTS user_purchases (
 CREATE INDEX IF NOT EXISTS idx_user_purchases_user ON user_purchases(user_id, purchased_at DESC);
 CREATE INDEX IF NOT EXISTS idx_user_purchases_tx_ref ON user_purchases(tx_ref);
 
+-- Household and leader dashboards ------------------------------------------------
+-- These tables back user-visible seat management, group invites, and assignment
+-- workflows. Invitation delivery can be layered on separately; the dashboard state
+-- itself is durable and owned by the authenticated account.
+
+CREATE TABLE IF NOT EXISTS household_members (
+  id TEXT PRIMARY KEY,
+  owner_id TEXT NOT NULL,
+  name TEXT NOT NULL,
+  email TEXT NOT NULL,
+  role TEXT NOT NULL DEFAULT 'member', -- owner | member | pending
+  status TEXT NOT NULL DEFAULT 'active', -- active | pending
+  joined_at TEXT,
+  invited_at TEXT,
+  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_household_members_owner_email ON household_members(owner_id, email);
+CREATE INDEX IF NOT EXISTS idx_household_members_owner ON household_members(owner_id, role, updated_at DESC);
+
+CREATE TABLE IF NOT EXISTS group_members (
+  id TEXT PRIMARY KEY,
+  leader_id TEXT NOT NULL,
+  name TEXT NOT NULL,
+  email TEXT NOT NULL,
+  role TEXT NOT NULL DEFAULT 'member', -- leader | member | pending
+  status TEXT NOT NULL DEFAULT 'active', -- active | pending
+  engagement_score INTEGER NOT NULL DEFAULT 0,
+  last_active_at TEXT,
+  invited_at TEXT,
+  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_group_members_leader_email ON group_members(leader_id, email);
+CREATE INDEX IF NOT EXISTS idx_group_members_leader ON group_members(leader_id, role, updated_at DESC);
+
+CREATE TABLE IF NOT EXISTS group_assignments (
+  id TEXT PRIMARY KEY,
+  leader_id TEXT NOT NULL,
+  title TEXT NOT NULL,
+  assignment_type TEXT NOT NULL DEFAULT 'practice', -- devotional | course | challenge | practice
+  progress INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_group_assignments_leader_created ON group_assignments(leader_id, created_at DESC);
+
 INSERT OR IGNORE INTO blog_posts (
   id,
   slug,

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { motion } from 'motion/react';
 import Card from '../components/Card';
 
@@ -7,83 +7,141 @@ import { useAuth } from '../contexts/AuthContext';
 import { useNotifications } from '../contexts/NotificationContext';
 import { Lightbulb } from 'lucide-react';
 import { PlusIcon, UserIcon, ChartBarIcon, ReaderIcon, CloseIcon } from '../components/icons';
+import {
+  GroupAssignment,
+  GroupAssignmentType,
+  GroupMember,
+  createGroupAssignment,
+  getGroupOverview,
+  inviteGroupMember,
+  removeGroupAssignment,
+  removeGroupMember,
+} from '../services/householdService';
 
-interface GroupMember {
-  id: string;
-  name: string;
-  email: string;
-  role: 'leader' | 'member' | 'pending';
-  engagementScore: number;
-  lastActive: string;
-}
+const ASSIGNMENT_TYPES: { value: GroupAssignmentType; label: string }[] = [
+  { value: 'devotional', label: 'Devotional' },
+  { value: 'course', label: 'Course' },
+  { value: 'challenge', label: 'Challenge' },
+  { value: 'practice', label: 'Practice' },
+];
+
+const formatLastActive = (value?: string) => {
+  if (!value) return 'Not yet';
+  const parsed = Date.parse(value);
+  if (Number.isNaN(parsed)) return 'Not yet';
+  const days = Math.floor((Date.now() - parsed) / (1000 * 60 * 60 * 24));
+  if (days <= 0) return 'Today';
+  if (days === 1) return 'Yesterday';
+  if (days < 7) return `${days} days ago`;
+  return new Date(parsed).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+};
 
 const LeaderDashboardPage: React.FC = () => {
   const { user } = useAuth();
   const { notify } = useNotifications();
   const [inviteEmail, setInviteEmail] = useState('');
   const [isInviting, setIsInviting] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
+  const [members, setMembers] = useState<GroupMember[]>([]);
+  const [assignments, setAssignments] = useState<GroupAssignment[]>([]);
+  const [assignmentTitle, setAssignmentTitle] = useState('');
+  const [assignmentType, setAssignmentType] = useState<GroupAssignmentType>('practice');
+  const [isAssigning, setIsAssigning] = useState(false);
+  const assignmentInputRef = useRef<HTMLInputElement>(null);
 
-  // Placeholder group members — replace with Firestore group data
-  const [members, setMembers] = useState<GroupMember[]>([
-    {
-      id: '1',
-      name: user?.displayName || 'You',
-      email: user?.email || '',
-      role: 'leader',
-      engagementScore: 100,
-      lastActive: 'Today',
-    },
-    {
-      id: '2',
-      name: 'Michael Chen',
-      email: 'michael@example.com',
-      role: 'member',
-      engagementScore: 85,
-      lastActive: 'Yesterday',
-    },
-    {
-      id: '3',
-      name: 'Emma Davis',
-      email: 'emma@example.com',
-      role: 'member',
-      engagementScore: 40,
-      lastActive: '3 days ago',
-    },
-    {
-      id: '4',
-      name: 'Pending Invite',
-      email: 'david@example.com',
-      role: 'pending',
-      engagementScore: 0,
-      lastActive: 'Never',
+  const refreshOverview = useCallback(async () => {
+    if (!user?.uid) return;
+    try {
+      const overview = await getGroupOverview(user.uid);
+      setMembers(overview.members);
+      setAssignments(overview.assignments);
+      setLoadError('');
+    } catch (error) {
+      setLoadError(error instanceof Error ? error.message : 'Your group could not be loaded.');
+    } finally {
+      setIsLoading(false);
     }
-  ]);
+  }, [user?.uid]);
 
-  const handleInvite = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!inviteEmail) return;
+  useEffect(() => {
+    setIsLoading(true);
+    refreshOverview();
+  }, [refreshOverview]);
 
-    setIsInviting(true);
-    // Simulate API call
-    setTimeout(() => {
-      setMembers([...members, {
-        id: Date.now().toString(),
-        name: 'Pending Invite',
-        email: inviteEmail,
-        role: 'pending',
-        engagementScore: 0,
-        lastActive: 'Never'
-      }]);
-      setInviteEmail('');
-      setIsInviting(false);
-      notify('Invitation sent successfully!', 'success');
-    }, 1000);
+  const activeMembers = useMemo(
+    () => members.filter((member) => member.status === 'active'),
+    [members]
+  );
+
+  const participation = useMemo(() => {
+    if (activeMembers.length === 0) return 0;
+    const total = activeMembers.reduce((sum, member) => sum + member.engagementScore, 0);
+    return Math.round(total / activeMembers.length);
+  }, [activeMembers]);
+
+  const focusAssignmentForm = () => {
+    assignmentInputRef.current?.focus();
+    assignmentInputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
   };
 
-  const handleRemoveMember = (id: string) => {
+  const handleInvite = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!inviteEmail || !user?.uid) return;
+
+    setIsInviting(true);
+    try {
+      await inviteGroupMember(user.uid, inviteEmail.trim());
+      setInviteEmail('');
+      notify('Invitation recorded. A place is held in your group.', 'success');
+      await refreshOverview();
+    } catch (error) {
+      notify(error instanceof Error ? error.message : 'The invitation could not be sent.', 'error');
+    } finally {
+      setIsInviting(false);
+    }
+  };
+
+  const handleRemoveMember = async (id: string) => {
+    if (!user?.uid) return;
     if (window.confirm('Are you sure you want to remove this member from the group?')) {
-      setMembers(members.filter(m => m.id !== id));
-      notify('Member removed.', 'success');
+      try {
+        await removeGroupMember(user.uid, id);
+        notify('Member removed.', 'success');
+        await refreshOverview();
+      } catch (error) {
+        notify(error instanceof Error ? error.message : 'The member could not be removed.', 'error');
+      }
+    }
+  };
+
+  const handleCreateAssignment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!assignmentTitle.trim() || !user?.uid) return;
+
+    setIsAssigning(true);
+    try {
+      await createGroupAssignment(user.uid, assignmentTitle.trim(), assignmentType);
+      setAssignmentTitle('');
+      notify('Practice assigned to your group.', 'success');
+      await refreshOverview();
+    } catch (error) {
+      notify(error instanceof Error ? error.message : 'The practice could not be assigned.', 'error');
+    } finally {
+      setIsAssigning(false);
+    }
+  };
+
+  const handleRemoveAssignment = async (id: string) => {
+    if (!user?.uid) return;
+    if (window.confirm('Remove this assignment from your group?')) {
+      try {
+        await removeGroupAssignment(user.uid, id);
+        notify('Assignment removed.', 'success');
+        await refreshOverview();
+      } catch (error) {
+        notify(error instanceof Error ? error.message : 'The assignment could not be removed.', 'error');
+      }
     }
   };
 
@@ -106,7 +164,10 @@ const LeaderDashboardPage: React.FC = () => {
           </h1>
           <p className="text-brand-text-secondary max-w-2xl">Guide your group with shared Scripture practice, gentle accountability, and clear next steps.</p>
         </div>
-        <button className="flex-shrink-0 px-6 py-2.5 bg-brand-accent text-white font-semibold rounded-md hover:bg-opacity-90 transition-colors self-start sm:self-auto">
+        <button
+          onClick={focusAssignmentForm}
+          className="flex-shrink-0 px-6 py-2.5 bg-brand-accent text-white font-semibold rounded-md hover:bg-opacity-90 transition-colors self-start sm:self-auto"
+        >
           Assign Practice
         </button>
       </motion.div>
@@ -124,7 +185,7 @@ const LeaderDashboardPage: React.FC = () => {
             </div>
           </div>
         </Card>
-        
+
         <Card className="border-brand-border bg-brand-dark/20">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 rounded-full bg-status-success/20 flex items-center justify-center">
@@ -132,7 +193,7 @@ const LeaderDashboardPage: React.FC = () => {
             </div>
             <div>
               <p className="text-sm text-brand-text-secondary">Shared participation</p>
-              <h3 className="text-2xl font-bold text-brand-text-primary">75%</h3>
+              <h3 className="text-2xl font-bold text-brand-text-primary">{participation}%</h3>
             </div>
           </div>
         </Card>
@@ -144,7 +205,7 @@ const LeaderDashboardPage: React.FC = () => {
             </div>
             <div>
               <p className="text-sm text-brand-text-secondary">Active practices</p>
-              <h3 className="text-2xl font-bold text-brand-text-primary">2</h3>
+              <h3 className="text-2xl font-bold text-brand-text-primary">{assignments.length}</h3>
             </div>
           </div>
         </Card>
@@ -184,28 +245,64 @@ const LeaderDashboardPage: React.FC = () => {
               <Lightbulb className="w-5 h-5 text-brand-accent" />
               Current Assignments
             </h2>
+
+            <form onSubmit={handleCreateAssignment} className="space-y-3 mb-5">
+              <input
+                ref={assignmentInputRef}
+                type="text"
+                value={assignmentTitle}
+                onChange={(e) => setAssignmentTitle(e.target.value)}
+                placeholder="Name the practice, course, or challenge"
+                maxLength={160}
+                className="w-full bg-brand-dark border border-brand-border rounded-lg px-4 py-3 text-brand-text-primary focus:outline-none focus:border-brand-accent"
+              />
+              <div className="flex gap-2">
+                <select
+                  value={assignmentType}
+                  onChange={(e) => setAssignmentType(e.target.value as GroupAssignmentType)}
+                  className="flex-1 bg-brand-dark border border-brand-border rounded-lg px-3 py-2.5 text-sm text-brand-text-primary focus:outline-none focus:border-brand-accent"
+                >
+                  {ASSIGNMENT_TYPES.map((option) => (
+                    <option key={option.value} value={option.value}>{option.label}</option>
+                  ))}
+                </select>
+                <button
+                  type="submit"
+                  disabled={isAssigning || !assignmentTitle.trim()}
+                  className="px-4 py-2.5 bg-brand-accent text-white rounded-lg text-sm font-semibold hover:bg-opacity-90 transition-colors disabled:opacity-50"
+                >
+                  {isAssigning ? 'Assigning…' : 'Assign'}
+                </button>
+              </div>
+            </form>
+
             <div className="space-y-4">
-              <div className="p-4 rounded-lg bg-brand-dark border border-brand-border">
-                <div className="flex justify-between items-start mb-2">
-                  <h4 className="text-sm text-brand-text-primary font-bold">Foundations of Faith</h4>
-                  <span className="text-[12px] bg-brand-accent/20 text-brand-accent px-2 py-0.5 rounded-full">Course</span>
+              {assignments.length === 0 && !isLoading && (
+                <p className="text-xs text-brand-text-secondary">
+                  Nothing assigned yet. Set a shared practice above and your group will see it here.
+                </p>
+              )}
+              {assignments.map((assignment) => (
+                <div key={assignment.id} className="p-4 rounded-lg bg-brand-dark border border-brand-border">
+                  <div className="flex justify-between items-start mb-2">
+                    <h4 className="text-sm text-brand-text-primary font-bold">{assignment.title}</h4>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[12px] bg-brand-accent/20 text-brand-accent px-2 py-0.5 rounded-full capitalize">{assignment.type}</span>
+                      <button
+                        onClick={() => handleRemoveAssignment(assignment.id)}
+                        className="p-1 text-brand-text-secondary hover:text-red-500 transition-colors"
+                        title="Remove assignment"
+                      >
+                        <CloseIcon className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                  <div className="w-full bg-brand-secondary rounded-full h-1.5 mb-1">
+                    <div className="bg-brand-accent h-1.5 rounded-full" style={{ width: `${Math.min(100, assignment.progress)}%` }}></div>
+                  </div>
+                  <p className="text-xs text-brand-text-secondary text-right">{Math.min(100, assignment.progress)}% Avg Completion</p>
                 </div>
-                <div className="w-full bg-brand-secondary rounded-full h-1.5 mb-1">
-                  <div className="bg-brand-accent h-1.5 rounded-full" style={{ width: '60%' }}></div>
-                </div>
-                <p className="text-xs text-brand-text-secondary text-right">60% Avg Completion</p>
-              </div>
-              
-              <div className="p-4 rounded-lg bg-brand-dark border border-brand-border">
-                <div className="flex justify-between items-start mb-2">
-                  <h4 className="text-sm text-brand-text-primary font-bold">30 Days of Prayer</h4>
-                  <span className="text-[12px] bg-brand-accent/20 text-brand-accent px-2 py-0.5 rounded-full">Challenge</span>
-                </div>
-                <div className="w-full bg-brand-secondary rounded-full h-1.5 mb-1">
-                  <div className="bg-brand-accent h-1.5 rounded-full" style={{ width: '25%' }}></div>
-                </div>
-                <p className="text-xs text-brand-text-secondary text-right">25% Avg Completion</p>
-              </div>
+              ))}
             </div>
           </Card>
         </div>
@@ -216,7 +313,16 @@ const LeaderDashboardPage: React.FC = () => {
             <h2 className="text-xl font-bold text-brand-text-primary mb-6 border-b border-brand-border pb-4">
               Group Members
             </h2>
-            
+
+            {isLoading && (
+              <p className="text-sm text-brand-text-secondary py-6 text-center">Gathering your group…</p>
+            )}
+
+            {!isLoading && loadError && (
+              <p className="text-sm text-status-error py-6 text-center">{loadError}</p>
+            )}
+
+            {!isLoading && !loadError && (
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
@@ -253,9 +359,9 @@ const LeaderDashboardPage: React.FC = () => {
                         {member.role !== 'pending' ? (
                           <div className="flex items-center gap-2">
                             <div className="w-16 bg-brand-dark rounded-full h-1.5">
-                              <div 
-                                className={`h-1.5 rounded-full ${member.engagementScore > 70 ? 'bg-status-success' : member.engagementScore > 30 ? 'bg-yellow-500' : 'bg-status-error'}`} 
-                                style={{ width: `${member.engagementScore}%` }}
+                              <div
+                                className={`h-1.5 rounded-full ${member.engagementScore > 70 ? 'bg-status-success' : member.engagementScore > 30 ? 'bg-yellow-500' : 'bg-status-error'}`}
+                                style={{ width: `${Math.min(100, member.engagementScore)}%` }}
                               ></div>
                             </div>
                             <span className="text-xs text-brand-text-secondary">{member.engagementScore}%</span>
@@ -265,11 +371,11 @@ const LeaderDashboardPage: React.FC = () => {
                         )}
                       </td>
                       <td className="py-4 text-sm text-brand-text-secondary">
-                        {member.lastActive}
+                        {member.role === 'pending' ? 'Invited' : formatLastActive(member.lastActiveAt)}
                       </td>
                       <td className="py-4 text-right">
                         {member.role !== 'leader' && (
-                          <button 
+                          <button
                             onClick={() => handleRemoveMember(member.id)}
                             className="p-2 text-brand-text-secondary hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
                             title={member.role === 'pending' ? 'Cancel Invite' : 'Remove Member'}
@@ -283,6 +389,7 @@ const LeaderDashboardPage: React.FC = () => {
                 </tbody>
               </table>
             </div>
+            )}
           </Card>
         </div>
       </div>
@@ -291,33 +398,46 @@ const LeaderDashboardPage: React.FC = () => {
       <div className="mt-10">
         <div className="mb-6">
           <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ fontFamily: 'var(--sans-ui)', color: 'var(--gold-ds, #B7892E)' }}>Church &amp; Corporate</p>
-          <h2 className="text-2xl font-bold text-brand-text-primary" style={{ fontFamily: 'var(--serif-display)' }}>Bulk Access &amp; Cohort Management</h2>
-          <p className="text-brand-text-secondary text-sm mt-1">Manage multi-seat church or corporate licenses, assign content to cohorts, and track group progress.</p>
+          <h2 className="text-2xl font-bold text-brand-text-primary" style={{ fontFamily: 'var(--serif-display)' }}>Your Cohort at a Glance</h2>
+          <p className="text-brand-text-secondary text-sm mt-1">Everything your church or organization needs to walk together: seats, shared practices, and visible progress.</p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <Card className="border-brand-border bg-brand-dark/30">
             <div className="w-10 h-10 rounded-full bg-brand-accent/15 flex items-center justify-center mb-4">
               <UserIcon className="w-5 h-5 text-brand-accent" />
             </div>
-            <h3 className="font-bold text-brand-text-primary mb-1">Manage Groups</h3>
-            <p className="text-xs text-brand-text-secondary mb-4">Create sub-groups within your church or organization and assign leaders to each cohort.</p>
-            <span className="inline-block text-[11px] font-bold uppercase tracking-wider px-3 py-1 rounded-full bg-brand-secondary text-brand-text-secondary border border-brand-border">Coming Soon</span>
+            <h3 className="font-bold text-brand-text-primary mb-1">Manage Your Group</h3>
+            <p className="text-xs text-brand-text-secondary mb-4">
+              {members.length} {members.length === 1 ? 'person is' : 'people are'} at your table, with {members.filter((m) => m.status === 'pending').length} invitation{members.filter((m) => m.status === 'pending').length === 1 ? '' : 's'} outstanding. Add or release members above.
+            </p>
+            <span className="inline-block text-[11px] font-bold uppercase tracking-wider px-3 py-1 rounded-full bg-status-success/15 text-status-success border border-status-success/30">Active</span>
           </Card>
           <Card className="border-brand-border bg-brand-dark/30">
             <div className="w-10 h-10 rounded-full bg-brand-accent/15 flex items-center justify-center mb-4">
               <Lightbulb className="w-5 h-5 text-brand-accent" />
             </div>
             <h3 className="font-bold text-brand-text-primary mb-1">Assign Content</h3>
-            <p className="text-xs text-brand-text-secondary mb-4">Push devotionals, courses, and challenges to your entire organization or specific cohorts.</p>
-            <span className="inline-block text-[11px] font-bold uppercase tracking-wider px-3 py-1 rounded-full bg-brand-secondary text-brand-text-secondary border border-brand-border">Coming Soon</span>
+            <p className="text-xs text-brand-text-secondary mb-4">
+              {assignments.length === 0
+                ? 'Set a devotional, course, or challenge for your whole group using the assignment form above.'
+                : `${assignments.length} shared ${assignments.length === 1 ? 'practice is' : 'practices are'} currently assigned to your group.`}
+            </p>
+            <button
+              onClick={focusAssignmentForm}
+              className="inline-block text-[11px] font-bold uppercase tracking-wider px-3 py-1 rounded-full bg-brand-accent/15 text-brand-accent border border-brand-accent/30 hover:bg-brand-accent/25 transition-colors"
+            >
+              Assign Now
+            </button>
           </Card>
           <Card className="border-brand-border bg-brand-dark/30">
             <div className="w-10 h-10 rounded-full bg-brand-accent/15 flex items-center justify-center mb-4">
               <ChartBarIcon className="w-5 h-5 text-brand-accent" />
             </div>
             <h3 className="font-bold text-brand-text-primary mb-1">Track Cohort Progress</h3>
-            <p className="text-xs text-brand-text-secondary mb-4">View completion rates, engagement scores, and spiritual growth metrics across your full organization.</p>
-            <span className="inline-block text-[11px] font-bold uppercase tracking-wider px-3 py-1 rounded-full bg-brand-secondary text-brand-text-secondary border border-brand-border">Coming Soon</span>
+            <p className="text-xs text-brand-text-secondary mb-4">
+              Shared participation across your active members currently sits at {participation}%. Engagement updates as your group practices together.
+            </p>
+            <span className="inline-block text-[11px] font-bold uppercase tracking-wider px-3 py-1 rounded-full bg-status-success/15 text-status-success border border-status-success/30">Live</span>
           </Card>
         </div>
       </div>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { motion } from 'motion/react';
 import Card from '../components/Card';
 
@@ -7,78 +7,83 @@ import { useAuth } from '../contexts/AuthContext';
 import { useNotifications } from '../contexts/NotificationContext';
 import { HeartHandshake } from 'lucide-react';
 import { PlusIcon, UserIcon, GamificationIcon, CloseIcon } from '../components/icons';
+import {
+  HouseholdMember,
+  inviteHouseholdMember,
+  listHouseholdMembers,
+  removeHouseholdMember,
+} from '../services/householdService';
 
-interface FamilyMember {
-  id: string;
-  name: string;
-  email: string;
-  role: 'owner' | 'member' | 'pending';
-  joinedAt?: string;
-  avatarUrl?: string;
-}
+const formatJoined = (value?: string) => {
+  if (!value) return '';
+  const parsed = Date.parse(value);
+  if (Number.isNaN(parsed)) return '';
+  return new Date(parsed).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+};
 
 const FamilyDashboardPage: React.FC = () => {
   const { user } = useAuth();
   const { notify } = useNotifications();
   const [inviteEmail, setInviteEmail] = useState('');
   const [isInviting, setIsInviting] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
+  const [members, setMembers] = useState<HouseholdMember[]>([]);
+  const [maxSeats, setMaxSeats] = useState(5);
 
-  // Placeholder family members — replace with Firestore family plan data
-  const [members, setMembers] = useState<FamilyMember[]>([
-    {
-      id: '1',
-      name: user?.displayName || 'You',
-      email: user?.email || '',
-      role: 'owner',
-      joinedAt: '2024-01-01',
-      avatarUrl: user?.photoURL || undefined,
-    },
-    {
-      id: '2',
-      name: 'Sarah Smith',
-      email: 'sarah@example.com',
-      role: 'member',
-      joinedAt: '2024-01-15',
-    },
-    {
-      id: '3',
-      name: 'Pending Invite',
-      email: 'john@example.com',
-      role: 'pending',
+  const refreshMembers = useCallback(async () => {
+    if (!user?.uid) return;
+    try {
+      const overview = await listHouseholdMembers(user.uid);
+      setMembers(overview.members);
+      setMaxSeats(overview.maxSeats);
+      setLoadError('');
+    } catch (error) {
+      setLoadError(error instanceof Error ? error.message : 'Your household could not be loaded.');
+    } finally {
+      setIsLoading(false);
     }
-  ]);
+  }, [user?.uid]);
 
-  const maxSeats = 5;
+  useEffect(() => {
+    setIsLoading(true);
+    refreshMembers();
+  }, [refreshMembers]);
+
   const usedSeats = members.length;
 
-  const handleInvite = (e: React.FormEvent) => {
+  const handleInvite = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!inviteEmail) return;
-    
+    if (!inviteEmail || !user?.uid) return;
+
     if (usedSeats >= maxSeats) {
       notify('No available seats left in your family plan.', 'error');
       return;
     }
 
     setIsInviting(true);
-    // Simulate API call
-    setTimeout(() => {
-      setMembers([...members, {
-        id: Date.now().toString(),
-        name: 'Pending Invite',
-        email: inviteEmail,
-        role: 'pending'
-      }]);
+    try {
+      await inviteHouseholdMember(user.uid, inviteEmail.trim());
       setInviteEmail('');
+      notify('Invitation recorded. Your household seat is reserved.', 'success');
+      await refreshMembers();
+    } catch (error) {
+      notify(error instanceof Error ? error.message : 'The invitation could not be sent.', 'error');
+    } finally {
       setIsInviting(false);
-      notify('Invitation sent successfully!', 'success');
-    }, 1000);
+    }
   };
 
-  const handleRemoveMember = (id: string) => {
+  const handleRemoveMember = async (id: string) => {
+    if (!user?.uid) return;
     if (window.confirm('Are you sure you want to remove this member?')) {
-      setMembers(members.filter(m => m.id !== id));
-      notify('Member removed.', 'success');
+      try {
+        await removeHouseholdMember(user.uid, id);
+        notify('Member removed.', 'success');
+        await refreshMembers();
+      } catch (error) {
+        notify(error instanceof Error ? error.message : 'The member could not be removed.', 'error');
+      }
     }
   };
 
@@ -115,9 +120,9 @@ const FamilyDashboardPage: React.FC = () => {
                 <span className="font-bold text-brand-text-primary">{usedSeats} / {maxSeats}</span>
               </div>
               <div className="w-full bg-brand-dark rounded-full h-2.5">
-                <div 
-                  className="bg-brand-accent h-2.5 rounded-full transition-all" 
-                  style={{ width: `${(usedSeats / maxSeats) * 100}%` }}
+                <div
+                  className="bg-brand-accent h-2.5 rounded-full transition-all"
+                  style={{ width: `${Math.min(100, (usedSeats / maxSeats) * 100)}%` }}
                 ></div>
               </div>
             </div>
@@ -156,14 +161,30 @@ const FamilyDashboardPage: React.FC = () => {
               Household Activity
             </h2>
             <div className="space-y-4">
-              <div className="p-3 rounded-lg bg-brand-dark border border-brand-border">
-                <p className="text-sm text-brand-text-primary font-bold">30 Days of Prayer</p>
-                <p className="text-xs text-brand-text-secondary mt-1">Sarah completed Day 4</p>
-              </div>
-              <div className="p-3 rounded-lg bg-brand-dark border border-brand-border">
-                <p className="text-sm text-brand-text-primary font-bold">Foundations Course</p>
-                <p className="text-xs text-brand-text-secondary mt-1">You and 1 other are enrolled</p>
-              </div>
+              {members.filter((member) => member.status === 'active').length > 1 ? (
+                <div className="p-3 rounded-lg bg-brand-dark border border-brand-border">
+                  <p className="text-sm text-brand-text-primary font-bold">Walking together</p>
+                  <p className="text-xs text-brand-text-secondary mt-1">
+                    {members.filter((member) => member.status === 'active').length} of your household are sharing the daily rhythm.
+                  </p>
+                </div>
+              ) : (
+                <div className="p-3 rounded-lg bg-brand-dark border border-brand-border">
+                  <p className="text-sm text-brand-text-primary font-bold">A table set for more</p>
+                  <p className="text-xs text-brand-text-secondary mt-1">
+                    Invite your household so courses, challenges, and prayer can be shared.
+                  </p>
+                </div>
+              )}
+              {members.some((member) => member.status === 'pending') && (
+                <div className="p-3 rounded-lg bg-brand-dark border border-brand-border">
+                  <p className="text-sm text-brand-text-primary font-bold">Invitations waiting</p>
+                  <p className="text-xs text-brand-text-secondary mt-1">
+                    {members.filter((member) => member.status === 'pending').length} seat
+                    {members.filter((member) => member.status === 'pending').length === 1 ? ' is' : 's are'} reserved for invited members.
+                  </p>
+                </div>
+              )}
             </div>
           </Card>
         </div>
@@ -174,14 +195,23 @@ const FamilyDashboardPage: React.FC = () => {
             <h2 className="text-xl font-bold text-brand-text-primary mb-6 border-b border-brand-border pb-4">
               People at the Table
             </h2>
-            
+
+            {isLoading && (
+              <p className="text-sm text-brand-text-secondary py-6 text-center">Setting the table…</p>
+            )}
+
+            {!isLoading && loadError && (
+              <p className="text-sm text-status-error py-6 text-center">{loadError}</p>
+            )}
+
+            {!isLoading && !loadError && (
             <div className="space-y-4">
               {members.map((member) => (
                 <div key={member.id} className="flex items-center justify-between p-4 rounded-xl border border-brand-border bg-brand-dark/50 hover:border-brand-accent/50 transition-colors">
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 rounded-full bg-brand-secondary flex items-center justify-center overflow-hidden">
-                      {member.avatarUrl ? (
-                        <img src={member.avatarUrl} alt={member.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                      {member.role === 'owner' && user?.photoURL ? (
+                        <img src={user.photoURL} alt={member.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                       ) : (
                         <UserIcon className="w-6 h-6 text-brand-text-secondary" />
                       )}
@@ -196,12 +226,15 @@ const FamilyDashboardPage: React.FC = () => {
                           <span className="px-2 py-0.5 text-[12px] bg-yellow-500/20 text-yellow-500 rounded-full uppercase tracking-wider">Pending</span>
                         )}
                       </h4>
-                      <p className="text-xs text-brand-text-secondary">{member.email}</p>
+                      <p className="text-xs text-brand-text-secondary">
+                        {member.email}
+                        {member.joinedAt && member.status === 'active' ? ` · joined ${formatJoined(member.joinedAt)}` : ''}
+                      </p>
                     </div>
                   </div>
-                  
+
                   {member.role !== 'owner' && (
-                    <button 
+                    <button
                       onClick={() => handleRemoveMember(member.id)}
                       className="p-2 text-brand-text-secondary hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
                       title={member.role === 'pending' ? 'Cancel Invite' : 'Remove Member'}
@@ -212,6 +245,7 @@ const FamilyDashboardPage: React.FC = () => {
                 </div>
               ))}
             </div>
+            )}
           </Card>
         </div>
       </div>
