@@ -71,6 +71,10 @@ const AdminDashboard: React.FC = () => {
     const [helpFormMessages, setHelpFormMessages] = useState<any[]>([]);
     const [loadingInbox, setLoadingInbox] = useState(true);
 
+    // Giving stewardship report (admin payments tab)
+    const [givingReport, setGivingReport] = useState<{ totals: any[]; recent: any[] } | null>(null);
+    const [loadingGiving, setLoadingGiving] = useState(false);
+
     // Resource Management State
     const [resources, setResources] = useState<any[]>([]);
     const [loadingResources, setLoadingResources] = useState(true);
@@ -361,6 +365,25 @@ const AdminDashboard: React.FC = () => {
                 handleFirestoreError(error, OperationType.LIST, 'settings');
                 setLoadingDiscounts(false);
             }));
+        }
+
+        if (activeTab === 'payments') {
+            setLoadingGiving(true);
+            (async () => {
+                try {
+                    const response = await fetch('/api/admin/giving/report', {
+                        headers: await adminAuthHeaders(),
+                    });
+                    if (response.ok) {
+                        const data = await response.json();
+                        setGivingReport({ totals: data.totals || [], recent: data.recent || [] });
+                    }
+                } catch {
+                    // Report is additive; the rest of the payments tab still renders.
+                } finally {
+                    setLoadingGiving(false);
+                }
+            })();
         }
 
         if (activeTab === 'resources') {
@@ -925,7 +948,7 @@ const AdminDashboard: React.FC = () => {
                                                 This key is used for client-side payment initialization. Keep it secure.
                                             </p>
                                         </div>
-                                        <button 
+                                        <button
                                             onClick={handleUpdatePaymentSettings}
                                             disabled={isUpdatingPayment || !flutterwaveKey}
                                             className="w-full py-3 bg-brand-accent text-white rounded-xl font-bold hover:scale-[1.02] transition-transform flex items-center justify-center gap-2 disabled:opacity-50"
@@ -933,6 +956,58 @@ const AdminDashboard: React.FC = () => {
                                             {isUpdatingPayment ? <><SpinnerIcon className="w-5 h-5"/> Updating...</> : 'Save Payment Settings'}
                                         </button>
                                     </div>
+                                </div>
+
+                                <div className="p-6 border border-brand-border rounded-xl bg-brand-secondary/30">
+                                    <h3 className="text-lg font-semibold text-brand-text-primary mb-1" style={{ fontFamily: 'var(--serif-display)' }}>Giving Stewardship</h3>
+                                    <p className="text-xs text-brand-text-secondary mb-4">Verified gifts recorded by the payment webhook. Donors receive an automatic receipt email.</p>
+                                    {loadingGiving ? (
+                                        <SpinnerIcon className="w-6 h-6 animate-spin text-brand-accent" />
+                                    ) : !givingReport || (givingReport.totals.length === 0 && givingReport.recent.length === 0) ? (
+                                        <p className="text-sm text-brand-text-secondary">No verified gifts yet. Totals will appear here after the first confirmed gift.</p>
+                                    ) : (
+                                        <div className="space-y-5">
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                                {givingReport.totals.map((row, index) => (
+                                                    <div key={index} className="p-4 rounded-lg bg-brand-dark border border-brand-border">
+                                                        <p className="text-xs text-brand-text-secondary uppercase tracking-wider">{row.giftType} · {row.currency}</p>
+                                                        <p className="text-2xl font-semibold text-brand-text-primary" style={{ fontFamily: 'var(--serif-display)' }}>
+                                                            {Number(row.totalAmount).toLocaleString()}
+                                                        </p>
+                                                        <p className="text-xs text-brand-text-secondary">{row.giftCount} gift{row.giftCount === 1 ? '' : 's'}</p>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                            {givingReport.recent.length > 0 && (
+                                                <div className="overflow-x-auto">
+                                                    <table className="w-full text-left text-sm">
+                                                        <thead>
+                                                            <tr className="border-b border-brand-border text-xs uppercase tracking-wider text-brand-text-secondary">
+                                                                <th className="pb-2 font-bold">When</th>
+                                                                <th className="pb-2 font-bold">Amount</th>
+                                                                <th className="pb-2 font-bold">Type</th>
+                                                                <th className="pb-2 font-bold text-right">Status</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody className="divide-y divide-brand-border">
+                                                            {givingReport.recent.slice(0, 10).map((gift) => (
+                                                                <tr key={gift.txRef}>
+                                                                    <td className="py-2 text-brand-text-secondary">{gift.purchasedAt ? new Date(gift.purchasedAt).toLocaleDateString() : '—'}</td>
+                                                                    <td className="py-2 text-brand-text-primary font-semibold">{gift.currency} {Number(gift.amount).toLocaleString()}</td>
+                                                                    <td className="py-2 text-brand-text-secondary capitalize">{gift.giftType}</td>
+                                                                    <td className="py-2 text-right">
+                                                                        <span className={`px-2 py-0.5 text-[10px] uppercase tracking-wider rounded-full ${gift.status === 'active' ? 'bg-status-success/15 text-status-success' : gift.status === 'pending' ? 'bg-yellow-500/15 text-yellow-500' : 'bg-status-error/15 text-status-error'}`}>
+                                                                            {gift.status === 'active' ? 'verified' : gift.status}
+                                                                        </span>
+                                                                    </td>
+                                                                </tr>
+                                                            ))}
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </Card>

@@ -63,9 +63,14 @@ const FamilyDashboardPage: React.FC = () => {
 
     setIsInviting(true);
     try {
-      await inviteHouseholdMember(user.uid, inviteEmail.trim());
+      const result = await inviteHouseholdMember(user.uid, inviteEmail.trim());
       setInviteEmail('');
-      notify('Invitation recorded. Your household seat is reserved.', 'success');
+      notify(
+        result.emailSent
+          ? 'Invitation sent. They will receive an email with their seat.'
+          : 'Invitation recorded. Your household seat is reserved.',
+        'success'
+      );
       await refreshMembers();
     } catch (error) {
       notify(error instanceof Error ? error.message : 'The invitation could not be sent.', 'error');

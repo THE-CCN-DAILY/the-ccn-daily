@@ -91,9 +91,14 @@ const LeaderDashboardPage: React.FC = () => {
 
     setIsInviting(true);
     try {
-      await inviteGroupMember(user.uid, inviteEmail.trim());
+      const result = await inviteGroupMember(user.uid, inviteEmail.trim());
       setInviteEmail('');
-      notify('Invitation recorded. A place is held in your group.', 'success');
+      notify(
+        result.emailSent
+          ? 'Invitation sent. They will receive an email with their place.'
+          : 'Invitation recorded. A place is held in your group.',
+        'success'
+      );
       await refreshOverview();
     } catch (error) {
       notify(error instanceof Error ? error.message : 'The invitation could not be sent.', 'error');

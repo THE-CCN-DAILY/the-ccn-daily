@@ -2677,6 +2677,70 @@ const ensureHouseholdOwner = async (db: D1DatabaseBinding, userId: string, c: an
   ).bind(`owner_${userId}`, userId, name, email || `${userId}@local.ccn`).run();
 };
 
+// Flip pending invitations to active once the invited email has a real account.
+// Runs opportunistically on dashboard reads so no separate redemption flow is
+// needed: invitee signs in with the invited email and their seat activates.
+const reconcilePendingSeats = async (
+  db: D1DatabaseBinding,
+  table: 'household_members' | 'group_members',
+  ownerColumn: 'owner_id' | 'leader_id',
+  ownerId: string,
+) => {
+  try {
+    await db.prepare(
+      `UPDATE ${table}
+       SET role = 'member', status = 'active',
+           ${table === 'household_members' ? "joined_at = COALESCE(joined_at, CURRENT_TIMESTAMP)," : ''}
+           updated_at = CURRENT_TIMESTAMP
+       WHERE ${ownerColumn} = ? AND role = 'pending'
+         AND email IN (SELECT LOWER(email) FROM users WHERE email IS NOT NULL)`
+    ).bind(ownerId).run();
+  } catch (error) {
+    console.error('Seat reconciliation failed', error);
+  }
+};
+
+// Invitation email — best-effort; the durable seat record is the source of truth.
+const sendSeatInviteEmail = async (
+  c: any,
+  inviteeEmail: string,
+  inviteeName: string,
+  context: 'household' | 'group',
+) => {
+  if (!c.env.RESEND_API_KEY || !isValidEmail(inviteeEmail)) return false;
+  const inviterEmail = String(c.get('idTokenEmail') || '').trim();
+  const origin = c.env.PRODUCTION_ORIGIN || 'https://theccndaily.com';
+  const heading = context === 'household'
+    ? 'You have a place at the Family Table.'
+    : 'You have been invited to walk with a group.';
+  const detail = context === 'household'
+    ? 'A household seat on THE CCN DAILY has been reserved for you — daily Scripture, prayer, courses, and encouragement, shared as a family.'
+    : 'A group leader has invited you into a shared rhythm of Scripture practice, gentle accountability, and encouragement on THE CCN DAILY.';
+  try {
+    await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${c.env.RESEND_API_KEY}` },
+      body: JSON.stringify({
+        from: 'gifts@theccndaily.com',
+        to: [inviteeEmail],
+        subject: 'You have been invited to THE CCN DAILY',
+        html: `<div style="font-family:Georgia,serif;max-width:600px;margin:0 auto;background:#1a1210;color:#f0ebe4;padding:40px 32px;border-radius:12px">
+          <h2 style="color:#F27D26;font-size:22px;margin-bottom:8px">${heading}</h2>
+          <p>Hello ${sanitizeInput(inviteeName) || 'Friend'},</p>
+          <p>${detail}</p>
+          ${inviterEmail ? `<p style="font-size:13px;color:#c8b89a">Invited by ${sanitizeInput(inviterEmail)}</p>` : ''}
+          <p><a href="${origin}/#/onboarding" style="display:inline-block;margin-top:12px;padding:12px 24px;background:#F27D26;color:#ffffff;border-radius:8px;text-decoration:none;font-weight:bold">Take your seat</a></p>
+          <p style="margin-top:16px;font-size:13px;color:#c8b89a">Sign in with this email address (${sanitizeInput(inviteeEmail)}) and your seat will be waiting.</p>
+          <p style="margin-top:32px;font-size:12px;color:#7a6a60">THE CCN DAILY — theccndaily.com</p>
+        </div>`,
+      }),
+    });
+    return true;
+  } catch {
+    return false;
+  }
+};
+
 const ensureGroupLeader = async (db: D1DatabaseBinding, userId: string, c: any) => {
   const email = String(c.get('idTokenEmail') || '').trim().toLowerCase();
   const name = email ? fallbackNameFromEmail(email) : 'You';
@@ -2701,6 +2765,7 @@ app.get('/api/users/:userId/household/members', async (c) => {
 
   await ensureHouseholdTables(c.env.DB);
   await ensureHouseholdOwner(c.env.DB, userId, c);
+  await reconcilePendingSeats(c.env.DB, 'household_members', 'owner_id', userId);
 
   const result = await c.env.DB.prepare(
     `SELECT * FROM household_members
@@ -2748,7 +2813,9 @@ app.post('/api/users/:userId/household/invites', async (c) => {
     `SELECT * FROM household_members WHERE owner_id = ? AND email = ? LIMIT 1`
   ).bind(userId, email).first<HouseholdMemberRow>();
 
-  return c.json({ member: member ? mapHouseholdMember(member) : null, source: 'd1' });
+  const emailSent = await sendSeatInviteEmail(c, email, name, 'household');
+
+  return c.json({ member: member ? mapHouseholdMember(member) : null, emailSent, source: 'd1' });
 });
 
 app.delete('/api/users/:userId/household/members/:id', async (c) => {
@@ -2774,6 +2841,7 @@ app.get('/api/users/:userId/group/overview', async (c) => {
 
   await ensureHouseholdTables(c.env.DB);
   await ensureGroupLeader(c.env.DB, userId, c);
+  await reconcilePendingSeats(c.env.DB, 'group_members', 'leader_id', userId);
 
   const [members, assignments] = await Promise.all([
     c.env.DB.prepare(
@@ -2826,7 +2894,9 @@ app.post('/api/users/:userId/group/invites', async (c) => {
     `SELECT * FROM group_members WHERE leader_id = ? AND email = ? LIMIT 1`
   ).bind(userId, email).first<GroupMemberRow>();
 
-  return c.json({ member: member ? mapGroupMember(member) : null, source: 'd1' });
+  const emailSent = await sendSeatInviteEmail(c, email, name, 'group');
+
+  return c.json({ member: member ? mapGroupMember(member) : null, emailSent, source: 'd1' });
 });
 
 app.delete('/api/users/:userId/group/members/:id', async (c) => {
@@ -4120,6 +4190,50 @@ app.get('/api/giving/status/:txRef', async (c) => {
     giftType,
   });
 });
+// GET /api/admin/giving/report
+// Stewardship summary of verified giving: totals per currency/type plus the
+// most recent verified gifts. Reads the same user_purchases rows the webhook
+// marks active, so the report needs no separate ledger.
+app.get('/api/admin/giving/report', async (c) => {
+  const denied = requireAdmin(c); if (denied) return denied;
+  if (!c.env.DB) return c.json({ totals: [], recent: [], source: 'fallback' });
+
+  const [totals, recent] = await Promise.all([
+    c.env.DB.prepare(
+      `SELECT currency, resource_id, COUNT(*) as gift_count, SUM(amount) as total_amount
+       FROM user_purchases
+       WHERE resource_id LIKE 'donation:%' AND status = 'active'
+       GROUP BY currency, resource_id
+       ORDER BY total_amount DESC`
+    ).all<{ currency: string; resource_id: string; gift_count: number; total_amount: number }>(),
+    c.env.DB.prepare(
+      `SELECT tx_ref, amount, currency, resource_id, status, purchased_at
+       FROM user_purchases
+       WHERE resource_id LIKE 'donation:%'
+       ORDER BY purchased_at DESC
+       LIMIT 50`
+    ).all<{ tx_ref: string; amount: number; currency: string; resource_id: string; status: string; purchased_at: string }>(),
+  ]);
+
+  return c.json({
+    totals: totals.results.map((row) => ({
+      currency: row.currency || 'USD',
+      giftType: row.resource_id === 'donation:monthly' ? 'monthly' : 'one-time',
+      giftCount: Number(row.gift_count || 0),
+      totalAmount: Number(row.total_amount || 0),
+    })),
+    recent: recent.results.map((row) => ({
+      txRef: row.tx_ref,
+      amount: Number(row.amount || 0),
+      currency: row.currency || 'USD',
+      giftType: row.resource_id === 'donation:monthly' ? 'monthly' : 'one-time',
+      status: row.status,
+      purchasedAt: row.purchased_at,
+    })),
+    source: 'd1',
+  });
+});
+
 // Map a tier marker resource_id back to the tier (e.g. 'tier:pro' → 'pro').
 const tierFromResourceId = (resourceId: string): string =>
   resourceId.startsWith('tier:') ? resourceId.slice('tier:'.length) : '';
@@ -4202,6 +4316,33 @@ app.post('/api/payments/flutterwave/webhook', async (c) => {
     await c.env.DB.prepare(
       `UPDATE user_purchases SET status = 'active' WHERE tx_ref = ? AND status = 'pending'`
     ).bind(txRef).run();
+
+    // Donor receipt — best-effort: a failed email must never fail the webhook,
+    // the gift is already verified and recorded above.
+    const donorEmail = String(verified.customer?.email || '').trim();
+    const donorName = sanitizeInput(String(verified.customer?.name || 'Friend').trim().slice(0, 120)) || 'Friend';
+    if (c.env.RESEND_API_KEY && isValidEmail(donorEmail)) {
+      const giftLabel = purchase.resource_id === 'donation:monthly' ? 'monthly gift' : 'gift';
+      const amountLabel = `${purchase.currency || 'USD'} ${Number(purchase.amount || 0).toLocaleString()}`;
+      await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${c.env.RESEND_API_KEY}` },
+        body: JSON.stringify({
+          from: 'gifts@theccndaily.com',
+          to: [donorEmail],
+          subject: 'Thank you — your gift to THE CCN DAILY',
+          html: `<div style="font-family:Georgia,serif;max-width:600px;margin:0 auto;background:#1a1210;color:#f0ebe4;padding:40px 32px;border-radius:12px">
+            <h2 style="color:#F27D26;font-size:22px;margin-bottom:8px">Thank you, ${donorName}.</h2>
+            <p>Your ${giftLabel} of <strong>${amountLabel}</strong> has been received and verified.</p>
+            <p>Every gift carries Scripture, prayer, and daily formation to people who need it. We are grateful you chose to sow here.</p>
+            <p style="margin:20px 0 0;font-size:13px;color:#c8b89a">Receipt reference: ${txRef}</p>
+            <p>Grace and peace,<br/>THE CCN DAILY</p>
+            <p style="margin-top:32px;font-size:12px;color:#7a6a60">theccndaily.com</p>
+          </div>`,
+        }),
+      }).catch(() => {});
+    }
+
     return c.json({ received: true, donationRecorded: true });
   }
 

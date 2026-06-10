@@ -78,12 +78,17 @@ export const listHouseholdMembers = async (userId: string): Promise<HouseholdOve
   return { members: data.members || [], maxSeats: Number(data.maxSeats || 5) };
 };
 
+export interface InviteResult<T> {
+  member: T;
+  emailSent: boolean;
+}
+
 export const inviteHouseholdMember = async (
   userId: string,
   email: string,
   name?: string
-): Promise<HouseholdMember> => {
-  const data = await requestJson<{ member: HouseholdMember | null }>(
+): Promise<InviteResult<HouseholdMember>> => {
+  const data = await requestJson<{ member: HouseholdMember | null; emailSent?: boolean }>(
     householdUrl(userId, '/invites'),
     {
       method: 'POST',
@@ -92,7 +97,7 @@ export const inviteHouseholdMember = async (
     }
   );
   if (!data.member) throw new Error('The invitation could not be recorded. Please try again.');
-  return data.member;
+  return { member: data.member, emailSent: data.emailSent === true };
 };
 
 export const removeHouseholdMember = async (userId: string, memberId: string): Promise<void> => {
@@ -114,14 +119,17 @@ export const inviteGroupMember = async (
   userId: string,
   email: string,
   name?: string
-): Promise<GroupMember> => {
-  const data = await requestJson<{ member: GroupMember | null }>(groupUrl(userId, '/invites'), {
-    method: 'POST',
-    headers: await adminAuthHeaders(),
-    body: JSON.stringify({ email, name }),
-  });
+): Promise<InviteResult<GroupMember>> => {
+  const data = await requestJson<{ member: GroupMember | null; emailSent?: boolean }>(
+    groupUrl(userId, '/invites'),
+    {
+      method: 'POST',
+      headers: await adminAuthHeaders(),
+      body: JSON.stringify({ email, name }),
+    }
+  );
   if (!data.member) throw new Error('The invitation could not be recorded. Please try again.');
-  return data.member;
+  return { member: data.member, emailSent: data.emailSent === true };
 };
 
 export const removeGroupMember = async (userId: string, memberId: string): Promise<void> => {
