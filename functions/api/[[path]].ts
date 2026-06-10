@@ -1,4 +1,4 @@
-﻿import { Hono } from 'hono';
+import { Hono } from 'hono';
 import { SignJWT, jwtVerify, createRemoteJWKSet } from 'jose';
 
 type D1PreparedStatement = {
@@ -2717,11 +2717,11 @@ const sendSeatInviteEmail = async (
     ? 'A household seat on THE CCN DAILY has been reserved for you — daily Scripture, prayer, courses, and encouragement, shared as a family.'
     : 'A group leader has invited you into a shared rhythm of Scripture practice, gentle accountability, and encouragement on THE CCN DAILY.';
   try {
-    await fetch('https://api.resend.com/emails', {
+    const response = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${c.env.RESEND_API_KEY}` },
       body: JSON.stringify({
-        from: 'gifts@theccndaily.com',
+        from: 'THE CCN DAILY <gifts@updates.theccndaily.com>',
         to: [inviteeEmail],
         subject: 'You have been invited to THE CCN DAILY',
         html: `<div style="font-family:Georgia,serif;max-width:600px;margin:0 auto;background:#1a1210;color:#f0ebe4;padding:40px 32px;border-radius:12px">
@@ -2735,8 +2735,13 @@ const sendSeatInviteEmail = async (
         </div>`,
       }),
     });
+    if (!response.ok) {
+      console.error('Invite email rejected by Resend', response.status, await response.text().catch(() => ''));
+      return false;
+    }
     return true;
-  } catch {
+  } catch (error) {
+    console.error('Invite email send failed', error);
     return false;
   }
 };
@@ -3838,7 +3843,7 @@ app.post('/api/email/gift', async (c) => {
         Authorization: `Bearer ${c.env.RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: 'gifts@theccndaily.com',
+        from: 'THE CCN DAILY <gifts@updates.theccndaily.com>',
         to: [recipientEmail],
         subject: `You've received a gift: ${giftedItem}`,
         html,
@@ -3914,7 +3919,7 @@ app.post('/api/admin/scholarship-decide', async (c) => {
       await fetch('https://api.resend.com/emails', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${c.env.RESEND_API_KEY}` },
-        body: JSON.stringify({ from: 'gifts@theccndaily.com', to: [email], subject: 'Your CCN Daily scholarship is approved', html }),
+        body: JSON.stringify({ from: 'THE CCN DAILY <gifts@updates.theccndaily.com>', to: [email], subject: 'Your CCN Daily scholarship is approved', html }),
       }).catch(() => {});
     }
 
@@ -3935,7 +3940,7 @@ app.post('/api/admin/scholarship-decide', async (c) => {
     await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${c.env.RESEND_API_KEY}` },
-      body: JSON.stringify({ from: 'gifts@theccndaily.com', to: [email], subject: 'Your CCN Daily scholarship application', html }),
+      body: JSON.stringify({ from: 'THE CCN DAILY <gifts@updates.theccndaily.com>', to: [email], subject: 'Your CCN Daily scholarship application', html }),
     }).catch(() => {});
   }
 
@@ -3964,7 +3969,7 @@ app.post('/api/scholarship-submitted', async (c) => {
     fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${c.env.RESEND_API_KEY}` },
-      body: JSON.stringify({ from: 'gifts@theccndaily.com', to, subject, html }),
+      body: JSON.stringify({ from: 'THE CCN DAILY <gifts@updates.theccndaily.com>', to, subject, html }),
     }).catch(() => {});
 
   // 1. Acknowledge to the applicant.
@@ -4328,7 +4333,7 @@ app.post('/api/payments/flutterwave/webhook', async (c) => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${c.env.RESEND_API_KEY}` },
         body: JSON.stringify({
-          from: 'gifts@theccndaily.com',
+          from: 'THE CCN DAILY <gifts@updates.theccndaily.com>',
           to: [donorEmail],
           subject: 'Thank you — your gift to THE CCN DAILY',
           html: `<div style="font-family:Georgia,serif;max-width:600px;margin:0 auto;background:#1a1210;color:#f0ebe4;padding:40px 32px;border-radius:12px">
