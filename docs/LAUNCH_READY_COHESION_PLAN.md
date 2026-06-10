@@ -1,6 +1,6 @@
 # THE CCN DAILY Launch-Ready Cohesion Plan
 
-Last updated: 2026-06-05
+Last updated: 2026-06-10
 
 ## Direction
 
@@ -88,12 +88,12 @@ Status: not complete.
 Priorities:
 
 1. Decide source of truth by domain: D1 vs Firestore for books, announcements, donations, highlights, scholarships, and settings.
-2. Move donations to server-authoritative intent/webhook/readback like subscriptions.
-3. Replace mock family/leader dashboard state with real household/group APIs and seat/member workflows.
-4. Align books library with Cloudflare `/api/books` or document Firestore as the intentional boundary.
+2. Move donations to server-authoritative intent/webhook/readback like subscriptions. (Done — server-created intents, webhook verification, readback.)
+3. Replace mock family/leader dashboard state with real household/group APIs and seat/member workflows. (Done 2026-06-10 — D1 `household_members`, `group_members`, `group_assignments` tables; eight authenticated self-scoped routes; both dashboards load, invite, remove, and assign through the live API; leader "Coming Soon" cards replaced with live cohort data.)
+4. Align books library with Cloudflare `/api/books` or document Firestore as the intentional boundary. (Done — admin and member books route through the D1 catalog first.)
 5. Unify scholarship application, review, decision, notification, and access grant.
 6. Complete analytics beyond stubs.
-7. Replace podcast placeholder links.
+7. Replace podcast placeholder links. (Verified 2026-06-10 — no placeholder episode links remain in PodcastPage; episodes come from the RSS proxy.)
 
 ### 4. Cloudflare Launch Hardening
 
@@ -121,10 +121,38 @@ Required before production:
 - Production deploy to `https://theccndaily.com/` only after staging passes
 - GitHub branch pushed and clean
 
+## Launch Readiness Assessment (2026-06-10)
+
+Independent review on top of the expert findings above, after completing the household/group workstream.
+
+### Ready for launch
+
+- Public surfaces: landing, pricing, blog, newsletter, podcast, giving, sign-in.
+- Payments: server-priced subscription intents, Flutterwave webhook verification, D1 entitlement readback, fail-closed gating. Giving uses the same server-authoritative pattern.
+- Member surfaces: Daily Journey, Prayer Companion, Visual Sanctuary, courses, challenges, journal, books (D1 catalog first), community, account settings with D1 plan readback.
+- Family and leader plans: household seats, group members, and shared assignments are durable in D1 with self-scoped authenticated routes — no mock state remains on either dashboard.
+- Admin studio: content manager, blog studio, announcements, scholarship review, roles, diagnostics.
+- Release gates green at this checkpoint: `npm run lint`, `npm run build`, `npm run cf:typecheck`.
+
+### Should precede or closely follow launch (hardening, not blockers)
+
+1. Turnstile + durable rate limiting on public submissions (`/api/contact`, scholarship, testimonies, `/api/ai/generate`). Highest abuse-risk gap; the app is functional without it but exposed to cost abuse.
+2. Donor receipt emails and an admin giving report (giving works and verifies; stewardship reporting is manual until then).
+3. Signed-in visual QA pass on staging (dashboard, admin, family, leader, scholarship, Prayer Companion, Visual Sanctuary).
+4. Household/group invite delivery: seats and invitations are durable, but invited members are not yet emailed a join link. Position copy as "seat reserved" until invite email ships via Resend.
+
+### Post-launch backlog
+
+- D1 migrations directory instead of one-shot schema applies.
+- KV/Cache API for public RSS and content reads.
+- Queues for email, scholarship decisions, and media processing.
+- Engagement scoring fed by real activity events (group `engagement_score` currently only moves when set server-side).
+- Bundle splitting: main chunk is ~1.6 MB minified; code-split admin studio and reader surfaces.
+
 ## Current Evidence
 
 - Latest pushed branch: `phase-e-visual-authoring`
-- Latest functional checkpoint: `8da3e06 feat: complete giving and reader media flows`
+- Latest functional checkpoint: `a18513c feat: household and group dashboards on live D1 seat APIs`
 - Latest deployed staging alias: `https://staging.project-phoenix-ccn-daily.pages.dev/`
 - Latest staging deployment URL: `https://bebdb1a3.project-phoenix-ccn-daily.pages.dev`
 - Current in-progress checkpoint: books/admin catalog consolidation and remaining signed-in dashboard/admin QA.
