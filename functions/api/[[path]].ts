@@ -747,6 +747,11 @@ const mapAiUsage = (row: AiUsageRow) => {
 
 const isSafeId = (value: string) => /^[a-zA-Z0-9._:@-]{1,160}$/.test(value);
 
+// Secrets set from Windows shells can arrive with a UTF-8 BOM prefix, which
+// makes the Authorization header non-ASCII and Resend reject the key as
+// invalid. Strip BOM and stray whitespace at point of use.
+const resendKey = (env: Env) => (env.RESEND_API_KEY || '').replace(/^﻿/, '').trim();
+
 const ADMIN_EMAILS = ['pastor.eryeza@gmail.com', 'ccndaily@gmail.com'];
 
 const isAdminRequest = (c: any) => {
@@ -2719,7 +2724,7 @@ const sendSeatInviteEmail = async (
   try {
     const response = await fetch('https://api.resend.com/emails', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${c.env.RESEND_API_KEY}` },
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${resendKey(c.env)}` },
       body: JSON.stringify({
         from: 'THE CCN DAILY <gifts@updates.theccndaily.com>',
         to: [inviteeEmail],
@@ -3840,7 +3845,7 @@ app.post('/api/email/gift', async (c) => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${c.env.RESEND_API_KEY}`,
+        Authorization: `Bearer ${resendKey(c.env)}`,
       },
       body: JSON.stringify({
         from: 'THE CCN DAILY <gifts@updates.theccndaily.com>',
@@ -3918,7 +3923,7 @@ app.post('/api/admin/scholarship-decide', async (c) => {
         </div>`;
       await fetch('https://api.resend.com/emails', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${c.env.RESEND_API_KEY}` },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${resendKey(c.env)}` },
         body: JSON.stringify({ from: 'THE CCN DAILY <gifts@updates.theccndaily.com>', to: [email], subject: 'Your CCN Daily scholarship is approved', html }),
       }).catch(() => {});
     }
@@ -3939,7 +3944,7 @@ app.post('/api/admin/scholarship-decide', async (c) => {
       </div>`;
     await fetch('https://api.resend.com/emails', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${c.env.RESEND_API_KEY}` },
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${resendKey(c.env)}` },
       body: JSON.stringify({ from: 'THE CCN DAILY <gifts@updates.theccndaily.com>', to: [email], subject: 'Your CCN Daily scholarship application', html }),
     }).catch(() => {});
   }
@@ -3968,7 +3973,7 @@ app.post('/api/scholarship-submitted', async (c) => {
   const sendEmail = (to: string[], subject: string, html: string) =>
     fetch('https://api.resend.com/emails', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${c.env.RESEND_API_KEY}` },
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${resendKey(c.env)}` },
       body: JSON.stringify({ from: 'THE CCN DAILY <gifts@updates.theccndaily.com>', to, subject, html }),
     }).catch(() => {});
 
@@ -4331,7 +4336,7 @@ app.post('/api/payments/flutterwave/webhook', async (c) => {
       const amountLabel = `${purchase.currency || 'USD'} ${Number(purchase.amount || 0).toLocaleString()}`;
       await fetch('https://api.resend.com/emails', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${c.env.RESEND_API_KEY}` },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${resendKey(c.env)}` },
         body: JSON.stringify({
           from: 'THE CCN DAILY <gifts@updates.theccndaily.com>',
           to: [donorEmail],
