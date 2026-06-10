@@ -27,18 +27,27 @@ const loadTurnstileScript = (): Promise<void> =>
       return;
     }
     const existing = document.getElementById(SCRIPT_ID) as HTMLScriptElement | null;
-    if (existing) {
-      existing.addEventListener('load', () => resolve());
-      existing.addEventListener('error', () => reject(new Error('Turnstile failed to load')));
-      return;
+    if (!existing) {
+      const script = document.createElement('script');
+      script.id = SCRIPT_ID;
+      script.src = SCRIPT_SRC;
+      script.async = true;
+      script.onerror = () => reject(new Error('Turnstile failed to load'));
+      document.head.appendChild(script);
     }
-    const script = document.createElement('script');
-    script.id = SCRIPT_ID;
-    script.src = SCRIPT_SRC;
-    script.async = true;
-    script.onload = () => resolve();
-    script.onerror = () => reject(new Error('Turnstile failed to load'));
-    document.head.appendChild(script);
+    // Poll instead of listening for `load`: if the script tag already exists
+    // and finished loading before this mount (e.g. the page remounts after
+    // auth hydration), a load listener would never fire.
+    const startedAt = Date.now();
+    const poll = window.setInterval(() => {
+      if (window.turnstile) {
+        window.clearInterval(poll);
+        resolve();
+      } else if (Date.now() - startedAt > 15000) {
+        window.clearInterval(poll);
+        reject(new Error('Turnstile failed to load'));
+      }
+    }, 100);
   });
 
 interface TurnstileWidgetProps {
