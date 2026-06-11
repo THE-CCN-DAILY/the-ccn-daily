@@ -1,5 +1,8 @@
 import { adminAuthHeaders } from './adminAuth';
 
+export type ChallengeType = 'open' | 'scheduled';
+export type ChallengePhase = 'open' | 'upcoming' | 'active' | 'ended';
+
 export interface Challenge {
   id: string;
   title: string;
@@ -10,8 +13,20 @@ export interface Challenge {
   coverUrl?: string;
   participantsCount: number;
   status: 'published' | 'draft' | 'archived';
+  challengeType?: ChallengeType;
+  endDate?: string;
+  liveUrl?: string;
+  phase?: ChallengePhase;
   createdAt?: string;
   updatedAt?: string;
+}
+
+export interface ChallengeProgressEntry {
+  userId: string;
+  name: string;
+  completed: number;
+  percent: number;
+  joinedAt?: string;
 }
 
 export interface ChallengeModule {
@@ -90,6 +105,23 @@ export const joinChallenge = async (challengeId: string, userId: string) => {
   );
 };
 
+export const getChallengeProgress = async (challengeId: string) => {
+  return requestJson<{ participants: ChallengeProgressEntry[]; moduleCount: number }>(
+    `/api/challenges/${encodeURIComponent(challengeId)}/progress`
+  );
+};
+
+export const inviteToChallenge = async (challengeId: string, email: string) => {
+  return requestJson<{ ok: boolean; emailSent: boolean }>(
+    `/api/challenges/${encodeURIComponent(challengeId)}/invite`,
+    {
+      method: 'POST',
+      headers: await adminAuthHeaders(),
+      body: JSON.stringify({ email }),
+    }
+  );
+};
+
 export const completeChallengeModule = async (challengeId: string, moduleId: string, userId: string) => {
   return requestJson<{ participant: ChallengeParticipant | null }>(
     `/api/challenges/${encodeURIComponent(challengeId)}/modules/${encodeURIComponent(moduleId)}/complete`,
@@ -104,6 +136,9 @@ export const completeChallengeModule = async (challengeId: string, moduleId: str
 export const publishChallenge = async (challenge: Partial<Challenge> & {
   title: string;
   description: string;
+  challengeType?: ChallengeType;
+  endDate?: string;
+  liveUrl?: string;
   curriculum?: Array<Record<string, unknown>>;
   tasks?: string[];
 }) => {

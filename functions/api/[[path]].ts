@@ -163,6 +163,10 @@ type ChallengeRow = {
   status: 'draft' | 'published' | 'archived';
   start_date: string;
   participants_count: number;
+  // Community challenge extensions:
+  challenge_type?: string | null; // 'open' (join anytime) | 'scheduled' (timed)
+  end_date?: string | null;       // scheduled challenges only
+  live_url?: string | null;       // optional live session link (e.g. Cloudflare Stream)
   created_at?: string | null;
   updated_at?: string | null;
 };
@@ -493,6 +497,18 @@ const mapJournalEntry = (row: JournalEntryRow) => ({
   updatedAt: row.updated_at || undefined,
 });
 
+// Derived lifecycle phase for the member radar. Open challenges are always
+// joinable; scheduled challenges move upcoming → active → ended by their window.
+const challengePhase = (row: ChallengeRow): 'open' | 'upcoming' | 'active' | 'ended' => {
+  if ((row.challenge_type || 'open') !== 'scheduled') return 'open';
+  const now = Date.now();
+  const start = row.start_date ? Date.parse(row.start_date) : NaN;
+  const end = row.end_date ? Date.parse(row.end_date) : NaN;
+  if (!Number.isNaN(start) && now < start) return 'upcoming';
+  if (!Number.isNaN(end) && now > end) return 'ended';
+  return 'active';
+};
+
 const mapChallenge = (row: ChallengeRow) => ({
   id: row.id,
   title: row.title,
@@ -503,9 +519,27 @@ const mapChallenge = (row: ChallengeRow) => ({
   status: row.status,
   startDate: row.start_date,
   participantsCount: row.participants_count || 0,
+  challengeType: (row.challenge_type || 'open') as 'open' | 'scheduled',
+  endDate: row.end_date || undefined,
+  liveUrl: row.live_url || undefined,
+  phase: challengePhase(row),
   createdAt: row.created_at || undefined,
   updatedAt: row.updated_at || undefined,
 });
+
+// D1/SQLite has no "ADD COLUMN IF NOT EXISTS"; add each new challenge column
+// idempotently so existing databases gain the community-challenge fields
+// without a manual migration. A duplicate-column error means it already exists.
+const ensureChallengeColumns = async (db: D1DatabaseBinding) => {
+  const columns = [
+    "ALTER TABLE challenges ADD COLUMN challenge_type TEXT NOT NULL DEFAULT 'open'",
+    'ALTER TABLE challenges ADD COLUMN end_date TEXT',
+    'ALTER TABLE challenges ADD COLUMN live_url TEXT',
+  ];
+  for (const sql of columns) {
+    try { await db.prepare(sql).run(); } catch { /* column already present */ }
+  }
+};
 
 const mapChallengeModule = (row: ChallengeModuleRow) => ({
   id: row.id,
@@ -1451,6 +1485,100 @@ app.post('/api/challenges/:id/modules/:moduleId/complete', async (c) => {
   return c.json({ participant: updated ? mapChallengeParticipant(updated) : null });
 });
 
+// GET /api/challenges/:id/progress
+// Shared progress for everyone walking the challenge together: a roster of
+// participants with their completion percentage, so the community can see and
+// spur one another on. Names come from the D1 users table; anonymous if absent.
+app.get('/api/challenges/:id/progress', async (c) => {
+  const id = c.req.param('id');
+  if (!isSafeId(id)) return c.json({ error: 'Invalid challenge id' }, 400);
+  if (!c.env.DB) return c.json({ participants: [], moduleCount: 0, source: 'fallback' });
+
+  const moduleCountRow = await c.env.DB.prepare(
+    `SELECT COUNT(*) as count FROM challenge_modules WHERE challenge_id = ?`
+  ).bind(id).first<{ count: number }>();
+  const moduleCount = Number(moduleCountRow?.count || 0);
+
+  const rows = await c.env.DB.prepare(
+    `SELECT p.user_id, p.completed_modules, p.joined_at, u.display_name
+     FROM challenge_participants p
+     LEFT JOIN users u ON u.id = p.user_id
+     WHERE p.challenge_id = ?
+     ORDER BY p.joined_at ASC
+     LIMIT 500`
+  ).bind(id).all<{ user_id: string; completed_modules: string; joined_at: string; display_name?: string | null }>();
+
+  const participants = rows.results.map((row) => {
+    const done = (parseTags(row.completed_modules) || []).length;
+    return {
+      userId: row.user_id,
+      name: row.display_name || 'Community member',
+      completed: done,
+      percent: moduleCount > 0 ? Math.min(100, Math.round((done / moduleCount) * 100)) : 0,
+      joinedAt: row.joined_at,
+    };
+  }).sort((a, b) => b.percent - a.percent);
+
+  return c.json({ participants, moduleCount, source: 'd1' });
+});
+
+// POST /api/challenges/:id/invite
+// Any signed-in participant can invite a friend to walk the challenge with
+// them. Best-effort email via Resend; rate-limited to prevent abuse.
+app.post('/api/challenges/:id/invite', async (c) => {
+  const id = c.req.param('id');
+  if (!isSafeId(id)) return c.json({ error: 'Invalid challenge id' }, 400);
+  if (!c.get('idTokenUid')) return c.json({ error: 'Authentication required' }, 401);
+  if (!c.env.DB) return c.json({ error: 'D1 database binding is not configured' }, 503);
+
+  const limited = await enforceRateLimit(c, 'challenge-invite', String(c.get('idTokenUid')), 20, 3600);
+  if (limited) return limited;
+
+  const body = await c.req.json().catch(() => ({} as Record<string, unknown>));
+  const email = String(body.email || '').trim().toLowerCase();
+  if (!email || !isValidEmail(email)) return c.json({ error: 'Valid email is required' }, 400);
+
+  const challenge = await c.env.DB.prepare(
+    `SELECT * FROM challenges WHERE id = ? AND status = 'published' LIMIT 1`
+  ).bind(id).first<ChallengeRow>();
+  if (!challenge) return c.json({ error: 'Challenge not found' }, 404);
+
+  let emailSent = false;
+  const inviterEmail = String(c.get('idTokenEmail') || '').trim();
+  let inviterLabel = inviterEmail;
+  try {
+    const inviter = await c.env.DB.prepare(
+      `SELECT display_name FROM users WHERE id = ? LIMIT 1`
+    ).bind(String(c.get('idTokenUid'))).first<{ display_name?: string | null }>();
+    if (inviter?.display_name) inviterLabel = inviter.display_name;
+  } catch { /* cosmetic */ }
+
+  if (resendKey(c.env)) {
+    const origin = c.env.PRODUCTION_ORIGIN || 'https://theccndaily.com';
+    try {
+      const res = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${resendKey(c.env)}` },
+        body: JSON.stringify({
+          from: 'THE CCN DAILY <gifts@updates.theccndaily.com>',
+          to: [email],
+          subject: `You're invited to a CCN Daily challenge`,
+          html: `<div style="font-family:Georgia,serif;max-width:600px;margin:0 auto;background:#1a1210;color:#f0ebe4;padding:40px 32px;border-radius:12px">
+            <h2 style="color:#F27D26;font-size:22px;margin-bottom:8px">Walk this with me.</h2>
+            <p>${sanitizeInput(inviterLabel) || 'A friend'} invited you to join the <strong>${sanitizeInput(challenge.title)}</strong> challenge on THE CCN DAILY.</p>
+            <p style="color:#c8b89a">${sanitizeInput(String(challenge.description || '').slice(0, 200))}</p>
+            <p><a href="${origin}/#/app/challenges/${encodeURIComponent(id)}" style="display:inline-block;margin-top:12px;padding:12px 24px;background:#F27D26;color:#ffffff;border-radius:8px;text-decoration:none;font-weight:bold">Join the challenge</a></p>
+            <p style="margin-top:32px;font-size:12px;color:#7a6a60">THE CCN DAILY — theccndaily.com</p>
+          </div>`,
+        }),
+      });
+      emailSent = res.ok;
+    } catch { /* best-effort */ }
+  }
+
+  return c.json({ ok: true, emailSent });
+});
+
 app.post('/api/admin/challenges', async (c) => {
   const denied = requireAdmin(c);
   if (denied) return denied;
@@ -1463,12 +1591,18 @@ app.post('/api/admin/challenges', async (c) => {
   const id = String(body.id || `challenge-${slugify(title)}-${Date.now()}`);
   if (!isSafeId(id)) return c.json({ error: 'Invalid challenge id' }, 400);
   const status = ['draft', 'published', 'archived'].includes(body.status) ? body.status : 'published';
+  const challengeType = body.challengeType === 'scheduled' ? 'scheduled' : 'open';
+  // Open challenges have no window; scheduled ones carry start/end.
+  const endDate = challengeType === 'scheduled' && body.endDate ? String(body.endDate) : null;
+  const liveUrl = typeof body.liveUrl === 'string' && body.liveUrl.trim() ? body.liveUrl.trim() : null;
+
+  await ensureChallengeColumns(c.env.DB);
 
   await c.env.DB.prepare(
     `INSERT INTO challenges (
       id, title, description, duration, source_type, cover_url, status, start_date,
-      participants_count, created_at, updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, COALESCE(?, CURRENT_TIMESTAMP), ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+      participants_count, challenge_type, end_date, live_url, created_at, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, COALESCE(?, CURRENT_TIMESTAMP), ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
     ON CONFLICT(id) DO UPDATE SET
       title = excluded.title,
       description = excluded.description,
@@ -1478,6 +1612,9 @@ app.post('/api/admin/challenges', async (c) => {
       status = excluded.status,
       start_date = excluded.start_date,
       participants_count = excluded.participants_count,
+      challenge_type = excluded.challenge_type,
+      end_date = excluded.end_date,
+      live_url = excluded.live_url,
       updated_at = CURRENT_TIMESTAMP`
   ).bind(
     id,
@@ -1488,7 +1625,10 @@ app.post('/api/admin/challenges', async (c) => {
     body.coverUrl || null,
     status,
     body.startDate || new Date().toISOString(),
-    Number(body.participantsCount || body.participants || 0)
+    Number(body.participantsCount || body.participants || 0),
+    challengeType,
+    endDate,
+    liveUrl
   ).run();
 
   const curriculum = Array.isArray(body.curriculum) ? body.curriculum : [];

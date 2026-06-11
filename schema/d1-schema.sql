@@ -75,6 +75,10 @@ CREATE TABLE IF NOT EXISTS challenges (
   status TEXT NOT NULL DEFAULT 'draft',
   start_date TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
   participants_count INTEGER NOT NULL DEFAULT 0,
+  -- Community challenge extensions (added idempotently by ensureChallengeColumns):
+  challenge_type TEXT NOT NULL DEFAULT 'open', -- 'open' (join anytime) | 'scheduled'
+  end_date TEXT,                                -- scheduled challenges only
+  live_url TEXT,                                -- optional live session link
   created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );

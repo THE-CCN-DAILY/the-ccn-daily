@@ -1,27 +1,43 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useNotifications } from '../contexts/NotificationContext';
 import { Target } from 'lucide-react';
 import { TeamIcon, CheckIcon, ChevronLeftIcon, PlayIcon } from '../components/icons';
 import Card from '../components/Card';
 import {
   getChallengeDetail,
+  getChallengeProgress,
+  inviteToChallenge,
   joinChallenge,
   type Challenge,
   type ChallengeModule,
+  type ChallengeProgressEntry,
 } from '../services/challengeService';
 
 const ChallengeDetailPage: React.FC = () => {
   const { challengeId } = useParams<{ challengeId: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
-  
+  const { notify } = useNotifications();
+
   const [challenge, setChallenge] = useState<Challenge | null>(null);
   const [isParticipant, setIsParticipant] = useState(false);
   const [completedModules, setCompletedModules] = useState<string[]>([]);
   const [modules, setModules] = useState<ChallengeModule[]>([]);
   const [loading, setLoading] = useState(true);
   const [joining, setJoining] = useState(false);
+  const [progress, setProgress] = useState<ChallengeProgressEntry[]>([]);
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [inviting, setInviting] = useState(false);
+
+  const refreshProgress = useCallback(async () => {
+    if (!challengeId) return;
+    try {
+      const data = await getChallengeProgress(challengeId);
+      setProgress(data.participants);
+    } catch { /* progress is supplementary */ }
+  }, [challengeId]);
 
   useEffect(() => {
     if (!challengeId || !user) return;
@@ -40,7 +56,8 @@ const ChallengeDetailPage: React.FC = () => {
     };
 
     fetchChallengeData();
-  }, [challengeId, user]);
+    refreshProgress();
+  }, [challengeId, user, refreshProgress]);
 
   const handleJoinChallenge = async () => {
     if (!challengeId || !user || !challenge) return;
@@ -51,12 +68,35 @@ const ChallengeDetailPage: React.FC = () => {
       setIsParticipant(true);
       setCompletedModules(result.participant?.completedModules || []);
       if (result.challenge) setChallenge(result.challenge);
-
+      await refreshProgress();
     } catch (error) {
     } finally {
       setJoining(false);
     }
   };
+
+  const handleInvite = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!challengeId || !inviteEmail.trim()) return;
+    setInviting(true);
+    try {
+      const result = await inviteToChallenge(challengeId, inviteEmail.trim());
+      setInviteEmail('');
+      notify(
+        result.emailSent
+          ? 'Invitation sent. They will receive an email to join you.'
+          : 'Invitation noted. Share the challenge link directly to bring them in.',
+        'success'
+      );
+    } catch (error) {
+      notify(error instanceof Error ? error.message : 'The invitation could not be sent.', 'error');
+    } finally {
+      setInviting(false);
+    }
+  };
+
+  const isUpcoming = challenge?.phase === 'upcoming';
+  const joinLabel = isUpcoming ? 'Opt In' : 'Join Challenge';
 
   if (loading) {
     return (
@@ -107,20 +147,40 @@ const ChallengeDetailPage: React.FC = () => {
             </div>
             
             {!isParticipant ? (
-              <button 
+              <button
                 onClick={handleJoinChallenge}
                 disabled={joining}
                 className="px-8 py-3 bg-brand-accent text-white rounded-full font-bold hover:bg-opacity-90 transition-colors disabled:opacity-50 flex-shrink-0"
               >
-                {joining ? 'Joining...' : 'Join Challenge'}
+                {joining ? 'Joining...' : joinLabel}
               </button>
             ) : (
               <div className="px-6 py-3 bg-green-900/30 text-green-400 border border-green-500/30 rounded-full font-bold flex items-center flex-shrink-0">
                 <CheckIcon className="w-5 h-5 mr-2" />
-                You're In!
+                {isUpcoming ? "You're opted in" : "You're In!"}
               </div>
             )}
           </div>
+
+          {isUpcoming && challenge.startDate && (
+            <div className="mb-6 p-4 rounded-lg border border-brand-border bg-brand-dark/20">
+              <p className="text-sm text-brand-text-secondary">
+                This challenge begins <strong className="text-brand-text-primary">{new Date(challenge.startDate).toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}</strong>. Opt in now to reserve your place and invite others to walk it with you.
+              </p>
+            </div>
+          )}
+
+          {isParticipant && challenge.liveUrl && (
+            <a
+              href={challenge.liveUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 mb-6 px-6 py-3 rounded-full font-bold text-white transition-colors"
+              style={{ background: 'var(--crimson, #8E1B1B)' }}
+            >
+              <span className="w-2 h-2 rounded-full bg-white animate-pulse" /> Join the live session
+            </a>
+          )}
 
           <div className="prose prose-invert max-w-none">
             <h3 className="text-xl font-bold text-brand-text-primary mb-4">About this Challenge</h3>
@@ -128,8 +188,59 @@ const ChallengeDetailPage: React.FC = () => {
               {challenge.description}
             </p>
           </div>
+
+          {isParticipant && (
+            <form onSubmit={handleInvite} className="mt-8 pt-6 border-t border-brand-border">
+              <label className="block text-sm font-bold text-brand-text-primary mb-2">Invite someone to walk this with you</label>
+              <div className="flex gap-2">
+                <input
+                  type="email"
+                  value={inviteEmail}
+                  onChange={(e) => setInviteEmail(e.target.value)}
+                  placeholder="Their email address"
+                  className="flex-1 bg-brand-dark border border-brand-border rounded-lg px-4 py-2.5 text-brand-text-primary focus:outline-none focus:border-brand-accent"
+                />
+                <button
+                  type="submit"
+                  disabled={inviting || !inviteEmail.trim()}
+                  className="px-5 py-2.5 bg-brand-accent text-white rounded-lg font-semibold hover:bg-opacity-90 transition-colors disabled:opacity-50"
+                >
+                  {inviting ? 'Sending…' : 'Invite'}
+                </button>
+              </div>
+            </form>
+          )}
         </div>
       </Card>
+
+      {progress.length > 0 && (
+        <Card className="border-brand-border bg-brand-dark/30 mb-8">
+          <h2 className="text-xl font-bold text-brand-text-primary mb-1">Walking together</h2>
+          <p className="text-sm text-brand-text-secondary mb-5">
+            {progress.length} {progress.length === 1 ? 'person is' : 'people are'} on this path. Cheer one another on.
+          </p>
+          <div className="space-y-3">
+            {progress.slice(0, 25).map((entry) => (
+              <div key={entry.userId} className="flex items-center gap-4">
+                <div className="w-9 h-9 rounded-full bg-brand-secondary flex items-center justify-center text-sm font-bold text-brand-text-primary flex-shrink-0">
+                  {entry.name.charAt(0).toUpperCase()}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex justify-between items-baseline mb-1">
+                    <span className="text-sm font-semibold text-brand-text-primary truncate">
+                      {entry.userId === user?.uid ? 'You' : entry.name}
+                    </span>
+                    <span className="text-xs text-brand-text-secondary ml-2 flex-shrink-0">{entry.percent}%</span>
+                  </div>
+                  <div className="w-full bg-brand-dark rounded-full h-1.5">
+                    <div className="bg-brand-accent h-1.5 rounded-full transition-all" style={{ width: `${entry.percent}%` }} />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
 
       {isParticipant && (
         <div className="space-y-6">

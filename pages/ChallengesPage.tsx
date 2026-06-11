@@ -29,22 +29,44 @@ const ChallengesPage: React.FC = () => {
     fetchChallenges();
   }, []);
 
-  const activeChallenges = challenges.filter(c => {
-    const startDate = new Date(c.startDate);
-    // Consider it active if it started within the last 30 days or is in the future
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    return startDate >= thirtyDaysAgo && c.status === 'published';
-  });
-
-  const archivedChallenges = challenges.filter(c => {
-    const startDate = new Date(c.startDate);
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    return startDate < thirtyDaysAgo && c.status === 'published';
-  });
+  // Phase-aware buckets: open + upcoming + active stay on the live tab so
+  // scheduled challenges surface on the radar before they begin; ended ones
+  // move to the archive.
+  const phaseOf = (c: Challenge) => c.phase || 'open';
+  const activeChallenges = challenges.filter(
+    c => c.status === 'published' && phaseOf(c) !== 'ended'
+  );
+  const archivedChallenges = challenges.filter(
+    c => c.status === 'published' && phaseOf(c) === 'ended'
+  );
 
   const displayChallenges = activeTab === 'active' ? activeChallenges : archivedChallenges;
+
+  const phaseBadge = (c: Challenge): { label: string; tone: string } | null => {
+    switch (phaseOf(c)) {
+      case 'open':
+        return { label: 'Open · join anytime', tone: 'var(--sage, #4E7A5C)' };
+      case 'upcoming': {
+        const when = c.startDate ? new Date(c.startDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : '';
+        return { label: when ? `Starts ${when} · opt in` : 'Starts soon · opt in', tone: 'var(--gold-ds, #B7892E)' };
+      }
+      case 'active':
+        return { label: 'In progress', tone: '#E87A2C' };
+      case 'ended':
+        return { label: 'Completed', tone: 'var(--fg-3, #8A7A6A)' };
+      default:
+        return null;
+    }
+  };
+
+  const ctaLabel = (c: Challenge): string => {
+    if (activeTab === 'archive') return 'View Archive';
+    switch (phaseOf(c)) {
+      case 'upcoming': return 'Opt In';
+      case 'active': return 'Continue';
+      default: return 'Join Now';
+    }
+  };
 
   return (
     <div className="max-w-6xl mx-auto pb-20 px-4">
@@ -114,6 +136,21 @@ const ChallengesPage: React.FC = () => {
                 )}
               </div>
               <div className="p-6 flex flex-col flex-1">
+                <div className="flex flex-wrap items-center gap-2 mb-3">
+                  {phaseBadge(challenge) && (
+                    <span
+                      className="inline-flex items-center text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full"
+                      style={{ fontFamily: 'var(--sans-ui)', color: phaseBadge(challenge)!.tone, background: 'color-mix(in srgb, currentColor 12%, transparent)' }}
+                    >
+                      {phaseBadge(challenge)!.label}
+                    </span>
+                  )}
+                  {challenge.liveUrl && (
+                    <span className="inline-flex items-center text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full" style={{ fontFamily: 'var(--sans-ui)', color: 'var(--crimson, #8E1B1B)', background: 'color-mix(in srgb, var(--crimson, #8E1B1B) 12%, transparent)' }}>
+                      ● Live session
+                    </span>
+                  )}
+                </div>
                 <div className="flex justify-between items-start mb-4">
                   <h3 className="text-xl group-hover:text-brand-accent transition-colors" style={{ fontFamily: 'var(--serif-display, var(--font-display))', fontWeight: 600, color: 'var(--fg-1, #2A1C15)' }}>{challenge.title}</h3>
                 </div>
@@ -126,7 +163,7 @@ const ChallengesPage: React.FC = () => {
                     {challenge.participantsCount} joined
                   </div>
                   <button className="px-4 py-2 bg-brand-accent text-white rounded-lg text-sm font-bold hover:bg-opacity-90 transition-colors">
-                    {activeTab === 'active' ? 'Join Now' : 'View Archive'}
+                    {ctaLabel(challenge)}
                   </button>
                 </div>
               </div>

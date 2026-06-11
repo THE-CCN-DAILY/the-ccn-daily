@@ -134,7 +134,7 @@ export const scrubSlop = (text: string): string => {
 // Llama-class models often wrap JSON in markdown fences or stray prose even
 // when instructed not to. Extract the first JSON object/array before parsing
 // so a cosmetic wrapper never fails the whole generation.
-const extractJson = <T>(raw: string): T => {
+export const extractJson = <T>(raw: string): T => {
     const cleaned = raw.replace(/```(?:json)?/gi, '').trim();
     const objStart = cleaned.indexOf('{');
     const arrStart = cleaned.indexOf('[');

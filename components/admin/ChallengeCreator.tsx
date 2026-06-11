@@ -4,7 +4,7 @@ import Card from '../Card';
 import { Wand2 } from 'lucide-react';
 import { ReaderIcon, SoundWaveIcon, SpinnerIcon } from '../icons';
 import { useNotifications } from '../../contexts/NotificationContext';
-import { generateCloudflareText } from '../../services/geminiService';
+import { generateCloudflareText, extractJson } from '../../services/geminiService';
 import { publishChallenge } from '../../services/challengeService';
 
 type SourceType = 'Newsletter' | 'Book' | 'Manual' | 'URL';
@@ -16,6 +16,13 @@ const ChallengeCreator: React.FC = () => {
     const [isGenerating, setIsGenerating] = useState(false);
     const [isPublishing, setIsPublishing] = useState(false);
     const [generatedChallenge, setGeneratedChallenge] = useState<any>(null);
+
+    // Scheduling: open challenges are joinable anytime; scheduled ones run in a
+    // window and appear on the member radar before they begin.
+    const [challengeType, setChallengeType] = useState<'open' | 'scheduled'>('open');
+    const [startDate, setStartDate] = useState('');
+    const [endDate, setEndDate] = useState('');
+    const [liveUrl, setLiveUrl] = useState('');
 
     const handleGenerate = async () => {
         if (!sourceValue.trim()) return;
@@ -45,8 +52,7 @@ const ChallengeCreator: React.FC = () => {
                 systemInstruction: 'Return only a valid JSON object for a spiritual formation challenge.',
             });
 
-            const cleanText = responseText.replace(/```json/g, '').replace(/```/g, '').trim();
-            const result = JSON.parse(cleanText || '{}');
+            const result = extractJson<Record<string, unknown>>(responseText);
             setGeneratedChallenge(result);
         } catch {
             notify('Failed to prepare course. Please try again.', 'error');
@@ -64,7 +70,12 @@ const ChallengeCreator: React.FC = () => {
                 sourceType,
                 status: 'published',
                 participantsCount: 0,
-                startDate: new Date().toISOString(),
+                challengeType,
+                startDate: challengeType === 'scheduled' && startDate
+                    ? new Date(startDate).toISOString()
+                    : new Date().toISOString(),
+                endDate: challengeType === 'scheduled' && endDate ? new Date(endDate).toISOString() : undefined,
+                liveUrl: liveUrl.trim() || undefined,
             });
             notify('Challenge published successfully to the community!', 'success');
             setGeneratedChallenge(null);
@@ -161,8 +172,39 @@ const ChallengeCreator: React.FC = () => {
                         ))}
                     </div>
 
+                    <div className="mb-8 p-4 rounded-xl border border-brand-border bg-brand-secondary/40 space-y-4">
+                        <p className="text-xs font-bold text-brand-text-secondary uppercase">Availability</p>
+                        <div className="grid grid-cols-2 gap-3">
+                            {(['open', 'scheduled'] as const).map(type => (
+                                <button
+                                    key={type}
+                                    onClick={() => setChallengeType(type)}
+                                    className={`px-4 py-3 rounded-lg border text-sm font-bold transition-all ${challengeType === type ? 'bg-brand-accent text-white border-brand-accent' : 'bg-brand-dark text-brand-text-secondary border-brand-border hover:border-brand-accent/50'}`}
+                                >
+                                    {type === 'open' ? 'Open · join anytime' : 'Scheduled · timed window'}
+                                </button>
+                            ))}
+                        </div>
+                        {challengeType === 'scheduled' && (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div>
+                                    <label className="block text-[11px] font-bold text-brand-text-secondary uppercase mb-1">Starts</label>
+                                    <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="w-full bg-brand-dark border border-brand-border rounded-lg px-3 py-2 text-sm text-brand-text-primary focus:border-brand-accent outline-none" />
+                                </div>
+                                <div>
+                                    <label className="block text-[11px] font-bold text-brand-text-secondary uppercase mb-1">Ends</label>
+                                    <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="w-full bg-brand-dark border border-brand-border rounded-lg px-3 py-2 text-sm text-brand-text-primary focus:border-brand-accent outline-none" />
+                                </div>
+                            </div>
+                        )}
+                        <div>
+                            <label className="block text-[11px] font-bold text-brand-text-secondary uppercase mb-1">Live session link (optional)</label>
+                            <input type="url" value={liveUrl} onChange={(e) => setLiveUrl(e.target.value)} placeholder="https://… (Cloudflare Stream, Zoom, etc.)" className="w-full bg-brand-dark border border-brand-border rounded-lg px-3 py-2 text-sm text-brand-text-primary focus:border-brand-accent outline-none" />
+                        </div>
+                    </div>
+
                     <div className="flex gap-4">
-                        <button 
+                        <button
                             onClick={() => setGeneratedChallenge(null)}
                             className="flex-1 py-3 bg-brand-secondary text-brand-text-primary rounded-xl font-bold border border-brand-border hover:bg-brand-border transition-colors"
                         >
