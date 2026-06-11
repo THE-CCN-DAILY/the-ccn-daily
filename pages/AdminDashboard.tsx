@@ -75,6 +75,24 @@ const AdminDashboard: React.FC = () => {
     const [givingReport, setGivingReport] = useState<{ totals: any[]; recent: any[] } | null>(null);
     const [loadingGiving, setLoadingGiving] = useState(false);
 
+    // Live media-storage binding status from the worker diagnostics route.
+    const [mediaStorageStatus, setMediaStorageStatus] = useState<'checking' | 'connected' | 'missing'>('checking');
+
+    useEffect(() => {
+        let cancelled = false;
+        fetch('/api/ai/diagnostics')
+            .then((response) => response.json())
+            .then((data) => {
+                if (!cancelled) setMediaStorageStatus(data.mediaBucket === 'connected' ? 'connected' : 'missing');
+            })
+            .catch(() => {
+                if (!cancelled) setMediaStorageStatus('missing');
+            });
+        return () => {
+            cancelled = true;
+        };
+    }, []);
+
     // Resource Management State
     const [resources, setResources] = useState<any[]>([]);
     const [loadingResources, setLoadingResources] = useState(true);
@@ -603,7 +621,12 @@ const AdminDashboard: React.FC = () => {
             <div className="grid grid-cols-1 gap-4 mb-8 md:grid-cols-3">
                 <StatCard title="Total Members" value={userStats.total} change={`${userStats.active30d} active in 30 days`} icon={UserIcon} />
                 <StatCard title="Admin Operators" value={userStats.admins} change="D1 role source" icon={CommunityIcon} />
-                <StatCard title="Media Storage" value="R2 pending" change="Binding required for uploads" icon={DbIcon} />
+                <StatCard
+                    title="Media Storage"
+                    value={mediaStorageStatus === 'connected' ? 'R2 connected' : mediaStorageStatus === 'missing' ? 'R2 pending' : 'Checking…'}
+                    change={mediaStorageStatus === 'connected' ? 'Uploads ready' : 'Binding required for uploads'}
+                    icon={DbIcon}
+                />
             </div>
 
             <div className="mb-6 grid grid-cols-2 gap-1 rounded-lg border border-brand-border bg-brand-dark/30 p-1.5 sm:grid-cols-3 lg:grid-cols-6">

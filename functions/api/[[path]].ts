@@ -1025,6 +1025,7 @@ app.get('/api/ai/diagnostics', (c) =>
     cloudflarePages: 'connected',
     database: c.env.DB ? 'connected' : 'missing',
     workersAi: c.env.AI ? 'connected' : 'fallback',
+    mediaBucket: c.env.MEDIA_BUCKET ? 'connected' : 'missing',
     apiKeySource: 'cloudflare-binding',
     model: c.env.WORKERS_AI_TEXT_MODEL || '@cf/meta/llama-3.1-8b-instruct',
   })
@@ -4216,6 +4217,44 @@ app.get('/api/giving/status/:txRef', async (c) => {
     giftType,
   });
 });
+// GET /api/admin/growth/summary
+// Real growth signals from D1 — no sample data. Revenue figures are verified
+// purchases (webhook-confirmed) in the last 30 days.
+app.get('/api/admin/growth/summary', async (c) => {
+  const denied = requireAdmin(c); if (denied) return denied;
+  if (!c.env.DB) {
+    return c.json({ source: 'fallback', totalMembers: 0, activeSubscribers: 0, tierBreakdown: [], revenue30d: 0, revenueCount30d: 0, giving30d: 0, givingCount30d: 0 });
+  }
+
+  const [tiers, revenue, giving, members] = await Promise.all([
+    c.env.DB.prepare(
+      `SELECT tier, COUNT(*) as count FROM user_subscriptions WHERE status = 'active' GROUP BY tier ORDER BY count DESC`
+    ).all<{ tier: string; count: number }>(),
+    c.env.DB.prepare(
+      `SELECT COALESCE(SUM(amount), 0) as total, COUNT(*) as count FROM user_purchases
+       WHERE resource_id LIKE 'tier:%' AND status = 'active' AND datetime(purchased_at) >= datetime('now', '-30 days')`
+    ).first<{ total: number; count: number }>(),
+    c.env.DB.prepare(
+      `SELECT COALESCE(SUM(amount), 0) as total, COUNT(*) as count FROM user_purchases
+       WHERE resource_id LIKE 'donation:%' AND status = 'active' AND datetime(purchased_at) >= datetime('now', '-30 days')`
+    ).first<{ total: number; count: number }>(),
+    c.env.DB.prepare(`SELECT COUNT(*) as count FROM users`).first<{ count: number }>(),
+  ]);
+
+  const tierBreakdown = tiers.results.map((row) => ({ tier: row.tier, count: Number(row.count || 0) }));
+
+  return c.json({
+    source: 'd1',
+    totalMembers: Number(members?.count || 0),
+    activeSubscribers: tierBreakdown.reduce((sum, row) => sum + row.count, 0),
+    tierBreakdown,
+    revenue30d: Number(revenue?.total || 0),
+    revenueCount30d: Number(revenue?.count || 0),
+    giving30d: Number(giving?.total || 0),
+    givingCount30d: Number(giving?.count || 0),
+  });
+});
+
 // GET /api/admin/giving/report
 // Stewardship summary of verified giving: totals per currency/type plus the
 // most recent verified gifts. Reads the same user_purchases rows the webhook

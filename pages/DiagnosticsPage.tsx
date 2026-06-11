@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Card from '../components/Card';
 import { Activity } from 'lucide-react';
 import { SpinnerIcon, CheckIcon, XMarkIcon } from '../components/icons/index';
+import { adminAuthHeaders } from '../services/adminAuth';
 
 const DiagnosticsPage: React.FC = () => {
     const [status, setStatus] = useState<any>(null);
@@ -35,9 +36,11 @@ const DiagnosticsPage: React.FC = () => {
         setTestingBackgroundServices(true);
         setBackgroundTestResult(null);
         try {
+            // The generation route requires a verified ID token (cost-abuse guard),
+            // so the diagnostics probe must authenticate like every other caller.
             const response = await fetch('/api/ai/generate', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json', ...(await adminAuthHeaders()) },
                 body: JSON.stringify({
                     feature: 'diagnostics',
                     prompt: 'System check: respond with OK',
