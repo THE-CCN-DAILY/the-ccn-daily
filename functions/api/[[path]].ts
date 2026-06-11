@@ -4074,6 +4074,92 @@ const COUNTRY_PPP_SERVER: Record<string, { tier: PppTier; currency: string }> = 
   UG: { tier: 'TIER_4', currency: 'USD' }, // Uganda — added per spec
 };
 
+// ─── Local-currency charging (mobile money unlock) ──────────────────────────
+// Flutterwave only offers mobile-money rails when the charge currency is the
+// local one. For supported countries we convert the PPP-adjusted USD price to
+// a rounded local amount at a cached daily rate; everywhere else stays USD
+// (cards). Conversion is server-authoritative and fail-safe: any rate problem
+// falls back to USD rather than blocking a payment.
+
+const LOCAL_CHARGE_CURRENCIES: Record<string, { currency: string; roundTo: number }> = {
+  UG: { currency: 'UGX', roundTo: 500 },
+  KE: { currency: 'KES', roundTo: 10 },
+  TZ: { currency: 'TZS', roundTo: 500 },
+  RW: { currency: 'RWF', roundTo: 100 },
+  GH: { currency: 'GHS', roundTo: 1 },
+  NG: { currency: 'NGN', roundTo: 100 },
+  ZM: { currency: 'ZMW', roundTo: 1 },
+  MW: { currency: 'MWK', roundTo: 100 },
+  CM: { currency: 'XAF', roundTo: 100 },
+  CI: { currency: 'XOF', roundTo: 100 },
+  SN: { currency: 'XOF', roundTo: 100 },
+  ZA: { currency: 'ZAR', roundTo: 1 },
+};
+
+const FX_CACHE_HOURS = 24;
+
+const ensureFxTable = async (db: D1DatabaseBinding) => {
+  await db.prepare(
+    `CREATE TABLE IF NOT EXISTS fx_rates (
+      currency TEXT PRIMARY KEY,
+      usd_rate REAL NOT NULL,
+      fetched_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )`
+  ).run();
+};
+
+// Returns units of `currency` per 1 USD, from the daily D1 cache or a free
+// public rate feed. Returns null when no trustworthy rate is available.
+const getUsdRate = async (db: D1DatabaseBinding, currency: string): Promise<number | null> => {
+  try {
+    await ensureFxTable(db);
+    const cached = await db.prepare(
+      `SELECT usd_rate, fetched_at FROM fx_rates WHERE currency = ? LIMIT 1`
+    ).bind(currency).first<{ usd_rate: number; fetched_at: string }>();
+
+    const fresh = cached && Date.now() - Date.parse(cached.fetched_at) < FX_CACHE_HOURS * 3600 * 1000;
+    if (cached && fresh && cached.usd_rate > 0) return cached.usd_rate;
+
+    const response = await fetch('https://open.er-api.com/v6/latest/USD');
+    const data = await response.json().catch(() => null) as { result?: string; rates?: Record<string, number> } | null;
+    const rate = data?.result === 'success' ? Number(data.rates?.[currency]) : NaN;
+
+    if (Number.isFinite(rate) && rate > 0) {
+      await db.prepare(
+        `INSERT INTO fx_rates (currency, usd_rate, fetched_at) VALUES (?, ?, CURRENT_TIMESTAMP)
+         ON CONFLICT(currency) DO UPDATE SET usd_rate = excluded.usd_rate, fetched_at = CURRENT_TIMESTAMP`
+      ).bind(currency, rate).run();
+      return rate;
+    }
+
+    // Feed unavailable — a stale cached rate is still better than losing
+    // mobile money, as the webhook verifies the recorded amount either way.
+    if (cached && cached.usd_rate > 0) return cached.usd_rate;
+    return null;
+  } catch (error) {
+    console.error('FX rate lookup failed', error);
+    return null;
+  }
+};
+
+// Convert a USD amount for the visitor's country. Rounds to a clean local
+// denomination so prices read naturally (e.g. UGX 16,500 not UGX 16,437.18).
+const localizeAmount = async (
+  db: D1DatabaseBinding | undefined,
+  usdAmount: number,
+  country: string,
+): Promise<{ amount: number; currency: string; usdAmount: number }> => {
+  const local = LOCAL_CHARGE_CURRENCIES[(country || '').toUpperCase()];
+  if (!local || !db) return { amount: usdAmount, currency: 'USD', usdAmount };
+
+  const rate = await getUsdRate(db, local.currency);
+  if (!rate) return { amount: usdAmount, currency: 'USD', usdAmount };
+
+  const converted = usdAmount * rate;
+  const rounded = Math.max(local.roundTo, Math.round(converted / local.roundTo) * local.roundTo);
+  return { amount: rounded, currency: local.currency, usdAmount };
+};
+
 // Compute the AUTHORITATIVE amount + currency for a tier/cycle/country.
 const computeAuthoritativePrice = (
   tier: PaidTierServer,
@@ -4111,8 +4197,11 @@ app.post('/api/payments/intent', async (c) => {
   // request.cf.country is provided by Cloudflare at the edge.
   const country = String((c.req.raw as any)?.cf?.country || 'US');
 
-  const { amount, currency } = computeAuthoritativePrice(tier, billingCycle, country);
-  if (!(amount > 0)) return c.json({ error: 'Could not compute price' }, 500);
+  const usdPrice = computeAuthoritativePrice(tier, billingCycle, country);
+  if (!(usdPrice.amount > 0)) return c.json({ error: 'Could not compute price' }, 500);
+
+  // Charge in the local currency where it unlocks mobile money; USD elsewhere.
+  const { amount, currency, usdAmount } = await localizeAmount(c.env.DB, usdPrice.amount, country);
 
   const resourceId = `tier:${tier}`;
   const txRef = `sub_${userId}_${tier}_${Date.now()}_${crypto.randomUUID().slice(0, 8)}`;
@@ -4128,6 +4217,7 @@ app.post('/api/payments/intent', async (c) => {
     tx_ref: txRef,
     amount,
     currency,
+    usdAmount,
     billingCycle,
     tier,
     // Server-authoritative public key. FLUTTERWAVE_PUBLIC_KEY is the committed
@@ -4157,8 +4247,16 @@ app.post('/api/giving/intent', async (c) => {
   if (!c.env.DB) return c.json({ error: 'D1 database binding is not configured' }, 503);
 
   const giftType = body.giftType === 'monthly' ? 'monthly' : 'one-time';
-  const currency = 'USD';
-  const safeAmount = Number(amount.toFixed(2));
+
+  // The client suggests gift amounts in USD; charge in the local currency
+  // where that unlocks mobile money for the giver.
+  const country = String((c.req.raw as any)?.cf?.country || 'US');
+  const { amount: localAmount, currency, usdAmount } = await localizeAmount(
+    c.env.DB,
+    Number(amount.toFixed(2)),
+    country,
+  );
+  const safeAmount = currency === 'USD' ? Number(localAmount.toFixed(2)) : localAmount;
   const txRef = `give_${userId || 'guest'}_${Date.now()}_${crypto.randomUUID().slice(0, 8)}`;
   const id = crypto.randomUUID();
 
@@ -4178,6 +4276,7 @@ app.post('/api/giving/intent', async (c) => {
     tx_ref: txRef,
     amount: safeAmount,
     currency,
+    usdAmount,
     giftType,
     publicKey: c.env.FLUTTERWAVE_PUBLIC_KEY || c.env.VITE_FLUTTERWAVE_PUBLIC_KEY || undefined,
   });

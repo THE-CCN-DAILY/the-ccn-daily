@@ -448,6 +448,13 @@ CREATE TABLE IF NOT EXISTS rate_limit_hits (
   PRIMARY KEY (scope, bucket_key, window_start)
 );
 
+-- Daily-cached FX rates for local-currency charging (mobile money unlock).
+CREATE TABLE IF NOT EXISTS fx_rates (
+  currency TEXT PRIMARY KEY,
+  usd_rate REAL NOT NULL,
+  fetched_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Contact / help form submissions written by /api/contact.
 CREATE TABLE IF NOT EXISTS help_messages (
   id TEXT PRIMARY KEY,
