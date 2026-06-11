@@ -176,11 +176,36 @@
     font-family: var(--font-ui);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    /* Garamond faces have a small x-height and render thin/small without optical
+       sizing. These make Cormorant + EB Garamond hold proper weight and presence
+       on desktop, fixing the "letters look small" feel. */
+    font-optical-sizing: auto;
+    text-rendering: optimizeLegibility;
 
     /* Root font-size drives every rem-based utility (text, icon, spacing sizes).
        Bumping it scales the whole UI up proportionally. 110% = 17.6px base on
        desktop; mobile/tablet go larger because that's where text/icons read small. */
     font-size: 110%;
+  }
+
+  /* Reading register: the warm EB Garamond serif (the voice of the /give page)
+     is the app's default body type so reading surfaces feel like a devotional,
+     not a SaaS dashboard. Functional chrome is kept on the UI sans below for
+     clarity. EB Garamond runs a touch larger to match the sans it replaces. */
+  body {
+    font-family: var(--font-body);
+    font-size: 1.125rem;
+    line-height: 1.65;
+  }
+
+  /* Keep interactive and structural chrome on Inter Tight — buttons, inputs,
+     navigation, tables, badges, and anything that opts in with .font-sans or
+     the UI-sans utility. This is what lets the serif saturate gracefully. */
+  button, input, select, textarea, optgroup,
+  nav, table, th, td,
+  [role="tablist"], [role="tab"], [role="menu"], [role="menuitem"],
+  .font-sans, .font-ui {
+    font-family: var(--font-ui);
   }
 
   /* Tablet: a moderate bump. */
