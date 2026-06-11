@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { getAiCoachResponse } from '../services/geminiService';
-import { SendIcon, TeamIcon, LogoIcon, ClockIcon } from '../components/icons';
+import { SendIcon, TeamIcon, ClockIcon } from '../components/icons';
+import CcnFlame from '../components/CcnFlame';
 import Card from '../components/Card';
 import type { Message } from '../types';
 
@@ -66,7 +67,7 @@ const ChatWithTeam: React.FC = () => {
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
             {messages.map((msg, index) => (
                 <div key={index} className={`flex items-start gap-3 ${msg.sender === 'user' ? 'justify-end' : ''}`}>
-                {msg.sender === 'ai' && <LogoIcon className="w-8 h-8 text-brand-accent flex-shrink-0" />}
+                {msg.sender === 'ai' && <CcnFlame size={32} className="flex-shrink-0" />}
                 <div className={`max-w-lg p-3 rounded-xl ${msg.sender === 'user' ? 'bg-brand-accent text-white' : 'bg-brand-secondary'}`}>
                     <p className="whitespace-pre-wrap">{msg.text}</p>
                 </div>
@@ -74,7 +75,7 @@ const ChatWithTeam: React.FC = () => {
             ))}
             {isLoading && (
                 <div className="flex items-start gap-3">
-                <LogoIcon className="w-8 h-8 text-brand-accent flex-shrink-0 animate-pulse" />
+                <CcnFlame size={32} pulse className="flex-shrink-0" />
                 <div className="max-w-lg p-3 rounded-xl bg-brand-secondary">
                     <div className="flex items-center space-x-2">
                         <div className="w-2 h-2 bg-brand-text-secondary rounded-full animate-bounce [animation-delay:-0.3s]"></div>

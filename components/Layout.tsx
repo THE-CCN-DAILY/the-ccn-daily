@@ -48,7 +48,7 @@ import {
   X,
   Quote,
 } from 'lucide-react';
-import { ChatIcon, LogoIcon, UserCircleIcon, BellIcon } from './icons';
+import { ChatIcon, UserCircleIcon, BellIcon } from './icons';
 import ThemeSwitcher from './ThemeSwitcher';
 import CcnLogo from './CcnLogo';
 import { useAudioPlayer } from '../contexts/AudioPlayerContext';
