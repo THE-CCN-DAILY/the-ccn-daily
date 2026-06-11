@@ -2713,7 +2713,23 @@ const sendSeatInviteEmail = async (
   context: 'household' | 'group',
 ) => {
   if (!c.env.RESEND_API_KEY || !isValidEmail(inviteeEmail)) return false;
-  const inviterEmail = String(c.get('idTokenEmail') || '').trim();
+
+  // Prefer the inviter's display name over their raw email — warmer, and the
+  // invitee usually knows the person by name.
+  let inviterLabel = String(c.get('idTokenEmail') || '').trim();
+  try {
+    const inviterUid = c.get('idTokenUid');
+    const db: D1DatabaseBinding | undefined = c.env.DB;
+    if (inviterUid && db) {
+      const inviter = await db.prepare(
+        `SELECT display_name FROM users WHERE id = ? LIMIT 1`
+      ).bind(inviterUid).first<{ display_name?: string | null }>();
+      if (inviter?.display_name) inviterLabel = inviter.display_name;
+    }
+  } catch {
+    // Name lookup is cosmetic; fall back to the email.
+  }
+
   const origin = c.env.PRODUCTION_ORIGIN || 'https://theccndaily.com';
   const heading = context === 'household'
     ? 'You have a place at the Family Table.'
@@ -2733,7 +2749,7 @@ const sendSeatInviteEmail = async (
           <h2 style="color:#F27D26;font-size:22px;margin-bottom:8px">${heading}</h2>
           <p>Hello ${sanitizeInput(inviteeName) || 'Friend'},</p>
           <p>${detail}</p>
-          ${inviterEmail ? `<p style="font-size:13px;color:#c8b89a">Invited by ${sanitizeInput(inviterEmail)}</p>` : ''}
+          ${inviterLabel ? `<p style="font-size:13px;color:#c8b89a">Invited by ${sanitizeInput(inviterLabel)}</p>` : ''}
           <p><a href="${origin}/#/onboarding" style="display:inline-block;margin-top:12px;padding:12px 24px;background:#F27D26;color:#ffffff;border-radius:8px;text-decoration:none;font-weight:bold">Take your seat</a></p>
           <p style="margin-top:16px;font-size:13px;color:#c8b89a">Sign in with this email address (${sanitizeInput(inviteeEmail)}) and your seat will be waiting.</p>
           <p style="margin-top:32px;font-size:12px;color:#7a6a60">THE CCN DAILY — theccndaily.com</p>
