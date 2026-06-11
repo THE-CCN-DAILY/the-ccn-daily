@@ -56,6 +56,81 @@ export const generateCloudflareText = async (payload: CloudflareAiPayload): Prom
     return data.text || '';
 };
 
+// ---------------------------------------------------------------------------
+// Anti-slop enforcement — distilled from the theological-guardrails-writer and
+// provost-zinsser-pastoral-writer skills. The system prompt asks the model to
+// avoid these fingerprints; this layer ENFORCES it deterministically so no
+// banned phrase, em-dash, or corporate verb ever reaches a reader.
+
+const matchCase = (source: string, replacement: string): string =>
+    source.charAt(0) === source.charAt(0).toUpperCase()
+        ? replacement.charAt(0).toUpperCase() + replacement.slice(1)
+        : replacement;
+
+// Phrase-level scaffolding: removed or collapsed before word substitutions.
+const SLOP_PHRASES: Array<[RegExp, string]> = [
+    [/\bin today's [\w' -]{0,30}?(world|age|era|society)\b/gi, 'today'],
+    [/\bit('|’)s important to (note|remember|understand) that\b/gi, 'remember:'],
+    [/\bit('|’)s worth noting that\b/gi, 'note:'],
+    [/\bin (conclusion|summary)\b,?\s*/gi, ''],
+    [/\bwhen it comes to\b/gi, 'with'],
+    [/\bthe world of\b/gi, ''],
+    [/\bhustle and bustle\b/gi, 'rush'],
+    [/\bnot only\b/gi, 'beyond'],
+];
+
+// Word-level corporate/AI vocabulary with safe, tense-aware replacements.
+const SLOP_WORDS: Array<[RegExp, string]> = [
+    [/\bdelve(s)?\b/gi, 'look$1'], [/\bdelving\b/gi, 'looking'], [/\bdelved\b/gi, 'looked'],
+    [/\bnavigate(s)?\b/gi, 'walk$1 through'], [/\bnavigating\b/gi, 'walking through'], [/\bnavigated\b/gi, 'walked through'],
+    [/\bjourney(s)?\b/gi, 'walk$1'], [/\bjourneying\b/gi, 'walking'],
+    [/\blandscape(s)?\b/gi, 'ground'], [/\brealm(s)?\b/gi, 'place$1'],
+    [/\btapestr(y|ies)\b/gi, 'weaving'], [/\bsymphon(y|ies)\b/gi, 'song'],
+    [/\blabyrinth(ine|s)?\b/gi, 'maze'],
+    [/\belevate(s|d)?\b/gi, 'lift$1'], [/\belevating\b/gi, 'lifting'],
+    [/\bembark(s|ed)? on\b/gi, 'begin'], [/\bembarking on\b/gi, 'beginning'],
+    [/\bharness(es|ed|ing)?\b/gi, 'use'], [/\bunlock(s|ed|ing)?\b/gi, 'open'],
+    [/\bleverage(s|d)?\b/gi, 'use'], [/\bleveraging\b/gi, 'using'],
+    [/\bcrucial(ly)?\b/gi, 'important'], [/\bvital(ly)?\b/gi, 'important'],
+    [/\brobust\b/gi, 'strong'], [/\bvibrant\b/gi, 'alive'],
+    [/\bbustling\b/gi, 'busy'], [/\bnestled\b/gi, 'set'],
+    [/\bmeticulous\b/gi, 'careful'], [/\bmeticulously\b/gi, 'carefully'],
+    [/\bfurthermore\b/gi, 'and'], [/\bmoreover\b/gi, 'and'], [/\badditionally\b/gi, 'and'],
+    [/\bhowever\b/gi, 'but'], [/\btherefore\b/gi, 'so'], [/\bthus\b/gi, 'so'],
+    [/\bultimately\b/gi, 'in the end'], [/\bessentially\b/gi, 'at heart'],
+    [/\bconsequently\b/gi, 'so'], [/\bsubsequently\b/gi, 'later'],
+    [/\bfoster(s|ed)?\b/gi, 'feed$1'], [/\bfostering\b/gi, 'feeding'],
+    [/\bdaunting\b/gi, 'heavy'], [/\bcomplexities\b/gi, 'tangles'],
+    [/\bever-?evolving\b/gi, 'changing'], [/\bgame[- ]changer\b/gi, 'turning point'],
+    [/\bcutting[- ]edge\b/gi, 'new'], [/\bseamless(ly)?\b/gi, 'smooth$1'],
+];
+
+// Returns the distinct banned fingerprints present — used to decide whether a
+// corrective editing pass is worth one extra model call.
+export const findSlop = (text: string): string[] => {
+    const hits = new Set<string>();
+    if (/[—–]/.test(text)) hits.add('em-dash');
+    for (const [pattern] of [...SLOP_PHRASES, ...SLOP_WORDS]) {
+        const match = text.match(new RegExp(pattern.source, pattern.flags.replace('g', '')));
+        if (match) hits.add(match[0]);
+    }
+    return Array.from(hits);
+};
+
+// Deterministic final pass: after this, the hard blacklist cannot appear.
+export const scrubSlop = (text: string): string => {
+    let out = text.replace(/\s*[—–]\s*/g, ', ');
+    for (const [pattern, replacement] of SLOP_PHRASES) out = out.replace(pattern, replacement);
+    for (const [pattern, replacement] of SLOP_WORDS) {
+        out = out.replace(pattern, (m, g1) => matchCase(m, replacement.replace('$1', g1 || '')));
+    }
+    return out
+        .replace(/ {2,}/g, ' ')
+        .replace(/\s+,/g, ',')
+        .replace(/,\s*,/g, ',')
+        .replace(/([.!?])\s*,/g, '$1');
+};
+
 // Llama-class models often wrap JSON in markdown fences or stray prose even
 // when instructed not to. Extract the first JSON object/array before parsing
 // so a cosmetic wrapper never fails the whole generation.
@@ -97,7 +172,7 @@ export const getAiCoachResponse = async (newMessage: string, history: Message[],
             text: msg.text,
         }));
 
-        return await generateCloudflareText({
+        return scrubSlop(await generateCloudflareText({
             feature: 'coach',
             prompt: newMessage,
             history: aiHistory,
@@ -105,7 +180,7 @@ export const getAiCoachResponse = async (newMessage: string, history: Message[],
             userId,
             units: 500,
             systemInstruction: `${PASTORAL_VOICE_SYSTEM_INSTRUCTION}\n\n### YOUR SPECIFIC ROLE ###\nYou are a spiritual companion — a steady, warm presence that meets people where they are with Scripture, prayer, and pastoral wisdom. You are conversational and genuinely present. When someone brings a question, a struggle, or a celebration, sit with them in it before offering insight. Keep responses warm and focused — usually 2 to 4 paragraphs. End with one reflective question that opens continued conversation.`,
-        });
+        }));
     } catch {
         throw new Error("Coach failed.");
     }
@@ -141,14 +216,14 @@ export const getDeepTheologicalInsight = async (question: string, userTier: User
     if (!allowed) throw new Error(message);
 
     try {
-        return await generateCloudflareText({
+        return scrubSlop(await generateCloudflareText({
             feature: 'deepStudy',
             model: CAPABILITIES.deepStudy.model,
             userId,
             units: 2000,
             prompt: question,
             systemInstruction: `${PASTORAL_VOICE_SYSTEM_INSTRUCTION}\n\n### YOUR SPECIFIC ROLE ###\nYou are a pastor-theologian engaging a question with both biblical rigor and pastoral warmth. Bring the full weight of Christian scholarship to bear — but always in service of the person asking, not in service of displaying knowledge. Engage the question honestly, acknowledge its tensions, let Scripture do its illuminating work. Aim for 3 to 5 paragraphs of substantial, accessible reflection that the reader can sit with long after reading.`,
-        });
+        }));
     } catch {
         throw new Error("Deep thinking failed.");
     }
@@ -263,6 +338,20 @@ You must embody the persona of Pastor Eryeza, a warm, wise, and encouraging past
 - **Essential Beliefs**: Uphold The Trinity, Salvation Through Christ, Divinity and Resurrection of Jesus, the active role of the Holy Spirit, and the Bible as the inspired Word of God.
 - **Audience**: While the theology is Christian, the tone must be inclusive and welcoming to a global audience, including those exploring faith. Focus on edifying souls and addressing universal human needs through a Christian theological lens. Sound doctrine is the basis for edification, not controversy. Do not compromise scripture.
 - **God's Name**: Refer to God as 'God', 'the Father', 'Lord', or 'Jesus'. Do NOT use the word "Divine" to refer to God.
+
+### THEOLOGICAL GUARDRAILS (NON-NEGOTIABLE) ###
+- **Load-bearing beliefs — never contradicted or soft-pedaled**: the Trinity; salvation through Christ alone; the full divinity and bodily resurrection of Jesus; the active work of the Holy Spirit today; Scripture as the inspired, authoritative Word of God.
+- **Secondary matters — take no sides**: baptism mode, spiritual gifts (cessationist vs continuationist), eschatology, worship styles, church governance. Where these arise, show pastoral hospitality and anchor on the Scripture all traditions share.
+- **Never**: prosperity gospel or name-it-claim-it framing; triumphalism; therapeutic comfort without theological substance; shame-based evangelism; condescension toward doubt; denominational jargon ('altar call', 'tarrying', 'sinner's prayer') without explanation.
+- **Always**: evangelistic calls are invitations, never verdicts. Diagnosis of any struggle must lead to hope, a pathway, and a scriptural anchor — never diagnosis alone.
+- **Accessibility**: fifth-grade reading level. Theological precision without jargon walls. Welcoming to a global, non-Western reader who may be exploring faith.
+
+### WRITING CRAFT (PROVOST-ZINSSER STANDARD) ###
+- **Rhythm**: vary sentence length deliberately. Short sentences anchor (1-5 words). Medium sentences develop (6-15). Long sentences breathe and resolve (16+). Never three same-length sentences in a row.
+- **Simplicity**: every word does new work. Cut qualifiers (very, quite, rather, somewhat), redundant adverbs, and phrases that sound important while saying nothing. Active voice; strong verbs; specific nouns.
+- **No binary constructions**: never "It's not X. It's Y." or "not just X but Y". Show the real thing; do not define by negation.
+- **Lead and ending**: open where the reader's struggle or the action begins — no background scaffolding. End on the strongest word; never trail off into summary.
+- **Voice**: a Ugandan pastor beside the reader, writing from lived faith. Communal weight, concrete Monday-morning application, the streets of ordinary life. Warmth before cleverness.
 
 ### WRITING PROCESS & RULES ###
 1.  **Inspiration**: You will be given a theme, sometimes inspired by a recent podcast or newsletter. Use ONLY the core theme as a starting point.
@@ -460,7 +549,35 @@ export const generatePersonalizedDevotional = async (userId: string, name: strin
                 if (second.body.length > result.body.length) result = second;
             } catch { /* keep the first attempt */ }
         }
-        return result;
+
+        // Voice enforcement. Heavy slop earns one corrective editing pass by
+        // the model; the deterministic scrub then guarantees a clean result
+        // regardless of how the editing pass behaves.
+        const bodySlop = findSlop(result.body);
+        if (bodySlop.length >= 3) {
+            try {
+                const edited = await generateCloudflareText({
+                    feature: 'devotional',
+                    model: PRO_MODEL,
+                    userId,
+                    units: 1200,
+                    prompt: `Rewrite the passage below, removing every occurrence of these phrases and words: ${bodySlop.join(', ')}. Keep the meaning, pastoral warmth, paragraph breaks, and personal address exactly as they are. Vary sentence length (short, medium, long). Return ONLY the rewritten passage with no commentary.\n\n${result.body}`,
+                    systemInstruction: 'You are a precise line editor for pastoral writing in the school of Gary Provost and William Zinsser. Cut clutter, keep warmth, never add new ideas.',
+                });
+                if (edited && edited.trim().length > result.body.length * 0.6) {
+                    result = { ...result, body: edited.trim() };
+                }
+            } catch { /* scrub below still guarantees cleanliness */ }
+        }
+
+        return {
+            ...result,
+            title: scrubSlop(result.title),
+            openingVerse: result.openingVerse, // Scripture is quoted, never rewritten.
+            body: scrubSlop(result.body),
+            prayer: scrubSlop(result.prayer),
+            declaration: scrubSlop(result.declaration),
+        };
     } catch (error) {
         // Keep the underlying reason visible — a blanket message hid real
         // failures (JSON wrappers, auth, rate limits) from diagnosis.
