@@ -13,6 +13,7 @@ import {
   ChevronLeft,
   Crown,
   FilePenLine,
+  PenLine,
   FolderOpen,
   Gift,
   Globe,
@@ -69,6 +70,7 @@ declare global {
 const sanctuaryItems = [
   { to: '/app/dashboard', text: 'Dashboard', icon: LayoutDashboard, group: 'Account' },
   { to: '/app/guided-journey', text: 'Guided Daily Journey', icon: Route, group: 'Pray' },
+  { to: '/app/devotional', text: 'Your Devotional', icon: PenLine, group: 'Pray' },
   { to: '/app/planner', text: 'Daily Planner', icon: CalendarCheck, group: 'Pray' },
   { to: '/app/bible', text: 'Bible Reader', icon: BookOpen, group: 'Read' },
   { to: '/app/books', text: 'Books', icon: BookMarked, group: 'Read' },
@@ -107,7 +109,6 @@ const commandCenterItems = [
   { to: '/studio/scholarships', text: 'Scholarships', icon: HeartHandshake, group: 'Operate' },
   { to: '/studio/blog', text: 'Blog Studio', icon: FilePenLine, group: 'Publish' },
   { to: '/studio/announcements', text: 'Announcements', icon: Megaphone, group: 'Growth' },
-  { to: '/studio/devotional-generator', text: 'Devotional Prep', icon: BookPlus, group: 'Publish' },
   { to: '/studio/quote-generator', text: 'Quote Graphics', icon: ImagePlus, group: 'Publish' },
   { to: '/studio/growth', text: 'Growth Console', icon: TrendingUp, group: 'Growth' },
   { to: '/studio/roles', text: 'Roles & Permissions', icon: ShieldCheck, group: 'Systems' },

@@ -9,7 +9,9 @@ import { adminAuthHeaders } from './adminAuth';
 // PRO: reserved for max/admin flows and mapped server-side when a stronger model is configured.
 export const LITE_MODEL = '@cf/meta/llama-3.1-8b-instruct';
 export const FLASH_MODEL = '@cf/meta/llama-3.1-8b-instruct';
-export const PRO_MODEL = '@cf/meta/llama-3.1-8b-instruct';
+// 70B for long-form pastoral writing: the 8B model cannot hold the devotional
+// format and under-delivers the body. Cost is tracked via estimateAiCost's 70b branch.
+export const PRO_MODEL = '@cf/meta/llama-3.3-70b-instruct-fp8-fast';
 
 export type UserTier = 'guest' | 'free' | 'pro' | 'max' | 'partner' | 'admin';
 
@@ -21,7 +23,7 @@ export interface Capability {
 
 export const CAPABILITIES: Record<string, Capability> = {
     coach: { feature: 'Study Companion', minTier: 'free', model: LITE_MODEL },
-    devotional: { feature: 'Personalized Devotional', minTier: 'pro', model: LITE_MODEL },
+    devotional: { feature: 'Personalized Devotional', minTier: 'pro', model: PRO_MODEL },
     deepStudy: { feature: 'Deep Theological Study', minTier: 'max', model: PRO_MODEL },
     groundedPrayer: { feature: 'Grounded Prayer Topics', minTier: 'pro', model: FLASH_MODEL },
     quoteImage: { feature: 'Quote Image', minTier: 'pro', model: FLASH_MODEL },
@@ -54,11 +56,26 @@ export const generateCloudflareText = async (payload: CloudflareAiPayload): Prom
     return data.text || '';
 };
 
+// Llama-class models often wrap JSON in markdown fences or stray prose even
+// when instructed not to. Extract the first JSON object/array before parsing
+// so a cosmetic wrapper never fails the whole generation.
+const extractJson = <T>(raw: string): T => {
+    const cleaned = raw.replace(/```(?:json)?/gi, '').trim();
+    const objStart = cleaned.indexOf('{');
+    const arrStart = cleaned.indexOf('[');
+    const useArray = arrStart >= 0 && (objStart < 0 || arrStart < objStart);
+    const start = useArray ? arrStart : objStart;
+    if (start < 0) throw new Error('The background service returned no structured content.');
+    const end = cleaned.lastIndexOf(useArray ? ']' : '}');
+    if (end <= start) throw new Error('The background service returned malformed content.');
+    return JSON.parse(cleaned.slice(start, end + 1)) as T;
+};
+
 export const checkCapability = (feature: string, userTier: UserTier = 'free'): { allowed: boolean; message?: string } => {
     const capability = CAPABILITIES[feature];
     if (!capability) return { allowed: false, message: "Feature not found." };
 
-    const tiers: UserTier[] = ['guest', 'free', 'pro', 'max', 'admin'];
+    const tiers: UserTier[] = ['guest', 'free', 'pro', 'max', 'partner', 'admin'];
     const userIndex = tiers.indexOf(userTier);
     const minIndex = tiers.indexOf(capability.minTier);
 
@@ -112,7 +129,7 @@ export const getGroundedPrayerTopics = async (userTier: UserTier = 'free', userI
             prompt: "Identify 3 significant areas where the Church needs to pray right now. Write as a pastor naming what the Body of Christ must bring before God — specific, grounded in Scripture and present reality. Return a JSON array of 3 objects with these exact keys: title (a short pastoral name for the prayer concern), snippet (2 to 3 pastoral sentences grounded in Scripture and real life), uri (empty string).",
             systemInstruction: "You are a pastoral intercessor naming the Church's needs before God. Return ONLY a valid JSON array — no markdown, no preamble, no extra text. Write each snippet with the warmth and weight of genuine intercession. Keep language biblical and grounded. Never use these words: Additionally, Essentially, Journey, Landscape, Realm, Elevate, Embark, Crucial, Furthermore, However, Therefore, Thus, Ultimately.",
         });
-        const parsed = JSON.parse(text);
+        const parsed = extractJson<unknown>(text);
         return Array.isArray(parsed) ? parsed : [];
     } catch {
         return [];
@@ -154,7 +171,7 @@ export const generateTagsForNote = async (noteText: string): Promise<string[]> =
             systemInstruction: "Return ONLY a JSON array of strings. Keep tags spiritually meaningful and grounded — words that honor the pastoral nature of the note. No hollow filler terms. No markdown or extra text.",
             units: 300,
         });
-        const parsed = JSON.parse(text.trim());
+        const parsed = extractJson<unknown>(text.trim());
         return Array.isArray(parsed) ? parsed.slice(0, 5).map(String) : ["Reflection"];
     } catch {
         return ["Reflection"];
@@ -234,7 +251,7 @@ Additionally, Alright, Also, Alternatively, Amongst, Arguably, As a result, As a
 
 const DEVOTIONAL_SYSTEM_INSTRUCTION = `
 ### PRIMARY DIRECTIVE ###
-You are to generate a daily devotional for the app 'THE CCN DAILY'. Your response MUST be a single, clean, valid JSON object with no other text or markdown.
+You are to generate a daily devotional for the app 'THE CCN DAILY'. Your response MUST use the exact labeled-section format defined in OUTPUT FORMAT below — plain text, no JSON, no markdown, no commentary outside the sections.
 
 ### PERSONA: PASTOR ERYEZA ###
 You must embody the persona of Pastor Eryeza, a warm, wise, and encouraging pastor and author from Uganda. Your writing should feel like a personal, intimate, friendly letter from a trusted spiritual mentor.
@@ -257,7 +274,40 @@ You must embody the persona of Pastor Eryeza, a warm, wise, and encouraging past
     - After generating the draft, you MUST switch personas to an experienced Christian non-fiction bestseller book editor.
     - Scrutinize your own writing against ALL rules, especially the Negative Constraints.
     - Enhance clarity, brevity, and flow. Eliminate awkward phrasing, redundancies, and melodramatic language. Ensure a mix of short and long sentences for dynamic rhythm. Favor active voice and strong verbs. Ensure paragraphs have clear purpose and smooth transitions.
-7.  **Final Output**: Format the final, polished devotional into the specified JSON structure.
+7.  **Final Output**: Format the final, polished devotional into the OUTPUT FORMAT sections below.
+
+### OUTPUT FORMAT (CRITICAL) ###
+Respond in plain text with EXACTLY these labeled sections, in this order. Each label starts at the beginning of a line, uppercase, followed by a colon. Do not add any text before TITLE or after STUDY.
+TITLE: the devotional title on one line
+VERSE: the opening verse text in quotes, then a hyphen, then the citation (e.g. "..." - John 3:16, NKJV)
+BODY:
+the complete devotional message — at least 4 full paragraphs (300+ words) separated by blank lines; this is the heart of the devotional and must never be a single line
+PRAYER:
+the first-person prayer
+DECLARATION:
+one strong declaration sentence
+STUDY:
+three scripture references separated by semicolons (e.g. Psalm 23:1; Romans 8:28; James 1:5)
+
+Example of the correct shape (yours must be original, personal, and with a much longer BODY):
+TITLE: Grace for Tired Hands
+VERSE: "Come to Me, all you who labor and are heavy laden, and I will give you rest." - Matthew 11:28, NKJV
+BODY:
+Dear Friend,
+
+There is a kind of tiredness sleep does not cure. [...the first full paragraph continues...]
+
+[...second full paragraph...]
+
+[...third full paragraph...]
+
+[...fourth full paragraph, with the practical application woven in...]
+PRAYER:
+Father, I bring you the weight I have been carrying. [...]
+DECLARATION:
+I will walk through this day rested in God.
+STUDY:
+Matthew 11:28; Psalm 62:1; Isaiah 40:31
 
 ### STRICT NEGATIVE CONSTRAINTS ###
 You are strictly forbidden from using the following in your writing. Adherence is not optional.
@@ -298,6 +348,7 @@ export const generatePersonalizedDevotional = async (userId: string, name: strin
         userContext: ${notesContext || 'The user is seeking daily spiritual guidance and growth.'}
         `;
 
+        const runAttempt = async (): Promise<DevotionalOutput> => {
         const text = await generateCloudflareText({
             feature: 'devotional',
             model: CAPABILITIES.devotional.model,
@@ -308,8 +359,111 @@ export const generatePersonalizedDevotional = async (userId: string, name: strin
         });
 
         if (!text) throw new Error("No response from background service");
-        return JSON.parse(text) as DevotionalOutput;
-    } catch {
-        throw new Error("Failed to generate personalized devotional.");
+
+        // Primary contract: labeled plain-text sections (reliable for small
+        // models, immune to JSON escaping bugs in long prose). Models decorate
+        // the labels differently (## BODY ##, **PRAYER**, Body:), so normalize
+        // every decoration style to a bare "LABEL:" line before slicing.
+        const sectionText = text
+            .replace(/^\s*#{0,6}\s*\**\s*(TITLE|VERSE|BODY|PRAYER|DECLARATION|STUDY)\s*\**\s*#{0,6}\s*:?\s*$/gim, '$1:')
+            .replace(/^\s*#{0,6}\s*\**\s*(TITLE|VERSE|BODY|PRAYER|DECLARATION|STUDY)\s*\**\s*#{0,6}\s*:\s*/gim, '$1: ');
+        const grabSection = (label: string): string => {
+            // No 'm' flag: with it, the lazy capture stops at the first
+            // line end because $ matches every newline — truncating multi-
+            // paragraph sections to their first line.
+            const match = sectionText.match(new RegExp(
+                '(?:^|\\n)' + label + ':\\s*([\\s\\S]*?)(?=\\n(?:TITLE|VERSE|BODY|PRAYER|DECLARATION|STUDY):|$)',
+                'i'
+            ));
+            return match ? match[1].trim() : '';
+        };
+        const delimitedBody = grabSection('BODY');
+        if (delimitedBody) {
+            const study = grabSection('STUDY');
+            return {
+                title: grabSection('TITLE') || 'A Word for Today',
+                openingVerse: grabSection('VERSE'),
+                body: delimitedBody,
+                prayer: grabSection('PRAYER'),
+                declaration: grabSection('DECLARATION'),
+                furtherStudy: study ? study.split(/;|\n/).map(s => s.trim()).filter(Boolean) : [],
+            };
+        }
+
+        // Second chance: substantial unlabeled prose IS the devotional — never
+        // discard a good message over missing section labels.
+        const trimmed = text.trim();
+        const looksLikeJson = trimmed.includes('{') || trimmed.includes('[');
+        if (!looksLikeJson && trimmed.length > 200) {
+            const lines = trimmed.split('\n');
+            const firstLine = lines[0].trim().replace(/^#+\s*/, '').replace(/\**/g, '');
+            const titleish = firstLine.length > 0 && firstLine.length <= 90 && !firstLine.endsWith('.');
+            return {
+                title: titleish ? firstLine : 'A Word for Today',
+                openingVerse: '',
+                body: (titleish ? lines.slice(1).join('\n') : trimmed).trim(),
+                prayer: '',
+                declaration: '',
+                furtherStudy: [],
+            };
+        }
+
+        // Fallback contract: JSON (the worker's offline fallback still returns
+        // it). Smaller models freelance on shape: keys change case, sections
+        // nest, prose fields arrive as objects. Normalize aggressively.
+        const flattenToText = (value: unknown): string => {
+            if (typeof value === 'string') return value;
+            if (Array.isArray(value)) return value.map(flattenToText).filter(Boolean).join('\n\n');
+            if (value && typeof value === 'object') {
+                return Object.values(value as Record<string, unknown>).map(flattenToText).filter(Boolean).join('\n\n');
+            }
+            return value == null ? '' : String(value);
+        };
+        const pick = (obj: Record<string, unknown>, ...keys: string[]): unknown => {
+            for (const key of keys) {
+                const hit = Object.keys(obj).find(k => k.toLowerCase() === key.toLowerCase());
+                if (hit && obj[hit] != null && obj[hit] !== '') return obj[hit];
+            }
+            return undefined;
+        };
+
+        let source = extractJson<Record<string, unknown>>(text);
+        const inner = pick(source, 'devotional', 'data', 'output', 'result');
+        if (inner && typeof inner === 'object' && !Array.isArray(inner)) {
+            source = inner as Record<string, unknown>;
+        }
+
+        const body = flattenToText(pick(source, 'body', 'message', 'content', 'devotionalBody', 'reflection')).trim();
+        if (!body) throw new Error('The devotional came back empty. Please try again.');
+
+        const studyRaw = pick(source, 'furtherStudy', 'further_study', 'study', 'scriptures');
+        return {
+            title: flattenToText(pick(source, 'title', 'heading')).trim() || 'A Word for Today',
+            openingVerse: flattenToText(pick(source, 'openingVerse', 'opening_verse', 'verse', 'scripture')).trim(),
+            body,
+            prayer: flattenToText(pick(source, 'prayer')).trim(),
+            declaration: flattenToText(pick(source, 'declaration', 'affirmation')).trim(),
+            furtherStudy: Array.isArray(studyRaw)
+                ? studyRaw.map(flattenToText).filter(Boolean)
+                : studyRaw
+                    ? [flattenToText(studyRaw)]
+                    : [],
+        };
+        };
+
+        // Small models occasionally under-deliver the body (a one-line
+        // greeting). One retry recovers most of these; keep the better of two.
+        let result = await runAttempt();
+        if (result.body.length < 180) {
+            try {
+                const second = await runAttempt();
+                if (second.body.length > result.body.length) result = second;
+            } catch { /* keep the first attempt */ }
+        }
+        return result;
+    } catch (error) {
+        // Keep the underlying reason visible — a blanket message hid real
+        // failures (JSON wrappers, auth, rate limits) from diagnosis.
+        throw new Error(error instanceof Error ? error.message : "Failed to generate personalized devotional.");
     }
 };

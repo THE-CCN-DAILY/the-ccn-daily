@@ -117,6 +117,7 @@ const App: React.FC = () => {
                             <Route index element={<Navigate to="dashboard" replace />} />
                             <Route path="dashboard" element={<RequireAuth><DashboardPage /></RequireAuth>} />
                             <Route path="guided-journey" element={<RequireAuth><GuidedJourneyPage /></RequireAuth>} />
+                            <Route path="devotional" element={<RequireAuth><DevotionalGeneratorPage /></RequireAuth>} />
                             <Route path="bible" element={<RequireAuth><BibleReaderPage /></RequireAuth>} />
                             <Route path="podcasts" element={<RequireAuth><PodcastPage /></RequireAuth>} />
                             <Route path="the-community" element={<RequireAuth><TheCommunity /></RequireAuth>} />
@@ -164,7 +165,8 @@ const App: React.FC = () => {
                             <Route path="data" element={<RequireRole allowedRoles={['admin']}><DataArchitecture /></RequireRole>} />
                             <Route path="roles" element={<RequireRole allowedRoles={['admin']}><Roles /></RequireRole>} />
                             <Route path="multi-tenancy" element={<RequireRole allowedRoles={['admin']}><MultiTenancyAdmin /></RequireRole>} />
-                            <Route path="devotional-generator" element={<RequireRole allowedRoles={['admin']}><DevotionalGeneratorPage /></RequireRole>} />
+                            {/* Personal devotional moved to the member sanctuary; old studio link keeps working. */}
+                            <Route path="devotional-generator" element={<Navigate to="/app/devotional" replace />} />
                             <Route path="quote-generator" element={<RequireRole allowedRoles={['admin']}><QuoteGeneratorPage /></RequireRole>} />
                             <Route path="dynamic-theming" element={<RequireRole allowedRoles={['admin']}><DynamicTheming /></RequireRole>} />
                             <Route path="atmospheric-music" element={<RequireRole allowedRoles={['admin']}><AtmosphericMusicPage /></RequireRole>} />

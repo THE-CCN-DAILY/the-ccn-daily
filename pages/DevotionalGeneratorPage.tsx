@@ -56,8 +56,9 @@ const DevotionalGeneratorPage: React.FC = () => {
         return;
     }
 
+    const isAdminUser = user.role === 'admin';
     const userTier = user.tier || 'free';
-    if (!getTierFeatures(userTier).canGeneratePersonalizedDevotionals) {
+    if (!isAdminUser && !getTierFeatures(userTier).canGeneratePersonalizedDevotionals) {
         openUpgradeModal('Personal Devotionals', 'pro');
         return;
     }
@@ -69,7 +70,11 @@ const DevotionalGeneratorPage: React.FC = () => {
     localStorage.removeItem(LOCAL_STORAGE_KEY);
 
     try {
-      const generatedObject = await generatePersonalizedDevotional(user.uid, user.displayName || 'Friend', user.tier || 'free');
+      const generatedObject = await generatePersonalizedDevotional(
+        user.uid,
+        user.displayName || 'Friend',
+        isAdminUser ? 'admin' : (user.tier || 'free')
+      );
       setDailyDevotional({
           data: generatedObject,
           date: getTodayDateString()
@@ -90,40 +95,55 @@ const DevotionalGeneratorPage: React.FC = () => {
 
   const devotionalHtmlContent = (data: DevotionalOutput, date: string) => {
     const formattedDate = new Date(date + 'T00:00:00').toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-    const bodyHtml = data.body.split('\n\n').map(p => `<p style="font-family:var(--serif-body,'EB Garamond','Garamond',Georgia,serif);font-size:18px;line-height:1.75;color:var(--fg-1,#2A1C15);margin-bottom:1em">${p.trim()}</p>`).join('');
+    const bodyHtml = String(data.body || '').split('\n\n').map(p => `<p style="font-family:var(--serif-body,'EB Garamond','Garamond',Georgia,serif);font-size:18px;line-height:1.75;color:var(--fg-1,#2A1C15);margin-bottom:1em">${p.trim()}</p>`).join('');
     const eyebrowStyle = `font-family:var(--sans-ui,'Inter Tight',-apple-system,sans-serif);font-size:12px;font-weight:700;letter-spacing:0.10em;text-transform:uppercase;color:var(--crimson,#8E1B1B)`;
     const scriptureBlockStyle = `font-family:var(--serif-body,'EB Garamond','Garamond',Georgia,serif);font-style:italic;font-size:20px;line-height:1.6;border-left:2px solid var(--crimson,#8E1B1B);padding:1em 1.5em;background:var(--bg-paper,#F6EFE1);color:var(--fg-1,#2A1C15);margin:1.5em 0`;
     const citeStyle = `display:block;margin-top:0.75em;font-style:normal;font-family:var(--sans-ui,'Inter Tight',-apple-system,sans-serif);font-size:11px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--crimson,#8E1B1B)`;
     const prayerStyle = `font-family:var(--serif-display,'Cormorant Garamond','Didot',Georgia,serif);font-style:italic;font-size:21px;line-height:1.6;text-align:center;max-width:440px;margin:1.5em auto;color:var(--fg-1,#2A1C15)`;
 
+    // Every section is optional — smaller models occasionally omit one, and an
+    // empty section should disappear rather than render a hollow block.
+    const verseText = String(data.openingVerse || '');
+    const verseHtml = verseText
+      ? `<blockquote style="${scriptureBlockStyle}">
+          "${verseText.split('" - ')[0].replace(/^"|"$/g, '')}"
+          <cite style="${citeStyle}">${verseText.split('" - ')[1] || ''}</cite>
+        </blockquote>`
+      : '';
+    const prayerHtml = data.prayer
+      ? `<div style="margin-top:2.5rem;padding-top:1.5rem;border-top:1px solid rgba(42,28,21,0.1)">
+          <p style="${eyebrowStyle};margin-bottom:1rem">Prayer</p>
+          <blockquote style="${prayerStyle}">${data.prayer}</blockquote>
+        </div>`
+      : '';
+    const declarationHtml = data.declaration
+      ? `<div style="margin-top:2rem;padding:1.5rem;border-radius:0.75rem;background:var(--bg-paper,#F6EFE1);border:1px solid rgba(142,27,27,0.15)">
+          <p style="${eyebrowStyle};margin-bottom:0.75rem">Declaration</p>
+          <p style="font-family:var(--serif-display,'Cormorant Garamond','Didot',Georgia,serif);font-weight:600;font-size:1.2rem;line-height:1.5;color:var(--fg-1,#2A1C15)">${data.declaration}</p>
+        </div>`
+      : '';
+    const studyItems = Array.isArray(data.furtherStudy) ? data.furtherStudy : [];
+    const studyHtml = studyItems.length
+      ? `<div style="margin-top:2.5rem;padding-top:1.5rem;border-top:1px solid rgba(42,28,21,0.1)">
+          <p style="${eyebrowStyle};margin-bottom:1rem">For Further Study</p>
+          <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:0.5rem">
+            ${studyItems.map(s => `<li style="display:flex;align-items:center"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:1rem;height:1rem;margin-right:0.75rem;color:var(--fg-3,#8A7A6A);flex-shrink:0"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"></path></svg><span style="font-family:var(--serif-body,'EB Garamond','Garamond',Georgia,serif);font-size:17px;color:var(--fg-2,#5B4A3C)">${s}</span></li>`).join('')}
+          </ul>
+        </div>`
+      : '';
+
     return `
       <p style="text-align:center;${eyebrowStyle};margin-bottom:1.5rem">${formattedDate}</p>
-      <blockquote style="${scriptureBlockStyle}">
-        "${data.openingVerse.split('" - ')[0]}"
-        <cite style="${citeStyle}">${data.openingVerse.split('" - ')[1] || ''}</cite>
-      </blockquote>
+      ${verseHtml}
       ${bodyHtml}
-      <div style="margin-top:2.5rem;padding-top:1.5rem;border-top:1px solid rgba(42,28,21,0.1)">
-        <p style="${eyebrowStyle};margin-bottom:1rem">Prayer</p>
-        <blockquote style="${prayerStyle}">
-          ${data.prayer}
-        </blockquote>
-      </div>
-      <div style="margin-top:2rem;padding:1.5rem;border-radius:0.75rem;background:var(--bg-paper,#F6EFE1);border:1px solid rgba(142,27,27,0.15)">
-        <p style="${eyebrowStyle};margin-bottom:0.75rem">Declaration</p>
-        <p style="font-family:var(--serif-display,'Cormorant Garamond','Didot',Georgia,serif);font-weight:600;font-size:1.2rem;line-height:1.5;color:var(--fg-1,#2A1C15)">${data.declaration}</p>
-      </div>
-      <div style="margin-top:2.5rem;padding-top:1.5rem;border-top:1px solid rgba(42,28,21,0.1)">
-        <p style="${eyebrowStyle};margin-bottom:1rem">For Further Study</p>
-        <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:0.5rem">
-            ${data.furtherStudy.map(s => `<li style="display:flex;align-items:center"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:1rem;height:1rem;margin-right:0.75rem;color:var(--fg-3,#8A7A6A);flex-shrink:0"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"></path></svg><span style="font-family:var(--serif-body,'EB Garamond','Garamond',Georgia,serif);font-size:17px;color:var(--fg-2,#5B4A3C)">${s}</span></li>`).join('')}
-        </ul>
-      </div>
+      ${prayerHtml}
+      ${declarationHtml}
+      ${studyHtml}
     `;
   };
   
   const userTier = user?.tier || 'free';
-  const canGenerate = getTierFeatures(userTier).canGeneratePersonalizedDevotionals;
+  const canGenerate = user?.role === 'admin' || getTierFeatures(userTier).canGeneratePersonalizedDevotionals;
 
   return (
     <div>

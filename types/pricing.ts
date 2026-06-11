@@ -295,7 +295,9 @@ export const TIER_CONFIGS: Record<SubscriptionTier, TierConfig> = {
 };
 
 export function getTierFeatures(tier: SubscriptionTier): TierFeatures {
-  return TIER_CONFIGS[tier].features;
+  // Unknown/legacy tier values (e.g. 'admin' on older profiles) must not crash
+  // feature gates — fall back to the free tier rather than throwing.
+  return (TIER_CONFIGS[tier] || TIER_CONFIGS.free).features;
 }
 
 export function getTierLabel(tier: SubscriptionTier): string {

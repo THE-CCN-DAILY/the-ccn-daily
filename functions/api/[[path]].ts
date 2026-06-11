@@ -1068,8 +1068,13 @@ app.post('/api/ai/generate', async (c) => {
       ...(prompt ? [{ role: 'user', content: prompt }] : []),
     ];
 
+    // Workers AI defaults to a small output budget (~256 tokens), which
+    // truncates long generations (devotionals) mid-JSON. The client's `units`
+    // hint doubles as the output budget, bounded to keep costs sane.
+    const maxTokens = Math.max(256, Math.min(4096, Number(body.maxTokens || body.units || 1024)));
+
     try {
-      const result = await c.env.AI.run(model, { messages });
+      const result = await c.env.AI.run(model, { messages, max_tokens: maxTokens });
       text = extractAiText(result);
     } catch (error) {
       console.error('Workers AI generation failed', error);
