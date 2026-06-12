@@ -41,7 +41,6 @@ import VoiceCompanion from './pages/VoiceCompanion';
 import VisualSanctuary from './pages/VisualSanctuary';
 import InboxPage from './pages/InboxPage';
 import EventsPage from './pages/EventsPage';
-import GivingPage from './pages/GivingPage';
 import PricingPage from './pages/PricingPage';
 import ExpertCouncilPage from './pages/ExpertCouncilPage';
 import MultiTenancyAdmin from './pages/MultiTenancyAdmin';
@@ -131,7 +130,8 @@ const App: React.FC = () => {
                             <Route path="newsletters" element={<RequireAuth><NewsletterPage /></RequireAuth>} />
                             <Route path="events" element={<RequireAuth><EventsPage /></RequireAuth>} />
                             <Route path="live" element={<RequireAuth><LiveStreamPage /></RequireAuth>} />
-                            <Route path="giving" element={<RequireAuth><GivingPage /></RequireAuth>} />
+                            {/* Member giving uses the same canonical engine as the public /give page. */}
+                            <Route path="giving" element={<RequireAuth><DonationPage /></RequireAuth>} />
                             <Route path="help" element={<HelpPage />} />
                             <Route path="scholarship" element={<RequireAuth><ScholarshipApplicationPage /></RequireAuth>} />
                             <Route path="courses" element={<RequireAuth><CoursesPage /></RequireAuth>} />

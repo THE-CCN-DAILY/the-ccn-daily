@@ -726,7 +726,7 @@ const LandingPage: React.FC = () => {
                 transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
               >
                 <h2 className="font-display text-3xl font-bold leading-tight text-brand-text-primary md:text-4xl mb-8">
-                  Welcome. We are glad you are here.
+                  Welcome to your digital spiritual home
                 </h2>
                 <div className="space-y-5 text-base leading-[1.9] text-brand-text-secondary font-serif">
                   <p>
