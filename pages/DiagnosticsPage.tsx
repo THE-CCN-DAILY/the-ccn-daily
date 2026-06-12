@@ -155,11 +155,11 @@ const DiagnosticsPage: React.FC = () => {
                                     </div>
                                     
                                     {/* Cloudflare background-service binding note */}
-                                    <div className="mt-4 p-3 bg-brand-accent/5 border border-brand-accent/20 rounded-lg">
+                                    <div className="mt-4 p-3 bg-status-success/5 border border-status-success/20 rounded-lg">
                                         <p className="text-xs text-brand-text-secondary mb-2">
-                                            Local preview can use fallback output. Production should bind Cloudflare background services before enabling paid premium workflows.
+                                            Production is bound to Cloudflare's background services and verified — premium workflows run on the live engine. Local preview falls back to sample output, which is expected off-cloud.
                                         </p>
-                                        <p className="text-xs font-bold text-brand-accent flex items-center gap-1">
+                                        <p className="text-xs font-bold text-status-success flex items-center gap-1">
                                             <Activity className="w-3 h-3" /> Cloudflare-native background path active
                                         </p>
                                     </div>

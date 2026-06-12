@@ -264,19 +264,41 @@ const SunriseEmblem: React.FC<{ className?: string }> = ({ className }) => (
         />
       );
     })}
-    {/* Cross — vertical */}
-    <rect
-      x="96" y="66" width="8" height="52"
+    {/* Open Bible — two pages meeting at the spine */}
+    <g filter="url(#glow)">
+      {/* Left page */}
+      <path
+        d="M100 96 C 82 90, 60 91, 44 99 L 44 120 C 60 112, 82 111, 100 117 Z"
+        fill="url(#crossGrad)"
+        fillOpacity="0.85"
+      />
+      {/* Right page */}
+      <path
+        d="M100 96 C 118 90, 140 91, 156 99 L 156 120 C 140 112, 118 111, 100 117 Z"
+        fill="url(#crossGrad)"
+        fillOpacity="0.85"
+      />
+      {/* Spine */}
+      <line x1="100" y1="96" x2="100" y2="117" stroke="#FFAF50" strokeWidth="1.5" />
+      {/* Page text lines */}
+      {[103, 108].map((y, i) => (
+        <g key={i} stroke="#FFD9A0" strokeWidth="0.8" strokeOpacity="0.5">
+          <line x1="56" y1={y + 1} x2="92" y2={y - 1} />
+          <line x1="108" y1={y - 1} x2="144" y2={y + 1} />
+        </g>
+      ))}
+    </g>
+    {/* Flame rising from the open Bible */}
+    <path
+      d="M100 52 C 112 70, 110 84, 100 92 C 90 84, 88 70, 100 52 Z"
       fill="url(#crossGrad)"
-      rx="1"
       filter="url(#glow)"
     />
-    {/* Cross — horizontal */}
-    <rect
-      x="80" y="82" width="40" height="7"
-      fill="url(#crossGrad)"
-      rx="1"
-      filter="url(#glow)"
+    {/* Inner flame highlight */}
+    <path
+      d="M100 64 C 106 74, 105 82, 100 88 C 95 82, 94 74, 100 64 Z"
+      fill="#FFD9A0"
+      fillOpacity="0.85"
     />
   </svg>
 );
@@ -454,9 +476,9 @@ const LandingPage: React.FC = () => {
 
               <motion.h1
                 variants={fadeUp}
-                className="max-w-[11ch] font-display text-4xl font-semibold leading-[1.04] text-brand-text-primary sm:max-w-xl sm:text-5xl md:text-6xl lg:text-[4.25rem]"
+                className="max-w-[12ch] font-display text-4xl font-semibold leading-[1.08] text-brand-text-primary sm:max-w-xl sm:text-5xl md:text-6xl lg:text-[4.25rem]"
               >
-                Daily Scripture for the workday soul.
+                Your personal devotional space.
               </motion.h1>
 
               <motion.p

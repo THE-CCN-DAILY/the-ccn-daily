@@ -15,13 +15,13 @@
     })();
   </script>
 
-  <title>THE CCN DAILY — Faith for the workday soul</title>
+  <title>THE CCN DAILY — Your personal devotional space</title>
   <meta name="description" content="A quiet daily rhythm for Scripture, prayer, work, and spiritual steadiness. THE CCN DAILY helps busy professionals begin again with God every day." />
 
   <!-- Open Graph -->
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="THE CCN DAILY" />
-  <meta property="og:title" content="THE CCN DAILY — Faith for the workday soul" />
+  <meta property="og:title" content="THE CCN DAILY — Your personal devotional space" />
   <meta property="og:description" content="Read, listen, reflect, journal, grow in community, and lead with a formed inner life. Start your daily spiritual rhythm today." />
   <meta property="og:url" content="https://theccndaily.com" />
   <meta property="og:image" content="https://theccndaily.com/logo-wordmark-white.webp" />
@@ -29,7 +29,7 @@
 
   <!-- Twitter / X card -->
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="THE CCN DAILY — Faith for the workday soul" />
+  <meta name="twitter:title" content="THE CCN DAILY — Your personal devotional space" />
   <meta name="twitter:description" content="A quiet daily rhythm for Scripture, prayer, and spiritual steadiness." />
   <meta name="twitter:image" content="https://theccndaily.com/logo-wordmark-white.webp" />
 
@@ -63,8 +63,12 @@
   <!-- Canonical -->
   <link rel="canonical" href="https://theccndaily.com" />
 
-  <!-- Favicon & PWA — brand flame icon -->
-  <link rel="icon" type="image/svg+xml" href="/flame-transparent.svg" />
+  <!-- Favicon & PWA — brand flame icon. PNG is primary: the flame SVG is a
+       heavy embedded raster that some browsers refuse to render as a favicon
+       and fall back to a default globe. The 32px and 16px hints keep the tab
+       icon crisp at small sizes. -->
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png" />
   <link rel="icon" type="image/png" href="/flame-transparent.png" />
   <link rel="apple-touch-icon" href="/flame-transparent.png" />
   <link rel="manifest" href="/site.webmanifest" />

@@ -229,10 +229,12 @@
     font-family: var(--font-display);
   }
 
-  /* Tight heading rhythm — editorial, not web-default 1.2 */
-  h1 { line-height: 1.05; }
-  h2 { line-height: 1.1;  }
-  h3 { line-height: 1.15; }
+  /* Heading rhythm — comfortable and editorial. Cormorant Garamond's tall
+     ascenders need a touch more room than a tight 1.05 to breathe on desktop. */
+  h1 { line-height: 1.15; }
+  h2 { line-height: 1.2;  }
+  h3 { line-height: 1.25; }
+  h4, h5, h6 { line-height: 1.3; }
 
   /* Slightly larger base — 17px instead of 16px for comfortable desktop reading */
   body { font-size: 1.0625rem; }
