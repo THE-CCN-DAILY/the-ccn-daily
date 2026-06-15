@@ -1,8 +1,9 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Card from '../components/Card';
 import ChallengeCreator from '../components/admin/ChallengeCreator';
-import { UserIcon, PlusCircleIcon, ChatBubbleLeftRightIcon, PencilIcon, SpeakerWaveIcon, ReaderIcon, EllipsisHorizontalIcon, CommunityIcon, DbIcon, TrophyIcon, SpinnerIcon, CalendarIcon } from '../components/icons';
+import { UserIcon, PlusCircleIcon, ChatBubbleLeftRightIcon, PencilIcon, ReaderIcon, EllipsisHorizontalIcon, CommunityIcon, DbIcon, TrophyIcon, SpinnerIcon, CalendarIcon } from '../components/icons';
 import { useNotifications } from '../contexts/NotificationContext';
 import { db, storage } from '../firebase';
 import { collection, addDoc, serverTimestamp, query, orderBy, onSnapshot } from 'firebase/firestore';
@@ -43,6 +44,7 @@ const StatCard: React.FC<{ title: string; value: string | number; change: string
 
 const AdminDashboard: React.FC = () => {
     const { user } = useAuth();
+    const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState<'users' | 'challenges' | 'broadcasts' | 'events' | 'payments' | 'discounts' | 'tenancy' | 'resources' | 'inbox' | 'budget' | 'landscape'>('users');
     const { addNotification, notify } = useNotifications();
     const [usageStats, setUsageStats] = useState<any>(null);
@@ -1372,25 +1374,24 @@ const AdminDashboard: React.FC = () => {
                 <Card>
                     <h2 className="text-2xl font-semibold text-brand-text-primary mb-4" style={{ fontFamily: 'var(--serif-display)' }}>Content Controls</h2>
                     <div className="space-y-3">
-                        <button className="w-full text-left flex items-center gap-3 p-3.5 rounded-xl bg-brand-dark border border-brand-border hover:border-brand-accent/40 hover:bg-brand-accent/5 transition-colors">
+                        <button
+                            onClick={() => { setActiveTab('challenges'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                            className="w-full text-left flex items-center gap-3 p-3.5 rounded-xl bg-brand-dark border border-brand-border hover:border-brand-accent/40 hover:bg-brand-accent/5 transition-colors"
+                        >
                             <TrophyIcon className="w-6 h-6 text-brand-accent shrink-0"/>
                             <div>
                                 <p className="font-semibold text-brand-text-primary">Challenge Templates</p>
-                                <p className="text-xs text-brand-text-secondary">Manage Community Sprints</p>
+                                <p className="text-xs text-brand-text-secondary">Open the Course &amp; Challenge Studio</p>
                             </div>
                         </button>
-                        <button className="w-full text-left flex items-center gap-3 p-3.5 rounded-xl bg-brand-dark border border-brand-border hover:border-brand-accent/40 hover:bg-brand-accent/5 transition-colors">
+                        <button
+                            onClick={() => navigate('/studio/content-manager')}
+                            className="w-full text-left flex items-center gap-3 p-3.5 rounded-xl bg-brand-dark border border-brand-border hover:border-brand-accent/40 hover:bg-brand-accent/5 transition-colors"
+                        >
                             <ReaderIcon className="w-6 h-6 text-brand-accent shrink-0"/>
                             <div>
-                                <p className="font-semibold text-brand-text-primary">Books & Courses</p>
-                                <p className="text-xs text-brand-text-secondary">Global Library Distribution</p>
-                            </div>
-                        </button>
-                        <button className="w-full text-left flex items-center gap-3 p-3.5 rounded-xl bg-brand-dark border border-brand-border hover:border-brand-accent/40 hover:bg-brand-accent/5 transition-colors">
-                            <SpeakerWaveIcon className="w-6 h-6 text-brand-accent shrink-0"/>
-                             <div>
-                                <p className="font-semibold text-brand-text-primary">Voice Training</p>
-                                <p className="text-xs text-brand-text-secondary">Kai Customization Logic</p>
+                                <p className="font-semibold text-brand-text-primary">Books &amp; Courses</p>
+                                <p className="text-xs text-brand-text-secondary">Open the Content Manager</p>
                             </div>
                         </button>
                     </div>
