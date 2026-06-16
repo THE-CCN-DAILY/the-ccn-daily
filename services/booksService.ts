@@ -24,6 +24,7 @@ type CatalogBook = {
   status?: 'draft' | 'published' | 'archived';
   isPremium?: boolean;
   price?: number;
+  reviewLinks?: Record<string, string>;
   createdAt?: string;
   updatedAt?: string;
 };
@@ -50,6 +51,7 @@ const mapCatalogBook = (book: CatalogBook): Book => ({
     isFree: !book.isPremium && !book.price,
   }] : [],
   purchaseLinks: [],
+  reviewLinks: book.reviewLinks,
   createdAt: book.createdAt,
   updatedAt: book.updatedAt,
 });
@@ -65,6 +67,7 @@ const mapContentItemToBook = (item: CatalogContentItem): Book =>
     status: item.status === 'draft' ? 'draft' : 'published',
     isPremium: item.isPremium,
     price: item.price,
+    reviewLinks: item.reviewLinks,
     createdAt: item.createdAt,
     updatedAt: item.updatedAt,
   });
@@ -88,6 +91,7 @@ const mapBookToCatalogItem = (
     status: book.status || 'draft',
     isPremium: Boolean(price > 0 || variant?.isFree === false),
     price,
+    reviewLinks: book.reviewLinks,
   };
 };
 

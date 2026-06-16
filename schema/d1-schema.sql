@@ -156,6 +156,8 @@ CREATE TABLE IF NOT EXISTS audiobooks (
   status TEXT NOT NULL DEFAULT 'published',
   is_premium INTEGER NOT NULL DEFAULT 0,
   price REAL NOT NULL DEFAULT 0,
+  -- Admin-settable marketplace review links (added idempotently by ensureReviewLinksColumns):
+  review_links TEXT,                          -- JSON: { amazon?, goodreads?, appleBooks?, ... }
   created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
@@ -176,11 +178,30 @@ CREATE TABLE IF NOT EXISTS books (
   print_enabled INTEGER NOT NULL DEFAULT 0,  -- a physical edition exists
   print_countries TEXT,                       -- comma ISO codes that ship today (e.g. 'UG,KE')
   print_price_usd REAL NOT NULL DEFAULT 0,    -- USD list price for print
+  -- Admin-settable marketplace review links (added idempotently by ensureReviewLinksColumns):
+  review_links TEXT,                          -- JSON: { amazon?, goodreads?, appleBooks?, ... }
   created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE INDEX IF NOT EXISTS idx_books_status_created ON books(status, created_at DESC);
+
+-- In-app moderated reviews for books and audiobooks (content_type discriminates).
+-- Self-provisioned by ensureBookReviewsTable; only 'approved' reviews surface publicly.
+CREATE TABLE IF NOT EXISTS book_reviews (
+  id TEXT PRIMARY KEY,
+  content_type TEXT NOT NULL DEFAULT 'book',  -- book | audiobook
+  book_id TEXT NOT NULL,
+  user_id TEXT NOT NULL,
+  author_name TEXT NOT NULL DEFAULT '',
+  rating INTEGER NOT NULL,                     -- 1..5
+  body TEXT NOT NULL DEFAULT '',
+  status TEXT NOT NULL DEFAULT 'pending',      -- pending | approved | rejected
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_book_reviews_unique ON book_reviews(content_type, book_id, user_id);
+CREATE INDEX IF NOT EXISTS idx_book_reviews_lookup ON book_reviews(content_type, book_id, status, created_at DESC);
 
 -- Print access / waitlist requests from readers in regions without a
 -- distribution centre yet (Africa-first, but global where POD shipping is dear).

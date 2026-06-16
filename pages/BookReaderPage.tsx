@@ -6,6 +6,7 @@ import Card from '../components/Card';
 import { useAudioPlayer } from '../contexts/AudioPlayerContext';
 import { getBook } from '../services/booksService';
 import PrintEditionPanel from '../components/PrintEditionPanel';
+import ProductReviews from '../components/ProductReviews';
 import type { Book, BookVariant } from '../types';
 
 // POD platform display config
@@ -349,6 +350,9 @@ const BookReaderPage: React.FC = () => {
 
         {/* Print edition — country-aware availability + waitlist */}
         <PrintEditionPanel bookId={book.id} />
+
+        {/* Moderated reader reviews + external marketplace links */}
+        <ProductReviews contentType="book" contentId={book.id} reviewLinks={book.reviewLinks} />
       </div>
     </div>
   );

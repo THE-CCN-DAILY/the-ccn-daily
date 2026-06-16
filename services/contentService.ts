@@ -21,6 +21,8 @@ export interface CatalogContentItem {
   price?: number;
   participantsCount?: number;
   moduleCount?: number;
+  /** Admin-settable external marketplace review links (books & audiobooks). */
+  reviewLinks?: Record<string, string>;
 }
 
 const ADMIN_EMAIL = 'pastor.eryeza@gmail.com';

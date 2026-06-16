@@ -362,7 +362,18 @@ const emptyBook = (): Omit<Book, 'id' | 'createdAt' | 'updatedAt'> => ({
   status: 'draft',
   variants: [],
   purchaseLinks: [],
+  reviewLinks: {},
 });
+
+// Marketplace platforms readers can be sent to leave an external review.
+const REVIEW_LINK_FIELDS: { key: string; label: string; placeholder: string }[] = [
+  { key: 'amazon', label: 'Amazon', placeholder: 'https://www.amazon.com/dp/…' },
+  { key: 'goodreads', label: 'Goodreads', placeholder: 'https://www.goodreads.com/book/…' },
+  { key: 'appleBooks', label: 'Apple Books', placeholder: 'https://books.apple.com/…' },
+  { key: 'audible', label: 'Audible', placeholder: 'https://www.audible.com/pd/…' },
+  { key: 'kobo', label: 'Kobo', placeholder: 'https://www.kobo.com/…' },
+  { key: 'other', label: 'Other', placeholder: 'https://…' },
+];
 
 // ─── Books Manager Tab ───────────────────────────────────────────────────────
 
@@ -411,6 +422,7 @@ const BooksManagerTab: React.FC = () => {
       status: book.status,
       variants: book.variants,
       purchaseLinks: book.purchaseLinks,
+      reviewLinks: book.reviewLinks ?? {},
     });
     setEditingId(book.id);
     setShowForm(true);
@@ -441,6 +453,10 @@ const BooksManagerTab: React.FC = () => {
     setForm(f => ({ ...f, purchaseLinks: f.purchaseLinks.map((l, i) => i === idx ? { ...l, ...patch } : l) }));
   const removeLink = (idx: number) =>
     setForm(f => ({ ...f, purchaseLinks: f.purchaseLinks.filter((_, i) => i !== idx) }));
+
+  // Marketplace review-link helper
+  const updateReviewLink = (key: string, url: string) =>
+    setForm(f => ({ ...f, reviewLinks: { ...(f.reviewLinks ?? {}), [key]: url } }));
 
   const field = (label: string, el: React.ReactNode) => (
     <div>
@@ -479,6 +495,28 @@ const BooksManagerTab: React.FC = () => {
                     <option value="published">Published</option>
                   </select>
                 ))}
+
+                {/* Marketplace review links — surface a "Loved it? Review it on…" affordance */}
+                <div className="rounded-xl border border-brand-border bg-brand-dark/20 p-4">
+                  <p className="text-sm font-bold text-brand-text-primary mb-1">Marketplace review links</p>
+                  <p className="text-xs text-brand-text-secondary mb-3">
+                    Optional. Where readers can leave an external review — shown as buttons on the book page.
+                  </p>
+                  <div className="space-y-2">
+                    {REVIEW_LINK_FIELDS.map(({ key, label, placeholder }) => (
+                      <div key={key}>
+                        <label className="block text-xs font-semibold text-brand-text-secondary mb-1">{label}</label>
+                        <input
+                          type="url"
+                          value={form.reviewLinks?.[key] ?? ''}
+                          onChange={e => updateReviewLink(key, e.target.value)}
+                          className={INPUT_CLS}
+                          placeholder={placeholder}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
 
                 {/* Variants */}
                 <div>

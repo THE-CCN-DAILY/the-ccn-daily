@@ -316,6 +316,8 @@ type AudiobookRow = {
   status: 'draft' | 'published' | 'archived';
   is_premium: number;
   price: number;
+  // Admin-settable external marketplace review links (added by ensureReviewLinksColumns):
+  review_links?: string | null;          // JSON: { amazon?, goodreads?, appleBooks?, ... }
   created_at?: string | null;
   updated_at?: string | null;
 };
@@ -334,6 +336,8 @@ type BookRow = {
   print_enabled?: number | null;          // 0/1 — does a print edition exist at all
   print_countries?: string | null;        // comma ISO codes where print ships today (e.g. 'UG,KE')
   print_price_usd?: number | null;        // USD list price for the print edition
+  // Admin-settable external marketplace review links (added by ensureReviewLinksColumns):
+  review_links?: string | null;           // JSON: { amazon?, goodreads?, appleBooks?, ... }
   created_at?: string | null;
   updated_at?: string | null;
 };
@@ -679,6 +683,37 @@ const mapDevotional = (row: DevotionalRow) => ({
   updatedAt: row.updated_at || undefined,
 });
 
+// Marketplace review links are stored as a JSON object on the book/audiobook record.
+// Parse defensively — a malformed value should never break the catalog response.
+const parseReviewLinks = (value?: string | null): Record<string, string> => {
+  if (!value) return {};
+  try {
+    const parsed = JSON.parse(value);
+    if (!parsed || typeof parsed !== 'object') return {};
+    const out: Record<string, string> = {};
+    for (const [k, v] of Object.entries(parsed)) {
+      const url = String(v || '').trim();
+      if (url) out[k] = url;
+    }
+    return out;
+  } catch {
+    return {};
+  }
+};
+
+// Serialize an admin-provided review-links object to JSON for storage. Keeps only
+// http(s) URLs on known keys, capped, so a bad payload can't poison the record.
+const REVIEW_LINK_KEYS = ['amazon', 'goodreads', 'appleBooks', 'kobo', 'barnesNoble', 'audible', 'other'];
+const serializeReviewLinks = (value: unknown): string | null => {
+  if (!value || typeof value !== 'object') return null;
+  const out: Record<string, string> = {};
+  for (const key of REVIEW_LINK_KEYS) {
+    const raw = String((value as Record<string, unknown>)[key] ?? '').trim().slice(0, 500);
+    if (/^https?:\/\//i.test(raw)) out[key] = raw;
+  }
+  return Object.keys(out).length ? JSON.stringify(out) : null;
+};
+
 const mapAudiobook = (row: AudiobookRow) => ({
   id: row.id,
   title: row.title,
@@ -689,8 +724,33 @@ const mapAudiobook = (row: AudiobookRow) => ({
   status: row.status,
   isPremium: Boolean(row.is_premium),
   price: Number(row.price || 0),
+  reviewLinks: parseReviewLinks(row.review_links),
   createdAt: row.created_at || undefined,
   updatedAt: row.updated_at || undefined,
+});
+
+type BookReviewRow = {
+  id: string;
+  content_type: string;
+  book_id: string;
+  user_id: string;
+  author_name: string;
+  rating: number;
+  body: string;
+  status: 'pending' | 'approved' | 'rejected';
+  created_at?: string | null;
+};
+
+const mapBookReview = (row: BookReviewRow) => ({
+  id: row.id,
+  contentType: row.content_type,
+  bookId: row.book_id,
+  userId: row.user_id,
+  authorName: row.author_name || 'A member of the community',
+  rating: Number(row.rating || 0),
+  body: row.body || '',
+  status: row.status,
+  createdAt: row.created_at || undefined,
 });
 
 const mapBook = (row: BookRow) => ({
@@ -706,6 +766,7 @@ const mapBook = (row: BookRow) => ({
   printEnabled: Boolean(row.print_enabled),
   printCountries: (row.print_countries || '').split(',').map((s) => s.trim().toUpperCase()).filter(Boolean),
   printPriceUsd: Number(row.print_price_usd || 0),
+  reviewLinks: parseReviewLinks(row.review_links),
   createdAt: row.created_at || undefined,
   updatedAt: row.updated_at || undefined,
 });
@@ -721,6 +782,45 @@ const ensureBookPrintColumns = async (db: D1DatabaseBinding) => {
   for (const sql of stmts) {
     try { await db.prepare(sql).run(); } catch { /* already present */ }
   }
+};
+
+// Idempotent column add for admin-settable marketplace review links on both the
+// book and audiobook records (D1 has no ADD COLUMN IF NOT EXISTS).
+const ensureReviewLinksColumns = async (db: D1DatabaseBinding) => {
+  const stmts = [
+    'ALTER TABLE books ADD COLUMN review_links TEXT',
+    'ALTER TABLE audiobooks ADD COLUMN review_links TEXT',
+  ];
+  for (const sql of stmts) {
+    try { await db.prepare(sql).run(); } catch { /* already present */ }
+  }
+};
+
+// In-app moderated reviews for books and audiobooks. content_type lets one table
+// serve both surfaces; the unique index makes a re-submission update the prior
+// review (and reset it to pending) rather than create duplicates.
+const ensureBookReviewsTable = async (db: D1DatabaseBinding) => {
+  await db.prepare(
+    `CREATE TABLE IF NOT EXISTS book_reviews (
+      id TEXT PRIMARY KEY,
+      content_type TEXT NOT NULL DEFAULT 'book',
+      book_id TEXT NOT NULL,
+      user_id TEXT NOT NULL,
+      author_name TEXT NOT NULL DEFAULT '',
+      rating INTEGER NOT NULL,
+      body TEXT NOT NULL DEFAULT '',
+      status TEXT NOT NULL DEFAULT 'pending',
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )`
+  ).run();
+  await db.prepare(
+    `CREATE UNIQUE INDEX IF NOT EXISTS idx_book_reviews_unique
+       ON book_reviews(content_type, book_id, user_id)`
+  ).run();
+  await db.prepare(
+    `CREATE INDEX IF NOT EXISTS idx_book_reviews_lookup
+       ON book_reviews(content_type, book_id, status, created_at DESC)`
+  ).run();
 };
 
 // Print-edition waitlist / access-request table. Africa (and other regions far
@@ -2573,6 +2673,98 @@ app.get('/api/books', async (c) => {
   return c.json({ books: result.results.map(mapBook), source: 'd1' });
 });
 
+// ─── Book & audiobook reviews (moderated) ────────────────────────────────────
+// Members submit a star rating + note (created 'pending'); admins approve/reject;
+// only approved reviews surface on the public product view. One table serves both
+// books and audiobooks via content_type; re-submitting updates the prior review.
+const REVIEW_BODY_MAX = 2000;
+type ReviewContentType = 'book' | 'audiobook';
+
+const submitReviewHandler = (contentType: ReviewContentType) => async (c: any) => {
+  const id = c.req.param('id');
+  if (!isSafeId(id)) return c.json({ error: 'Invalid id' }, 400);
+  if (!c.env.DB) return c.json({ error: 'D1 database binding is not configured' }, 503);
+
+  const uid = c.get('idTokenUid');
+  if (!uid) return c.json({ error: 'Authentication required' }, 401);
+
+  const limited = await enforceRateLimit(c, 'book-review', uid, 10, 3600);
+  if (limited) return limited;
+
+  const body = await c.req.json().catch(() => ({} as Record<string, unknown>));
+  const rating = Math.round(Number(body.rating || 0));
+  if (!Number.isFinite(rating) || rating < 1 || rating > 5) {
+    return c.json({ error: 'Rating must be between 1 and 5.' }, 400);
+  }
+  const text = sanitizeInput(String(body.body || '').trim().slice(0, REVIEW_BODY_MAX));
+  const authorName = sanitizeInput(String(body.authorName || '').trim().slice(0, 120)) || 'A member of the community';
+
+  await ensureBookReviewsTable(c.env.DB);
+  await c.env.DB.prepare(
+    `INSERT INTO book_reviews (id, content_type, book_id, user_id, author_name, rating, body, status, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', CURRENT_TIMESTAMP)
+     ON CONFLICT(content_type, book_id, user_id) DO UPDATE SET
+       author_name = excluded.author_name,
+       rating = excluded.rating,
+       body = excluded.body,
+       status = 'pending',
+       created_at = CURRENT_TIMESTAMP`
+  ).bind(`review_${crypto.randomUUID()}`, contentType, id, uid, authorName, rating, text).run();
+
+  return c.json({ ok: true });
+};
+
+const listReviewsHandler = (contentType: ReviewContentType) => async (c: any) => {
+  const id = c.req.param('id');
+  if (!isSafeId(id)) return c.json({ error: 'Invalid id' }, 400);
+  if (!c.env.DB) return c.json({ reviews: [], aggregate: { count: 0, average: 0 }, source: 'fallback' });
+
+  await ensureBookReviewsTable(c.env.DB);
+  const result = await c.env.DB.prepare(
+    `SELECT * FROM book_reviews
+       WHERE content_type = ? AND book_id = ? AND status = 'approved'
+       ORDER BY created_at DESC LIMIT 100`
+  ).bind(contentType, id).all();
+  const reviews = (result.results as BookReviewRow[]).map(mapBookReview);
+  const count = reviews.length;
+  const average = count
+    ? Math.round((reviews.reduce((sum, r) => sum + r.rating, 0) / count) * 10) / 10
+    : 0;
+  return c.json({ reviews, aggregate: { count, average }, source: 'd1' });
+};
+
+app.post('/api/books/:id/reviews', submitReviewHandler('book'));
+app.get('/api/books/:id/reviews', listReviewsHandler('book'));
+app.post('/api/audiobooks/:id/reviews', submitReviewHandler('audiobook'));
+app.get('/api/audiobooks/:id/reviews', listReviewsHandler('audiobook'));
+
+// Admin moderation queue + decision.
+app.get('/api/admin/reviews', async (c) => {
+  const denied = requireAdmin(c); if (denied) return denied;
+  if (!c.env.DB) return c.json({ reviews: [], source: 'fallback' });
+  await ensureBookReviewsTable(c.env.DB);
+  const status = String(c.req.query('status') || 'pending');
+  const result = await c.env.DB.prepare(
+    `SELECT * FROM book_reviews WHERE status = ? ORDER BY created_at ASC LIMIT 300`
+  ).bind(status).all<BookReviewRow>();
+  return c.json({ reviews: result.results.map(mapBookReview), source: 'd1' });
+});
+
+app.post('/api/admin/reviews/:id/status', async (c) => {
+  const denied = requireAdmin(c); if (denied) return denied;
+  if (!c.env.DB) return c.json({ error: 'D1 database binding is not configured' }, 503);
+  const id = c.req.param('id');
+  if (!isSafeId(id)) return c.json({ error: 'Invalid review id' }, 400);
+  const body = await c.req.json().catch(() => ({} as Record<string, unknown>));
+  const status = String(body.status || '');
+  if (status !== 'approved' && status !== 'rejected') {
+    return c.json({ error: 'status must be approved or rejected' }, 400);
+  }
+  await ensureBookReviewsTable(c.env.DB);
+  await c.env.DB.prepare(`UPDATE book_reviews SET status = ? WHERE id = ?`).bind(status, id).run();
+  return c.json({ ok: true });
+});
+
 // GET /api/books/:id/print — print-edition availability for the visitor's
 // country (Cloudflare gives us request.cf.country). Returns one of:
 //   notOffered  — no print edition exists for this title
@@ -2824,11 +3016,12 @@ app.post('/api/admin/content/:type', async (c) => {
   }
 
   if (type === 'audiobooks') {
+    await ensureReviewLinksColumns(c.env.DB);
     await c.env.DB.prepare(
       `INSERT INTO audiobooks (
         id, title, description, author, audio_url, cover_url, status, is_premium, price,
-        created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+        review_links, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
       ON CONFLICT(id) DO UPDATE SET
         title = excluded.title,
         description = excluded.description,
@@ -2838,6 +3031,7 @@ app.post('/api/admin/content/:type', async (c) => {
         status = excluded.status,
         is_premium = excluded.is_premium,
         price = excluded.price,
+        review_links = excluded.review_links,
         updated_at = CURRENT_TIMESTAMP`
     ).bind(
       id,
@@ -2848,7 +3042,8 @@ app.post('/api/admin/content/:type', async (c) => {
       body.coverUrl || null,
       status,
       body.isPremium ? 1 : 0,
-      Number(body.price || 0)
+      Number(body.price || 0),
+      serializeReviewLinks(body.reviewLinks)
     ).run();
 
     const item = await c.env.DB.prepare(`SELECT * FROM audiobooks WHERE id = ? LIMIT 1`)
@@ -2857,11 +3052,12 @@ app.post('/api/admin/content/:type', async (c) => {
   }
 
   if (type === 'books') {
+    await ensureReviewLinksColumns(c.env.DB);
     await c.env.DB.prepare(
       `INSERT INTO books (
         id, title, description, author, file_url, cover_url, status, is_premium, price,
-        created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+        review_links, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
       ON CONFLICT(id) DO UPDATE SET
         title = excluded.title,
         description = excluded.description,
@@ -2871,6 +3067,7 @@ app.post('/api/admin/content/:type', async (c) => {
         status = excluded.status,
         is_premium = excluded.is_premium,
         price = excluded.price,
+        review_links = excluded.review_links,
         updated_at = CURRENT_TIMESTAMP`
     ).bind(
       id,
@@ -2881,7 +3078,8 @@ app.post('/api/admin/content/:type', async (c) => {
       body.coverUrl || null,
       status,
       body.isPremium ? 1 : 0,
-      Number(body.price || 0)
+      Number(body.price || 0),
+      serializeReviewLinks(body.reviewLinks)
     ).run();
 
     const item = await c.env.DB.prepare(`SELECT * FROM books WHERE id = ? LIMIT 1`)

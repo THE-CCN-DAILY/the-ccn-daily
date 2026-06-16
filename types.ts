@@ -273,6 +273,8 @@ export interface Book {
   status: 'draft' | 'published';
   variants: BookVariant[];
   purchaseLinks: BookPurchaseLink[];
+  /** Admin-settable external marketplace review links, keyed by platform. */
+  reviewLinks?: Record<string, string>;
   createdAt?: string;
   updatedAt?: string;
 }

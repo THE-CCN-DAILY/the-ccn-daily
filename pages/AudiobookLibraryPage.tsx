@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'motion/react';
-import { Lock } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
+import { Lock, Star, X } from 'lucide-react';
 import Card from '../components/Card';
 import { SpeakerWaveIcon, PlayIcon, PauseIcon } from '../components/icons';
 import { useAudioPlayer } from '../contexts/AudioPlayerContext';
 import { usePremiumGate } from '../hooks/usePremiumGate';
 import { listAudiobooks } from '../services/contentService';
+import ProductReviews from '../components/ProductReviews';
 
 interface Audiobook {
   id: string;
@@ -15,6 +16,7 @@ interface Audiobook {
   audioUrl: string;
   isPremium?: boolean;
   price?: number;
+  reviewLinks?: Record<string, string>;
   createdAt: unknown;
 }
 
@@ -27,6 +29,7 @@ const AudiobookLibraryPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const { playTrack, currentTrack, isPlaying, togglePlayPause } = useAudioPlayer();
   const { requireAccess, canAccess } = usePremiumGate();
+  const [reviewsFor, setReviewsFor] = useState<Audiobook | null>(null);
 
   useEffect(() => {
     const fetchAudiobooks = async () => {
@@ -96,6 +99,7 @@ const AudiobookLibraryPage: React.FC = () => {
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-accent" />
         </div>
       ) : audiobooks.length > 0 ? (
+        <>
         <motion.div
           className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
           variants={stagger} initial="hidden" animate="visible"
@@ -183,6 +187,12 @@ const AudiobookLibraryPage: React.FC = () => {
                           <><PlayIcon className="w-4 h-4" /> Listen</>
                         )}
                       </button>
+                      <button
+                        onClick={() => setReviewsFor((prev) => (prev?.id === book.id ? null : book))}
+                        className="mt-2 w-full py-2 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 text-brand-text-secondary hover:text-brand-accent transition-colors"
+                      >
+                        <Star className="w-4 h-4" /> {reviewsFor?.id === book.id ? 'Hide reviews' : 'Reviews & ratings'}
+                      </button>
                     </div>
                   </div>
                 </Card>
@@ -190,6 +200,43 @@ const AudiobookLibraryPage: React.FC = () => {
             );
           })}
         </motion.div>
+
+        <AnimatePresence>
+          {reviewsFor && (
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 8 }}
+              transition={{ duration: 0.3, ease: EASE }}
+              className="mt-8"
+            >
+              <Card className="border-brand-border">
+                <div className="flex items-start justify-between gap-3 mb-2">
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold uppercase tracking-widest text-brand-accent">Reviews</p>
+                    <h2 className="text-xl font-bold text-brand-text-primary truncate" style={{ fontFamily: 'var(--font-display)' }}>
+                      {reviewsFor.title}
+                    </h2>
+                  </div>
+                  <button
+                    onClick={() => setReviewsFor(null)}
+                    aria-label="Close reviews"
+                    className="flex-shrink-0 p-2 rounded-lg text-brand-text-secondary hover:bg-brand-secondary hover:text-brand-text-primary transition-colors"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+                <ProductReviews
+                  contentType="audiobook"
+                  contentId={reviewsFor.id}
+                  reviewLinks={reviewsFor.reviewLinks}
+                  heading="Reader reviews"
+                />
+              </Card>
+            </motion.div>
+          )}
+        </AnimatePresence>
+        </>
       ) : (
         <motion.div
           variants={fadeUp} initial="hidden" animate="visible"
