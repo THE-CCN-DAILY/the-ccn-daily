@@ -1,6 +1,24 @@
 # THE CCN DAILY — Handoff & Next-Session Plan
 
-_Last updated: 2026-06-12. Branch: `phase-e-visual-authoring`. Deploy flow: gates → commit/push → staging → verify → production (wrangler). Production is autonomous pre-launch; no approval pauses needed except where noted._
+_Last updated: 2026-06-16. Branch: `phase-e-visual-authoring`. Deploy flow: gates → commit/push → staging → verify → production (wrangler). Production is autonomous pre-launch; no approval pauses needed except where noted._
+
+---
+
+## Session 2026-06-16 — what shipped (all live on production, verified)
+
+| Area | Outcome |
+|---|---|
+| **A + B (roles + admin boundary)** | **DONE.** D1 `users.role` is now the single source of truth: worker resolves role per request, `isAdminRequest` honors stored admin role OR the founder bootstrap allowlist (un-removable super-admin). New admin-guarded `POST /api/admin/users/:id/role` (founder can't be demoted). `AuthContext` syncs Firebase users into D1 (`/api/auth/profile`) and hydrates role from it — this also fixes the latent gap where Firebase users were never written to D1, so the Roles page now sees every member. Roles page reads/writes via the worker (was Firestore, which gated nothing) + in-app roles explainer. Strategy toggle only renders for admin/lead_developer (stale localStorage can't leak admin nav); `/studio/*` wrapped in a single `RequireRole` group guard. Ladder documented in `docs/ROLES_AND_AUTHORITY.md`. Verified: role endpoints 401 unauth on prod; `/studio/roles` redirects anon → /pricing. |
+| **C + F0 (QA + responsive)** | **Verified clean.** Public screens have zero horizontal overflow at 320/375/390/768 (measured live). Flagged auth-gated screens audited — all already use correct responsive patterns (grid-cols-1 bases, overflow-x-auto tables). See `docs/QA_RESPONSIVE_SWEEP_2026-06-16.md`. Still owed: founder's live signed-in visual/taste pass in both themes (needs a session — can't automate Firebase redirect sign-in). |
+| **D (landing)** | **DONE.** Benefit-forward, non-salesy pastoral copy (hero + final CTA), slop-free. New seamless-looping `DawnAmbient` Remotion composition (breathing flame over dawn arcs + Scripture) embedded as a section break via a lazy-loaded, `prefers-reduced-motion`-aware `@remotion/player` (Remotion stays out of first paint; static fallback otherwise). Verified rendering live on prod. |
+| **F + G (SEO/GEO + bot policy)** | **DONE.** `usePageMeta` hook → distinct per-route title/description (landing, blog, blog post, pricing, newsletter, podcast); Article JSON-LD on blog posts (verified injecting on prod). `robots.txt` AI-bot policy: allow search+answer engines, disallow pure training scrapers (Cloudflare already prepends content-signals to it). See `docs/SEO_GEO_AND_BOT_POLICY.md`. |
+| **E (reviews)** | **Deferred (build-ready).** Full plan in `docs/SEO_GEO_AND_BOT_POLICY.md §4`; spawned as its own task (needs an authed admin session to verify moderation). |
+
+**Queued for the founder / next session:**
+- **Cloudflare dashboard (item G):** enable "Block AI Scrapers" + "AI Labyrinth", scoped to still allow answer engines; confirm Web Analytics on. Steps in `docs/SEO_GEO_AND_BOT_POLICY.md §2`.
+- **Founder signed-in visual QA** in both themes (the taste pass only you can do).
+- **Reviews feature** (chipped) and the **HashRouter→BrowserRouter prerender** lever (the biggest remaining SEO unlock).
+- **Pre-existing bug (chipped):** the Sentinel audit fires `/api/ai/generate` on the public landing for anonymous visitors → console 401s; gate it behind an admin session.
 
 ---
 
