@@ -6,6 +6,7 @@ import { listTestimonies } from '../services/testimonyService';
 import { useTheme } from '../contexts/ThemeContext';
 import CcnLogo from '../components/CcnLogo';
 import AmbientDevotionalMotion from '../components/landing/AmbientDevotionalMotion';
+import usePageMeta from '../hooks/usePageMeta';
 import {
   BookOpen,
   CalendarDays,
@@ -356,6 +357,13 @@ const CTA_COLORS = {
 const LandingPage: React.FC = () => {
   const { user, openSignIn } = useAuth();
   const { theme } = useTheme();
+
+  usePageMeta({
+    title: 'THE CCN DAILY — Your personal devotional space',
+    rawTitle: true,
+    description:
+      'A steady daily place to meet God — Scripture, prayer, audio devotionals, and guided reflection for believers who want to walk closely with God wherever they are.',
+  });
 
   // Live testimonials from the Wall of Testimony (latest 3 published). Public read.
   const [testimonials, setTestimonials] = useState<LandingTestimony[]>([]);

@@ -6,6 +6,7 @@ import { getPublishedBlogPost, type BlogPost } from '../services/blogService';
 import { useAudioPlayer } from '../contexts/AudioPlayerContext';
 import { PlayIcon, PauseIcon } from '../components/icons';
 import CcnLogo from '../components/CcnLogo';
+import usePageMeta from '../hooks/usePageMeta';
 
 const formatDate = (value?: string) => {
   if (!value) return 'Unscheduled';
@@ -45,6 +46,33 @@ const BlogPostPage: React.FC = () => {
       active = false;
     };
   }, [slug]);
+
+  // Per-post title/description + Article structured data (read by Googlebot, which
+  // renders client JS, and by answer engines parsing the page entity).
+  const articleJsonLd = React.useMemo(() => {
+    if (!post) return undefined;
+    return {
+      '@context': 'https://schema.org',
+      '@type': 'Article',
+      headline: post.title,
+      description: post.excerpt,
+      author: { '@type': 'Person', name: post.authorName },
+      datePublished: post.publishedAt || undefined,
+      articleSection: post.category,
+      publisher: {
+        '@type': 'Organization',
+        name: 'THE CCN DAILY',
+        logo: { '@type': 'ImageObject', url: 'https://theccndaily.com/logo-wordmark-white.webp' },
+      },
+      mainEntityOfPage: `https://theccndaily.com/#/blog/${slug}`,
+    } as Record<string, unknown>;
+  }, [post, slug]);
+
+  usePageMeta({
+    title: post ? post.title : 'Essay',
+    description: post?.excerpt || 'Essays and devotionals on faith, work, leadership, and endurance from THE CCN DAILY.',
+    jsonLd: articleJsonLd,
+  });
 
   return (
     <div className="min-h-screen bg-brand-secondary text-brand-text-primary">

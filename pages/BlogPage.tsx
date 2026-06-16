@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
+import usePageMeta from '../hooks/usePageMeta';
 import { ArrowRight, BookOpen, PenLine, RefreshCw, Search } from 'lucide-react';
 import { listPublishedBlogPosts, type BlogPost } from '../services/blogService';
 import CcnLogo from '../components/CcnLogo';
@@ -60,6 +61,10 @@ const formatDate = (value?: string) => {
 };
 
 const BlogPage: React.FC = () => {
+  usePageMeta({
+    title: 'Blog',
+    description: 'Essays and devotionals on faith, work, leadership, and endurance — Scripture-anchored writing from THE CCN DAILY.',
+  });
   const [posts, setPosts] = React.useState<BlogPost[]>(fallbackPosts);
   const [query, setQuery] = React.useState('');
   const [loading, setLoading] = React.useState(true);

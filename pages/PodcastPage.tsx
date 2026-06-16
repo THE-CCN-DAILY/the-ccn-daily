@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import usePageMeta from '../hooks/usePageMeta';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import type { PodcastEpisode, SearchResult } from '../types';
@@ -35,6 +36,10 @@ const formatMinutes = (seconds: number) => {
 };
 
 const PodcastPage: React.FC = () => {
+  usePageMeta({
+    title: 'Podcast',
+    description: 'Audio formation for commutes, quiet rooms, and workday resets — pastoral conversations from THE CCN DAILY.',
+  });
   const { playTrack, currentTrack, isPlaying, togglePlayPause } = useAudioPlayer();
   const [episodes, setEpisodes] = useState<PodcastEpisode[]>([]);
   const [loading, setLoading] = useState(true);

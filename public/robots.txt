@@ -1,3 +1,60 @@
+# THE CCN DAILY — robots policy
+#
+# Goal: be discoverable by search engines AND AI answer engines (so they read and
+# cite CCN), while declining pure AI-*training* scrapers that take content and give
+# nothing back. The matching Cloudflare dashboard control — "Block AI Scrapers" plus
+# "AI Labyrinth" for bots that ignore robots.txt — is configured separately in the zone.
+# See docs/SEO_GEO_AND_BOT_POLICY.md. This blocklist is the founder's strategic call
+# and is meant to be adjusted there.
+
+# ── Search + answer engines: fully allowed (they send readers and cite us) ──
+User-agent: Googlebot
+Allow: /
+
+# Google-Extended controls Gemini grounding/citation — allow it for answer-engine reach.
+User-agent: Google-Extended
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: DuckDuckBot
+Allow: /
+
+User-agent: Applebot
+Allow: /
+
+# OpenAI live-retrieval crawlers (ChatGPT search + user browsing) — NOT the training one.
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+# Perplexity answer engine.
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Perplexity-User
+Allow: /
+
+# ── Pure training scrapers: declined (content in, nothing back) ──
+User-agent: GPTBot
+Disallow: /
+
+User-agent: CCBot
+Disallow: /
+
+User-agent: Bytespider
+Disallow: /
+
+User-agent: Omgilibot
+Disallow: /
+
+User-agent: Diffbot
+Disallow: /
+
+# ── Everyone else: allowed (default-open keeps the site discoverable) ──
 User-agent: *
 Allow: /
 

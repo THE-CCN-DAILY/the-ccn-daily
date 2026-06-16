@@ -17,6 +17,7 @@ const fadeUp = { hidden: { opacity: 0, y: 24 }, visible: { opacity: 1, y: 0 } };
 const stagger = { hidden: {}, visible: { transition: { staggerChildren: 0.1, delayChildren: 0.05 } } };
 import { getLocalizedPrice, formatLocalPrice, isLocalCurrencyNonUsd } from '../utils/ppp';
 import { useAuth } from '../contexts/AuthContext';
+import usePageMeta from '../hooks/usePageMeta';
 import { useNotifications } from '../contexts/NotificationContext';
 import { useFlutterwave, closePaymentModal } from 'flutterwave-react-v3';
 import { db } from '../firebase';
@@ -145,6 +146,10 @@ const PlanDetails: React.FC<{ text: string }> = ({ text }) => {
 };
 
 const PricingPage: React.FC = () => {
+  usePageMeta({
+    title: 'Plans & Pricing',
+    description: 'Choose your daily rhythm with God. Begin free, or go deeper with premium courses, audiobooks, reading plans, and community.',
+  });
   const { user, openSignIn } = useAuth();
   const { notify } = useNotifications();
   const navigate = useNavigate();

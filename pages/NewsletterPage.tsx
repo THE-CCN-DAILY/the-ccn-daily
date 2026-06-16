@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import usePageMeta from '../hooks/usePageMeta';
 import { motion, AnimatePresence } from 'motion/react';
 import DOMPurify from 'dompurify';
 import Card from '../components/Card';
@@ -29,6 +30,10 @@ function getNewsletterThumbnail(item: FeedItem): string | null {
 }
 
 const NewsletterPage: React.FC = () => {
+  usePageMeta({
+    title: 'Newsletter',
+    description: 'Essays and devotionals for faith, work, leadership, and endurance — delivered to your inbox by THE CCN DAILY.',
+  });
   const [posts, setPosts] = useState<FeedItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
