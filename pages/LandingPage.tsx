@@ -433,7 +433,7 @@ const LandingPage: React.FC = () => {
             </Link>
           ) : (
             <button
-              onClick={openSignIn}
+              onClick={() => openSignIn()}
               className="flex shrink-0 items-center gap-2 rounded-md border border-brand-border px-3 py-2 text-xs font-semibold text-brand-text-primary transition-colors hover:bg-brand-dark sm:px-4 sm:text-sm"
             >
               Sign in <ArrowRight className="h-3.5 w-3.5" />

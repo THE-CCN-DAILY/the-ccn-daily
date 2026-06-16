@@ -3,6 +3,7 @@ import React from 'react';
 import { HashRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import Layout from './components/Layout';
 import LandingPage from './pages/LandingPage';
+import JoinPage from './pages/JoinPage';
 import BlogPage from './pages/BlogPage';
 import BlogPostPage from './pages/BlogPostPage';
 import BlogStudioPage from './pages/BlogStudioPage';
@@ -110,6 +111,7 @@ const App: React.FC = () => {
                           <Route path="/pricing" element={<PricingPage />} />
                           <Route path="/give" element={<DonationPage />} />
                           <Route path="/onboarding" element={<OnboardingPage />} />
+                          <Route path="/join" element={<JoinPage />} />
                           
                           {/* Member Sanctuary Routes */}
                           <Route path="/app/*">

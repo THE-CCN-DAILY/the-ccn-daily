@@ -14,12 +14,15 @@ import type { AppUser } from '../types';
 import type { SubscriptionTier } from '../types/pricing';
 import { getUserSubscription } from '../services/purchaseService';
 
+export type SignInIntent = 'signin' | 'signup';
+
 interface AuthContextType {
   user: AppUser | null;
   loading: boolean;
   showSignIn: boolean;
+  signInIntent: SignInIntent;
   redirectError: string | null;
-  openSignIn: () => void;
+  openSignIn: (intent?: SignInIntent) => void;
   closeSignIn: () => void;
   signIn: () => Promise<void>;
   signOut: () => Promise<void>;
@@ -86,9 +89,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [showSignIn, setShowSignIn] = useState(false);
+  const [signInIntent, setSignInIntent] = useState<SignInIntent>('signin');
   const [redirectError, setRedirectError] = useState<string | null>(null);
 
-  const openSignIn = useCallback(() => setShowSignIn(true), []);
+  const openSignIn = useCallback((intent: SignInIntent = 'signin') => {
+    setSignInIntent(intent);
+    setShowSignIn(true);
+  }, []);
   const closeSignIn = useCallback(() => { setShowSignIn(false); setRedirectError(null); }, []);
 
   useEffect(() => {
@@ -240,8 +247,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [user?.role, user?.tier]);
 
   const value = useMemo(
-    () => ({ user, loading, showSignIn, redirectError, openSignIn, closeSignIn, signIn, signOut, signInEmail, signUpEmail, sendPasswordReset, refreshUser }),
-    [user, loading, showSignIn, redirectError, openSignIn, closeSignIn, signIn, signOut, signInEmail, signUpEmail, sendPasswordReset, refreshUser],
+    () => ({ user, loading, showSignIn, signInIntent, redirectError, openSignIn, closeSignIn, signIn, signOut, signInEmail, signUpEmail, sendPasswordReset, refreshUser }),
+    [user, loading, showSignIn, signInIntent, redirectError, openSignIn, closeSignIn, signIn, signOut, signInEmail, signUpEmail, sendPasswordReset, refreshUser],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

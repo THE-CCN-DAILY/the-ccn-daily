@@ -328,7 +328,7 @@ const Sidebar: React.FC<SidebarProps> = ({ className = '', onNavigate, collapsib
               </div>
             )
           ) : (
-            <button onClick={openSignIn} title="Sign In" className={`rounded-lg bg-brand-accent text-white font-semibold hover:bg-opacity-90 transition-opacity ${collapsed ? 'w-full flex items-center justify-center py-2' : 'w-full px-4 py-2'}`}>
+            <button onClick={() => openSignIn()} title="Sign In" className={`rounded-lg bg-brand-accent text-white font-semibold hover:bg-opacity-90 transition-opacity ${collapsed ? 'w-full flex items-center justify-center py-2' : 'w-full px-4 py-2'}`}>
               {collapsed ? <UserCircleIcon className="w-5 h-5" /> : 'Sign In'}
             </button>
           )}
@@ -365,7 +365,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { unreadCount } = useNotifications();
   const [isMobileNavOpen, setIsMobileNavOpen] = React.useState(false);
   const isPublicRoute =
-    ['/', '/blog', '/newsletter', '/podcasts', '/pricing', '/give', '/onboarding'].includes(location.pathname) ||
+    ['/', '/blog', '/newsletter', '/podcasts', '/pricing', '/give', '/onboarding', '/join'].includes(location.pathname) ||
     location.pathname.startsWith('/blog/');
 
   if (isPublicRoute) {

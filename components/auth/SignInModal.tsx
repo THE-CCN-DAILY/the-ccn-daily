@@ -2,7 +2,7 @@
  * SignInModal — supports Google sign-in and email/password (sign-in + sign-up + reset).
  * Opened via AuthContext.openSignIn() / closed automatically after successful auth.
  */
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
@@ -22,7 +22,7 @@ const GoogleIcon: React.FC<{ className?: string }> = ({ className }) => (
 );
 
 const SignInModal: React.FC = () => {
-  const { showSignIn, closeSignIn, signIn, signInEmail, signUpEmail, sendPasswordReset, loading, redirectError } = useAuth();
+  const { showSignIn, signInIntent, closeSignIn, signIn, signInEmail, signUpEmail, sendPasswordReset, loading, redirectError } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -41,6 +41,15 @@ const SignInModal: React.FC = () => {
   const [error, setError] = useState('');
   const [resetSent, setResetSent] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // When the modal opens, honor the caller's intent (e.g. the /join link wants new
+  // visitors on the sign-up form, while header "Sign In" opens the sign-in form).
+  useEffect(() => {
+    if (showSignIn) {
+      setEmailMode(signInIntent === 'signup' ? 'signup' : 'signin');
+      setActiveTab('email');
+    }
+  }, [showSignIn, signInIntent]);
 
   const reset = () => {
     setError('');

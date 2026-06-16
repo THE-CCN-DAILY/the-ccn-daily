@@ -73,7 +73,7 @@ const RequireAuth: React.FC<RequireAuthProps> = ({ children }) => {
             journal, courses, and community.
           </p>
           <button
-            onClick={openSignIn}
+            onClick={() => openSignIn()}
             className="mt-8 w-full border border-brand-accent bg-brand-accent px-6 py-3 text-sm font-semibold text-brand-secondary hover:opacity-90 transition-opacity"
           >
             Sign in
