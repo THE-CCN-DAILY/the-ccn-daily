@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { listTestimonies } from '../services/testimonyService';
 import { useTheme } from '../contexts/ThemeContext';
 import CcnLogo from '../components/CcnLogo';
+import AmbientDevotionalMotion from '../components/landing/AmbientDevotionalMotion';
 import {
   BookOpen,
   CalendarDays,
@@ -485,7 +486,7 @@ const LandingPage: React.FC = () => {
                 variants={fadeUp}
                 className="mt-7 max-w-xl text-[1.125rem] leading-[1.8] text-brand-text-secondary"
               >
-                Begin with Scripture, prayer, audio devotionals, and guided reflection before the day starts making its demands.
+                A steady place to meet God each morning — Scripture, prayer, and a few honest minutes of reflection — before the day starts asking everything of you.
               </motion.p>
 
               <motion.div
@@ -757,23 +758,11 @@ const LandingPage: React.FC = () => {
           </div>
         </section>
 
-        {/* ── Scripture Accent — Matthew 4:4 ──────────────────────────────────── */}
-        <div className="py-10 px-6 text-center bg-brand-secondary border-t border-brand-border/40">
-          <motion.div
-            initial={{ opacity: 0, y: 8 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.65 }}
-            className="max-w-lg mx-auto"
-          >
-            <p className="font-serif italic text-base leading-[1.9] text-brand-text-secondary">
-              "Man shall not live by bread alone, but by every word that comes from the mouth of God."
-            </p>
-            <p className="mt-3 text-[10px] font-bold uppercase tracking-[0.18em] text-brand-accent">
-              Matthew 4:4
-            </p>
-          </motion.div>
-        </div>
+        {/* ── Ambient devotional motion — dawn over Scripture (Remotion, lazy) ──── */}
+        <AmbientDevotionalMotion
+          verseText="Man shall not live by bread alone, but by every word that comes from the mouth of God."
+          verseRef="Matthew 4:4"
+        />
 
         {/* ── What's Inside (Feature Grid) ──────────────────────────────────── */}
         <section className="bg-brand-secondary py-20 px-6 md:py-28">
@@ -919,10 +908,10 @@ const LandingPage: React.FC = () => {
                   Begin For Free
                 </p>
                 <h2 className="font-display text-4xl font-bold leading-tight text-brand-text-primary md:text-5xl mb-6">
-                  Your daily encounter starts here.
+                  A daily place to return to God.
                 </h2>
                 <p className="text-lg leading-relaxed text-brand-text-secondary mb-10">
-                  Free to begin. Deeper for those who go further.
+                  No card to start — just Scripture, prayer, and a quiet rhythm you can keep. More opens up when you&apos;re ready to go deeper.
                 </p>
                 <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
                   <motion.div

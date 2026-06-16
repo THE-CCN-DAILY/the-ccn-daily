@@ -8,9 +8,17 @@
 import React from 'react';
 import { Composition } from 'remotion';
 import { VerseCard, type VerseCardProps } from './VerseCard';
+import { DawnAmbient, type DawnAmbientProps } from './DawnAmbient';
 
 // Remotion requires ComponentType<Record<string, unknown>> — cast through unknown
 const VC = VerseCard as unknown as React.ComponentType<Record<string, unknown>>;
+const DA = DawnAmbient as unknown as React.ComponentType<Record<string, unknown>>;
+
+const dawnDefaults: DawnAmbientProps = {
+  verseText: 'But those who hope in the Lord will renew their strength.',
+  verseRef: 'Isaiah 40:31',
+  theme: 'dark',
+};
 
 const defaultProps: VerseCardProps = {
   verseText: 'But those who hope in the Lord will renew their strength. They will soar on wings like eagles.',
@@ -50,6 +58,17 @@ export const RemotionRoot: React.FC = () => (
       width={1920}
       height={1080}
       defaultProps={defaultProps as unknown as Record<string, unknown>}
+    />
+    {/* Seamless-looping ambient devotional motion — landing hero/section breaks.
+        Wide banner ratio; plays live via @remotion/player and renders to MP4. */}
+    <Composition
+      id="DawnAmbient"
+      component={DA}
+      durationInFrames={240}
+      fps={30}
+      width={1920}
+      height={800}
+      defaultProps={dawnDefaults as unknown as Record<string, unknown>}
     />
   </>
 );
