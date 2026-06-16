@@ -5,6 +5,7 @@ import { ArrowLeft, BookOpen, Download, Headphones, ShoppingBag, ExternalLink } 
 import Card from '../components/Card';
 import { useAudioPlayer } from '../contexts/AudioPlayerContext';
 import { getBook } from '../services/booksService';
+import PrintEditionPanel from '../components/PrintEditionPanel';
 import type { Book, BookVariant } from '../types';
 
 // POD platform display config
@@ -345,6 +346,9 @@ const BookReaderPage: React.FC = () => {
             )}
           </Card>
         )}
+
+        {/* Print edition — country-aware availability + waitlist */}
+        <PrintEditionPanel bookId={book.id} />
       </div>
     </div>
   );

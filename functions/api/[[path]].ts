@@ -316,6 +316,10 @@ type BookRow = {
   status: 'draft' | 'published' | 'archived';
   is_premium: number;
   price: number;
+  // Print edition (added idempotently by ensureBookPrintColumns):
+  print_enabled?: number | null;          // 0/1 — does a print edition exist at all
+  print_countries?: string | null;        // comma ISO codes where print ships today (e.g. 'UG,KE')
+  print_price_usd?: number | null;        // USD list price for the print edition
   created_at?: string | null;
   updated_at?: string | null;
 };
@@ -685,9 +689,56 @@ const mapBook = (row: BookRow) => ({
   status: row.status,
   isPremium: Boolean(row.is_premium),
   price: Number(row.price || 0),
+  printEnabled: Boolean(row.print_enabled),
+  printCountries: (row.print_countries || '').split(',').map((s) => s.trim().toUpperCase()).filter(Boolean),
+  printPriceUsd: Number(row.print_price_usd || 0),
   createdAt: row.created_at || undefined,
   updatedAt: row.updated_at || undefined,
 });
+
+// Idempotent column adds for the print edition (D1 has no ADD COLUMN IF NOT
+// EXISTS). A duplicate-column error means the column is already present.
+const ensureBookPrintColumns = async (db: D1DatabaseBinding) => {
+  const stmts = [
+    'ALTER TABLE books ADD COLUMN print_enabled INTEGER NOT NULL DEFAULT 0',
+    'ALTER TABLE books ADD COLUMN print_countries TEXT',
+    'ALTER TABLE books ADD COLUMN print_price_usd REAL NOT NULL DEFAULT 0',
+  ];
+  for (const sql of stmts) {
+    try { await db.prepare(sql).run(); } catch { /* already present */ }
+  }
+};
+
+// Print-edition waitlist / access-request table. Africa (and other regions far
+// from POD hubs) has real book-distribution friction; this captures interest so
+// the ministry can arrange shipping or stand up a distribution centre.
+const ensureBookPrintRequestsTable = async (db: D1DatabaseBinding) => {
+  await db.prepare(
+    `CREATE TABLE IF NOT EXISTS book_print_requests (
+      id TEXT PRIMARY KEY,
+      book_id TEXT NOT NULL,
+      book_title TEXT NOT NULL DEFAULT '',
+      user_id TEXT,
+      name TEXT NOT NULL DEFAULT '',
+      email TEXT NOT NULL,
+      country TEXT NOT NULL DEFAULT '',
+      message TEXT NOT NULL DEFAULT '',
+      status TEXT NOT NULL DEFAULT 'new',
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )`
+  ).run();
+  await db.prepare(
+    `CREATE INDEX IF NOT EXISTS idx_book_print_requests_created ON book_print_requests(created_at DESC)`
+  ).run();
+};
+
+// ISO country → display name for the print availability UI (the common African
+// markets first, then a few global ones). Unknown codes fall back to the code.
+const COUNTRY_NAMES: Record<string, string> = {
+  UG: 'Uganda', KE: 'Kenya', TZ: 'Tanzania', RW: 'Rwanda', NG: 'Nigeria',
+  GH: 'Ghana', ZA: 'South Africa', ZM: 'Zambia', US: 'United States',
+  GB: 'United Kingdom', CA: 'Canada', AU: 'Australia',
+};
 
 const mapNotification = (row: NotificationRow) => ({
   id: row.id,
@@ -2504,6 +2555,152 @@ app.get('/api/books', async (c) => {
     `SELECT * FROM books WHERE status = 'published' ORDER BY created_at DESC`
   ).all<BookRow>();
   return c.json({ books: result.results.map(mapBook), source: 'd1' });
+});
+
+// GET /api/books/:id/print — print-edition availability for the visitor's
+// country (Cloudflare gives us request.cf.country). Returns one of:
+//   notOffered  — no print edition exists for this title
+//   available   — ships to the visitor's country now, with a localized price
+//   comingSoon  — print exists but not yet in their country (offer the waitlist)
+app.get('/api/books/:id/print', async (c) => {
+  const id = c.req.param('id');
+  if (!isSafeId(id)) return c.json({ error: 'Invalid book id' }, 400);
+  if (!c.env.DB) return c.json({ state: 'notOffered', source: 'fallback' });
+
+  const country = String((c.req.raw as any)?.cf?.country || c.req.query('country') || 'US').toUpperCase();
+  const book = await c.env.DB.prepare(`SELECT * FROM books WHERE id = ? LIMIT 1`).bind(id).first<BookRow>();
+  if (!book) return c.json({ error: 'Book not found' }, 404);
+
+  const mapped = mapBook(book);
+  const countryName = COUNTRY_NAMES[country] || country;
+  if (!mapped.printEnabled) {
+    return c.json({ state: 'notOffered', country, countryName });
+  }
+
+  const available = mapped.printCountries.includes(country);
+  if (available) {
+    const local = await localizeAmount(c.env.DB, mapped.printPriceUsd, country);
+    return c.json({
+      state: 'available',
+      country,
+      countryName,
+      priceUsd: mapped.printPriceUsd,
+      price: local.amount,
+      currency: local.currency,
+    });
+  }
+
+  return c.json({ state: 'comingSoon', country, countryName });
+});
+
+// POST /api/books/:id/print-request — capture a print access / waitlist request
+// from a reader whose country has no distribution yet. Best-effort admin email.
+app.post('/api/books/:id/print-request', async (c) => {
+  const id = c.req.param('id');
+  if (!isSafeId(id)) return c.json({ error: 'Invalid book id' }, 400);
+  if (!c.env.DB) return c.json({ error: 'D1 database binding is not configured' }, 503);
+
+  const ip = requestIp(c);
+  const limited = await enforceRateLimit(c, 'print-request', ip, 5, 3600);
+  if (limited) return limited;
+
+  const body = await c.req.json().catch(() => ({} as Record<string, unknown>));
+  const email = String(body.email || c.get('idTokenEmail') || '').trim().toLowerCase();
+  if (!email || !isValidEmail(email)) return c.json({ error: 'Valid email is required' }, 400);
+  const name = sanitizeInput(String(body.name || '').trim().slice(0, 120));
+  const country = String(body.country || (c.req.raw as any)?.cf?.country || '').toUpperCase().slice(0, 2);
+  const message = sanitizeInput(String(body.message || '').trim().slice(0, 1000));
+
+  await ensureBookPrintRequestsTable(c.env.DB);
+  const book = await c.env.DB.prepare(`SELECT title FROM books WHERE id = ? LIMIT 1`).bind(id).first<{ title: string }>();
+
+  await c.env.DB.prepare(
+    `INSERT INTO book_print_requests (id, book_id, book_title, user_id, name, email, country, message, status, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'new', CURRENT_TIMESTAMP)`
+  ).bind(
+    `printreq_${crypto.randomUUID()}`,
+    id,
+    book?.title || '',
+    c.get('idTokenUid') || null,
+    name,
+    email,
+    country,
+    message,
+  ).run();
+
+  // Attention-only admin alert; reader detail stays in the dashboard.
+  if (resendKey(c.env)) {
+    const recipients = [...new Set([...ADMIN_EMAILS, ...String(c.env.ADMIN_NOTIFY_EMAILS || '').split(',').map((s) => s.trim())])].filter(isValidEmail);
+    if (recipients.length) {
+      await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${resendKey(c.env)}` },
+        body: JSON.stringify({
+          from: 'THE CCN DAILY <gifts@updates.theccndaily.com>',
+          to: recipients,
+          subject: `Print access requested — ${COUNTRY_NAMES[country] || country || 'unknown country'}`,
+          html: `<div style="font-family:Georgia,serif;max-width:600px;margin:0 auto;background:#1a1210;color:#f0ebe4;padding:40px 32px;border-radius:12px">
+            <h2 style="color:#F27D26;font-size:20px;margin-bottom:8px">Someone wants a print copy</h2>
+            <p>A reader in <strong>${sanitizeInput(COUNTRY_NAMES[country] || country || 'an unlisted country')}</strong> requested the print edition of <strong>${sanitizeInput(book?.title || 'a book')}</strong>.</p>
+            <p>Open the dashboard to see all print requests and arrange shipping or a distribution point.</p>
+            <p style="margin-top:24px;font-size:12px;color:#7a6a60">Reader details stay in the app.</p>
+          </div>`,
+        }),
+      }).catch(() => {});
+    }
+  }
+
+  return c.json({ ok: true });
+});
+
+// GET /api/admin/print-requests — the follow-up queue for arranging print
+// distribution in regions without a centre yet.
+app.get('/api/admin/print-requests', async (c) => {
+  const denied = requireAdmin(c); if (denied) return denied;
+  if (!c.env.DB) return c.json({ requests: [], source: 'fallback' });
+  await ensureBookPrintRequestsTable(c.env.DB);
+  const result = await c.env.DB.prepare(
+    `SELECT * FROM book_print_requests ORDER BY created_at DESC LIMIT 300`
+  ).all<{ id: string; book_id: string; book_title: string; name: string; email: string; country: string; message: string; status: string; created_at: string }>();
+  return c.json({
+    requests: result.results.map((r) => ({
+      id: r.id,
+      bookId: r.book_id,
+      bookTitle: r.book_title,
+      name: r.name,
+      email: r.email,
+      country: r.country,
+      countryName: COUNTRY_NAMES[r.country] || r.country,
+      message: r.message,
+      status: r.status,
+      createdAt: r.created_at,
+    })),
+    source: 'd1',
+  });
+});
+
+// POST /api/admin/books/:id/print — set a book's print edition availability:
+// which countries it ships to today and the USD list price.
+app.post('/api/admin/books/:id/print', async (c) => {
+  const denied = requireAdmin(c); if (denied) return denied;
+  const id = c.req.param('id');
+  if (!isSafeId(id)) return c.json({ error: 'Invalid book id' }, 400);
+  if (!c.env.DB) return c.json({ error: 'D1 database binding is not configured' }, 503);
+
+  const body = await c.req.json().catch(() => ({} as Record<string, unknown>));
+  const printEnabled = body.printEnabled ? 1 : 0;
+  const countries = Array.isArray(body.printCountries)
+    ? body.printCountries.map((x: unknown) => String(x).toUpperCase().trim()).filter((x: string) => /^[A-Z]{2}$/.test(x))
+    : String(body.printCountries || '').split(',').map((s) => s.toUpperCase().trim()).filter((x) => /^[A-Z]{2}$/.test(x));
+  const priceUsd = Math.max(0, Number(body.printPriceUsd || 0));
+
+  await ensureBookPrintColumns(c.env.DB);
+  await c.env.DB.prepare(
+    `UPDATE books SET print_enabled = ?, print_countries = ?, print_price_usd = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`
+  ).bind(printEnabled, countries.join(','), priceUsd, id).run();
+
+  const book = await c.env.DB.prepare(`SELECT * FROM books WHERE id = ? LIMIT 1`).bind(id).first<BookRow>();
+  return c.json({ book: book ? mapBook(book) : null });
 });
 
 app.post('/api/admin/content/media', async (c) => {

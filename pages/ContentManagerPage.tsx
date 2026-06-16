@@ -24,6 +24,11 @@ import {
   updateReadingPlan,
   deleteReadingPlan,
 } from '../services/booksService';
+import {
+  listPrintRequests,
+  setBookPrintAvailability,
+  type PrintRequest,
+} from '../services/printService';
 import { CloseIcon, GamificationIcon, ReaderIcon, SpeakerWaveIcon } from '../components/icons';
 import type {
   Book,
@@ -37,7 +42,7 @@ import type {
 
 type UploadRole = 'file' | 'cover' | 'audio';
 
-type TabId = ContentType | 'written-devotionals' | 'books-library' | 'reading-plans' | 'podcasts' | 'newsletters';
+type TabId = ContentType | 'written-devotionals' | 'books-library' | 'reading-plans' | 'podcasts' | 'newsletters' | 'print-distribution';
 
 const TABS: Array<{ id: TabId; label: string; icon: React.FC<React.SVGProps<SVGSVGElement>> }> = [
   { id: 'written-devotionals', label: 'Devotionals', icon: (props) => <BookOpen {...props} /> },
@@ -52,6 +57,7 @@ const TABS: Array<{ id: TabId; label: string; icon: React.FC<React.SVGProps<SVGS
   { id: 'newsletters', label: 'Newsletters', icon: (props) => <Mail {...props} /> },
   { id: 'books-library', label: 'Books Library', icon: (props) => <BookMarked {...props} /> },
   { id: 'reading-plans', label: 'Reading Plans', icon: (props) => <Calendar {...props} /> },
+  { id: 'print-distribution', label: 'Print Distribution', icon: (props) => <BookMarked {...props} /> },
 ];
 
 // ─── Devotionals Tab ────────────────────────────────────────────────────────
@@ -1331,6 +1337,175 @@ const NewslettersTab: React.FC = () => {
   );
 };
 
+// ─── Print Distribution Tab ──────────────────────────────────────────────────
+// Set which countries each book's print edition ships to (Uganda-first), the
+// print price, and work the waitlist of readers in regions without a centre yet.
+const PRINT_COUNTRY_OPTIONS = [
+  { code: 'UG', name: 'Uganda' },
+  { code: 'KE', name: 'Kenya' },
+  { code: 'TZ', name: 'Tanzania' },
+  { code: 'RW', name: 'Rwanda' },
+  { code: 'NG', name: 'Nigeria' },
+  { code: 'GH', name: 'Ghana' },
+  { code: 'ZA', name: 'South Africa' },
+  { code: 'US', name: 'United States' },
+  { code: 'GB', name: 'United Kingdom' },
+];
+
+const PrintDistributionTab: React.FC = () => {
+  const { notify } = useNotifications();
+  const [books, setBooks] = useState<Book[]>([]);
+  const [requests, setRequests] = useState<PrintRequest[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [draft, setDraft] = useState<Record<string, { enabled: boolean; countries: string[]; priceUsd: number }>>({});
+  const [savingId, setSavingId] = useState<string | null>(null);
+
+  useEffect(() => {
+    Promise.all([
+      fetch('/api/books').then((r) => r.json()).catch(() => ({ books: [] })),
+      listPrintRequests().catch(() => []),
+    ]).then(([booksData, reqs]) => {
+      const list = (booksData.books || []) as Array<Record<string, any>>;
+      setBooks(list.map((b) => ({ id: b.id, title: b.title, author: b.author } as Book)));
+      const initial: Record<string, { enabled: boolean; countries: string[]; priceUsd: number }> = {};
+      for (const b of list) {
+        initial[b.id] = {
+          enabled: Boolean(b.printEnabled),
+          countries: Array.isArray(b.printCountries) ? b.printCountries : [],
+          priceUsd: Number(b.printPriceUsd || 0),
+        };
+      }
+      setDraft(initial);
+      setRequests(reqs);
+    }).finally(() => setLoading(false));
+  }, []);
+
+  const toggleCountry = (bookId: string, code: string) => {
+    setDraft((prev) => {
+      const cur = prev[bookId] || { enabled: false, countries: [], priceUsd: 0 };
+      const has = cur.countries.includes(code);
+      return { ...prev, [bookId]: { ...cur, countries: has ? cur.countries.filter((c) => c !== code) : [...cur.countries, code] } };
+    });
+  };
+
+  const save = async (bookId: string) => {
+    const d = draft[bookId];
+    if (!d) return;
+    setSavingId(bookId);
+    try {
+      await setBookPrintAvailability(bookId, { printEnabled: d.enabled, printCountries: d.countries, printPriceUsd: d.priceUsd });
+      notify('Print availability saved.', 'success');
+    } catch (error) {
+      notify(error instanceof Error ? error.message : 'Could not save print availability.', 'error');
+    } finally {
+      setSavingId(null);
+    }
+  };
+
+  if (loading) return <div className="py-12 text-center text-brand-text-secondary">Loading print distribution…</div>;
+
+  return (
+    <div className="space-y-8">
+      <div>
+        <h2 className="text-2xl font-semibold text-brand-text-primary mb-1" style={{ fontFamily: 'var(--serif-display)' }}>Print Availability</h2>
+        <p className="text-sm text-brand-text-secondary mb-5">Choose which countries each book's print edition ships to today, and set the print price. Readers elsewhere can join a waitlist.</p>
+        {books.length === 0 ? (
+          <p className="text-sm text-brand-text-secondary">No books yet. Add books in the Books tab first.</p>
+        ) : (
+          <div className="space-y-4">
+            {books.map((book) => {
+              const d = draft[book.id] || { enabled: false, countries: [], priceUsd: 0 };
+              return (
+                <div key={book.id} className="p-4 rounded-xl border border-brand-border bg-brand-dark/20">
+                  <div className="flex items-center justify-between gap-4 mb-3">
+                    <div>
+                      <p className="font-semibold text-brand-text-primary">{book.title}</p>
+                      <p className="text-xs text-brand-text-secondary">by {book.author}</p>
+                    </div>
+                    <label className="flex items-center gap-2 text-sm text-brand-text-secondary">
+                      <input
+                        type="checkbox"
+                        checked={d.enabled}
+                        onChange={(e) => setDraft((prev) => ({ ...prev, [book.id]: { ...d, enabled: e.target.checked } }))}
+                      />
+                      Print edition exists
+                    </label>
+                  </div>
+                  {d.enabled && (
+                    <div className="space-y-3">
+                      <div className="flex flex-wrap gap-2">
+                        {PRINT_COUNTRY_OPTIONS.map((opt) => (
+                          <button
+                            key={opt.code}
+                            type="button"
+                            onClick={() => toggleCountry(book.id, opt.code)}
+                            className={`text-xs font-semibold px-2.5 py-1 rounded-full border transition-colors ${d.countries.includes(opt.code) ? 'bg-brand-accent text-white border-brand-accent' : 'bg-brand-dark text-brand-text-secondary border-brand-border hover:border-brand-accent/50'}`}
+                          >
+                            {opt.name}
+                          </button>
+                        ))}
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <label className="text-xs text-brand-text-secondary">Print price (USD)</label>
+                        <input
+                          type="number"
+                          value={d.priceUsd}
+                          onChange={(e) => setDraft((prev) => ({ ...prev, [book.id]: { ...d, priceUsd: Number(e.target.value) } }))}
+                          className="w-28 bg-brand-dark border border-brand-border rounded-lg px-3 py-1.5 text-sm text-brand-text-primary focus:outline-none focus:border-brand-accent"
+                        />
+                      </div>
+                    </div>
+                  )}
+                  <div className="mt-3">
+                    <button
+                      onClick={() => save(book.id)}
+                      disabled={savingId === book.id}
+                      className="px-4 py-2 rounded-lg bg-brand-accent text-white text-sm font-semibold hover:bg-opacity-90 transition-colors disabled:opacity-50"
+                    >
+                      {savingId === book.id ? 'Saving…' : 'Save'}
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      <div>
+        <h2 className="text-2xl font-semibold text-brand-text-primary mb-1" style={{ fontFamily: 'var(--serif-display)' }}>Print Requests</h2>
+        <p className="text-sm text-brand-text-secondary mb-5">Readers asking for a print copy where there is no distribution yet. Reach out to arrange shipping or a local centre.</p>
+        {requests.length === 0 ? (
+          <p className="text-sm text-brand-text-secondary">No print requests yet.</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead>
+                <tr className="border-b border-brand-border text-xs uppercase tracking-wider text-brand-text-secondary">
+                  <th className="pb-2 font-bold">When</th>
+                  <th className="pb-2 font-bold">Book</th>
+                  <th className="pb-2 font-bold">Reader</th>
+                  <th className="pb-2 font-bold">Country</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-brand-border">
+                {requests.map((r) => (
+                  <tr key={r.id}>
+                    <td className="py-2 text-brand-text-secondary">{r.createdAt ? new Date(r.createdAt).toLocaleDateString() : '—'}</td>
+                    <td className="py-2 text-brand-text-primary">{r.bookTitle || r.bookId}</td>
+                    <td className="py-2 text-brand-text-secondary">{r.name ? `${r.name} · ` : ''}{r.email}{r.message ? ` — ${r.message}` : ''}</td>
+                    <td className="py-2 text-brand-text-secondary">{r.countryName || r.country || '—'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 const ContentManagerPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabId>('written-devotionals');
   const navigate = useNavigate();
@@ -1349,7 +1524,7 @@ const ContentManagerPage: React.FC = () => {
   const [items, setItems] = useState<CatalogContentItem[]>([]);
   const [loadingItems, setLoadingItems] = useState(false);
 
-  const isCatalogTab = activeTab !== 'written-devotionals' && activeTab !== 'books-library' && activeTab !== 'reading-plans' && activeTab !== 'podcasts' && activeTab !== 'newsletters';
+  const isCatalogTab = activeTab !== 'written-devotionals' && activeTab !== 'books-library' && activeTab !== 'reading-plans' && activeTab !== 'podcasts' && activeTab !== 'newsletters' && activeTab !== 'print-distribution';
   const catalogTab = isCatalogTab ? (activeTab as ContentType) : 'devotionals';
 
   const requiresAuthor = catalogTab === 'audiobooks' || catalogTab === 'books' || catalogTab === 'courses';
@@ -1461,6 +1636,8 @@ const ContentManagerPage: React.FC = () => {
         <BooksManagerTab />
       ) : activeTab === 'reading-plans' ? (
         <ReadingPlansManagerTab />
+      ) : activeTab === 'print-distribution' ? (
+        <PrintDistributionTab />
       ) : activeTab === 'podcasts' ? (
         <PodcastsTab />
       ) : activeTab === 'newsletters' ? (

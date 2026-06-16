@@ -172,11 +172,32 @@ CREATE TABLE IF NOT EXISTS books (
   status TEXT NOT NULL DEFAULT 'published',
   is_premium INTEGER NOT NULL DEFAULT 0,
   price REAL NOT NULL DEFAULT 0,
+  -- Print edition (added idempotently by ensureBookPrintColumns):
+  print_enabled INTEGER NOT NULL DEFAULT 0,  -- a physical edition exists
+  print_countries TEXT,                       -- comma ISO codes that ship today (e.g. 'UG,KE')
+  print_price_usd REAL NOT NULL DEFAULT 0,    -- USD list price for print
   created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE INDEX IF NOT EXISTS idx_books_status_created ON books(status, created_at DESC);
+
+-- Print access / waitlist requests from readers in regions without a
+-- distribution centre yet (Africa-first, but global where POD shipping is dear).
+CREATE TABLE IF NOT EXISTS book_print_requests (
+  id TEXT PRIMARY KEY,
+  book_id TEXT NOT NULL,
+  book_title TEXT NOT NULL DEFAULT '',
+  user_id TEXT,
+  name TEXT NOT NULL DEFAULT '',
+  email TEXT NOT NULL,
+  country TEXT NOT NULL DEFAULT '',
+  message TEXT NOT NULL DEFAULT '',
+  status TEXT NOT NULL DEFAULT 'new', -- new | contacted | fulfilled
+  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_book_print_requests_created ON book_print_requests(created_at DESC);
 
 CREATE TABLE IF NOT EXISTS media_assets (
   id TEXT PRIMARY KEY,
