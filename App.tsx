@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { HashRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import Layout from './components/Layout';
 import LandingPage from './pages/LandingPage';
 import BlogPage from './pages/BlogPage';
@@ -155,7 +155,18 @@ const App: React.FC = () => {
                           </Route>
 
                           {/* Founder Command Center Routes (Admin Only) */}
-                          <Route path="/studio/*">
+                          {/* Single hard boundary for the entire admin surface: any non-privileged
+                              user who lands on /studio/* (e.g. by typing a URL) is redirected out by
+                              RequireRole before any studio page mounts. Individual routes keep their
+                              own stricter guards for defense in depth. */}
+                          <Route
+                            path="/studio/*"
+                            element={
+                              <RequireRole allowedRoles={['admin', 'lead_developer']}>
+                                <Outlet />
+                              </RequireRole>
+                            }
+                          >
                             <Route index element={<Navigate to="admin" replace />} />
                             <Route path="admin" element={<RequireRole allowedRoles={['admin']}><AdminDashboard /></RequireRole>} />
                             <Route path="blog" element={<RequireRole allowedRoles={['admin']}><BlogStudioPage /></RequireRole>} />

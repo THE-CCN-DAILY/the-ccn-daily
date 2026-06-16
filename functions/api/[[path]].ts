@@ -72,7 +72,7 @@ type Env = {
 
 const app = new Hono<{
   Bindings: Env;
-  Variables: { idTokenEmail?: string; idTokenEmailVerified?: boolean; idTokenUid?: string };
+  Variables: { idTokenEmail?: string; idTokenEmailVerified?: boolean; idTokenUid?: string; idTokenRole?: string };
 }>();
 
 // Firebase ID-token verification (RS256) against Google's public JWKS.
@@ -108,6 +108,20 @@ app.use('*', async (c, next) => {
       c.set('idTokenEmail', session.email);
       c.set('idTokenEmailVerified', session.emailVerified);
       c.set('idTokenUid', session.uid);
+      // Authority comes from the D1 users.role column (the single source of truth).
+      // Look it up once per authenticated request so synchronous guards (isAdminRequest)
+      // can honor stored roles without each route doing its own query. Public/unauthenticated
+      // requests skip this entirely. Failures fall through to the email allowlist bootstrap.
+      if (c.env.DB && (session.uid || session.email)) {
+        try {
+          const row = await c.env.DB.prepare(
+            `SELECT role FROM users WHERE id = ? OR email = ? LIMIT 1`,
+          ).bind(session.uid, session.email).first<{ role: string }>();
+          if (row?.role) c.set('idTokenRole', row.role);
+        } catch {
+          // D1 unavailable — allowlist bootstrap still authorizes the founder.
+        }
+      }
     }
   }
   await next();
@@ -840,15 +854,17 @@ const resendKey = (env: Env) => (env.RESEND_API_KEY || '').replace(/^﻿/, '').t
 const ADMIN_EMAILS = ['pastor.eryeza@gmail.com', 'ccndaily@gmail.com'];
 
 const isAdminRequest = (c: any) => {
-  // Admin = a verified Firebase ID token (set by the auth middleware) for a ministry-owner email.
-  // This is the ONLY admin path. The old spoofable x-admin-email + x-admin-token shared-secret
-  // scheme and the host-based localhost bypass have been removed (host headers are client-supplied).
-  // For local testing, sign in with a ministry account so the request carries a real ID token.
+  // Admin authority is granted on a verified Firebase ID token (set by the auth middleware) when
+  // EITHER (a) the email is a ministry-owner on the bootstrap allowlist — the un-removable founder
+  // fallback so the owner can never be locked out — OR (b) the user's stored D1 role is 'admin'
+  // (the single source of truth, so in-app promotions actually take effect).
+  // The old spoofable x-admin-email + x-admin-token shared-secret scheme and the host-based
+  // localhost bypass were removed (host headers are client-supplied).
   const sessionEmail = (c.get('idTokenEmail') || '').toLowerCase();
+  if (!sessionEmail || c.get('idTokenEmailVerified') !== true) return false;
   return Boolean(
-    sessionEmail &&
-    c.get('idTokenEmailVerified') === true &&
-    ADMIN_EMAILS.includes(sessionEmail),
+    ADMIN_EMAILS.includes(sessionEmail) ||
+    c.get('idTokenRole') === 'admin',
   );
 };
 
@@ -3723,6 +3739,43 @@ app.get('/api/admin/users', async (c) => {
     },
     source: 'd1',
   });
+});
+
+// POST /api/admin/users/:id/role — promote/demote a user. D1 users.role is the single
+// source of truth (see isAdminRequest). Admin-guarded. The bootstrap super-admin emails
+// can never be demoted here so the founder is never locked out of the role table.
+const ASSIGNABLE_ROLES = ['user', 'family_lead', 'group_lead', 'lead_developer', 'admin'] as const;
+
+app.post('/api/admin/users/:id/role', async (c) => {
+  const denied = requireAdmin(c);
+  if (denied) return denied;
+  if (!c.env.DB) return c.json({ error: 'DB_UNAVAILABLE', message: 'User store is unavailable.' }, 503);
+
+  const id = c.req.param('id');
+  if (!isSafeId(id)) return c.json({ error: 'INVALID_ID' }, 400);
+
+  const body = await c.req.json().catch(() => ({}));
+  const role = String(body.role || '').trim();
+  if (!ASSIGNABLE_ROLES.includes(role as (typeof ASSIGNABLE_ROLES)[number])) {
+    return c.json({ error: 'INVALID_ROLE', message: `Role must be one of: ${ASSIGNABLE_ROLES.join(', ')}` }, 400);
+  }
+
+  const target = await c.env.DB.prepare(
+    `SELECT id, email, role FROM users WHERE id = ? LIMIT 1`,
+  ).bind(id).first<{ id: string; email: string; role: string }>();
+  if (!target) return c.json({ error: 'USER_NOT_FOUND' }, 404);
+
+  // The founder allowlist is the un-removable root: never let it be demoted below admin.
+  if (ADMIN_EMAILS.includes((target.email || '').toLowerCase()) && role !== 'admin') {
+    return c.json({ error: 'PROTECTED_SUPER_ADMIN', message: 'The founder account cannot be demoted.' }, 409);
+  }
+
+  await c.env.DB.prepare(
+    `UPDATE users SET role = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
+  ).bind(role, id).run();
+
+  const updated = await c.env.DB.prepare(`SELECT * FROM users WHERE id = ? LIMIT 1`).bind(id).first<UserRow>();
+  return c.json({ user: updated ? mapUser(updated) : null, source: 'd1' });
 });
 
 app.post('/api/auth/profile', async (c) => {

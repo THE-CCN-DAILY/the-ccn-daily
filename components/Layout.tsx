@@ -162,8 +162,14 @@ const Sidebar: React.FC<SidebarProps> = ({ className = '', onNavigate, collapsib
 
   const { notify } = useNotifications();
 
+  // Only ministry operators may even SEE the Strategy/Command Center surface. Regular
+  // members never get the toggle, and a stale `phoenix_mode=strategy` in localStorage
+  // can't drop them into the admin nav — effectiveStrategyMode forces sanctuary for them.
+  const canStrategy = user?.role === 'admin' || user?.role === 'lead_developer';
+  const effectiveStrategyMode = isStrategyMode && canStrategy;
+
   const toggleMode = () => {
-    if (user?.role !== 'admin' && user?.role !== 'lead_developer') {
+    if (!canStrategy) {
       notify("Strategy mode is reserved for Admins and Lead Developers.", "error");
       return;
     }
@@ -190,7 +196,7 @@ const Sidebar: React.FC<SidebarProps> = ({ className = '', onNavigate, collapsib
     return true;
   });
 
-  const activeItems = isStrategyMode ? filteredCommandCenterItems : filteredSanctuaryItems;
+  const activeItems = effectiveStrategyMode ? filteredCommandCenterItems : filteredSanctuaryItems;
 
   const baseLinkClasses = `flex min-w-0 items-center ${collapsed ? 'justify-center p-2.5' : 'p-3'} my-0.5 rounded-lg transition-all duration-200`;
   const inactiveLinkClasses = "text-brand-text-secondary hover:bg-brand-secondary hover:text-brand-text-primary";
@@ -206,7 +212,7 @@ const Sidebar: React.FC<SidebarProps> = ({ className = '', onNavigate, collapsib
           <div className="flex flex-col gap-1 min-w-0">
             <CcnLogo size="sm" theme="auto" />
             <p style={{ fontFamily: 'var(--sans-ui, "Inter Tight", -apple-system, sans-serif)', fontSize: '11px', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--gold-ds, #B7892E)', fontWeight: 600 }}>
-              {isStrategyMode ? 'Command Center' : 'Sanctuary'}
+              {effectiveStrategyMode ? 'Command Center' : 'Sanctuary'}
             </p>
           </div>
         )}
@@ -223,16 +229,16 @@ const Sidebar: React.FC<SidebarProps> = ({ className = '', onNavigate, collapsib
         )}
       </div>
 
-      {!collapsed && (
+      {!collapsed && canStrategy && (
         <div className="mb-6">
           <button
             onClick={toggleMode}
-            className={`w-full p-1 rounded-full border border-brand-border flex items-center transition-all ${isStrategyMode ? 'bg-brand-accent/10 border-brand-accent/30' : 'bg-brand-secondary'}`}
+            className={`w-full p-1 rounded-full border border-brand-border flex items-center transition-all ${effectiveStrategyMode ? 'bg-brand-accent/10 border-brand-accent/30' : 'bg-brand-secondary'}`}
           >
-            <div className={`flex-1 py-1.5 rounded-full text-[12px] font-bold uppercase tracking-tighter transition-all ${!isStrategyMode ? 'bg-brand-accent text-white shadow-md' : 'text-brand-text-secondary'}`}>
+            <div className={`flex-1 py-1.5 rounded-full text-[12px] font-bold uppercase tracking-tighter transition-all ${!effectiveStrategyMode ? 'bg-brand-accent text-white shadow-md' : 'text-brand-text-secondary'}`}>
               Sanctuary
             </div>
-            <div className={`flex-1 py-1.5 rounded-full text-[12px] font-bold uppercase tracking-tighter transition-all ${isStrategyMode ? 'bg-brand-accent text-white shadow-md' : 'text-brand-text-secondary'}`}>
+            <div className={`flex-1 py-1.5 rounded-full text-[12px] font-bold uppercase tracking-tighter transition-all ${effectiveStrategyMode ? 'bg-brand-accent text-white shadow-md' : 'text-brand-text-secondary'}`}>
               Strategy
             </div>
           </button>
@@ -240,7 +246,7 @@ const Sidebar: React.FC<SidebarProps> = ({ className = '', onNavigate, collapsib
       )}
 
       <nav className="flex-grow overflow-y-auto custom-scrollbar pr-2">
-        {isStrategyMode ? (
+        {effectiveStrategyMode ? (
           <>
             {commandCenterGroups.map(group => {
               const groupItems = filteredCommandCenterItems.filter(item => item.group === group);

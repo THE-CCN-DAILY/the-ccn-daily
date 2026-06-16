@@ -38,6 +38,36 @@ let verificationSent = false;
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+/**
+ * Sync the signed-in Firebase user into the D1 `users` table and read back the
+ * authoritative role. D1 `users.role` is the single source of truth for authority
+ * (see the worker's isAdminRequest), so the UI must hydrate role from here rather
+ * than from Firestore. The POST upserts the row (preserving any promoted role on
+ * conflict) and returns it. Returns null if the sync fails, in which case callers
+ * fall back to the Firestore role + the founder allowlist.
+ */
+const syncD1Profile = async (
+  firebaseUser: import('firebase/auth').User,
+): Promise<{ role: AppUser['role']; tier: SubscriptionTier } | null> => {
+  try {
+    const token = await firebaseUser.getIdToken();
+    const res = await fetch('/api/auth/profile', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({
+        displayName: firebaseUser.displayName || '',
+        photoURL: firebaseUser.photoURL || '',
+      }),
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (!data?.user?.role) return null;
+    return { role: data.user.role as AppUser['role'], tier: (data.user.tier as SubscriptionTier) ?? 'free' };
+  } catch {
+    return null;
+  }
+};
+
 const readTrustedTier = async (
   userId: string,
   fallbackTier: SubscriptionTier,
@@ -100,19 +130,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (firebaseUser) {
         let role: AppUser['role'] = 'user';
         let storedTier: SubscriptionTier = 'free';
-        try {
-          const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
-          if (userDoc.exists()) {
-            const data = userDoc.data();
-            role = (data.role as AppUser['role']) ?? 'user';
-            storedTier = (data.tier as SubscriptionTier) ?? 'free';
+
+        // Authoritative role comes from D1 (single source of truth). This call also
+        // ensures the D1 users row exists so admin/role management sees every member.
+        const d1Profile = await syncD1Profile(firebaseUser);
+        if (d1Profile) {
+          role = d1Profile.role ?? 'user';
+          storedTier = d1Profile.tier ?? 'free';
+        } else {
+          // D1 unreachable — fall back to the legacy Firestore role so the UI still works.
+          try {
+            const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
+            if (userDoc.exists()) {
+              const data = userDoc.data();
+              role = (data.role as AppUser['role']) ?? 'user';
+              storedTier = (data.tier as SubscriptionTier) ?? 'free';
+            }
+          } catch {
+            // Firestore unavailable — default role is safe
           }
-        } catch {
-          // Firestore unavailable — default role is safe
         }
 
-        // Ministry owner emails are always admins (frontend mirror of the
-        // backend's email-based admin rule), regardless of the stored role.
+        // Ministry owner emails are always admins (bootstrap super-admin: the un-removable
+        // founder fallback that mirrors the worker's allowlist), regardless of stored role.
         if (ADMIN_EMAILS.includes((firebaseUser.email ?? '').toLowerCase())) {
           role = 'admin';
         }

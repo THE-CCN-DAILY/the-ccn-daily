@@ -46,3 +46,25 @@ export const listAdminUsers = async (): Promise<{ users: AdminUser[]; stats: Adm
     stats: data.stats || { total: 0, admins: 0, active30d: 0 },
   };
 };
+
+export type AssignableRole = 'user' | 'family_lead' | 'group_lead' | 'lead_developer' | 'admin';
+
+/**
+ * Promote or demote a user. Authority lives in D1 (`users.role`); the worker verifies the
+ * caller is an admin via their Firebase ID token before updating the row.
+ */
+export const updateUserRole = async (userId: string, role: AssignableRole): Promise<AdminUser> => {
+  const response = await fetch(`/api/admin/users/${encodeURIComponent(userId)}/role`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...(await adminAuthHeaders()) },
+    body: JSON.stringify({ role }),
+  });
+
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}));
+    throw new Error(data.message || data.error || 'Failed to update role');
+  }
+
+  const data = await response.json();
+  return data.user as AdminUser;
+};
