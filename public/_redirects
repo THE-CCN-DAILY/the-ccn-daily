@@ -1,7 +1,4 @@
-# Shareable invite link: theccndaily.com/join → the hash-routed join page.
-# The app is a HashRouter SPA, so a bare /join path must bounce to /#/join for the
-# client router to land on the sign-up page.
-/join   /#/join   302
-
-# SPA fallback — every other path serves the app shell.
+# SPA fallback — every path serves the app shell. Bare share-paths like /join are
+# bounced into the HashRouter by the early script in index.html (Cloudflare Pages
+# _redirects cannot target a URL fragment, so the redirect is done client-side).
 /*      /index.html   200

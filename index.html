@@ -4,6 +4,18 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
+  <!-- Bounce shareable bare paths into the HashRouter before the app boots. Lets links like
+       theccndaily.com/join resolve to the in-app sign-up route even though this is a hash SPA. -->
+  <script>
+    (function () {
+      var pathRoutes = { '/join': '/join' };
+      var target = pathRoutes[location.pathname];
+      if (target && !location.hash) {
+        location.replace('/#' + target);
+      }
+    })();
+  </script>
+
   <!-- Apply the saved theme before first paint to prevent a light-theme flash (FOUC) on the dark UI -->
   <script>
     (function () {
