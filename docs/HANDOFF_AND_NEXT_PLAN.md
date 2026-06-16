@@ -12,13 +12,17 @@ _Last updated: 2026-06-16. Branch: `phase-e-visual-authoring`. Deploy flow: gate
 | **C + F0 (QA + responsive)** | **Verified clean.** Public screens have zero horizontal overflow at 320/375/390/768 (measured live). Flagged auth-gated screens audited — all already use correct responsive patterns (grid-cols-1 bases, overflow-x-auto tables). See `docs/QA_RESPONSIVE_SWEEP_2026-06-16.md`. Still owed: founder's live signed-in visual/taste pass in both themes (needs a session — can't automate Firebase redirect sign-in). |
 | **D (landing)** | **DONE.** Benefit-forward, non-salesy pastoral copy (hero + final CTA), slop-free. New seamless-looping `DawnAmbient` Remotion composition (breathing flame over dawn arcs + Scripture) embedded as a section break via a lazy-loaded, `prefers-reduced-motion`-aware `@remotion/player` (Remotion stays out of first paint; static fallback otherwise). Verified rendering live on prod. |
 | **F + G (SEO/GEO + bot policy)** | **DONE.** `usePageMeta` hook → distinct per-route title/description (landing, blog, blog post, pricing, newsletter, podcast); Article JSON-LD on blog posts (verified injecting on prod). `robots.txt` AI-bot policy: allow search+answer engines, disallow pure training scrapers (Cloudflare already prepends content-signals to it). See `docs/SEO_GEO_AND_BOT_POLICY.md`. |
-| **E (reviews)** | **Deferred (build-ready).** Full plan in `docs/SEO_GEO_AND_BOT_POLICY.md §4`; spawned as its own task (needs an authed admin session to verify moderation). |
+| **E (reviews)** | **DONE (commit `53fefb7`).** D1 `book_reviews` (self-provisioning, `content_type` serves books + audiobooks) + worker routes (member submit→pending, public approved-only list + aggregate, admin queue + approve/reject) + `review_links` on books/audiobooks. Client: `ProductReviews` (star rating, form, approved list, aggregate, "Loved it? Review it on…" marketplace buttons) on the book page + expandable panel on the audiobook library; `ReviewModerationPage` at `/studio/reviews`; marketplace-link fields in the Books Library editor. Verified live (endpoints 200/401/401; admin moderation page + editor confirmed in an admin session). Only the literal submit→approve cycle is unverified — no published books exist yet. |
+| **Sentinel 401 fix** | **DONE (commit `cad779b`).** `useSentinel` only runs for signed-in admin/lead_developer — public landing now makes zero `/api/ai/generate` calls (verified: no 401s/console errors). |
+| **`/join` signup link** | **DONE (commit `ecf88d1`).** `theccndaily.com/join` bounces into the HashRouter (index.html early script, since Pages `_redirects` can't target a fragment) and opens the **sign-up** form (`openSignIn` gained an intent; `SignInModal` honors it). Verified live. |
+| **www HTTPS "not secure"** | **DONE.** Root cause: `www.theccndaily.com` was a proxied CNAME but not bound to the Pages project → 522. Added `www` as a Pages custom domain (Cloudflare dashboard); cert provisioned immediately — `https://www.theccndaily.com` now returns 200. Apex unchanged (Active/SSL). |
+| **Admin sign-in** | **DONE.** Signed into prod as `pastor.eryeza@gmail.com` via the founder's Chrome; role resolves to admin (Strategy toggle renders), `/studio/reviews` authorizes, book editor review-link fields confirmed. |
 
 **Queued for the founder / next session:**
 - **Cloudflare dashboard (item G):** enable "Block AI Scrapers" + "AI Labyrinth", scoped to still allow answer engines; confirm Web Analytics on. Steps in `docs/SEO_GEO_AND_BOT_POLICY.md §2`.
 - **Founder signed-in visual QA** in both themes (the taste pass only you can do).
-- **Reviews feature** (chipped) and the **HashRouter→BrowserRouter prerender** lever (the biggest remaining SEO unlock).
-- **Pre-existing bug (chipped):** the Sentinel audit fires `/api/ai/generate` on the public landing for anonymous visitors → console 401s; gate it behind an admin session.
+- **Publish a book** then run the live review submit→approve→display cycle (only unverified piece of the reviews feature).
+- **HashRouter→BrowserRouter prerender** lever (the biggest remaining SEO unlock).
 
 ---
 

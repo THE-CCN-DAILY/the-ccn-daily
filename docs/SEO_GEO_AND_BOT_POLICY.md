@@ -64,9 +64,15 @@ prerender), so each public page is server-rendered with its own real URL, title,
 JSON-LD that even non-JS scrapers read. This touches routing, the `/__/auth` redirect
 proxy, and `_redirects`, so it's a dedicated change — not folded into this pass.
 
-## 4. Book & audiobook reviews (item E) — implementation plan
+## 4. Book & audiobook reviews (item E) — BUILT & DEPLOYED (2026-06-16)
 
-Not yet built. Planned shape so it can be picked up cleanly:
+Shipped to production (commit `53fefb7`). D1 `book_reviews` table (self-provisioning,
+`content_type` serves books + audiobooks), worker routes (member submit→pending, public
+approved-only list + aggregate, admin queue + approve/reject via `requireAdmin`),
+`review_links` on books/audiobooks, `ProductReviews` on the book page + an expandable
+panel on the audiobook library, `ReviewModerationPage` at `/studio/reviews`, and
+marketplace-link fields in the Books Library editor. Verified live (endpoints + admin
+session). Original plan below for reference:
 
 - **D1 table** `book_reviews(id, book_id, user_id, author_name, rating, body,
   status TEXT DEFAULT 'pending', created_at)`; self-provision via an `ensure*` helper like
