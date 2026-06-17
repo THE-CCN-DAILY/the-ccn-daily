@@ -1,6 +1,22 @@
 # THE CCN DAILY — Handoff & Next-Session Plan
 
-_Last updated: 2026-06-16. Branch: `phase-e-visual-authoring`. Deploy flow: gates → commit/push → staging → verify → production (wrangler). Production is autonomous pre-launch; no approval pauses needed except where noted._
+_Last updated: 2026-06-17. Branch: `phase-e-visual-authoring`. Deploy flow: gates → commit/push → staging → verify → production (wrangler). Production is autonomous pre-launch; no approval pauses needed except where noted._
+
+---
+
+## Session 2026-06-17 — UI polish + clean URLs (all live on production, verified)
+
+| Area | Outcome |
+|---|---|
+| **Clean path URLs** (`555466e`) | **DONE.** HashRouter → **BrowserRouter** — links are now `theccndaily.com/app/giving` (no `#/`), and the home address bar is just the domain. `_middleware.ts` proxies `/__/auth/*` server-side so Google sign-in is unaffected; SPA fallback serves deep paths (verified: every route returns 200 live). `index.html` migrates any legacy `#/path` link or bookmark to its clean path before React boots (verified live: `/#/app/dashboard` → `/app/dashboard`, session intact). Worker email links + blog JSON-LD + event share URLs use clean paths. Header logos already link home; landing logo also scrolls-to-top when already home. **NOTE:** the `/app/*` prefix is intentional (namespaces the signed-in member app away from public/marketing/`/studio` routes); founder asked why — can drop it later if desired (bigger refactor, collision risk). |
+| **Typography** (`84f500a`) | Body bumped to 1.1875rem with tighter leading (1.5 body / 1.6 prose) — fixes the small-text + loose-paragraph feel on desktop and mobile. |
+| **Landing visuals** (`84f500a`, `4b7dd1e`) | Cleaner `SunriseEmblem` (flame lifted above the book, no muddy overlap); mobile ambient section now uses the static dawn fallback instead of the Remotion player (kills the white-noise band). |
+| **Guided Journey** (`84f500a`) | Step name is a centered caption under the stepper — "Start" is never clipped by a scroll container. |
+| **Sign-in/up modal** (`84f500a`) | Larger wordmark/logo/field/tab/button text. |
+| **Dashboard** (`84f500a`) | Devotional card softened to a warm dawn gradient with explicit light text (readable in every theme). |
+| **Bible Reader** (`84f500a`) | Friendly "Open the Word" prompt for the empty state. |
+
+**Reviews feature (item E) shipped earlier same day** (`53fefb7`) — see the 2026-06-16 block below; verified live (endpoints + admin moderation page + book-editor marketplace fields).
 
 ---
 
