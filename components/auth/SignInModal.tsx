@@ -119,7 +119,7 @@ const SignInModal: React.FC = () => {
   if (!showSignIn) return null;
 
   const inputClass =
-    'w-full rounded-lg border border-brand-border bg-brand-secondary px-4 py-3 text-sm text-brand-text-primary outline-none transition-colors placeholder:text-brand-text-secondary/50 focus:border-brand-accent/70';
+    'w-full rounded-lg border border-brand-border bg-brand-secondary px-4 py-3 text-base text-brand-text-primary outline-none transition-colors placeholder:text-brand-text-secondary/50 focus:border-brand-accent/70';
 
   return (
     <AnimatePresence>
@@ -169,13 +169,13 @@ const SignInModal: React.FC = () => {
                   <img
                     src="/flame-transparent.png"
                     alt="THE CCN DAILY"
-                    className="mb-3 h-14 w-14 object-contain"
+                    className="mb-3 h-16 w-16 object-contain"
                     onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
                   />
-                  <p className="text-[10px] font-display font-bold uppercase tracking-[0.22em] text-brand-accent">
+                  <p className="text-[13px] font-display font-bold uppercase tracking-[0.2em] text-brand-accent">
                     THE CCN DAILY
                   </p>
-                  <h2 className="mt-2 font-display text-2xl font-bold text-brand-text-primary">
+                  <h2 className="mt-2 font-display text-3xl font-bold text-brand-text-primary">
                     {emailMode === 'reset'
                       ? 'Reset password'
                       : emailMode === 'signup'
@@ -183,7 +183,7 @@ const SignInModal: React.FC = () => {
                       : 'Sign in'}
                   </h2>
                   {emailMode === 'signin' && (
-                    <p className="mt-1 text-xs text-brand-text-secondary text-center">
+                    <p className="mt-1.5 text-sm text-brand-text-secondary text-center">
                       Sign in once — your profile is created automatically.
                     </p>
                   )}
@@ -196,7 +196,7 @@ const SignInModal: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => { setActiveTab('email'); setError(''); }}
-                        className={`flex-1 rounded-md py-2 text-sm font-display font-semibold transition-colors ${
+                        className={`flex-1 rounded-md py-2 text-[15px] font-display font-semibold transition-colors ${
                           activeTab === 'email'
                             ? 'bg-brand-dark text-brand-text-primary shadow-sm'
                             : 'text-brand-text-secondary hover:text-brand-text-primary'
@@ -207,7 +207,7 @@ const SignInModal: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => { setActiveTab('google'); setError(''); }}
-                        className={`flex-1 rounded-md py-2 text-sm font-display font-semibold transition-colors ${
+                        className={`flex-1 rounded-md py-2 text-[15px] font-display font-semibold transition-colors ${
                           activeTab === 'google'
                             ? 'bg-brand-dark text-brand-text-primary shadow-sm'
                             : 'text-brand-text-secondary hover:text-brand-text-primary'
@@ -223,7 +223,7 @@ const SignInModal: React.FC = () => {
                           type="button"
                           onClick={handleGoogleSignIn}
                           disabled={loading}
-                          className="flex w-full items-center justify-center gap-3 rounded-lg border border-brand-border bg-brand-secondary py-3.5 font-display text-sm font-semibold text-brand-text-primary transition-all hover:border-brand-accent/40 hover:bg-brand-dark disabled:opacity-60"
+                          className="flex w-full items-center justify-center gap-3 rounded-lg border border-brand-border bg-brand-secondary py-3.5 font-display text-base font-semibold text-brand-text-primary transition-all hover:border-brand-accent/40 hover:bg-brand-dark disabled:opacity-60"
                         >
                           <GoogleIcon className="h-5 w-5" />
                           Continue with Google
@@ -295,14 +295,14 @@ const SignInModal: React.FC = () => {
                         <button
                           type="submit"
                           disabled={isSubmitting || loading}
-                          className="flex w-full items-center justify-center gap-2 rounded-lg bg-brand-accent py-3.5 font-display text-sm font-semibold text-white transition-all hover:bg-brand-accent/90 disabled:opacity-60"
+                          className="flex w-full items-center justify-center gap-2 rounded-lg bg-brand-accent py-3.5 font-display text-base font-semibold text-white transition-all hover:bg-brand-accent/90 disabled:opacity-60"
                         >
                           {isSubmitting ? (
                             <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
                           ) : emailMode === 'signup' ? 'Create account' : 'Sign in'}
                         </button>
 
-                        <div className="flex items-center justify-between pt-1 text-xs font-display text-brand-text-secondary">
+                        <div className="flex items-center justify-between pt-1 text-[13px] font-display text-brand-text-secondary">
                           {emailMode === 'signin' ? (
                             <>
                               <button

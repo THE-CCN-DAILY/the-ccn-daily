@@ -476,8 +476,9 @@ const GuidedJourneyPage: React.FC = () => {
                 </div>
             </motion.div>
 
-            {/* Stepper */}
-            <div className="mb-12 overflow-x-auto py-4">
+            {/* Stepper — circles only; the active step name is captioned below the row so
+                edge labels (e.g. "Start") are never clipped by a scroll container. */}
+            <div className="mb-5 py-4">
                 <ol className="flex items-center w-full max-w-4xl mx-auto px-4">
                     {journeySteps.map((step, index) => {
                         const isCompleted = index < currentStep;
@@ -487,31 +488,28 @@ const GuidedJourneyPage: React.FC = () => {
                                 key={step.id}
                                 className={`relative flex w-full items-center ${index < journeySteps.length - 1 ? "after:content-[''] after:w-full after:h-px after:inline-block" : ''} ${isCompleted ? 'after:bg-brand-accent' : 'after:bg-brand-border'}`}
                             >
-                                <div className="flex flex-col items-center">
-                                    <motion.div
-                                        animate={{
-                                            scale: isCurrent ? 1.22 : 1,
-                                            boxShadow: isCurrent ? '0 0 18px rgb(242 125 38 / 0.45)' : '0 0 0px transparent',
-                                        }}
-                                        transition={{ duration: 0.35, ease: STEP_EASE }}
-                                        className={`flex items-center justify-center w-10 h-10 rounded-full ${isCurrent ? 'bg-brand-accent text-white' : isCompleted ? 'bg-brand-accent/60 text-white' : 'bg-brand-secondary text-brand-text-secondary border border-brand-border'}`}
-                                    >
-                                        {isCompleted ? <CheckIcon className="w-5 h-5" /> : <step.icon className="w-5 h-5" />}
-                                    </motion.div>
-                                    {isCurrent && (
-                                        <p className="absolute top-12 whitespace-nowrap text-[12px] font-bold uppercase tracking-widest text-brand-accent transition-all duration-400">
-                                            {step.name}
-                                        </p>
-                                    )}
-                                </div>
+                                <motion.div
+                                    animate={{
+                                        scale: isCurrent ? 1.22 : 1,
+                                        boxShadow: isCurrent ? '0 0 18px rgb(242 125 38 / 0.45)' : '0 0 0px transparent',
+                                    }}
+                                    transition={{ duration: 0.35, ease: STEP_EASE }}
+                                    className={`flex flex-shrink-0 items-center justify-center w-10 h-10 rounded-full ${isCurrent ? 'bg-brand-accent text-white' : isCompleted ? 'bg-brand-accent/60 text-white' : 'bg-brand-secondary text-brand-text-secondary border border-brand-border'}`}
+                                >
+                                    {isCompleted ? <CheckIcon className="w-5 h-5" /> : <step.icon className="w-5 h-5" />}
+                                </motion.div>
                             </li>
                         );
                     })}
                 </ol>
+                {/* Active step name — centered caption, always fully visible */}
+                <p className="mt-5 text-center text-[13px] font-bold uppercase tracking-widest text-brand-accent">
+                    {journeySteps[currentStep]?.name}
+                </p>
             </div>
 
             {/* Step content — direction-aware transition */}
-            <div className="mt-20 overflow-hidden">
+            <div className="mt-10 overflow-hidden">
                 <AnimatePresence mode="wait" custom={direction}>
                     <motion.div
                         key={currentStep}

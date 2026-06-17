@@ -448,7 +448,21 @@ const BibleReaderPage: React.FC = () => {
               )}
 
               {!isSearching && !searchResults && (
-                isLoading ? (
+                !selectedBook ? (
+                  <motion.div
+                    key="reader-empty"
+                    className="h-full"
+                    initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                  >
+                    <Card className="flex flex-col items-center justify-center py-24 text-center">
+                      <ScrollText className="w-10 h-10 text-brand-accent mb-4" />
+                      <p className="text-lg font-semibold text-brand-text-primary mb-1">Open the Word</p>
+                      <p className="max-w-sm text-brand-text-secondary">
+                        Choose a book and chapter above, or search a reference like “John 3:16” to begin reading.
+                      </p>
+                    </Card>
+                  </motion.div>
+                ) : isLoading ? (
                   <motion.div
                     key="chapter-loading"
                     className="h-full"

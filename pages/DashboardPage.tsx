@@ -92,8 +92,10 @@ const DevotionalCard: React.FC<DevotionalCardProps> = ({ devotional, loading, da
     <div
       className="w-full rounded-lg overflow-hidden"
       style={{
-        background: 'var(--bg-deep)',
-        boxShadow: '0 1px 2px rgba(42,28,21,.10), 0 18px 44px rgba(42,28,21,.14)',
+        // A warm dawn gradient rather than a flat near-black slab — softer and more
+        // intentional against the light dashboard, while staying a rich spotlight in dark.
+        background: 'linear-gradient(135deg, #241410 0%, #190E08 55%, #3A1C0B 100%)',
+        boxShadow: '0 1px 2px rgba(42,28,21,.08), 0 14px 36px rgba(42,28,21,.12)',
       }}
     >
       {loading ? (
@@ -128,7 +130,7 @@ const DevotionalCard: React.FC<DevotionalCardProps> = ({ devotional, loading, da
               fontSize: 'clamp(1.75rem, 4vw, 2.75rem)',
               fontWeight: 600,
               lineHeight: 1.1,
-              color: 'var(--bg-paper)',
+              color: '#FAF6EE',
             }}
             className="mb-4"
           >
@@ -140,9 +142,9 @@ const DevotionalCard: React.FC<DevotionalCardProps> = ({ devotional, loading, da
             <p
               style={{
                 fontFamily: 'var(--serif-body)',
-                fontSize: '1.0625rem',
-                lineHeight: 1.7,
-                color: 'var(--fg-3)',
+                fontSize: '1.1rem',
+                lineHeight: 1.6,
+                color: 'rgba(250,244,235,0.76)',
               }}
               className="mb-8 max-w-2xl"
             >
@@ -152,9 +154,9 @@ const DevotionalCard: React.FC<DevotionalCardProps> = ({ devotional, loading, da
             <p
               style={{
                 fontFamily: 'var(--serif-body)',
-                fontSize: '1.0625rem',
-                lineHeight: 1.7,
-                color: 'var(--fg-3)',
+                fontSize: '1.1rem',
+                lineHeight: 1.6,
+                color: 'rgba(250,244,235,0.76)',
               }}
               className="mb-8"
             >
