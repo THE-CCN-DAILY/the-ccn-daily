@@ -208,6 +208,10 @@ const Reveal: React.FC<{
 
 /* ─── Sunrise Emblem (decorative SVG) ────────────────────────────────────── */
 
+// Clean, legible watermark: a single sunrise arc + rays cradling an open book with a
+// flame clearly lifted above its spine. Kept deliberately simple — the previous version
+// stacked curved pages, page-text strokes, and a flame under a heavy blur, which muddied
+// into an unreadable smudge at the low watermark opacity.
 const SunriseEmblem: React.FC<{ className?: string }> = ({ className }) => (
   <svg
     className={className}
@@ -217,91 +221,50 @@ const SunriseEmblem: React.FC<{ className?: string }> = ({ className }) => (
     aria-hidden="true"
   >
     <defs>
-      <radialGradient id="glowRad" cx="50%" cy="60%" r="50%">
-        <stop offset="0%" stopColor="#F27D26" stopOpacity="0.25" />
+      <radialGradient id="glowRad" cx="50%" cy="58%" r="55%">
+        <stop offset="0%" stopColor="#F27D26" stopOpacity="0.22" />
         <stop offset="100%" stopColor="#F27D26" stopOpacity="0" />
       </radialGradient>
-      <linearGradient id="crossGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-        <stop offset="0%" stopColor="#FFAF50" />
+      <linearGradient id="flameGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stopColor="#FFD9A0" />
         <stop offset="100%" stopColor="#F27D26" />
       </linearGradient>
       <linearGradient id="arcGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-        <stop offset="0%" stopColor="#F27D26" stopOpacity="0.3" />
+        <stop offset="0%" stopColor="#F27D26" stopOpacity="0.25" />
         <stop offset="50%" stopColor="#FFAF50" stopOpacity="0.9" />
-        <stop offset="100%" stopColor="#F27D26" stopOpacity="0.3" />
+        <stop offset="100%" stopColor="#F27D26" stopOpacity="0.25" />
       </linearGradient>
-      <filter id="glow">
-        <feGaussianBlur stdDeviation="3" result="blur" />
-        <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
-      </filter>
     </defs>
-    {/* Ambient fill */}
-    <circle cx="100" cy="120" r="70" fill="url(#glowRad)" />
-    {/* Horizon line */}
-    <line x1="30" y1="130" x2="170" y2="130" stroke="#F27D26" strokeWidth="1" strokeOpacity="0.3" />
-    {/* Sunrise arc */}
-    <path
-      d="M 42 130 A 58 58 0 0 1 158 130"
-      stroke="url(#arcGrad)"
-      strokeWidth="1.5"
-      fill="none"
-      filter="url(#glow)"
-    />
-    {/* Light rays */}
-    {[0, 30, 60, 90, 120, 150, 180].map((angle, i) => {
-      const rad = (angle - 90) * (Math.PI / 180);
-      const r1 = 62, r2 = 74;
-      const x1 = 100 + r1 * Math.cos(rad);
-      const y1 = 130 + r1 * Math.sin(rad);
-      const x2 = 100 + r2 * Math.cos(rad);
-      const y2 = 130 + r2 * Math.sin(rad);
-      if (y1 > 132 || y2 > 132) return null;
+
+    {/* Soft ambient halo */}
+    <circle cx="100" cy="118" r="74" fill="url(#glowRad)" />
+
+    {/* Sunrise arc + horizon */}
+    <path d="M 46 132 A 54 54 0 0 1 154 132" stroke="url(#arcGrad)" strokeWidth="1.6" fill="none" strokeLinecap="round" />
+    <line x1="36" y1="132" x2="164" y2="132" stroke="#F27D26" strokeWidth="1" strokeOpacity="0.28" />
+
+    {/* A few clean rays fanning above the horizon */}
+    {[-46, -23, 0, 23, 46].map((deg, i) => {
+      const rad = (deg - 90) * (Math.PI / 180);
+      const x1 = 100 + 60 * Math.cos(rad);
+      const y1 = 132 + 60 * Math.sin(rad);
+      const x2 = 100 + 74 * Math.cos(rad);
+      const y2 = 132 + 74 * Math.sin(rad);
       return (
-        <line
-          key={i}
-          x1={x1} y1={y1} x2={x2} y2={y2}
-          stroke="#FFAF50"
-          strokeWidth="1"
-          strokeOpacity={i === 3 ? 0.9 : 0.4}
-        />
+        <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke="#FFAF50" strokeWidth="1" strokeOpacity={deg === 0 ? 0.85 : 0.4} strokeLinecap="round" />
       );
     })}
-    {/* Open Bible — two pages meeting at the spine */}
-    <g filter="url(#glow)">
-      {/* Left page */}
-      <path
-        d="M100 96 C 82 90, 60 91, 44 99 L 44 120 C 60 112, 82 111, 100 117 Z"
-        fill="url(#crossGrad)"
-        fillOpacity="0.85"
-      />
-      {/* Right page */}
-      <path
-        d="M100 96 C 118 90, 140 91, 156 99 L 156 120 C 140 112, 118 111, 100 117 Z"
-        fill="url(#crossGrad)"
-        fillOpacity="0.85"
-      />
-      {/* Spine */}
-      <line x1="100" y1="96" x2="100" y2="117" stroke="#FFAF50" strokeWidth="1.5" />
-      {/* Page text lines */}
-      {[103, 108].map((y, i) => (
-        <g key={i} stroke="#FFD9A0" strokeWidth="0.8" strokeOpacity="0.5">
-          <line x1="56" y1={y + 1} x2="92" y2={y - 1} />
-          <line x1="108" y1={y - 1} x2="144" y2={y + 1} />
-        </g>
-      ))}
+
+    {/* Open book — two straight pages meeting at the spine (no muddy curves/text) */}
+    <g stroke="#FFAF50" strokeOpacity="0.85" strokeWidth="1.6" strokeLinejoin="round" fill="none">
+      <path d="M100 112 L 56 104 L 56 124 L 100 130 Z" />
+      <path d="M100 112 L 144 104 L 144 124 L 100 130 Z" />
+      <line x1="100" y1="112" x2="100" y2="130" strokeOpacity="0.6" />
     </g>
-    {/* Flame rising from the open Bible */}
-    <path
-      d="M100 52 C 112 70, 110 84, 100 92 C 90 84, 88 70, 100 52 Z"
-      fill="url(#crossGrad)"
-      filter="url(#glow)"
-    />
-    {/* Inner flame highlight */}
-    <path
-      d="M100 64 C 106 74, 105 82, 100 88 C 95 82, 94 74, 100 64 Z"
-      fill="#FFD9A0"
-      fillOpacity="0.85"
-    />
+
+    {/* Flame, clearly lifted above the spine with a gap so the two read as separate marks */}
+    <path d="M100 60 C 113 78, 110 92, 100 100 C 90 92, 87 78, 100 60 Z" fill="url(#flameGrad)" />
+    <path d="M100 74 C 106 84, 105 92, 100 97 C 95 92, 94 84, 100 74 Z" fill="#FFE6BE" fillOpacity="0.85" />
   </svg>
 );
 

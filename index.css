@@ -195,7 +195,9 @@
   body {
     font-family: var(--font-body);
     font-size: 1.125rem;
-    line-height: 1.65;
+    /* Tighter than 1.65 — the warm Garamond read like loosely-set verse before; 1.5
+       keeps it comfortable without the airy paragraph gaps the founder flagged. */
+    line-height: 1.5;
   }
 
   /* Keep interactive and structural chrome on Inter Tight — buttons, inputs,
@@ -236,8 +238,9 @@
   h3 { line-height: 1.25; }
   h4, h5, h6 { line-height: 1.3; }
 
-  /* Slightly larger base — 17px instead of 16px for comfortable desktop reading */
-  body { font-size: 1.0625rem; }
+  /* Body reads small in Garamond (low x-height) — bump the base so reading copy has
+     real presence on desktop and mobile (this is the size the founder flagged). */
+  body { font-size: 1.1875rem; }
 
   code, pre, kbd {
     font-family: var(--font-mono);
@@ -308,9 +311,9 @@
     padding-left: 1rem;
     font-family: var(--font-display);
     font-style: italic;
-    font-size: 1.05rem;
+    font-size: 1.1rem;
     color: rgb(var(--text-secondary-raw));
-    line-height: 1.75;
+    line-height: 1.6;
   }
   .scripture-quote cite {
     display: block;
@@ -401,14 +404,14 @@
 
 .ds-reading-body {
   font-family: var(--serif-body);
-  font-size: 18px;
-  line-height: 1.75;
+  font-size: 19px;
+  line-height: 1.6;
   color: var(--fg-1);
 }
 .ds-reading-body p + p { margin-top: 1.25em; }
 
 /* Newsletter full HTML rendering */
-.prose-newsletter p { margin-top: 1.2em; margin-bottom: 1.2em; font-size: 1.0625rem; line-height: 1.75; }
+.prose-newsletter p { margin-top: 1.1em; margin-bottom: 1.1em; font-size: 1.1875rem; line-height: 1.6; }
 .prose-newsletter h1, .prose-newsletter h2, .prose-newsletter h3 {
   font-family: var(--serif-display);
   font-weight: 700;

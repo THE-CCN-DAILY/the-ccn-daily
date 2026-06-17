@@ -17,16 +17,16 @@ interface AmbientDevotionalMotionProps {
   verseRef?: string;
 }
 
-const usePrefersReducedMotion = (): boolean => {
-  const [reduced, setReduced] = useState(false);
+const useMediaQuery = (query: string): boolean => {
+  const [matches, setMatches] = useState(false);
   useEffect(() => {
-    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
-    setReduced(mq.matches);
-    const handler = (e: MediaQueryListEvent) => setReduced(e.matches);
+    const mq = window.matchMedia(query);
+    setMatches(mq.matches);
+    const handler = (e: MediaQueryListEvent) => setMatches(e.matches);
     mq.addEventListener('change', handler);
     return () => mq.removeEventListener('change', handler);
-  }, []);
-  return reduced;
+  }, [query]);
+  return matches;
 };
 
 const StaticFallback: React.FC<{ verseText: string; verseRef: string }> = ({ verseText, verseRef }) => (
@@ -53,7 +53,11 @@ const AmbientDevotionalMotion: React.FC<AmbientDevotionalMotionProps> = ({
   verseRef = 'Isaiah 40:31',
 }) => {
   const { theme } = useTheme();
-  const reduced = usePrefersReducedMotion();
+  const reduced = useMediaQuery('(prefers-reduced-motion: reduce)');
+  // The Remotion player is scaled hard on a narrow phone and the bright dawn glow can
+  // moiré into a noisy band there; the still gradient + verse reads cleaner and is far
+  // lighter on mobile. So phones get the static fallback, desktops keep the motion.
+  const isSmallScreen = useMediaQuery('(max-width: 640px)');
   const ref = useRef<HTMLDivElement>(null);
   const [inView, setInView] = useState(false);
 
@@ -80,8 +84,8 @@ const AmbientDevotionalMotion: React.FC<AmbientDevotionalMotionProps> = ({
       aria-label="Ambient devotional motion"
       className="relative w-full overflow-hidden border-y border-brand-border bg-brand-dark"
     >
-      <div ref={ref} className="relative mx-auto aspect-[1920/800] w-full max-w-6xl">
-        {reduced || !inView ? (
+      <div ref={ref} className="relative mx-auto w-full max-w-6xl min-h-[240px] sm:min-h-0 sm:aspect-[1920/800]">
+        {reduced || isSmallScreen || !inView ? (
           <StaticFallback verseText={verseText} verseRef={verseRef} />
         ) : (
           <Suspense fallback={<StaticFallback verseText={verseText} verseRef={verseRef} />}>
