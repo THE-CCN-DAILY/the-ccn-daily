@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "tsx server.ts",
-    "build": "vite build",
+    "build": "vite build && node scripts/prerender.mjs",
+    "prerender": "node scripts/prerender.mjs",
     "lint": "tsc --noEmit",
     "preview": "vite preview",
     "cf:dev": "npm run build && wrangler pages dev dist --compatibility-flag nodejs_compat --port 8788",
