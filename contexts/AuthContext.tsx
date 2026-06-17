@@ -114,7 +114,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       .then((result) => {
         // A non-null result means a Google redirect sign-in just completed — take the
         // user into the app instead of leaving them on the public landing page.
-        if (result?.user) window.location.hash = '#/app/dashboard';
+        if (result?.user) window.location.assign('/app/dashboard');
       })
       .catch((err: unknown) => {
       const code = (err as { code?: string }).code ?? '';

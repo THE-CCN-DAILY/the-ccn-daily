@@ -64,7 +64,7 @@ const BlogPostPage: React.FC = () => {
         name: 'THE CCN DAILY',
         logo: { '@type': 'ImageObject', url: 'https://theccndaily.com/logo-wordmark-white.webp' },
       },
-      mainEntityOfPage: `https://theccndaily.com/#/blog/${slug}`,
+      mainEntityOfPage: `https://theccndaily.com/blog/${slug}`,
     } as Record<string, unknown>;
   }, [post, slug]);
 

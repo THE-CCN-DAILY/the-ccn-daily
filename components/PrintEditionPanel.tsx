@@ -75,7 +75,7 @@ const PrintEditionPanel: React.FC<PrintEditionPanelProps> = ({ bookId }) => {
               {formatPrice(info.price ?? info.priceUsd, info.currency)}
             </span>
             <a
-              href="/#/app/help"
+              href="/app/help"
               className="px-5 py-2.5 rounded-lg font-semibold text-white"
               style={{ background: 'var(--ember, #C23B1E)' }}
             >

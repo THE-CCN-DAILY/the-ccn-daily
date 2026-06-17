@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { HashRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import Layout from './components/Layout';
 import LandingPage from './pages/LandingPage';
 import JoinPage from './pages/JoinPage';
@@ -97,7 +97,7 @@ const App: React.FC = () => {
             <GamificationProvider>
               <RoadmapProvider>
                 <AudioPlayerProvider>
-                  <HashRouter>
+                  <BrowserRouter>
                     <ScrollToTop />
                     <UpgradeModalProvider>
                       <Layout>
@@ -206,7 +206,7 @@ const App: React.FC = () => {
                         </Routes>
                       </Layout>
                     </UpgradeModalProvider>
-                  </HashRouter>
+                  </BrowserRouter>
                 </AudioPlayerProvider>
               </RoadmapProvider>
             </GamificationProvider>

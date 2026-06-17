@@ -212,7 +212,9 @@ const Sidebar: React.FC<SidebarProps> = ({ className = '', onNavigate, collapsib
       <div className={`mb-6 flex ${collapsed ? 'flex-col items-center gap-3' : 'items-start justify-between gap-2'}`}>
         {!collapsed && (
           <div className="flex flex-col gap-1 min-w-0">
-            <CcnLogo size="sm" theme="auto" />
+            <NavLink to="/app/dashboard" onClick={onNavigate} aria-label="THE CCN DAILY — dashboard">
+              <CcnLogo size="sm" theme="auto" />
+            </NavLink>
             <p style={{ fontFamily: 'var(--sans-ui, "Inter Tight", -apple-system, sans-serif)', fontSize: '11px', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--gold-ds, #B7892E)', fontWeight: 600 }}>
               {effectiveStrategyMode ? 'Command Center' : 'Sanctuary'}
             </p>

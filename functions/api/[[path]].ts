@@ -1734,7 +1734,7 @@ app.post('/api/challenges/:id/invite', async (c) => {
             <h2 style="color:#F27D26;font-size:22px;margin-bottom:8px">Walk this with me.</h2>
             <p>${sanitizeInput(inviterLabel) || 'A friend'} invited you to join the <strong>${sanitizeInput(challenge.title)}</strong> challenge on THE CCN DAILY.</p>
             <p style="color:#c8b89a">${sanitizeInput(String(challenge.description || '').slice(0, 200))}</p>
-            <p><a href="${origin}/#/app/challenges/${encodeURIComponent(id)}" style="display:inline-block;margin-top:12px;padding:12px 24px;background:#F27D26;color:#ffffff;border-radius:8px;text-decoration:none;font-weight:bold">Join the challenge</a></p>
+            <p><a href="${origin}/app/challenges/${encodeURIComponent(id)}" style="display:inline-block;margin-top:12px;padding:12px 24px;background:#F27D26;color:#ffffff;border-radius:8px;text-decoration:none;font-weight:bold">Join the challenge</a></p>
             <p style="margin-top:32px;font-size:12px;color:#7a6a60">THE CCN DAILY — theccndaily.com</p>
           </div>`,
         }),
@@ -3307,7 +3307,7 @@ const sendSeatInviteEmail = async (
           <p>Hello ${sanitizeInput(inviteeName) || 'Friend'},</p>
           <p>${detail}</p>
           ${inviterLabel ? `<p style="font-size:13px;color:#c8b89a">Invited by ${sanitizeInput(inviterLabel)}</p>` : ''}
-          <p><a href="${origin}/#/onboarding" style="display:inline-block;margin-top:12px;padding:12px 24px;background:#F27D26;color:#ffffff;border-radius:8px;text-decoration:none;font-weight:bold">Take your seat</a></p>
+          <p><a href="${origin}/onboarding" style="display:inline-block;margin-top:12px;padding:12px 24px;background:#F27D26;color:#ffffff;border-radius:8px;text-decoration:none;font-weight:bold">Take your seat</a></p>
           <p style="margin-top:16px;font-size:13px;color:#c8b89a">Sign in with this email address (${sanitizeInput(inviteeEmail)}) and your seat will be waiting.</p>
           <p style="margin-top:32px;font-size:12px;color:#7a6a60">THE CCN DAILY — theccndaily.com</p>
         </div>`,
@@ -4612,7 +4612,7 @@ app.post('/api/scholarship-submitted', async (c) => {
       `<div style="font-family:Georgia,serif;max-width:600px;margin:0 auto;background:#1a1210;color:#f0ebe4;padding:40px 32px;border-radius:12px">
         <h2 style="color:#F27D26;font-size:22px;margin-bottom:8px">A scholarship application needs review</h2>
         <p>A new application has been submitted. Open the dashboard to review and decide.</p>
-        <p><a href="https://theccndaily.com/#/studio/scholarships" style="color:#F27D26">Review in the dashboard →</a></p>
+        <p><a href="https://theccndaily.com/studio/scholarships" style="color:#F27D26">Review in the dashboard →</a></p>
         <p style="margin-top:32px;font-size:12px;color:#7a6a60">You're receiving this because you help steward CCN Daily. Details stay in the app.</p>
       </div>`,
     );

@@ -4,14 +4,14 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <!-- Bounce shareable bare paths into the HashRouter before the app boots. Lets links like
-       theccndaily.com/join resolve to the in-app sign-up route even though this is a hash SPA. -->
+  <!-- The app now uses clean path URLs (BrowserRouter). Migrate any legacy hash-router
+       link (theccndaily.com/#/app/giving) or bookmark to its clean path before React boots,
+       so old shared links keep working. -->
   <script>
     (function () {
-      var pathRoutes = { '/join': '/join' };
-      var target = pathRoutes[location.pathname];
-      if (target && !location.hash) {
-        location.replace('/#' + target);
+      var h = location.hash;
+      if (h.length > 1 && h.charAt(1) === '/') {
+        location.replace(h.slice(1) + location.search);
       }
     })();
   </script>

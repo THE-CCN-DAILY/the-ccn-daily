@@ -58,7 +58,7 @@ const EventsPage: React.FC = () => {
   };
 
   const handleShare = (id: string) => {
-    const shareUrl = `${window.location.origin}/#/app/events?event=${encodeURIComponent(id)}`;
+    const shareUrl = `${window.location.origin}/app/events?event=${encodeURIComponent(id)}`;
     navigator.clipboard.writeText(shareUrl);
     notify('Grace Link copied to clipboard! Share this link to invite others.', 'success');
   };

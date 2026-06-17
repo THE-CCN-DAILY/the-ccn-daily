@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import LandingPage from './LandingPage';
 
@@ -11,15 +12,16 @@ import LandingPage from './LandingPage';
  */
 const JoinPage: React.FC = () => {
   const { user, loading, openSignIn } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (loading) return;
     if (user) {
-      window.location.hash = '#/app/dashboard';
+      navigate('/app/dashboard', { replace: true });
       return;
     }
     openSignIn('signup');
-  }, [user, loading, openSignIn]);
+  }, [user, loading, openSignIn, navigate]);
 
   return <LandingPage />;
 };

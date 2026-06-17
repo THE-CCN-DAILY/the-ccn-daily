@@ -378,7 +378,7 @@ const LandingPage: React.FC = () => {
         transition={{ duration: 0.4, ease: 'easeOut' }}
       >
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-4 sm:px-6">
-          <Link to="/" aria-label="THE CCN DAILY — home">
+          <Link to="/" aria-label="THE CCN DAILY — home" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
             <CcnLogo size="md" theme="auto" />
           </Link>
           <nav className="hidden items-center gap-7 text-sm text-brand-text-secondary md:flex">
