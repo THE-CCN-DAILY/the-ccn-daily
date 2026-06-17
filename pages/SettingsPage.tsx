@@ -202,7 +202,7 @@ const SettingsPage: React.FC = () => {
         initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: EASE }}
       >
         <p className="text-xs font-bold uppercase tracking-widest text-brand-accent mb-2">Your preferences</p>
-        <h1 className="text-4xl font-black text-brand-text-primary" style={{ fontFamily: 'var(--serif-display)' }}>
+        <h1 className="text-3xl sm:text-4xl font-black text-brand-text-primary" style={{ fontFamily: 'var(--serif-display)' }}>
           Settings
         </h1>
       </motion.div>

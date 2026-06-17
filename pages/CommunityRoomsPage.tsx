@@ -112,7 +112,7 @@ const CommunityRoomsPage: React.FC = () => {
           Community
         </p>
         <h1
-          className="text-4xl font-black text-brand-text-primary mb-2"
+          className="text-3xl sm:text-4xl font-black text-brand-text-primary mb-2"
           style={{ fontFamily: 'var(--serif-display)' }}
         >
           The Sanctuary Room

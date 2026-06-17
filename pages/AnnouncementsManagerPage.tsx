@@ -119,7 +119,7 @@ const AnnouncementsManagerPage: React.FC = () => {
     <div className="max-w-4xl mx-auto pb-24 px-4">
       <motion.div className="mb-8" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: EASE }}>
         <p className="text-xs font-bold uppercase tracking-widest text-brand-accent mb-2">Promotion</p>
-        <h1 className="text-4xl font-black text-brand-text-primary inline-flex items-center gap-3" style={{ fontFamily: 'var(--serif-display)' }}>
+        <h1 className="text-3xl sm:text-4xl font-black text-brand-text-primary inline-flex items-center gap-3" style={{ fontFamily: 'var(--serif-display)' }}>
           <Megaphone className="w-8 h-8 text-brand-accent" /> Announcements
         </h1>
         <p className="text-sm text-brand-text-secondary mt-2">

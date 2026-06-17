@@ -119,7 +119,7 @@ const GamificationPage: React.FC = () => {
           transition={{ duration: 0.5, ease: EASE }}
         >
           <p className="text-xs font-bold uppercase tracking-widest text-brand-accent mb-2">Account</p>
-          <h1 className="text-4xl font-black text-brand-text-primary mb-2" style={{ fontFamily: 'var(--font-display)' }}>
+          <h1 className="text-3xl sm:text-4xl font-black text-brand-text-primary mb-2" style={{ fontFamily: 'var(--font-display)' }}>
             Your Journey
           </h1>
           <p className="text-brand-text-secondary">
@@ -146,7 +146,7 @@ const GamificationPage: React.FC = () => {
             transition={{ duration: 0.5, ease: EASE }}
           >
             <p className="text-xs font-bold uppercase tracking-widest text-brand-accent mb-2">Account</p>
-            <h1 className="text-4xl font-black text-brand-text-primary mb-2" style={{ fontFamily: 'var(--font-display)' }}>
+            <h1 className="text-3xl sm:text-4xl font-black text-brand-text-primary mb-2" style={{ fontFamily: 'var(--font-display)' }}>
               Your Journey
             </h1>
             <p className="text-brand-text-secondary">

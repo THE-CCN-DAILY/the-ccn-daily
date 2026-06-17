@@ -26,7 +26,7 @@ const InboxPage: React.FC = () => {
       >
         <div>
           <p className="text-xs font-bold uppercase tracking-widest text-brand-accent mb-2">Account</p>
-          <h1 className="text-4xl font-black text-brand-text-primary mb-2" style={{ fontFamily: 'var(--font-display)' }}>
+          <h1 className="text-3xl sm:text-4xl font-black text-brand-text-primary mb-2" style={{ fontFamily: 'var(--font-display)' }}>
             Inbox &amp; Updates
           </h1>
           <p className="text-brand-text-secondary">Announcements, broadcasts, and system updates — all in one place.</p>

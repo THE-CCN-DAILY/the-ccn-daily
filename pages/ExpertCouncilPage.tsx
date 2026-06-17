@@ -199,7 +199,7 @@ const ExpertCouncilPage: React.FC = () => {
           Guided Study
         </p>
         <h1
-          className="text-4xl font-black text-brand-text-primary mb-2"
+          className="text-3xl sm:text-4xl font-black text-brand-text-primary mb-2"
           style={{ fontFamily: 'var(--font-display)' }}
         >
           Seek Counsel

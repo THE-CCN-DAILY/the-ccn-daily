@@ -47,7 +47,7 @@ const CoursesPage: React.FC = () => {
         transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
       >
         <p className="text-xs font-bold uppercase tracking-widest text-brand-accent mb-2">LEARN</p>
-        <h1 className="text-4xl font-black text-brand-text-primary mb-2" style={{ fontFamily: 'var(--font-display)' }}>
+        <h1 className="text-3xl sm:text-4xl font-black text-brand-text-primary mb-2" style={{ fontFamily: 'var(--font-display)' }}>
           Courses
         </h1>
         <p className="text-brand-text-secondary">Structured paths to grow in faith, Scripture, and spiritual practice.</p>

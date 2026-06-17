@@ -64,7 +64,7 @@ const VoiceCompanion: React.FC = () => {
     <div className="mx-auto max-w-4xl pb-20">
       <motion.div className="mb-8" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: EASE }}>
         <p className="mb-2 text-xs font-bold uppercase tracking-widest text-brand-accent">Pray</p>
-        <h1 className="mb-2 flex items-center gap-3 text-4xl font-black text-brand-text-primary" style={{ fontFamily: 'var(--font-display)' }}>
+        <h1 className="mb-2 flex items-center gap-3 text-3xl sm:text-4xl font-black text-brand-text-primary" style={{ fontFamily: 'var(--font-display)' }}>
           <Mic className="h-9 w-9 text-brand-accent" />
           Kai Prayer Companion
         </h1>

@@ -294,7 +294,7 @@ const TestimoniesPage: React.FC = () => {
             Community
           </p>
           <h1
-            className="text-4xl font-black text-brand-text-primary mb-2"
+            className="text-3xl sm:text-4xl font-black text-brand-text-primary mb-2"
             style={{ fontFamily: 'var(--font-display)' }}
           >
             Wall of Testimony

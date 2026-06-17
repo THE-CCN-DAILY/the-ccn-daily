@@ -105,7 +105,7 @@ const FamilyDashboardPage: React.FC = () => {
         transition={{ duration: 0.5, ease: EASE }}
       >
         <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ fontFamily: 'var(--sans-ui)', color: 'var(--gold-ds, #B7892E)' }}>Household formation</p>
-        <h1 className="text-4xl font-semibold text-brand-text-primary mb-2" style={{ fontFamily: 'var(--serif-display)' }}>
+        <h1 className="text-3xl sm:text-4xl font-semibold text-brand-text-primary mb-2" style={{ fontFamily: 'var(--serif-display)' }}>
           Family Table
         </h1>
         <p className="text-brand-text-secondary max-w-2xl">Invite your household into one shared rhythm of Scripture, prayer, courses, and encouragement.</p>

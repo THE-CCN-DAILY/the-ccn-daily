@@ -143,7 +143,7 @@ const GraceLinkPage: React.FC = () => {
               transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
             >
               <p className="text-xs font-bold uppercase tracking-widest text-brand-accent mb-2">COMMUNITY</p>
-              <h1 className="text-4xl font-black text-brand-text-primary mb-2" style={{ fontFamily: 'var(--font-display)' }}>
+              <h1 className="text-3xl sm:text-4xl font-black text-brand-text-primary mb-2" style={{ fontFamily: 'var(--font-display)' }}>
                 Grace Links
               </h1>
               <p className="text-brand-text-secondary">Share digital gifts of faith — devotionals, songs, and Scripture — with someone who needs them.</p>

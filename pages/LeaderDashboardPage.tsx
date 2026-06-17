@@ -164,7 +164,7 @@ const LeaderDashboardPage: React.FC = () => {
       >
         <div>
           <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ fontFamily: 'var(--sans-ui)', color: 'var(--gold-ds, #B7892E)' }}>Group stewardship</p>
-          <h1 className="text-4xl font-semibold text-brand-text-primary mb-2" style={{ fontFamily: 'var(--serif-display)' }}>
+          <h1 className="text-3xl sm:text-4xl font-semibold text-brand-text-primary mb-2" style={{ fontFamily: 'var(--serif-display)' }}>
             Leader Table
           </h1>
           <p className="text-brand-text-secondary max-w-2xl">Guide your group with shared Scripture practice, gentle accountability, and clear next steps.</p>
