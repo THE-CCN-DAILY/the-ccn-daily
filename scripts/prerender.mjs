@@ -105,9 +105,12 @@ const writeRouteHtml = async (routePath, html) => {
     await writeFile(path.join(DIST, 'index.html'), html, 'utf8');
     return;
   }
-  const dir = path.join(DIST, routePath);
-  await mkdir(dir, { recursive: true });
-  await writeFile(path.join(dir, 'index.html'), html, 'utf8');
+  // Write `<route>.html` (not `<route>/index.html`) so Cloudflare Pages serves it
+  // directly at the clean path with NO trailing-slash 308 redirect — keeping the
+  // served URL identical to the canonical we emit.
+  const file = path.join(DIST, `${routePath}.html`);
+  await mkdir(path.dirname(file), { recursive: true });
+  await writeFile(file, html, 'utf8');
 };
 
 async function main() {
