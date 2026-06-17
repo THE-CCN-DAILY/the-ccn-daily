@@ -80,7 +80,7 @@ const CoursePlayerPage: React.FC = () => {
     return (
       <div className="max-w-4xl mx-auto py-20 px-4 text-center">
         <h2 className="text-2xl font-bold text-brand-text-primary mb-4">Course Not Found</h2>
-        <button onClick={() => navigate('/app/courses')} className="text-brand-accent hover:underline">
+        <button onClick={() => navigate('/courses')} className="text-brand-accent hover:underline">
           Return to Courses
         </button>
       </div>
@@ -92,7 +92,7 @@ const CoursePlayerPage: React.FC = () => {
   return (
     <div className="max-w-7xl mx-auto pb-20 px-4">
       <button 
-        onClick={() => navigate('/app/courses')}
+        onClick={() => navigate('/courses')}
         className="flex items-center text-brand-text-secondary hover:text-brand-text-primary mb-6 transition-colors"
       >
         <ChevronLeftIcon className="w-5 h-5 mr-1" />

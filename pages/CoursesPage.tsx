@@ -21,7 +21,7 @@ const CoursesPage: React.FC = () => {
     // Premium gate: block opening a premium course for non-admins until the
     // purchase flow is live (opens the upgrade modal instead).
     if (!requireAccess(course.isPremium, course.title)) return;
-    navigate(`/app/courses/${course.id}`);
+    navigate(`/courses/${course.id}`);
   };
 
   useEffect(() => {

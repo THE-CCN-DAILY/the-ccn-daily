@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, Outlet, useLocation } from 'react-router-dom';
 import Layout from './components/Layout';
 import LandingPage from './pages/LandingPage';
 import JoinPage from './pages/JoinPage';
@@ -88,6 +88,14 @@ import OnboardingPage from './pages/OnboardingPage';
 import DonationPage from './pages/DonationPage';
 import PlannerPage from './pages/PlannerPage';
 
+// Strips the legacy /app prefix and redirects to the clean path, so old links,
+// bookmarks, and already-sent emails (e.g. /app/giving) keep working.
+const LegacyAppRedirect: React.FC = () => {
+  const location = useLocation();
+  const stripped = location.pathname.replace(/^\/app/, '') || '/dashboard';
+  return <Navigate to={`${stripped}${location.search}`} replace />;
+};
+
 const App: React.FC = () => {
   return (
     <ErrorBoundary>
@@ -114,48 +122,52 @@ const App: React.FC = () => {
                           <Route path="/onboarding" element={<OnboardingPage />} />
                           <Route path="/join" element={<JoinPage />} />
                           
-                          {/* Member Sanctuary Routes */}
-                          <Route path="/app/*">
-                            <Route index element={<Navigate to="dashboard" replace />} />
-                            <Route path="dashboard" element={<RequireAuth><DashboardPage /></RequireAuth>} />
-                            <Route path="guided-journey" element={<RequireAuth><GuidedJourneyPage /></RequireAuth>} />
-                            <Route path="devotional" element={<RequireAuth><DevotionalGeneratorPage /></RequireAuth>} />
-                            <Route path="bible" element={<RequireAuth><BibleReaderPage /></RequireAuth>} />
-                            <Route path="podcasts" element={<RequireAuth><PodcastPage /></RequireAuth>} />
-                            <Route path="the-community" element={<RequireAuth><TheCommunity /></RequireAuth>} />
-                            <Route path="expert-council" element={<RequireAuth><ExpertCouncilPage /></RequireAuth>} />
-                            <Route path="testimonies" element={<RequireAuth><TestimoniesPage /></RequireAuth>} />
-                            <Route path="gamification" element={<RequireAuth><GamificationPage /></RequireAuth>} />
-                            <Route path="grace-link" element={<RequireAuth><GraceLinkPage /></RequireAuth>} />
-                            <Route path="prayer-companion" element={<RequireAuth><VoiceCompanion /></RequireAuth>} />
-                            <Route path="visual-sanctuary" element={<RequireAuth><VisualSanctuary /></RequireAuth>} />
-                            <Route path="inbox" element={<RequireAuth><InboxPage /></RequireAuth>} />
-                            <Route path="newsletters" element={<RequireAuth><NewsletterPage /></RequireAuth>} />
-                            <Route path="events" element={<RequireAuth><EventsPage /></RequireAuth>} />
-                            <Route path="live" element={<RequireAuth><LiveStreamPage /></RequireAuth>} />
-                            {/* Member giving uses the same canonical engine as the public /give page. */}
-                            <Route path="giving" element={<RequireAuth><DonationPage /></RequireAuth>} />
-                            <Route path="help" element={<HelpPage />} />
-                            <Route path="scholarship" element={<RequireAuth><ScholarshipApplicationPage /></RequireAuth>} />
-                            <Route path="courses" element={<RequireAuth><CoursesPage /></RequireAuth>} />
-                            <Route path="courses/:courseId" element={<RequireAuth><CoursePlayerPage /></RequireAuth>} />
-                            <Route path="audiobook-library" element={<RequireAuth><AudiobookLibraryPage /></RequireAuth>} />
-                            <Route path="challenges" element={<RequireAuth><ChallengesPage /></RequireAuth>} />
-                            <Route path="challenges/:challengeId" element={<RequireAuth><ChallengeDetailPage /></RequireAuth>} />
-                            <Route path="challenges/:challengeId/modules/:moduleId" element={<RequireAuth><ChallengeModuleViewerPage /></RequireAuth>} />
-                            <Route path="books" element={<RequireAuth><BooksLibraryPage /></RequireAuth>} />
-                            <Route path="book/:bookId" element={<RequireAuth><BookReaderPage /></RequireAuth>} />
-                            <Route path="reading-plans" element={<RequireAuth><ReadingPlansPage /></RequireAuth>} />
-                            <Route path="reading-plans/:planId" element={<RequireAuth><ReadingPlansPage /></RequireAuth>} />
-                            <Route path="journaling" element={<RequireAuth><JournalingPage /></RequireAuth>} />
-                            <Route path="library" element={<RequireAuth><LibraryPage /></RequireAuth>} />
-                            <Route path="settings" element={<RequireAuth><SettingsPage /></RequireAuth>} />
-                            <Route path="planner" element={<RequireAuth><PlannerPage /></RequireAuth>} />
-                            <Route path="community-rooms" element={<RequireAuth><CommunityRoomsPage /></RequireAuth>} />
-                            <Route path="prayer-circle" element={<RequireAuth><PrayerCirclePage /></RequireAuth>} />
-                            <Route path="family-dashboard" element={<RequireRole allowedRoles={['admin', 'family_lead']}><FamilyDashboardPage /></RequireRole>} />
-                            <Route path="leader-dashboard" element={<RequireRole allowedRoles={['admin', 'group_lead']}><LeaderDashboardPage /></RequireRole>} />
-                          </Route>
+                          {/* Member Sanctuary Routes — now at clean root paths (no /app prefix). */}
+                          <Route path="/dashboard" element={<RequireAuth><DashboardPage /></RequireAuth>} />
+                          <Route path="/guided-journey" element={<RequireAuth><GuidedJourneyPage /></RequireAuth>} />
+                          <Route path="/devotional" element={<RequireAuth><DevotionalGeneratorPage /></RequireAuth>} />
+                          <Route path="/bible" element={<RequireAuth><BibleReaderPage /></RequireAuth>} />
+                          {/* Member podcast library — distinct from the public /podcasts page so members keep the app shell. */}
+                          <Route path="/podcast-library" element={<RequireAuth><PodcastPage /></RequireAuth>} />
+                          <Route path="/the-community" element={<RequireAuth><TheCommunity /></RequireAuth>} />
+                          <Route path="/expert-council" element={<RequireAuth><ExpertCouncilPage /></RequireAuth>} />
+                          <Route path="/testimonies" element={<RequireAuth><TestimoniesPage /></RequireAuth>} />
+                          <Route path="/gamification" element={<RequireAuth><GamificationPage /></RequireAuth>} />
+                          <Route path="/grace-link" element={<RequireAuth><GraceLinkPage /></RequireAuth>} />
+                          <Route path="/prayer-companion" element={<RequireAuth><VoiceCompanion /></RequireAuth>} />
+                          <Route path="/visual-sanctuary" element={<RequireAuth><VisualSanctuary /></RequireAuth>} />
+                          <Route path="/inbox" element={<RequireAuth><InboxPage /></RequireAuth>} />
+                          <Route path="/newsletters" element={<RequireAuth><NewsletterPage /></RequireAuth>} />
+                          <Route path="/events" element={<RequireAuth><EventsPage /></RequireAuth>} />
+                          <Route path="/live" element={<RequireAuth><LiveStreamPage /></RequireAuth>} />
+                          {/* Member giving uses the same canonical engine as the public /give page. */}
+                          <Route path="/giving" element={<RequireAuth><DonationPage /></RequireAuth>} />
+                          <Route path="/help" element={<HelpPage />} />
+                          <Route path="/scholarship" element={<RequireAuth><ScholarshipApplicationPage /></RequireAuth>} />
+                          <Route path="/courses" element={<RequireAuth><CoursesPage /></RequireAuth>} />
+                          <Route path="/courses/:courseId" element={<RequireAuth><CoursePlayerPage /></RequireAuth>} />
+                          <Route path="/audiobook-library" element={<RequireAuth><AudiobookLibraryPage /></RequireAuth>} />
+                          <Route path="/challenges" element={<RequireAuth><ChallengesPage /></RequireAuth>} />
+                          <Route path="/challenges/:challengeId" element={<RequireAuth><ChallengeDetailPage /></RequireAuth>} />
+                          <Route path="/challenges/:challengeId/modules/:moduleId" element={<RequireAuth><ChallengeModuleViewerPage /></RequireAuth>} />
+                          <Route path="/books" element={<RequireAuth><BooksLibraryPage /></RequireAuth>} />
+                          <Route path="/book/:bookId" element={<RequireAuth><BookReaderPage /></RequireAuth>} />
+                          <Route path="/reading-plans" element={<RequireAuth><ReadingPlansPage /></RequireAuth>} />
+                          <Route path="/reading-plans/:planId" element={<RequireAuth><ReadingPlansPage /></RequireAuth>} />
+                          <Route path="/journaling" element={<RequireAuth><JournalingPage /></RequireAuth>} />
+                          <Route path="/library" element={<RequireAuth><LibraryPage /></RequireAuth>} />
+                          <Route path="/settings" element={<RequireAuth><SettingsPage /></RequireAuth>} />
+                          <Route path="/planner" element={<RequireAuth><PlannerPage /></RequireAuth>} />
+                          <Route path="/community-rooms" element={<RequireAuth><CommunityRoomsPage /></RequireAuth>} />
+                          <Route path="/prayer-circle" element={<RequireAuth><PrayerCirclePage /></RequireAuth>} />
+                          <Route path="/family-dashboard" element={<RequireRole allowedRoles={['admin', 'family_lead']}><FamilyDashboardPage /></RequireRole>} />
+                          <Route path="/leader-dashboard" element={<RequireRole allowedRoles={['admin', 'group_lead']}><LeaderDashboardPage /></RequireRole>} />
+
+                          {/* Backward-compat: old /app/* links + bookmarks + already-sent emails
+                              redirect to the new clean paths (e.g. /app/giving → /giving). */}
+                          <Route path="/app" element={<Navigate to="/dashboard" replace />} />
+                          <Route path="/app/podcasts" element={<Navigate to="/podcast-library" replace />} />
+                          <Route path="/app/*" element={<LegacyAppRedirect />} />
 
                           {/* Founder Command Center Routes (Admin Only) */}
                           {/* Single hard boundary for the entire admin surface: any non-privileged
@@ -180,7 +192,7 @@ const App: React.FC = () => {
                             <Route path="roles" element={<RequireRole allowedRoles={['admin']}><Roles /></RequireRole>} />
                             <Route path="multi-tenancy" element={<RequireRole allowedRoles={['admin']}><MultiTenancyAdmin /></RequireRole>} />
                             {/* Personal devotional moved to the member sanctuary; old studio link keeps working. */}
-                            <Route path="devotional-generator" element={<Navigate to="/app/devotional" replace />} />
+                            <Route path="devotional-generator" element={<Navigate to="/devotional" replace />} />
                             <Route path="quote-generator" element={<RequireRole allowedRoles={['admin']}><QuoteGeneratorPage /></RequireRole>} />
                             <Route path="dynamic-theming" element={<RequireRole allowedRoles={['admin']}><DynamicTheming /></RequireRole>} />
                             <Route path="atmospheric-music" element={<RequireRole allowedRoles={['admin']}><AtmosphericMusicPage /></RequireRole>} />

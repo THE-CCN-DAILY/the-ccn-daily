@@ -1734,7 +1734,7 @@ app.post('/api/challenges/:id/invite', async (c) => {
             <h2 style="color:#F27D26;font-size:22px;margin-bottom:8px">Walk this with me.</h2>
             <p>${sanitizeInput(inviterLabel) || 'A friend'} invited you to join the <strong>${sanitizeInput(challenge.title)}</strong> challenge on THE CCN DAILY.</p>
             <p style="color:#c8b89a">${sanitizeInput(String(challenge.description || '').slice(0, 200))}</p>
-            <p><a href="${origin}/app/challenges/${encodeURIComponent(id)}" style="display:inline-block;margin-top:12px;padding:12px 24px;background:#F27D26;color:#ffffff;border-radius:8px;text-decoration:none;font-weight:bold">Join the challenge</a></p>
+            <p><a href="${origin}/challenges/${encodeURIComponent(id)}" style="display:inline-block;margin-top:12px;padding:12px 24px;background:#F27D26;color:#ffffff;border-radius:8px;text-decoration:none;font-weight:bold">Join the challenge</a></p>
             <p style="margin-top:32px;font-size:12px;color:#7a6a60">THE CCN DAILY — theccndaily.com</p>
           </div>`,
         }),
@@ -4151,7 +4151,7 @@ app.get('/api/auth/google', async (c) => {
     const token = await signSession({ sub: 'preview-admin', email: adminEmail, name: 'Preview Admin', picture: null, role: 'admin', tier: 'max' }, secret);
     return new Response(null, {
       status: 302,
-      headers: { Location: '/app/guided-journey', 'Set-Cookie': makeSessionCookie(token) },
+      headers: { Location: '/guided-journey', 'Set-Cookie': makeSessionCookie(token) },
     });
   }
 
@@ -4230,7 +4230,7 @@ app.get('/api/auth/callback/google', async (c) => {
 
   return new Response(null, {
     status: 302,
-    headers: { Location: '/app/guided-journey', 'Set-Cookie': makeSessionCookie(token) },
+    headers: { Location: '/guided-journey', 'Set-Cookie': makeSessionCookie(token) },
   });
 });
 

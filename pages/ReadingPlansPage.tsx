@@ -218,7 +218,7 @@ const ReadingPlansPage: React.FC = () => {
       <div className="max-w-2xl mx-auto pb-20 px-4">
         <div className="mb-6">
           <Link
-            to="/app/reading-plans"
+            to="/reading-plans"
             className="flex items-center gap-1.5 text-sm text-brand-text-secondary hover:text-brand-accent transition-colors"
           >
             <ArrowLeft className="w-4 h-4" /> Reading Plans
@@ -302,7 +302,7 @@ const ReadingPlansPage: React.FC = () => {
 
                 {item.bookId && (
                   <Link
-                    to={`/app/book/${item.bookId}`}
+                    to={`/book/${item.bookId}`}
                     onClick={e => e.stopPropagation()}
                     className="flex-shrink-0 text-xs text-brand-accent hover:underline flex items-center gap-1"
                   >
@@ -331,7 +331,7 @@ const ReadingPlansPage: React.FC = () => {
     return (
       <div className="max-w-2xl mx-auto py-16 text-center">
         <p className="text-brand-text-secondary">Reading plan not found.</p>
-        <Link to="/app/reading-plans" className="mt-4 inline-block text-brand-accent hover:underline">
+        <Link to="/reading-plans" className="mt-4 inline-block text-brand-accent hover:underline">
           Back to Plans
         </Link>
       </div>
@@ -403,7 +403,7 @@ const ReadingPlansPage: React.FC = () => {
           <motion.div className="space-y-4" variants={stagger} initial="hidden" animate="visible">
             {plans.map(plan => (
               <motion.div key={plan.id} variants={fadeUp} transition={{ duration: 0.4, ease: EASE }}>
-                <Link to={`/app/reading-plans/${plan.id}`}>
+                <Link to={`/reading-plans/${plan.id}`}>
                   <Card
                     className="group p-5 flex gap-4 border-l-4 hover:shadow-md transition-all"
                     style={{ borderLeftColor: 'var(--ember, #C23B1E)' }}

@@ -169,7 +169,7 @@ const BibleReaderPage: React.FC = () => {
       <div className="flex-shrink-0 mb-6">
         <div className="mb-2">
           <Link
-            to="/app/guided-journey"
+            to="/guided-journey"
             className="inline-flex items-center gap-1.5 text-sm text-brand-text-secondary hover:text-brand-accent transition-colors"
           >
             <ArrowLeft className="w-4 h-4" /> Daily Journey

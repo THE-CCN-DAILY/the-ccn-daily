@@ -29,7 +29,7 @@ const SignInModal: React.FC = () => {
   // After auth, take the user into the app — unless they were on /pricing (where they
   // likely want to finish choosing a plan) so they can resume the purchase.
   const goAfterAuth = () => {
-    if (!location.pathname.startsWith('/pricing')) navigate('/app/dashboard');
+    if (!location.pathname.startsWith('/pricing')) navigate('/dashboard');
   };
 
   const [activeTab, setActiveTab] = useState<AuthTab>('email');

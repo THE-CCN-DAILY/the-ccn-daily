@@ -89,7 +89,7 @@ const VisionaryLab: React.FC = () => {
                 The launch version is a provider-independent prayer atmosphere with breathing rhythm, themed scenes, and downloadable reflection notes.
             </p>
             <Link
-                to="/app/visual-sanctuary"
+                to="/visual-sanctuary"
                 className="w-full py-3 rounded-lg bg-brand-accent text-white font-bold flex items-center justify-center gap-2 hover:bg-opacity-90"
             >
                 Open Visual Sanctuary

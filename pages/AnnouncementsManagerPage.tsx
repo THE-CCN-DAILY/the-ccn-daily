@@ -175,7 +175,7 @@ const AnnouncementsManagerPage: React.FC = () => {
               </div>
               <div>
                 <label className={labelClass}>Button link</label>
-                <input className={fieldClass} value={form.ctaUrl} onChange={(e) => set('ctaUrl', e.target.value)} placeholder="/app/audiobook-library" />
+                <input className={fieldClass} value={form.ctaUrl} onChange={(e) => set('ctaUrl', e.target.value)} placeholder="/audiobook-library" />
               </div>
             </div>
           </div>

@@ -124,7 +124,7 @@ const ChallengesPage: React.FC = () => {
             <Card
               className="flex flex-col overflow-hidden p-0 cursor-pointer transition-colors group h-full"
               style={{ background: 'var(--bg-card, #FBF6EA)', boxShadow: 'var(--sh-card, 0 1px 2px rgba(42,28,21,.06), 0 8px 24px rgba(42,28,21,.05))', borderRadius: '6px', borderTop: '2px solid #E87A2C' }}
-              onClick={() => navigate(`/app/challenges/${challenge.id}`)}
+              onClick={() => navigate(`/challenges/${challenge.id}`)}
             >
               <div className="relative h-48 w-full bg-brand-secondary flex items-center justify-center overflow-hidden">
                 {challenge.coverUrl ? (

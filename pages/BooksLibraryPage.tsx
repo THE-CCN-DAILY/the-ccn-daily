@@ -142,7 +142,7 @@ const BooksLibraryPage: React.FC = () => {
                 </p>
                 {/* CTA */}
                 <Link
-                  to={`/app/book/${book.id}`}
+                  to={`/book/${book.id}`}
                   className="flex items-center justify-between gap-2 px-4 py-2.5 rounded-xl font-semibold text-sm transition-all"
                   style={{
                     background: 'var(--ember, #C23B1E)18',

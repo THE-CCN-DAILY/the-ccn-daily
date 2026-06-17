@@ -32,7 +32,7 @@ const RequireRole: React.FC<RequireRoleProps> = ({ children, allowedRoles }) => 
 
   if (!allowedRoles.includes(user.role)) {
     // If they don't have the role, redirect to sanctuary home
-    return <Navigate to="/app/guided-journey" replace />;
+    return <Navigate to="/guided-journey" replace />;
   }
 
   return <>{children}</>;

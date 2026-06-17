@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import Card from '../components/Card';
@@ -685,7 +685,7 @@ const PricingPage: React.FC = () => {
           Give someone courses, audio, guided Scripture practice, and a quieter place to grow.
         </p>
         <button
-          onClick={() => navigate('/app/help')}
+          onClick={() => navigate('/help')}
           className="px-8 py-3 rounded-xl bg-brand-secondary text-brand-text-primary font-bold border border-brand-border hover:bg-brand-dark transition-colors"
         >
           Gift a Subscription
@@ -702,7 +702,7 @@ const PricingPage: React.FC = () => {
           Are you a university student?{' '}
           <button
             type="button"
-            onClick={() => (user ? navigate('/app/scholarship') : openSignIn())}
+            onClick={() => (user ? navigate('/scholarship') : openSignIn())}
             className="text-brand-accent font-semibold hover:underline"
           >
             Apply for six months of Growth access →

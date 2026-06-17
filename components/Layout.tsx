@@ -69,38 +69,38 @@ declare global {
 }
 
 const sanctuaryItems = [
-  { to: '/app/dashboard', text: 'Dashboard', icon: LayoutDashboard, group: 'Account' },
-  { to: '/app/guided-journey', text: 'Guided Daily Journey', icon: Route, group: 'Pray' },
-  { to: '/app/devotional', text: 'Your Devotional', icon: PenLine, group: 'Pray' },
-  { to: '/app/planner', text: 'Daily Planner', icon: CalendarCheck, group: 'Pray' },
-  { to: '/app/bible', text: 'Bible Reader', icon: BookOpen, group: 'Read' },
-  { to: '/app/books', text: 'Books', icon: BookMarked, group: 'Read' },
-  { to: '/app/reading-plans', text: 'Reading Plans', icon: Calendar, group: 'Read' },
-  { to: '/app/newsletters', text: 'News', icon: Newspaper, group: 'Read' },
-  { to: '/app/podcasts', text: 'Podcast Library', icon: Podcast, group: 'Read' },
-  { to: '/app/courses', text: 'Courses', icon: GraduationCap, group: 'Read' },
-  { to: '/app/audiobook-library', text: 'Audiobook Library', icon: Headphones, group: 'Read' },
-  { to: '/app/challenges', text: 'Challenges', icon: Target, group: 'Community' },
-  { to: '/app/journaling', text: 'Journaling', icon: NotebookPen, group: 'Pray' },
-  { to: '/app/prayer-circle', text: 'Prayer Circle', icon: Heart, group: 'Pray' },
-  { to: '/app/community-rooms', text: 'Community Rooms', icon: MessageCircle, group: 'Community' },
-  { to: '/app/family-dashboard', text: 'Family Dashboard', icon: Users, group: 'Account' },
-  { to: '/app/leader-dashboard', text: 'Leader Dashboard', icon: ShieldCheck, group: 'Account' },
-  { to: '/app/the-community', text: 'The Community', icon: Globe, group: 'Community' },
-  { to: '/app/testimonies', text: 'Testimonies', icon: Quote, group: 'Community' },
-  { to: '/app/library', text: 'Your Library', icon: Library, group: 'Account' },
-  { to: '/app/gamification', text: 'Your Journey', icon: Trophy, group: 'Account' },
-  { to: '/app/grace-link', text: 'Grace Links', icon: Gift, group: 'Community' },
-  { to: '/app/inbox', text: 'Inbox & Updates', icon: Inbox, group: 'Account' },
-  { to: '/app/settings', text: 'Settings', icon: Settings, group: 'Account' },
-  { to: '/app/events', text: 'Live Events', icon: CalendarDays, group: 'Live' },
+  { to: '/dashboard', text: 'Dashboard', icon: LayoutDashboard, group: 'Account' },
+  { to: '/guided-journey', text: 'Guided Daily Journey', icon: Route, group: 'Pray' },
+  { to: '/devotional', text: 'Your Devotional', icon: PenLine, group: 'Pray' },
+  { to: '/planner', text: 'Daily Planner', icon: CalendarCheck, group: 'Pray' },
+  { to: '/bible', text: 'Bible Reader', icon: BookOpen, group: 'Read' },
+  { to: '/books', text: 'Books', icon: BookMarked, group: 'Read' },
+  { to: '/reading-plans', text: 'Reading Plans', icon: Calendar, group: 'Read' },
+  { to: '/newsletters', text: 'News', icon: Newspaper, group: 'Read' },
+  { to: '/podcast-library', text: 'Podcast Library', icon: Podcast, group: 'Read' },
+  { to: '/courses', text: 'Courses', icon: GraduationCap, group: 'Read' },
+  { to: '/audiobook-library', text: 'Audiobook Library', icon: Headphones, group: 'Read' },
+  { to: '/challenges', text: 'Challenges', icon: Target, group: 'Community' },
+  { to: '/journaling', text: 'Journaling', icon: NotebookPen, group: 'Pray' },
+  { to: '/prayer-circle', text: 'Prayer Circle', icon: Heart, group: 'Pray' },
+  { to: '/community-rooms', text: 'Community Rooms', icon: MessageCircle, group: 'Community' },
+  { to: '/family-dashboard', text: 'Family Dashboard', icon: Users, group: 'Account' },
+  { to: '/leader-dashboard', text: 'Leader Dashboard', icon: ShieldCheck, group: 'Account' },
+  { to: '/the-community', text: 'The Community', icon: Globe, group: 'Community' },
+  { to: '/testimonies', text: 'Testimonies', icon: Quote, group: 'Community' },
+  { to: '/library', text: 'Your Library', icon: Library, group: 'Account' },
+  { to: '/gamification', text: 'Your Journey', icon: Trophy, group: 'Account' },
+  { to: '/grace-link', text: 'Grace Links', icon: Gift, group: 'Community' },
+  { to: '/inbox', text: 'Inbox & Updates', icon: Inbox, group: 'Account' },
+  { to: '/settings', text: 'Settings', icon: Settings, group: 'Account' },
+  { to: '/events', text: 'Live Events', icon: CalendarDays, group: 'Live' },
   // Hidden until Cloudflare Stream is enabled (video subscription). Route still exists for
   // admin testing; restore this nav item once Stream is live.
-  // { to: '/app/live', text: 'Live Broadcast', icon: Radio, group: 'Live' },
+  // { to: '/live', text: 'Live Broadcast', icon: Radio, group: 'Live' },
   { to: '/give', text: 'Give', icon: HeartHandshake, group: 'Account' },
-  { to: '/app/giving', text: 'Giving & Support', icon: HeartHandshake, group: 'Account' },
+  { to: '/giving', text: 'Giving & Support', icon: HeartHandshake, group: 'Account' },
   { to: '/pricing', text: 'Upgrade Plan', icon: Crown, group: 'Account' },
-  { to: '/app/help', text: 'Help & Contact', icon: HelpCircle, group: 'Account' },
+  { to: '/help', text: 'Help & Contact', icon: HelpCircle, group: 'Account' },
 ];
 
 const commandCenterItems = [
@@ -189,10 +189,10 @@ const Sidebar: React.FC<SidebarProps> = ({ className = '', onNavigate, collapsib
   });
 
   const filteredSanctuaryItems = sanctuaryItems.filter(item => {
-    if (item.to === '/app/family-dashboard') {
+    if (item.to === '/family-dashboard') {
       return user?.role === 'admin' || user?.role === 'family_lead';
     }
-    if (item.to === '/app/leader-dashboard') {
+    if (item.to === '/leader-dashboard') {
       return user?.role === 'admin' || user?.role === 'group_lead';
     }
     return true;
@@ -212,7 +212,7 @@ const Sidebar: React.FC<SidebarProps> = ({ className = '', onNavigate, collapsib
       <div className={`mb-6 flex ${collapsed ? 'flex-col items-center gap-3' : 'items-start justify-between gap-2'}`}>
         {!collapsed && (
           <div className="flex flex-col gap-1 min-w-0">
-            <NavLink to="/app/dashboard" onClick={onNavigate} aria-label="THE CCN DAILY — dashboard">
+            <NavLink to="/dashboard" onClick={onNavigate} aria-label="THE CCN DAILY — dashboard">
               <CcnLogo size="sm" theme="auto" />
             </NavLink>
             <p style={{ fontFamily: 'var(--sans-ui, "Inter Tight", -apple-system, sans-serif)', fontSize: '11px', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--gold-ds, #B7892E)', fontWeight: 600 }}>
@@ -319,7 +319,7 @@ const Sidebar: React.FC<SidebarProps> = ({ className = '', onNavigate, collapsib
              <div className={`h-10 flex items-center justify-center text-brand-text-secondary text-sm ${collapsed ? '' : ''}`}>{collapsed ? '…' : 'Authenticating...'}</div>
           ) : user ? (
             collapsed ? (
-              <NavLink to="/app/settings" title={user.displayName || 'Account'} className="flex items-center justify-center py-1">
+              <NavLink to="/settings" title={user.displayName || 'Account'} className="flex items-center justify-center py-1">
                 <UserCircleIcon className="w-8 h-8 text-brand-text-secondary hover:text-brand-accent transition-colors" />
               </NavLink>
             ) : (
@@ -413,7 +413,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
           </button>
           <BackButton className="!px-2.5" />
         </div>
-        <NavLink to="/app/inbox" className="relative p-2 text-brand-text-secondary hover:text-brand-text-primary transition-colors">
+        <NavLink to="/inbox" className="relative p-2 text-brand-text-secondary hover:text-brand-text-primary transition-colors">
           <BellIcon className="w-6 h-6" />
           {unreadCount > 0 && (
             <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-brand-dark"></span>
@@ -451,7 +451,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         <div className="relative z-10 max-w-7xl mx-auto">
           <div className="mb-4 hidden items-center justify-between md:flex">
             <BackButton />
-            <NavLink to="/app/inbox" className="relative p-2 text-brand-text-secondary hover:text-brand-text-primary transition-colors">
+            <NavLink to="/inbox" className="relative p-2 text-brand-text-secondary hover:text-brand-text-primary transition-colors">
               <BellIcon className="w-6 h-6" />
               {unreadCount > 0 && (
                 <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-brand-dark"></span>

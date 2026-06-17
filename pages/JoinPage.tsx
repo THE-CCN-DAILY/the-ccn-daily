@@ -17,7 +17,7 @@ const JoinPage: React.FC = () => {
   useEffect(() => {
     if (loading) return;
     if (user) {
-      navigate('/app/dashboard', { replace: true });
+      navigate('/dashboard', { replace: true });
       return;
     }
     openSignIn('signup');

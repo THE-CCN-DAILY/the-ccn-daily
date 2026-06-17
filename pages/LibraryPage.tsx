@@ -267,14 +267,14 @@ const LibraryPage: React.FC = () => {
               heading="No notes yet"
               subtext="Your journal entries and reflections will gather here. Start with a single line."
               ctaLabel="Open Journaling"
-              ctaHref="/app/journaling"
+              ctaHref="/journaling"
             />
           ) : (
             <>
               <div className="flex items-center justify-between mb-4">
                 <Eyebrow>{noteCountLabel}</Eyebrow>
                 <Link
-                  to="/app/journaling"
+                  to="/journaling"
                   className="inline-flex items-center gap-1.5 text-sm font-semibold transition-opacity hover:opacity-80"
                   style={{ fontFamily: 'var(--sans-ui)', color: 'var(--ember)' }}
                 >
@@ -309,7 +309,7 @@ const LibraryPage: React.FC = () => {
             heading="Your highlights, coming together"
             subtext="Passages you mark while reading the Bible and books live with each text today. A single home for all of them is on the way."
             ctaLabel="Open the Bible Reader"
-            ctaHref="/app/bible"
+            ctaHref="/bible"
           />
         </section>
       )}

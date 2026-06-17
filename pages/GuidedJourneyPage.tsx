@@ -76,7 +76,7 @@ const ScriptureSnippetModal: React.FC<{
                                 Close
                             </button>
                             <button 
-                                onClick={() => navigate(`/app/bible?book=${snippet?.book}&chapter=${snippet?.chapter}`)}
+                                onClick={() => navigate(`/bible?book=${snippet?.book}&chapter=${snippet?.chapter}`)}
                                 className="flex-1 px-4 py-2 bg-brand-accent text-white rounded-lg text-sm font-bold flex items-center justify-center gap-2 hover:bg-opacity-90"
                             >
                                 <ReaderIcon className="w-4 h-4"/> Full Study

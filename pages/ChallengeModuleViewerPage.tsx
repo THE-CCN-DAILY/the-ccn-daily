@@ -62,7 +62,7 @@ const ChallengeModuleViewerPage: React.FC = () => {
     return (
       <div className="max-w-3xl mx-auto py-20 px-4 text-center">
         <h2 className="text-2xl font-bold text-brand-text-primary mb-4">Module Not Found</h2>
-        <button onClick={() => navigate(`/app/challenges/${challengeId}`)} className="text-brand-accent hover:underline">
+        <button onClick={() => navigate(`/challenges/${challengeId}`)} className="text-brand-accent hover:underline">
           Return to Challenge
         </button>
       </div>
@@ -72,7 +72,7 @@ const ChallengeModuleViewerPage: React.FC = () => {
   return (
     <div className="max-w-3xl mx-auto pb-20 px-4">
       <button 
-        onClick={() => navigate(`/app/challenges/${challengeId}`)}
+        onClick={() => navigate(`/challenges/${challengeId}`)}
         className="flex items-center text-brand-text-secondary hover:text-brand-text-primary mb-6 transition-colors"
       >
         <ChevronLeftIcon className="w-5 h-5 mr-1" />

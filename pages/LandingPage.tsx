@@ -54,28 +54,28 @@ const features = [
     icon: BookOpen,
     label: 'Bible & devotional reading',
     text: 'Start with Scripture, then move into a guided reflection that respects your working life — not a performance, just presence.',
-    to: '/app/guided-journey',
+    to: '/guided-journey',
     cta: "Open today's devotional",
   },
   {
     icon: Headphones,
     label: 'Podcast & audio formation',
     text: 'Listen while commuting, walking, or closing the day. Formation shouldn\'t require a desk.',
-    to: '/app/podcasts',
+    to: '/podcasts',
     cta: 'Browse episodes',
   },
   {
     icon: NotebookPen,
     label: 'Private journaling',
     text: 'Capture prayers, convictions, and decisions without turning devotion into another noisy feed. Your words stay yours.',
-    to: '/app/journaling',
+    to: '/journaling',
     cta: 'Start journaling',
   },
   {
     icon: Users,
     label: 'Community & leadership',
     text: 'Support families, small groups, testimonies, and prayer rooms. Built for leaders who carry others.',
-    to: '/app/the-community',
+    to: '/the-community',
     cta: 'Join the community',
   },
 ];
@@ -97,7 +97,7 @@ const channels = [
     icon: CalendarDays,
     title: 'Events',
     text: 'Live moments, gatherings, and ministry rhythms gathered in one quiet place.',
-    to: '/app/events',
+    to: '/events',
   },
 ];
 
@@ -389,7 +389,7 @@ const LandingPage: React.FC = () => {
           </nav>
           {user ? (
             <Link
-              to="/app/guided-journey"
+              to="/guided-journey"
               className="flex shrink-0 items-center gap-2 rounded-md border border-brand-border px-3 py-2 text-xs font-semibold text-brand-text-primary transition-colors hover:bg-brand-dark sm:px-4 sm:text-sm"
             >
               Open app <ArrowRight className="h-3.5 w-3.5" />
@@ -466,7 +466,7 @@ const LandingPage: React.FC = () => {
               >
                 <motion.div whileTap={{ scale: 0.99 }}>
                   <Link
-                    to="/app/guided-journey"
+                    to="/guided-journey"
                     className="group flex items-center justify-center gap-2 rounded-md bg-brand-accent px-7 py-3.5 text-sm font-semibold text-white shadow-[0_14px_34px_rgba(94,15,15,0.18)] transition-colors hover:bg-brand-cta-light"
                   >
                     Open today&apos;s journey
@@ -557,7 +557,7 @@ const LandingPage: React.FC = () => {
                 className="relative mt-7"
               >
                 <Link
-                  to="/app/guided-journey"
+                  to="/guided-journey"
                   className="block w-full rounded-md border border-brand-accent bg-brand-accent/10 py-3 text-center text-xs font-semibold uppercase tracking-widest text-brand-accent transition-colors hover:bg-brand-accent hover:text-white"
                 >
                   Enter the journey
@@ -890,7 +890,7 @@ const LandingPage: React.FC = () => {
                     whileTap={{ scale: 0.97 }}
                   >
                     <Link
-                      to="/app/guided-journey"
+                      to="/guided-journey"
                       className="group flex items-center gap-2 bg-brand-accent px-8 py-4 text-sm font-semibold text-white transition-all hover:opacity-90"
                     >
                       Begin Your Journey
@@ -902,7 +902,7 @@ const LandingPage: React.FC = () => {
                     whileTap={{ scale: 0.98 }}
                   >
                     <Link
-                      to="/app/guided-journey"
+                      to="/guided-journey"
                       className="flex items-center gap-2 border border-brand-border px-8 py-4 text-sm font-semibold text-brand-text-primary transition-colors hover:bg-brand-dark"
                     >
                       Explore the App
@@ -1040,7 +1040,7 @@ const LandingPage: React.FC = () => {
               <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
                 <motion.div whileTap={{ scale: 0.99 }}>
                   <Link
-                    to="/app/guided-journey"
+                    to="/guided-journey"
                     className="group flex items-center gap-2 rounded-md bg-brand-accent px-8 py-4 text-sm font-semibold text-white transition-colors hover:bg-brand-cta-light"
                   >
                     Open today&apos;s journey
@@ -1070,8 +1070,8 @@ const LandingPage: React.FC = () => {
               <Link to="/podcasts" className="hover:text-brand-text-primary">Podcasts</Link>
               <Link to="/blog" className="hover:text-brand-text-primary">Blog</Link>
               <Link to="/pricing" className="hover:text-brand-text-primary">Pricing</Link>
-              <Link to="/app/giving" className="hover:text-brand-text-primary">Support</Link>
-              <Link to="/app/help" className="hover:text-brand-text-primary">Help</Link>
+              <Link to="/giving" className="hover:text-brand-text-primary">Support</Link>
+              <Link to="/help" className="hover:text-brand-text-primary">Help</Link>
             </nav>
             <span>© {new Date().getFullYear()} THE CCN DAILY</span>
           </div>

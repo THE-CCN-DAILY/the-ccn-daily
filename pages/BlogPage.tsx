@@ -107,7 +107,7 @@ const BlogPage: React.FC = () => {
           <nav className="flex w-full items-center justify-between border-t border-brand-border pt-4 text-sm font-semibold text-brand-text-secondary sm:w-auto sm:justify-start sm:gap-5 sm:border-t-0 sm:pt-0" style={{ fontFamily: 'var(--sans-ui, "Inter Tight", -apple-system, sans-serif)' }}>
             <Link to="/newsletter" className="hover:text-brand-text-primary">Newsletter</Link>
             <Link to="/podcasts" className="hover:text-brand-text-primary">Podcasts</Link>
-            <Link to="/app/guided-journey" className="border border-brand-border px-4 py-2 hover:bg-brand-dark">
+            <Link to="/guided-journey" className="border border-brand-border px-4 py-2 hover:bg-brand-dark">
               Enter app
             </Link>
           </nav>

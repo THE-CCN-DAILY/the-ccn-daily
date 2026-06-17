@@ -59,7 +59,7 @@ const BookReaderPage: React.FC = () => {
     return (
       <div className="max-w-2xl mx-auto py-16 text-center">
         <p className="text-brand-text-secondary">Book not found.</p>
-        <Link to="/app/books" className="mt-4 inline-block text-brand-accent hover:underline">
+        <Link to="/books" className="mt-4 inline-block text-brand-accent hover:underline">
           Back to Library
         </Link>
       </div>
@@ -126,7 +126,7 @@ const BookReaderPage: React.FC = () => {
       {/* Back nav */}
       <div className="mb-6">
         <Link
-          to="/app/books"
+          to="/books"
           className="flex items-center gap-1.5 text-sm text-brand-text-secondary hover:text-brand-accent transition-colors"
         >
           <ArrowLeft className="w-4 h-4" /> All Books

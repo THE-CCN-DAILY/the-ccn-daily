@@ -469,7 +469,7 @@ const OnboardingPage: React.FC = () => {
         completedAt: serverTimestamp(),
       };
       await setDoc(doc(db, 'users', user.uid), data, { merge: true });
-      navigate('/app/guided-journey', { replace: true });
+      navigate('/guided-journey', { replace: true });
     } catch {
       notify('Something went wrong saving your preferences. Please try again.', 'error');
       setIsSaving(false);

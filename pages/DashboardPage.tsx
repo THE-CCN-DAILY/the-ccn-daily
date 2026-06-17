@@ -166,7 +166,7 @@ const DevotionalCard: React.FC<DevotionalCardProps> = ({ devotional, loading, da
 
           {/* CTA */}
           <Link
-            to="/app/guided-journey"
+            to="/guided-journey"
             className="inline-flex items-center gap-2 rounded-md px-5 py-2.5 text-sm font-semibold transition-colors hover:opacity-90"
             style={{
               fontFamily: 'var(--sans-ui)',
@@ -190,31 +190,31 @@ const CONTINUE_CARDS = [
     icon: Target,
     title: 'Planner',
     desc: 'Set your intention for today',
-    route: '/app/planner',
+    route: '/planner',
   },
   {
     icon: BookOpen,
     title: 'Bible',
     desc: 'Continue reading',
-    route: '/app/bible',
+    route: '/bible',
   },
   {
     icon: NotebookPen,
     title: 'Journaling',
     desc: 'Write a reflection',
-    route: '/app/journaling',
+    route: '/journaling',
   },
 ] as const;
 
 // ─── Quick Links ──────────────────────────────────────────────────────────────
 
 const QUICK_LINKS = [
-  { label: 'Courses', route: '/app/courses', icon: GraduationCap },
-  { label: 'Community', route: '/app/community-rooms', icon: Users },
-  { label: 'Events', route: '/app/events', icon: CalendarDays },
-  { label: 'Books', route: '/app/books', icon: Library },
-  { label: 'Testimonies', route: '/app/testimonies', icon: Star },
-  { label: 'Newsletter', route: '/app/newsletters', icon: Newspaper },
+  { label: 'Courses', route: '/courses', icon: GraduationCap },
+  { label: 'Community', route: '/community-rooms', icon: Users },
+  { label: 'Events', route: '/events', icon: CalendarDays },
+  { label: 'Books', route: '/books', icon: Library },
+  { label: 'Testimonies', route: '/testimonies', icon: Star },
+  { label: 'Newsletter', route: '/newsletters', icon: Newspaper },
 ] as const;
 
 // ─── Main Component ───────────────────────────────────────────────────────────
@@ -594,7 +594,7 @@ const DashboardPage: React.FC = () => {
             </div>
 
             <Link
-              to="/app/podcasts"
+              to="/podcasts"
               className="inline-flex items-center gap-1.5 text-sm font-semibold transition-colors hover:opacity-80"
               style={{
                 fontFamily: 'var(--sans-ui)',

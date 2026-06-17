@@ -255,7 +255,7 @@ const SettingsPage: React.FC = () => {
           </Row>
           <Row title="Prayer voice" desc="Open the guided voice prayer companion.">
             <Link
-              to="/app/prayer-companion"
+              to="/prayer-companion"
               className="inline-flex items-center gap-1.5 rounded-lg border border-brand-border px-3 py-2 text-xs font-bold text-brand-text-primary transition-colors hover:bg-brand-secondary"
             >
               <Mic className="w-3.5 h-3.5" /> Open companion

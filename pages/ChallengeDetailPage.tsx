@@ -110,7 +110,7 @@ const ChallengeDetailPage: React.FC = () => {
     return (
       <div className="max-w-4xl mx-auto py-20 px-4 text-center">
         <h2 className="text-2xl font-bold text-brand-text-primary mb-4">Challenge Not Found</h2>
-        <button onClick={() => navigate('/app/challenges')} className="text-brand-accent hover:underline">
+        <button onClick={() => navigate('/challenges')} className="text-brand-accent hover:underline">
           Return to Challenges
         </button>
       </div>
@@ -120,7 +120,7 @@ const ChallengeDetailPage: React.FC = () => {
   return (
     <div className="max-w-4xl mx-auto pb-20 px-4">
       <button 
-        onClick={() => navigate('/app/challenges')}
+        onClick={() => navigate('/challenges')}
         className="flex items-center text-brand-text-secondary hover:text-brand-text-primary mb-6 transition-colors"
       >
         <ChevronLeftIcon className="w-5 h-5 mr-1" />
@@ -253,7 +253,7 @@ const ChallengeDetailPage: React.FC = () => {
                 return (
                   <div 
                     key={module.id} 
-                    onClick={() => navigate(`/app/challenges/${challengeId}/modules/${module.id}`)}
+                    onClick={() => navigate(`/challenges/${challengeId}/modules/${module.id}`)}
                     className={`flex items-center justify-between p-6 rounded-xl border cursor-pointer transition-colors ${
                       isCompleted 
                         ? 'border-green-500/30 bg-green-900/10 hover:border-green-500/50' 
