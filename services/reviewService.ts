@@ -98,3 +98,12 @@ export const setReviewStatus = async (
   });
   if (!response.ok) throw await errorFrom(response, 'Could not update the review.');
 };
+
+/** Admin: permanently delete a review (e.g. un-publish an approved one). */
+export const deleteReview = async (id: string): Promise<void> => {
+  const response = await fetch(`/api/admin/reviews/${encodeURIComponent(id)}`, {
+    method: 'DELETE',
+    headers: await adminAuthHeaders(),
+  });
+  if (!response.ok) throw await errorFrom(response, 'Could not remove the review.');
+};

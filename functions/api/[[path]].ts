@@ -2765,6 +2765,18 @@ app.post('/api/admin/reviews/:id/status', async (c) => {
   return c.json({ ok: true });
 });
 
+// Admin: permanently remove a review (e.g. un-publish a previously-approved one).
+// Deleting frees the (content_type, book_id, user_id) slot so the reader can review again.
+app.delete('/api/admin/reviews/:id', async (c) => {
+  const denied = requireAdmin(c); if (denied) return denied;
+  if (!c.env.DB) return c.json({ error: 'D1 database binding is not configured' }, 503);
+  const id = c.req.param('id');
+  if (!isSafeId(id)) return c.json({ error: 'Invalid review id' }, 400);
+  await ensureBookReviewsTable(c.env.DB);
+  await c.env.DB.prepare(`DELETE FROM book_reviews WHERE id = ?`).bind(id).run();
+  return c.json({ ok: true });
+});
+
 // GET /api/books/:id/print — print-edition availability for the visitor's
 // country (Cloudflare gives us request.cf.country). Returns one of:
 //   notOffered  — no print edition exists for this title
