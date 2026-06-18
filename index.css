@@ -210,14 +210,16 @@
     font-family: var(--font-ui);
   }
 
-  /* Tablet: a moderate bump. */
+  /* Tablet: a slight bump only. */
   @media (max-width: 820px) {
-    html { font-size: 118%; }
+    html { font-size: 108%; }
   }
 
-  /* Mobile: enlarge text, icons, and tap targets app-wide. */
+  /* Mobile: keep the same comfortable scale as desktop. The earlier 118%/125%
+     bumps zoomed content in and made phones feel cramped and oversized (huge
+     headings, heavy wrapping); 110% reads well without the zoom. */
   @media (max-width: 640px) {
-    html { font-size: 125%; }
+    html { font-size: 110%; }
   }
 
   body {
