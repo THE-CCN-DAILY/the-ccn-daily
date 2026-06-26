@@ -1,3 +1,6 @@
+import { adminAuthHeaders } from './adminAuth';
+import { generateCloudflareText, scrubSlop } from './geminiService';
+
 export interface LiveSessionCallbacks {
   onAudioData: (base64Audio: string) => void;
   onTranscription: (text: string, isUser: boolean) => void;
@@ -70,14 +73,87 @@ const fallbackResponse = (text: string) => {
   return 'I hear you. Hold that before God for a breath, then ask: what is the faithful response for today?';
 };
 
-const speak = (text: string) => {
-  if (!('speechSynthesis' in window)) return;
+// Global speaking state to block audio echo loop in microphone capture
+let isSpeaking = false;
+let speakingTimeout: any = null;
+let currentAudioElement: HTMLAudioElement | null = null;
+
+const speakLocalFallback = (text: string) => {
+  if (!('speechSynthesis' in window)) {
+    isSpeaking = false;
+    return;
+  }
   window.speechSynthesis.cancel();
   const utterance = new SpeechSynthesisUtterance(text);
   utterance.rate = 0.88;
   utterance.pitch = 0.92;
   utterance.volume = 0.9;
+
+  utterance.onstart = () => {
+    isSpeaking = true;
+  };
+  utterance.onend = () => {
+    if (speakingTimeout) clearTimeout(speakingTimeout);
+    speakingTimeout = setTimeout(() => {
+      isSpeaking = false;
+    }, 1000); // 1 second decay buffer to ensure mic doesn't capture trailing echo
+  };
+  utterance.onerror = () => {
+    isSpeaking = false;
+  };
   window.speechSynthesis.speak(utterance);
+};
+
+const speakResponse = async (text: string) => {
+  isSpeaking = true;
+  if (speakingTimeout) {
+    clearTimeout(speakingTimeout);
+    speakingTimeout = null;
+  }
+  if (currentAudioElement) {
+    currentAudioElement.pause();
+    currentAudioElement = null;
+  }
+
+  try {
+    const authHeaders = await adminAuthHeaders();
+    const response = await fetch('/api/ai/tts', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...authHeaders,
+      },
+      body: JSON.stringify({ text }),
+    });
+
+    if (response.ok) {
+      const blob = await response.blob();
+      const audioUrl = URL.createObjectURL(blob);
+      const audio = new Audio(audioUrl);
+      currentAudioElement = audio;
+
+      audio.onended = () => {
+        if (speakingTimeout) clearTimeout(speakingTimeout);
+        speakingTimeout = setTimeout(() => {
+          isSpeaking = false;
+        }, 1000);
+        URL.revokeObjectURL(audioUrl);
+      };
+
+      audio.onerror = () => {
+        isSpeaking = false;
+        URL.revokeObjectURL(audioUrl);
+        speakLocalFallback(text);
+      };
+
+      await audio.play();
+      return;
+    }
+  } catch (err) {
+    console.error('Workers AI TTS failed, using local fallback', err);
+  }
+
+  speakLocalFallback(text);
 };
 
 const getSpeechRecognition = () => {
@@ -90,20 +166,52 @@ export const connectToPrayerCompanion = async (callbacks: LiveSessionCallbacks):
   let recognition: SpeechRecognitionLike | null = null;
   let closed = false;
 
-  const sendText = (text: string) => {
+  const sendText = async (text: string) => {
     const clean = text.trim();
     if (!clean || closed) return;
     callbacks.onTranscription(clean, true);
-    window.setTimeout(() => {
+
+    try {
+      const isFinishing = /\b(amen|done|finish|finished|end)\b/i.test(clean);
+      if (isFinishing) {
+        callbacks.onTranscription(CLOSING_BLESSING, false);
+        void speakResponse(CLOSING_BLESSING);
+        return;
+      }
+
+      const reply = await generateCloudflareText({
+        feature: 'prayerCompanion',
+        prompt: clean,
+        units: 300,
+        systemInstruction: `You are a quiet, gentle, and wise prayer companion. Speak in the voice of a warm pastoral guide. 
+Your role is to help the user bring their concerns before God. 
+
+### RESPONDING RULES:
+1. Keep your response extremely brief — exactly 1 or 2 short, gentle sentences of pastoral encouragement, followed by a brief invitation/prompt to pray.
+2. Focus the attention on God, not on yourself. Acknowledge what they said with deep empathy, then direct their heart to prayer.
+3. NEVER use bullet points, lists, numbered lists, or bold highlights in your conversation.
+4. Adhere strictly to the theological guardrails and writing voice. 
+
+### BLACKLISTED WORDS:
+Additionally, Crucial, Elevate, Embark, Essentially, Furthermore, However, Journey, Landscape, Navigate, Realm, Robust, Symphony, Tapestry, Therefore, Thus, Ultimately, Vibrant, Vital.
+Do not use em-dashes (—).`,
+      });
+
       if (closed) return;
-      const reply = fallbackResponse(clean);
-      callbacks.onTranscription(reply, false);
-      speak(reply);
-    }, 350);
+      const scrubbed = scrubSlop(reply || 'I hear you. Bring that before God for a breath, and let Him hold it.');
+      callbacks.onTranscription(scrubbed, false);
+      void speakResponse(scrubbed);
+    } catch (err) {
+      console.error('AI Prayer Companion failed, using static fallback bank', err);
+      if (closed) return;
+      const fallback = fallbackResponse(clean);
+      callbacks.onTranscription(fallback, false);
+      void speakResponse(fallback);
+    }
   };
 
   callbacks.onTranscription(OPENING_PRAYER, false);
-  speak(OPENING_PRAYER);
+  void speakResponse(OPENING_PRAYER);
 
   if (RecognitionCtor) {
     recognition = new RecognitionCtor();
@@ -111,8 +219,12 @@ export const connectToPrayerCompanion = async (callbacks: LiveSessionCallbacks):
     recognition.interimResults = false;
     recognition.lang = 'en-US';
     recognition.onresult = event => {
+      if (isSpeaking) return;
       const latest = event.results?.[event.results.length - 1]?.[0]?.transcript || '';
-      sendText(latest);
+      const clean = latest.trim();
+      if (clean) {
+        void sendText(clean);
+      }
     };
     recognition.onerror = event => {
       const error = event?.error === 'not-allowed'
@@ -144,7 +256,12 @@ export const connectToPrayerCompanion = async (callbacks: LiveSessionCallbacks):
     close: () => {
       closed = true;
       recognition?.abort();
+      if (currentAudioElement) {
+        currentAudioElement.pause();
+        currentAudioElement = null;
+      }
       if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+      isSpeaking = false;
     },
   };
 };

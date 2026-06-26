@@ -1366,6 +1366,36 @@ app.post('/api/ai/generate', async (c) => {
   return c.json({ text, model: modelUsed, provider, fallback });
 });
 
+app.post('/api/ai/tts', async (c) => {
+  if (!c.get('idTokenUid')) return c.json({ error: 'Authentication required' }, 401);
+
+  const limited = await enforceRateLimit(c, 'ai-tts', String(c.get('idTokenUid')), 40, 600);
+  if (limited) return limited;
+
+  const body = await c.req.json();
+  const text = String(body.text || '').trim();
+  if (!text) return c.json({ error: 'text is required' }, 400);
+
+  if (c.env.AI?.run) {
+    try {
+      const response = await c.env.AI.run('@cf/myshell-ai/melotts', {
+        text,
+        lang: 'EN',
+      });
+      return new Response(response as any, {
+        headers: {
+          'Content-Type': 'audio/mpeg',
+        },
+      });
+    } catch (err) {
+      console.error('MeloTTS generation failed', err);
+      return c.json({ error: 'TTS generation failed' }, 500);
+    }
+  } else {
+    return c.json({ error: 'AI binding not configured' }, 503);
+  }
+});
+
 app.post('/api/ai/usage', async (c) => {
   if (!c.env.DB) return c.json({ ok: true, source: 'fallback' });
 

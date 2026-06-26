@@ -66,7 +66,7 @@ const VoiceCompanion: React.FC = () => {
         <p className="mb-2 text-xs font-bold uppercase tracking-widest text-brand-accent">Pray</p>
         <h1 className="mb-2 flex items-center gap-3 text-3xl sm:text-4xl font-black text-brand-text-primary" style={{ fontFamily: 'var(--font-display)' }}>
           <Mic className="h-9 w-9 text-brand-accent" />
-          Kai Prayer Companion
+          Prayer Companion
         </h1>
         <p className="text-brand-text-secondary">
           A calm guided prayer space with spoken prompts, browser voice capture where supported, and type-to-pray fallback everywhere.
@@ -112,11 +112,11 @@ const VoiceCompanion: React.FC = () => {
             <h3 className="mb-4 flex-shrink-0 text-sm font-bold uppercase tracking-widest text-brand-text-secondary">Prayer Thread</h3>
             <div className="flex-1 space-y-3 overflow-y-auto pr-1">
               {transcript.length === 0 ? (
-                <p className="pt-8 text-center text-sm text-brand-text-secondary/60">{isActive ? 'Kai is listening...' : 'Start a session to begin'}</p>
+                <p className="pt-8 text-center text-sm text-brand-text-secondary/60">{isActive ? 'Companion is listening...' : 'Start a session to begin'}</p>
               ) : transcript.map((item, index) => (
                 <div key={`${item.text}-${index}`} className={`flex ${item.isUser ? 'justify-end' : 'justify-start'}`}>
                   <div className={`max-w-[85%] rounded-2xl px-3 py-2 text-sm leading-relaxed ${item.isUser ? 'rounded-tr-sm bg-brand-accent/20 text-brand-text-primary' : 'rounded-tl-sm bg-brand-secondary text-brand-accent'}`}>
-                    {!item.isUser && <span className="mb-0.5 block text-[10px] font-black uppercase tracking-widest text-brand-accent/70">Kai</span>}
+                    {!item.isUser && <span className="mb-0.5 block text-[10px] font-black uppercase tracking-widest text-brand-accent/70">Companion</span>}
                     {item.text}
                   </div>
                 </div>

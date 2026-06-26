@@ -92,7 +92,7 @@ const VoiceCompanionDrawer: React.FC<VoiceCompanionDrawerProps> = ({ isOpen, onC
             <div className="pointer-events-none absolute inset-x-0 top-0 h-32 opacity-15" aria-hidden style={{ background: 'radial-gradient(ellipse 70% 60% at 50% 0%, rgb(242 125 38) 0%, transparent 70%)' }} />
             <div className="relative z-10 flex items-center justify-between px-6 pb-3 pt-5">
               <div>
-                <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-brand-accent">Kai Prayer Companion</p>
+                <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-brand-accent">Prayer Companion</p>
                 {stepContext && <p className="mt-0.5 text-sm text-brand-text-secondary">Praying through: {stepContext}</p>}
               </div>
               <button onClick={handleClose} className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-secondary text-brand-text-secondary hover:text-brand-text-primary" aria-label="Close prayer companion">
@@ -127,7 +127,7 @@ const VoiceCompanionDrawer: React.FC<VoiceCompanionDrawerProps> = ({ isOpen, onC
                   {transcript.map((item, index) => (
                     <div key={`${item.text}-${index}`} className={`flex ${item.isUser ? 'justify-end' : 'justify-start'}`}>
                       <div className={`max-w-[82%] rounded-2xl px-3 py-2 text-sm leading-relaxed ${item.isUser ? 'rounded-tr-sm bg-brand-accent/20 text-brand-text-primary' : 'rounded-tl-sm bg-brand-secondary text-brand-accent'}`}>
-                        {!item.isUser && <span className="mb-1 block text-[9px] font-black uppercase tracking-widest text-brand-accent/70">Kai</span>}
+                        {!item.isUser && <span className="mb-1 block text-[9px] font-black uppercase tracking-widest text-brand-accent/70">Companion</span>}
                         {item.text}
                       </div>
                     </div>

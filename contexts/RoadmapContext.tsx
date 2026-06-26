@@ -36,7 +36,7 @@ const initialPhases: PlanPhase[] = [
     progress: 100,
     description: 'Prayerful guidance, Scripture-aware reflection, and global intercession support.',
     tasks: [
-        { id: 't51', title: 'Kai Prayer Companion', description: 'Real-time spoken guidance during prayer.', icon: SoundWaveIcon, status: 'Completed' },
+        { id: 't51', title: 'Prayer Companion', description: 'Real-time spoken guidance during prayer.', icon: SoundWaveIcon, status: 'Completed' },
         { id: 't52', title: 'Grounded Intercession', description: 'Search-grounded global prayer suggestions.', icon: SearchIcon, status: 'Completed' },
         { id: 't53', title: 'Substack Devotional Sync', description: 'Automated ingestion of themes from theccndaily.substack.com.', icon: ReaderIcon, status: 'Completed' },
         { id: 't55', title: 'The Sanctuary Timer', description: 'Animated, musical, and extendable sessions.', icon: SoundWaveIcon, status: 'Completed' },

@@ -19,7 +19,7 @@ const suggestions: Suggestion[] = [
     {
         id: 's1',
         title: 'Prayer Memory',
-        description: 'Let Kai draw on prior prayers, journal entries, and life events so guidance feels continuous without becoming noisy.',
+        description: 'Let the prayer companion draw on prior prayers, journal entries, and life events so guidance feels continuous without becoming noisy.',
         icon: SoundWaveIcon,
         iconName: 'SoundWaveIcon',
         benefit: 'Deepens user emotional connection and spiritual continuity.',
