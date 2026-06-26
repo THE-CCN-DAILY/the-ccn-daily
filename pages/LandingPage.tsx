@@ -6,6 +6,7 @@ import { listTestimonies } from '../services/testimonyService';
 import { useTheme } from '../contexts/ThemeContext';
 import CcnLogo from '../components/CcnLogo';
 import AmbientDevotionalMotion from '../components/landing/AmbientDevotionalMotion';
+import FeaturesDevotionalMotion from '../components/landing/FeaturesDevotionalMotion';
 import usePageMeta from '../hooks/usePageMeta';
 import {
   BookOpen,
@@ -57,6 +58,7 @@ const detailedFeatures = [
     text: "Arrive every morning with quiet discipline. We provide a focused Scripture reading, a brief pastoral reflection, and space to settle your thoughts before the workday begins. Written and spoken versions let you choose how to listen.",
     to: '/guided-journey',
     cta: "Open today's devotional",
+    accent: 'var(--crimson)',
   },
   {
     id: 'feature-bible',
@@ -65,6 +67,7 @@ const detailedFeatures = [
     text: "Read the Word without distractions. The interface supports multiple translations and curated reading plans that keep you on track. Highlight key verses and build a deep, personal relationship with Scripture.",
     to: '/bible',
     cta: "Open the Bible",
+    accent: 'var(--ember)',
   },
   {
     id: 'feature-audio',
@@ -73,6 +76,7 @@ const detailedFeatures = [
     text: "Listen to pastoral conversations and study guides while you commute or walk. Form your faith on the move. Press play and let careful teaching anchor your daily routine.",
     to: '/podcasts',
     cta: "Browse podcasts",
+    accent: 'var(--amber-ds)',
   },
   {
     id: 'feature-journal',
@@ -81,6 +85,7 @@ const detailedFeatures = [
     text: "Write down your prayers, choices, and convictions in a quiet space. No public feeds or social pressure. Your entries are kept private and secure, helping you see how God works in your life.",
     to: '/journaling',
     cta: "Start writing",
+    accent: 'var(--gold-ds)',
   },
   {
     id: 'feature-community',
@@ -89,6 +94,7 @@ const detailedFeatures = [
     text: "Share prayer requests and testimonies with other believers. Gather with small groups in digital rooms that encourage real connection. Carry each other's burdens.",
     to: '/the-community',
     cta: "Join the community",
+    accent: 'var(--sage)',
   },
   {
     id: 'feature-events',
@@ -97,6 +103,7 @@ const detailedFeatures = [
     text: "Structured studies and live online gatherings help you grow. Learn from experienced leaders who teach sound theology. Engage with practical resources designed to build up your local ministry.",
     to: '/pricing',
     cta: "Explore courses",
+    accent: 'var(--color-primary-blue)',
   },
 ];
 
@@ -424,14 +431,14 @@ const LandingPage: React.FC = () => {
             <SunriseEmblem className="h-full w-full" />
           </motion.div>
 
-          <div className={`mx-auto max-w-6xl px-4 py-[4.5rem] sm:px-6 lg:py-28 ${user ? 'grid gap-12 lg:grid-cols-[1.05fr_0.95fr]' : 'flex flex-col items-center text-center'}`}>
+          <div className="mx-auto max-w-6xl px-4 py-[4.5rem] sm:px-6 lg:py-28 flex flex-col items-center text-center">
 
-            {/* Left — copy */}
+            {/* Centered copy */}
             <motion.div
               variants={staggerContainer}
               initial="hidden"
               animate="visible"
-              className={user ? '' : 'flex flex-col items-center text-center'}
+              className="flex flex-col items-center text-center"
             >
               <motion.p
                 variants={fadeUp}
@@ -442,7 +449,7 @@ const LandingPage: React.FC = () => {
 
               <motion.h1
                 variants={fadeUp}
-                className={`font-display text-4xl font-semibold leading-[1.08] sm:text-5xl md:text-6xl lg:text-[4.25rem] ${user ? 'max-w-[12ch] sm:max-w-xl' : 'max-w-4xl'}`}
+                className="font-display text-4xl font-semibold leading-[1.08] sm:text-5xl md:text-6xl lg:text-[4.25rem] max-w-4xl"
                 style={{ color: 'var(--fg-1)' }}
               >
                 Your personal devotional space.
@@ -450,14 +457,14 @@ const LandingPage: React.FC = () => {
 
               <motion.p
                 variants={fadeUp}
-                className={`mt-7 max-w-xl text-[1.125rem] leading-[1.8] text-brand-text-secondary ${user ? '' : 'mx-auto'}`}
+                className="mt-7 max-w-xl text-[1.125rem] leading-[1.8] text-brand-text-secondary mx-auto"
               >
                 A steady place to meet God each morning. We offer Scripture, prayer, and a few honest minutes of reflection, before the day starts asking everything of you.
               </motion.p>
 
               <motion.div
                 variants={fadeUp}
-                className={`mt-10 flex flex-col gap-3 sm:flex-row ${user ? '' : 'justify-center w-full'}`}
+                className="mt-10 flex flex-col gap-3 sm:flex-row justify-center w-full"
               >
                 <motion.div whileTap={{ scale: 0.99 }}>
                   <Link
@@ -481,7 +488,7 @@ const LandingPage: React.FC = () => {
               {/* Stats row */}
               <motion.div
                 variants={staggerFast}
-                className={`mt-12 flex flex-wrap gap-x-8 gap-y-4 ${user ? '' : 'justify-center'}`}
+                className="mt-12 flex flex-wrap gap-x-8 gap-y-4 justify-center"
               >
                 {stats.map(({ icon: Icon, value, label }) => (
                   <motion.div
@@ -498,61 +505,6 @@ const LandingPage: React.FC = () => {
                 ))}
               </motion.div>
             </motion.div>
-
-            {/* Right — Today preview card */}
-            {user && (
-              <motion.aside
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.7, delay: 0.35, ease: EASE }}
-                className="relative overflow-hidden rounded-lg border border-brand-border bg-brand-secondary p-7 shadow-[0_18px_54px_rgba(42,28,21,0.13)] lg:self-start"
-              >
-                <div
-                  className="pointer-events-none absolute -right-16 -top-20 h-64 w-64 opacity-[0.08]"
-                  aria-hidden
-                >
-                  <img src="/flame-transparent.png" alt="" className="h-full w-full object-contain" />
-                </div>
-
-                <p className="relative mb-3 text-[0.7rem] font-semibold uppercase tracking-[0.12em] text-brand-accent">
-                  Today&apos;s quiet rhythm
-                </p>
-
-                {/* Verse preview */}
-                <blockquote className="scripture-quote relative mb-6 text-sm">
-                  &ldquo;{dailyVerse.text}&rdquo;
-                  <cite>{dailyVerse.ref}</cite>
-                </blockquote>
-
-                <h2 className="relative font-display text-2xl font-bold leading-snug text-brand-text-primary">
-                  Prepare your heart before the day takes your attention.
-                </h2>
-
-                <div className="relative mt-7 grid gap-3 border-t border-brand-border pt-6 sm:grid-cols-2 lg:grid-cols-1">
-                  {todayItems.map(([Icon, label], i) => (
-                    <motion.div
-                      key={label as string}
-                      initial={{ opacity: 0, y: 6 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.2 + i * 0.04, duration: 0.3 }}
-                      className="flex items-center gap-3 rounded-md border border-brand-border/70 bg-brand-dark/25 p-3 text-brand-text-secondary"
-                    >
-                      <div className="flex h-7 w-7 items-center justify-center rounded-md border border-brand-border bg-brand-dark/50">
-                        <Icon className="h-3.5 w-3.5 text-brand-accent" />
-                      </div>
-                      <span className="text-sm">{label as string}</span>
-                    </motion.div>
-                  ))}
-                </div>
-
-                <Link
-                  to="/guided-journey"
-                  className="block text-center text-xs font-semibold uppercase tracking-wider text-brand-accent hover:underline mt-7"
-                >
-                  Enter the sanctuary &rarr;
-                </Link>
-              </motion.aside>
-            )}
           </div>
         </section>
 
@@ -573,24 +525,30 @@ const LandingPage: React.FC = () => {
             variants={staggerContainer}
             initial="hidden"
             animate={featuresInView ? 'visible' : 'hidden'}
-            className="grid gap-px border border-brand-border bg-brand-border md:grid-cols-2 lg:grid-cols-3"
+            className="grid gap-6 md:grid-cols-2 lg:grid-cols-3"
           >
-            {detailedFeatures.map(({ id, icon: Icon, label, text, to, cta }) => (
-              <Link key={label} to={to} id={id} className="block group scroll-mt-24">
+            {detailedFeatures.map(({ id, icon: Icon, label, text, to, cta, accent }) => (
+              <Link
+                key={label}
+                to={to}
+                id={id}
+                className="block group scroll-mt-24"
+                style={{ '--accent-color': accent } as React.CSSProperties}
+              >
                 <motion.article
                   variants={fadeUp}
-                  whileHover={{ y: -4, transition: { type: 'spring', stiffness: 340, damping: 22 } }}
-                  className="bg-brand-secondary p-8 transition-colors hover:bg-brand-dark h-full flex flex-col justify-between"
+                  className="premium-feature-card p-8 h-full flex flex-col justify-between"
                 >
                   <div>
-                    <div className="mb-5 flex h-10 w-10 items-center justify-center rounded-lg border border-brand-border bg-brand-dark transition-colors group-hover:border-brand-accent/40 group-hover:bg-brand-accent/10">
-                      <Icon className="h-5 w-5 text-brand-accent" />
+                    <div className="mb-5 flex h-10 w-10 items-center justify-center rounded-lg premium-feature-icon">
+                      <Icon className="h-5 w-5" />
                     </div>
                     <h3 className="font-display text-base font-bold text-brand-text-primary">{label}</h3>
                     <p className="mt-3 text-sm leading-7 text-brand-text-secondary font-serif">{text}</p>
                   </div>
                   <span
-                    className="mt-4 inline-flex items-center gap-1 text-xs font-semibold text-brand-accent opacity-0 transition-opacity group-hover:opacity-100"
+                    className="mt-4 inline-flex items-center gap-1 text-xs font-semibold opacity-0 transition-opacity group-hover:opacity-100"
+                    style={{ color: 'var(--accent-color)' }}
                   >
                     {cta} <ArrowRight className="h-3 w-3" />
                   </span>
@@ -599,6 +557,8 @@ const LandingPage: React.FC = () => {
             ))}
           </motion.div>
         </section>
+
+        <FeaturesDevotionalMotion />
 
         {/* ── Scripture Accent — Psalm 119:105 ───────────────────────────────── */}
         <div className="py-10 px-6 text-center bg-brand-dark border-t border-brand-border/40">

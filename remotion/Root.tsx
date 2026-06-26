@@ -9,10 +9,12 @@ import React from 'react';
 import { Composition } from 'remotion';
 import { VerseCard, type VerseCardProps } from './VerseCard';
 import { DawnAmbient, type DawnAmbientProps } from './DawnAmbient';
+import { FeaturesAmbient } from './FeaturesAmbient';
 
 // Remotion requires ComponentType<Record<string, unknown>> — cast through unknown
 const VC = VerseCard as unknown as React.ComponentType<Record<string, unknown>>;
 const DA = DawnAmbient as unknown as React.ComponentType<Record<string, unknown>>;
+const FA = FeaturesAmbient as unknown as React.ComponentType<Record<string, unknown>>;
 
 const dawnDefaults: DawnAmbientProps = {
   verseText: 'But those who hope in the Lord will renew their strength.',
@@ -69,6 +71,16 @@ export const RemotionRoot: React.FC = () => (
       width={1920}
       height={800}
       defaultProps={dawnDefaults as unknown as Record<string, unknown>}
+    />
+    {/* Animated app features slideshow — highlight and transition features. */}
+    <Composition
+      id="FeaturesAmbient"
+      component={FA}
+      durationInFrames={600}
+      fps={30}
+      width={1920}
+      height={800}
+      defaultProps={{ theme: 'dark' } as unknown as Record<string, unknown>}
     />
   </>
 );

@@ -318,8 +318,9 @@ const QuoteGeneratorPage: React.FC = () => {
                     <p className="font-serif text-2xl font-bold leading-relaxed text-white drop-shadow-md md:text-3xl">
                       "{quoteText}"
                     </p>
-                    <p className="mt-4 border-t border-white/30 pt-2 text-sm font-bold uppercase tracking-widest text-brand-accent">
-                      THE CCN DAILY
+                    <p className="mt-4 border-t border-white/30 pt-2 text-sm font-bold uppercase tracking-widest text-brand-accent flex flex-col items-center">
+                      <span>THE CCN DAILY</span>
+                      <span className="text-[10px] tracking-wider mt-1 text-white/60 lowercase font-sans">theccndaily.com</span>
                     </p>
                   </div>
                   <div className="absolute bottom-4 right-4 flex gap-2 opacity-0 transition-opacity group-hover:opacity-100">

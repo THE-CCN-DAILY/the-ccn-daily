@@ -269,6 +269,18 @@ export const VerseCard: React.FC<VerseCardProps> = ({
           >
             {brandName}
           </p>
+          <p
+            style={{
+              fontFamily: '"Inter", sans-serif',
+              fontSize: 13,
+              fontWeight: 500,
+              color: palette.accent,
+              letterSpacing: '0.12em',
+              marginTop: 4,
+            }}
+          >
+            theccndaily.com
+          </p>
         </div>
       </AbsoluteFill>
     </AbsoluteFill>
