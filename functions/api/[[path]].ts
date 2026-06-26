@@ -115,12 +115,12 @@ app.use('*', async (c, next) => {
       // Authority comes from the D1 users.role column (the single source of truth).
       // Look it up once per authenticated request so synchronous guards (isAdminRequest)
       // can honor stored roles without each route doing its own query. Public/unauthenticated
-      // requests skip this entirely. Failures fall through to the email allowlist bootstrap.
-      if (c.env.DB && (session.uid || session.email)) {
+      // requests skip this entirely.
+      if (c.env.DB && session.uid) {
         try {
           const row = await c.env.DB.prepare(
-            `SELECT role FROM users WHERE id = ? OR email = ? LIMIT 1`,
-          ).bind(session.uid, session.email).first<{ role: string }>();
+            `SELECT role FROM users WHERE id = ? LIMIT 1`,
+          ).bind(session.uid).first<{ role: string }>();
           if (row?.role) c.set('idTokenRole', row.role);
         } catch {
           // D1 unavailable — allowlist bootstrap still authorizes the founder.
@@ -4049,6 +4049,9 @@ app.post('/api/admin/users/:id/role', async (c) => {
   if (denied) return denied;
   if (!c.env.DB) return c.json({ error: 'DB_UNAVAILABLE', message: 'User store is unavailable.' }, 503);
 
+  const actorEmail = (c.get('idTokenEmail') || '').trim().toLowerCase();
+  const isActorSuperAdmin = ADMIN_EMAILS.includes(actorEmail);
+
   const id = c.req.param('id');
   if (!isSafeId(id)) return c.json({ error: 'INVALID_ID' }, 400);
 
@@ -4063,17 +4066,187 @@ app.post('/api/admin/users/:id/role', async (c) => {
   ).bind(id).first<{ id: string; email: string; role: string }>();
   if (!target) return c.json({ error: 'USER_NOT_FOUND' }, 404);
 
-  // The founder allowlist is the un-removable root: never let it be demoted below admin.
-  if (ADMIN_EMAILS.includes((target.email || '').toLowerCase()) && role !== 'admin') {
+  const targetEmail = (target.email || '').trim().toLowerCase();
+  const targetRole = target.role;
+
+  // 1. Guard check for super-admin / founder accounts
+  if (ADMIN_EMAILS.includes(targetEmail) && role !== 'admin') {
     return c.json({ error: 'PROTECTED_SUPER_ADMIN', message: 'The founder account cannot be demoted.' }, 409);
+  }
+
+  // 2. Restrict promotion to Admin or Lead Developer to Super-Admins only
+  if (!isActorSuperAdmin && (role === 'admin' || role === 'lead_developer')) {
+    return c.json({
+      error: 'UNAUTHORIZED_PROMOTION',
+      message: 'Only super-admins (founders) can promote accounts to Admin or Lead Developer roles.'
+    }, 403);
+  }
+
+  // 3. Restrict demotion/modification of Admins or Lead Developers to Super-Admins only
+  if (!isActorSuperAdmin && (targetRole === 'admin' || targetRole === 'lead_developer')) {
+    return c.json({
+      error: 'UNAUTHORIZED_DEMOTION',
+      message: 'Only super-admins (founders) are permitted to modify or demote other Admin or Lead Developer accounts.'
+    }, 403);
   }
 
   await c.env.DB.prepare(
     `UPDATE users SET role = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
   ).bind(role, id).run();
 
+  // 4. Record to audit_logs (Defense-in-depth tracking)
+  try {
+    // Self-provision audit_logs table if not exists
+    await c.env.DB.prepare(
+      `CREATE TABLE IF NOT EXISTS audit_logs (
+        id TEXT PRIMARY KEY,
+        actor_email TEXT,
+        action TEXT NOT NULL,
+        entity_type TEXT NOT NULL,
+        entity_id TEXT,
+        metadata TEXT,
+        created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+      )`
+    ).run();
+
+    const auditId = crypto.randomUUID();
+    const metadata = JSON.stringify({
+      actor: actorEmail,
+      targetId: id,
+      targetEmail: targetEmail,
+      oldRole: targetRole,
+      newRole: role,
+    });
+    await c.env.DB.prepare(
+      `INSERT INTO audit_logs (id, actor_email, action, entity_type, entity_id, metadata, created_at)
+       VALUES (?, ?, 'UPDATE_ROLE', 'user', ?, ?, CURRENT_TIMESTAMP)`
+    ).bind(auditId, actorEmail, id, metadata).run();
+  } catch (auditError) {
+    console.error('Audit log write failed:', auditError);
+  }
+
   const updated = await c.env.DB.prepare(`SELECT * FROM users WHERE id = ? LIMIT 1`).bind(id).first<UserRow>();
   return c.json({ user: updated ? mapUser(updated) : null, source: 'd1' });
+});
+
+// GET /api/admin/invites — list pending role invitations. Admin-guarded.
+app.get('/api/admin/invites', async (c) => {
+  const denied = requireAdmin(c);
+  if (denied) return denied;
+  if (!c.env.DB) return c.json({ error: 'DB_UNAVAILABLE', message: 'User store is unavailable.' }, 503);
+
+  try {
+    const invites = await c.env.DB.prepare(
+      `SELECT email, role, invited_by, created_at FROM role_invitations ORDER BY created_at DESC`
+    ).all<{ email: string; role: string; invited_by: string; created_at: string }>();
+    return c.json({ invites: invites.results || [] });
+  } catch {
+    // If table doesn't exist yet, return empty list
+    return c.json({ invites: [] });
+  }
+});
+
+// POST /api/admin/invites — create or update a pending role invitation. Admin-guarded.
+app.post('/api/admin/invites', async (c) => {
+  const denied = requireAdmin(c);
+  if (denied) return denied;
+  if (!c.env.DB) return c.json({ error: 'DB_UNAVAILABLE', message: 'User store is unavailable.' }, 503);
+
+  const actorEmail = (c.get('idTokenEmail') || '').trim().toLowerCase();
+  const isActorSuperAdmin = ADMIN_EMAILS.includes(actorEmail);
+
+  const body = await c.req.json().catch(() => ({}));
+  const email = String(body.email || '').trim().toLowerCase();
+  const role = String(body.role || '').trim();
+
+  if (!email || !isValidEmail(email)) {
+    return c.json({ error: 'INVALID_EMAIL', message: 'Please provide a valid email address.' }, 400);
+  }
+  if (!ASSIGNABLE_ROLES.includes(role as (typeof ASSIGNABLE_ROLES)[number])) {
+    return c.json({ error: 'INVALID_ROLE', message: `Role must be one of: ${ASSIGNABLE_ROLES.join(', ')}` }, 400);
+  }
+
+  // Security check: Only super-admins can invite Admin or Lead Developer
+  if (!isActorSuperAdmin && (role === 'admin' || role === 'lead_developer')) {
+    return c.json({
+      error: 'UNAUTHORIZED_INVITATION',
+      message: 'Only super-admins (founders) can invite users to Admin or Lead Developer roles.'
+    }, 403);
+  }
+
+  // Check if the user is already a member
+  const existingUser = await c.env.DB.prepare(
+    `SELECT id, email, role FROM users WHERE LOWER(email) = ? LIMIT 1`
+  ).bind(email).first<{ id: string; email: string; role: string }>();
+
+  if (existingUser) {
+    // Security check: Only super-admins can promote to or modify Admin/Lead Developer
+    if (!isActorSuperAdmin && (role === 'admin' || role === 'lead_developer' || existingUser.role === 'admin' || existingUser.role === 'lead_developer')) {
+      return c.json({
+        error: 'UNAUTHORIZED_PROMOTION',
+        message: 'Only super-admins (founders) can promote or modify Admin or Lead Developer accounts.'
+      }, 403);
+    }
+    // Update role directly for existing user
+    await c.env.DB.prepare(
+      `UPDATE users SET role = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`
+    ).bind(role, existingUser.id).run();
+    return c.json({ status: 'member_updated', message: 'User is already a member; role updated directly.' });
+  }
+
+  // Provision table if not exists
+  await c.env.DB.prepare(
+    `CREATE TABLE IF NOT EXISTS role_invitations (
+      email TEXT PRIMARY KEY,
+      role TEXT NOT NULL,
+      invited_by TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )`
+  ).run();
+
+  // Create pending invitation
+  await c.env.DB.prepare(
+    `INSERT INTO role_invitations (email, role, invited_by, created_at)
+     VALUES (?, ?, ?, CURRENT_TIMESTAMP)
+     ON CONFLICT(email) DO UPDATE SET
+       role = excluded.role,
+       invited_by = excluded.invited_by,
+       created_at = CURRENT_TIMESTAMP`
+  ).bind(email, role, actorEmail).run();
+
+  return c.json({ status: 'invited', message: `Pending role invitation created for ${email}.` });
+});
+
+// DELETE /api/admin/invites/:email — revoke a pending role invitation. Admin-guarded.
+app.delete('/api/admin/invites/:email', async (c) => {
+  const denied = requireAdmin(c);
+  if (denied) return denied;
+  if (!c.env.DB) return c.json({ error: 'DB_UNAVAILABLE', message: 'User store is unavailable.' }, 503);
+
+  const actorEmail = (c.get('idTokenEmail') || '').trim().toLowerCase();
+  const isActorSuperAdmin = ADMIN_EMAILS.includes(actorEmail);
+  const email = c.req.param('email').trim().toLowerCase();
+
+  // Check invitation details
+  const invite = await c.env.DB.prepare(
+    `SELECT role FROM role_invitations WHERE LOWER(email) = ? LIMIT 1`
+  ).bind(email).first<{ role: string }>();
+
+  if (!invite) return c.json({ error: 'INVITE_NOT_FOUND', message: 'No pending invitation found for this email.' }, 404);
+
+  // Security check: Only super-admins can modify Admin/Lead Developer invitations
+  if (!isActorSuperAdmin && (invite.role === 'admin' || invite.role === 'lead_developer')) {
+    return c.json({
+      error: 'UNAUTHORIZED_REVOCATION',
+      message: 'Only super-admins (founders) can revoke Admin or Lead Developer invitations.'
+    }, 403);
+  }
+
+  await c.env.DB.prepare(
+    `DELETE FROM role_invitations WHERE LOWER(email) = ?`
+  ).bind(email).run();
+
+  return c.json({ status: 'revoked', message: `Pending role invitation for ${email} revoked.` });
 });
 
 app.post('/api/auth/profile', async (c) => {
@@ -4095,7 +4268,7 @@ app.post('/api/auth/profile', async (c) => {
   const photoUrl = String(body.photoURL || body.photoUrl || '').trim() || null;
   // Admin only for a VERIFIED ministry-owner email (matches isAdminRequest's allowlist).
   const isMinistryAdmin = sessionEmailVerified && ADMIN_EMAILS.includes(email);
-  const defaultRole = isMinistryAdmin ? 'admin' : 'user';
+  let defaultRole = isMinistryAdmin ? 'admin' : 'user';
   const defaultTier = isMinistryAdmin ? 'max' : 'free';
 
   if (!c.env.DB) {
@@ -4113,11 +4286,41 @@ app.post('/api/auth/profile', async (c) => {
     });
   }
 
+  // Self-provision role_invitations table if needed
+  try {
+    await c.env.DB.prepare(
+      `CREATE TABLE IF NOT EXISTS role_invitations (
+        email TEXT PRIMARY KEY,
+        role TEXT NOT NULL,
+        invited_by TEXT NOT NULL,
+        created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+      )`
+    ).run();
+  } catch {
+    /* ignore if fails */
+  }
+
+  // Check and consume pending invitations
+  try {
+    const invite = await c.env.DB.prepare(
+      `SELECT role FROM role_invitations WHERE LOWER(email) = ? LIMIT 1`
+    ).bind(email).first<{ role: string }>();
+    if (invite?.role) {
+      defaultRole = invite.role;
+      await c.env.DB.prepare(
+        `DELETE FROM role_invitations WHERE LOWER(email) = ?`
+      ).bind(email).run();
+    }
+  } catch {
+    /* ignore if fails */
+  }
+
   await c.env.DB.prepare(
     `INSERT INTO users (
       id, email, display_name, photo_url, role, tier, created_at, updated_at, last_active_at
     ) VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
     ON CONFLICT(email) DO UPDATE SET
+      id = CASE WHEN id IS NULL OR id = '' OR id = email OR id = 'dummy' THEN excluded.id ELSE id END,
       display_name = excluded.display_name,
       photo_url = excluded.photo_url,
       last_active_at = CURRENT_TIMESTAMP,

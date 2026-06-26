@@ -68,3 +68,53 @@ export const updateUserRole = async (userId: string, role: AssignableRole): Prom
   const data = await response.json();
   return data.user as AdminUser;
 };
+
+export interface RoleInvite {
+  email: string;
+  role: string;
+  invited_by: string;
+  created_at: string;
+}
+
+export const listPendingInvites = async (): Promise<RoleInvite[]> => {
+  const response = await fetch('/api/admin/invites', {
+    headers: await adminAuthHeaders(),
+  });
+
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}));
+    throw new Error(data.message || data.error || 'Failed to load invitations');
+  }
+
+  const data = await response.json();
+  return data.invites || [];
+};
+
+export const createPendingInvite = async (email: string, role: AssignableRole): Promise<{ status: string; message: string }> => {
+  const response = await fetch('/api/admin/invites', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...(await adminAuthHeaders()) },
+    body: JSON.stringify({ email, role }),
+  });
+
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}));
+    throw new Error(data.message || data.error || 'Failed to create invitation');
+  }
+
+  return response.json();
+};
+
+export const revokePendingInvite = async (email: string): Promise<{ status: string; message: string }> => {
+  const response = await fetch(`/api/admin/invites/${encodeURIComponent(email)}`, {
+    method: 'DELETE',
+    headers: await adminAuthHeaders(),
+  });
+
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}));
+    throw new Error(data.message || data.error || 'Failed to revoke invitation');
+  }
+
+  return response.json();
+};

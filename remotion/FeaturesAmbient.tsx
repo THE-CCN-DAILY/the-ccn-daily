@@ -52,7 +52,7 @@ const THEME_SURFACES = {
 
 export const FeaturesAmbient: React.FC<FeaturesAmbientProps> = ({ theme = 'dark' }) => {
   const frame = useCurrentFrame();
-  const { durationInFrames, width, height } = useVideoConfig();
+  const { durationInFrames } = useVideoConfig();
   
   const surface = THEME_SURFACES[theme] ?? THEME_SURFACES.dark;
   const slideDuration = Math.floor(durationInFrames / FEATURES.length);
@@ -62,40 +62,35 @@ export const FeaturesAmbient: React.FC<FeaturesAmbientProps> = ({ theme = 'dark'
   
   const activeFeature = FEATURES[index];
   
-  // Transition animations within each slide
-  const fadeIn = interpolate(localFrame, [0, 15], [0, 1], { extrapolateRight: 'clamp' });
-  const fadeOut = interpolate(localFrame, [slideDuration - 15, slideDuration], [1, 0], { extrapolateLeft: 'clamp' });
-  const opacity = Math.min(fadeIn, fadeOut);
+  // Transition timing: 15 frames for transition window. Skip transition on first frame to prevent slide 5 flash/lag.
+  const isTransitioning = localFrame < 15 && frame >= 15;
+  const prevIndex = (index - 1 + FEATURES.length) % FEATURES.length;
+  const prevFeature = FEATURES[prevIndex];
   
-  const yOffset = interpolate(localFrame, [0, 25], [18, 0], {
-    extrapolateRight: 'clamp',
-  });
+  // Opacity rates
+  const currOpacity = isTransitioning ? localFrame / 15 : 1;
+  const prevOpacity = isTransitioning ? 1 - localFrame / 15 : 0;
   
-  // Background glow scale breathing
+  // yOffsets for sliding transition
+  const currYOffset = isTransitioning ? interpolate(localFrame, [0, 15], [20, 0], { extrapolateRight: 'clamp' }) : 0;
+  const prevYOffset = isTransitioning ? interpolate(localFrame, [0, 15], [0, -20], { extrapolateRight: 'clamp' }) : 0;
+  
+  // Background scale
   const scale = 1.0 + 0.05 * Math.sin((2 * Math.PI * frame) / 180);
-
-  return (
-    <AbsoluteFill style={{ background: `linear-gradient(180deg, ${surface.skyFrom} 0%, ${surface.skyTo} 100%)` }}>
-      {/* Dynamic background glow matching the active feature's accent */}
-      <AbsoluteFill
-        style={{
-          background: `radial-gradient(circle 500px at center, ${activeFeature.accent}12 0%, transparent 80%)`,
-          opacity,
-          transform: `scale(${scale})`,
-          transition: 'background 0.5s ease',
-        }}
-      />
-
+ 
+  const renderSlide = (idx: number, opacity: number, yOffset: number) => {
+    const feat = FEATURES[idx];
+    return (
       <div
         style={{
+          position: 'absolute',
+          inset: 0,
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          height: '100%',
-          width: '100%',
           textAlign: 'center',
-          padding: '0 10%',
+          padding: '0 12%',
           opacity,
           transform: `translateY(${yOffset}px)`,
         }}
@@ -106,19 +101,19 @@ export const FeaturesAmbient: React.FC<FeaturesAmbientProps> = ({ theme = 'dark'
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            width: width * 0.07,
-            height: width * 0.07,
+            width: 64,
+            height: 64,
             borderRadius: '24%',
-            backgroundColor: `${activeFeature.accent}18`,
-            border: `1.5px solid ${activeFeature.accent}40`,
-            color: activeFeature.accent,
-            marginBottom: height * 0.05,
-            boxShadow: `0 10px 30px ${activeFeature.accent}0f`,
+            backgroundColor: `${feat.accent}18`,
+            border: `1.5px solid ${feat.accent}40`,
+            color: feat.accent,
+            marginBottom: 24,
+            boxShadow: `0 8px 24px ${feat.accent}0f`,
           }}
         >
           <svg
-            width={width * 0.035}
-            height={width * 0.035}
+            width="28"
+            height="28"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
@@ -126,61 +121,88 @@ export const FeaturesAmbient: React.FC<FeaturesAmbientProps> = ({ theme = 'dark'
             strokeLinecap="round"
             strokeLinejoin="round"
           >
-            <path d={activeFeature.iconPath} />
+            <path d={feat.iconPath} />
           </svg>
         </div>
 
         {/* Feature Title */}
         <h2
           style={{
-            fontFamily: '"Georgia", "Times New Roman", serif',
-            fontSize: Math.round(width * 0.038),
+            fontFamily: '"Cormorant Garamond", "Didot", Georgia, serif',
+            fontSize: 48,
             fontWeight: 700,
             color: theme === 'dark' ? '#F0E8D8' : '#2A1C15',
             margin: 0,
             letterSpacing: '-0.02em',
           }}
         >
-          {activeFeature.label}
+          {feat.label}
         </h2>
 
         {/* Feature Subtext */}
         <p
           style={{
-            fontFamily: '"Inter", sans-serif',
-            fontSize: Math.round(width * 0.016),
+            fontFamily: '"Inter Tight", -apple-system, sans-serif',
+            fontSize: 21,
             fontWeight: 400,
             lineHeight: 1.6,
             color: theme === 'dark' ? 'rgba(250,248,245,0.65)' : 'rgba(42,28,21,0.65)',
-            marginTop: height * 0.03,
-            maxWidth: width * 0.6,
+            marginTop: 20,
+            maxWidth: 620,
           }}
         >
-          {activeFeature.text}
+          {feat.text}
         </p>
 
-        {/* Progress Dots */}
+        {/* Progress Dots inside the slide so it fades and lines up perfectly */}
         <div
           style={{
             display: 'flex',
             gap: 12,
-            marginTop: height * 0.06,
+            marginTop: 40,
           }}
         >
           {FEATURES.map((_, i) => (
             <div
               key={i}
               style={{
-                width: i === index ? 24 : 8,
+                width: i === idx ? 24 : 8,
                 height: 8,
                 borderRadius: 4,
-                backgroundColor: i === index ? activeFeature.accent : 'rgba(128,128,128,0.25)',
+                backgroundColor: i === idx ? feat.accent : 'rgba(128,128,128,0.25)',
                 transition: 'all 0.3s ease',
               }}
             />
           ))}
         </div>
       </div>
+    );
+  };
+
+  return (
+    <AbsoluteFill style={{ background: `linear-gradient(180deg, ${surface.skyFrom} 0%, ${surface.skyTo} 100%)` }}>
+      {/* Background glow cross-fade: current glow */}
+      <AbsoluteFill
+        style={{
+          background: `radial-gradient(circle 500px at center, ${activeFeature.accent}12 0%, transparent 80%)`,
+          opacity: currOpacity,
+          transform: `scale(${scale})`,
+        }}
+      />
+      {/* Background glow cross-fade: previous glow */}
+      {isTransitioning && (
+        <AbsoluteFill
+          style={{
+            background: `radial-gradient(circle 500px at center, ${prevFeature.accent}12 0%, transparent 80%)`,
+            opacity: prevOpacity,
+            transform: `scale(${scale})`,
+          }}
+        />
+      )}
+
+      {/* Render slides */}
+      {isTransitioning && renderSlide(prevIndex, prevOpacity, prevYOffset)}
+      {renderSlide(index, currOpacity, currYOffset)}
     </AbsoluteFill>
   );
 };

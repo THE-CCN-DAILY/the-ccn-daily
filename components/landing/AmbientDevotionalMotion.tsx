@@ -84,7 +84,7 @@ const AmbientDevotionalMotion: React.FC<AmbientDevotionalMotionProps> = ({
       aria-label="Ambient devotional motion"
       className="relative w-full overflow-hidden border-y border-brand-border bg-brand-dark"
     >
-      <div ref={ref} className="relative mx-auto w-full max-w-6xl min-h-[240px] sm:min-h-0 sm:aspect-[1920/800]">
+      <div ref={ref} className="relative w-full min-h-[240px] sm:min-h-0 sm:aspect-[1920/800]">
         {reduced || isSmallScreen || !inView ? (
           <StaticFallback verseText={verseText} verseRef={verseRef} />
         ) : (

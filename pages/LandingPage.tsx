@@ -525,14 +525,14 @@ const LandingPage: React.FC = () => {
             variants={staggerContainer}
             initial="hidden"
             animate={featuresInView ? 'visible' : 'hidden'}
-            className="grid gap-6 md:grid-cols-2 lg:grid-cols-3"
+            className="flex overflow-x-auto snap-x snap-mandatory scrollbar-none pb-6 md:grid md:grid-cols-2 lg:grid-cols-3 gap-6"
           >
             {detailedFeatures.map(({ id, icon: Icon, label, text, to, cta, accent }) => (
               <Link
                 key={label}
                 to={to}
                 id={id}
-                className="block group scroll-mt-24"
+                className="block group scroll-mt-24 w-[85vw] shrink-0 snap-center md:w-auto md:shrink md:snap-align-none"
                 style={{ '--accent-color': accent } as React.CSSProperties}
               >
                 <motion.article
@@ -917,7 +917,7 @@ const LandingPage: React.FC = () => {
                 className="font-display text-4xl font-bold leading-tight md:text-5xl lg:text-6xl"
                 style={{ color: cta.headingColor }}
               >
-                New mercies wait<br className="hidden sm:block" /> in the morning.
+                New mercies wait in the morning.
               </h2>
               <p
                 className="mx-auto mt-6 max-w-xl text-lg leading-relaxed"

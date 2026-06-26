@@ -63,7 +63,7 @@ export const DawnAmbient: React.FC<DawnAmbientProps> = ({
   const drift = Math.sin(TAU * t);
 
   const cx = width / 2;
-  const horizon = height * 0.72;
+  const horizon = height * 0.54;
 
   // Dawn glow rises and settles a touch with the breath.
   const glowY = horizon - 40 - breath * 26;
@@ -144,9 +144,9 @@ export const DawnAmbient: React.FC<DawnAmbientProps> = ({
       >
         <p
           style={{
-            fontFamily: '"Georgia", "Times New Roman", serif',
+            fontFamily: '"EB Garamond", "Cormorant Garamond", "Garamond", Georgia, serif',
             fontStyle: 'italic',
-            fontSize: Math.round(width * 0.026),
+            fontSize: Math.round(width * 0.022),
             lineHeight: 1.5,
             color: p.text,
             margin: 0,
@@ -156,13 +156,13 @@ export const DawnAmbient: React.FC<DawnAmbientProps> = ({
         </p>
         <p
           style={{
-            fontFamily: '"Inter", sans-serif',
-            fontSize: Math.round(width * 0.013),
+            fontFamily: '"Inter Tight", -apple-system, sans-serif',
+            fontSize: Math.round(width * 0.011),
             fontWeight: 700,
             letterSpacing: '0.18em',
             textTransform: 'uppercase',
             color: p.ref,
-            marginTop: Math.round(height * 0.03),
+            marginTop: Math.round(height * 0.02),
           }}
         >
           {verseRef}

@@ -31,6 +31,9 @@ const SignInModal: React.FC = () => {
   // If they were redirected to /pricing from a protected route, state.from contains
   // the original path — take them back there.
   const goAfterAuth = () => {
+    if (location.pathname.startsWith('/studio') || location.pathname.startsWith('/admin')) {
+      return;
+    }
     const from = (location.state as any)?.from?.pathname || (location.state as any)?.from || '/dashboard';
     if (!location.pathname.startsWith('/pricing') || from !== '/dashboard') {
       navigate(from, { replace: true });

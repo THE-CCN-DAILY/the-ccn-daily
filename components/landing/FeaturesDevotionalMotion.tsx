@@ -16,7 +16,7 @@ const useMediaQuery = (query: string): boolean => {
 };
 
 const StaticFallback: React.FC = () => (
-  <div className="absolute inset-0 flex flex-col items-center justify-center px-8 text-center bg-brand-dark">
+  <div className="absolute inset-0 flex flex-col items-center justify-center px-8 text-center bg-brand-dark overflow-hidden">
     <div
       className="pointer-events-none absolute inset-0 opacity-15"
       aria-hidden
@@ -28,21 +28,33 @@ const StaticFallback: React.FC = () => (
     <p className="relative font-serif italic text-base leading-relaxed text-brand-text-secondary sm:text-lg">
       "Let the word of Christ dwell in you richly, teaching and admonishing one another in all wisdom."
     </p>
-    <p className="relative mt-3 text-[10px] font-bold uppercase tracking-[0.18em] text-brand-accent">
+    <p className="relative mt-3 text-[10px] font-bold uppercase tracking-[0.18em] text-brand-accent mb-6">
       Colossians 3:16
     </p>
-    <div className="relative mt-8 flex flex-wrap justify-center gap-x-6 gap-y-2 text-xs font-semibold uppercase tracking-widest text-brand-text-tertiary">
-      <span>Devotionals</span>
-      <span>•</span>
-      <span>Bible Reader</span>
-      <span>•</span>
-      <span>Podcasts</span>
-      <span>•</span>
-      <span>Journal</span>
-      <span>•</span>
-      <span>Community</span>
-      <span>•</span>
-      <span>Courses</span>
+    
+    {/* Infinite scrolling features ticker for clean mobile display */}
+    <div className="relative w-full overflow-hidden py-3 border-t border-brand-border/10">
+      <style>{`
+        @keyframes marqueeScroll {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+      `}</style>
+      <div 
+        className="flex gap-8 text-[11px] font-bold uppercase tracking-widest text-brand-text-tertiary w-fit"
+        style={{ animation: 'marqueeScroll 25s linear infinite' }}
+      >
+        {['Devotionals', 'Bible Reader', 'Podcasts & Audio', 'Private Journal', 'Community & Prayer', 'Courses & Events'].map((name, i) => (
+          <span key={i} className="inline-flex items-center gap-2 whitespace-nowrap">
+            <span className="text-brand-accent">✦</span> {name}
+          </span>
+        ))}
+        {['Devotionals', 'Bible Reader', 'Podcasts & Audio', 'Private Journal', 'Community & Prayer', 'Courses & Events'].map((name, i) => (
+          <span key={`dup-${i}`} className="inline-flex items-center gap-2 whitespace-nowrap">
+            <span className="text-brand-accent">✦</span> {name}
+          </span>
+        ))}
+      </div>
     </div>
   </div>
 );
@@ -77,7 +89,7 @@ const FeaturesDevotionalMotion: React.FC = () => {
       aria-label="App features visual showcase"
       className="relative w-full overflow-hidden border-y border-brand-border bg-brand-dark"
     >
-      <div ref={ref} className="relative mx-auto w-full max-w-6xl min-h-[280px] sm:min-h-0 sm:aspect-[1920/800]">
+      <div ref={ref} className="relative w-full min-h-[280px] sm:min-h-0 sm:aspect-[1920/800]">
         {reduced || isSmallScreen || !inView ? (
           <StaticFallback />
         ) : (
