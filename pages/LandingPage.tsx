@@ -49,55 +49,54 @@ const fadeIn = {
 
 /* ─── Data ────────────────────────────────────────────────────────────────── */
 
-const features = [
+const detailedFeatures = [
   {
+    id: 'feature-devotionals',
     icon: BookOpen,
-    label: 'Bible & devotional reading',
-    text: "Start with Scripture, then move into a guided reflection that respects your working life. Here, you simply rest in God's presence.",
+    label: 'Daily Devotionals',
+    text: "Arrive every morning with quiet discipline. We provide a focused Scripture reading, a brief pastoral reflection, and space to settle your thoughts before the workday begins. Written and spoken versions let you choose how to listen.",
     to: '/guided-journey',
     cta: "Open today's devotional",
   },
   {
+    id: 'feature-bible',
+    icon: BookOpenCheck,
+    label: 'Bible Reader',
+    text: "Read the Word without distractions. The interface supports multiple translations and curated reading plans that keep you on track. Highlight key verses and build a deep, personal relationship with Scripture.",
+    to: '/bible',
+    cta: "Open the Bible",
+  },
+  {
+    id: 'feature-audio',
     icon: Headphones,
-    label: 'Podcast & audio formation',
-    text: 'Listen while commuting, walking, or closing the day. Formation shouldn\'t require a desk.',
+    label: 'Podcasts & Audio',
+    text: "Listen to pastoral conversations and study guides while you commute or walk. Form your faith on the move. Press play and let careful teaching anchor your daily routine.",
     to: '/podcasts',
-    cta: 'Browse episodes',
+    cta: "Browse podcasts",
   },
   {
+    id: 'feature-journal',
     icon: NotebookPen,
-    label: 'Private journaling',
-    text: 'Capture prayers, convictions, and decisions without turning devotion into another noisy feed. Your words stay yours.',
+    label: 'Private Journal',
+    text: "Write down your prayers, choices, and convictions in a quiet space. No public feeds or social pressure. Your entries are kept private and secure, helping you see how God works in your life.",
     to: '/journaling',
-    cta: 'Start journaling',
+    cta: "Start writing",
   },
   {
+    id: 'feature-community',
     icon: Users,
-    label: 'Community & leadership',
-    text: 'Support families, small groups, testimonies, and prayer rooms. Built for leaders who carry others.',
+    label: 'Community & Prayer',
+    text: "Share prayer requests and testimonies with other believers. Gather with small groups in digital rooms that encourage real connection. Carry each other's burdens.",
     to: '/the-community',
-    cta: 'Join the community',
-  },
-];
-
-const channels = [
-  {
-    icon: Mail,
-    title: 'Newsletter',
-    text: 'We send essays and devotionals for faith, work, leadership, and endurance straight to your inbox.',
-    to: '/newsletter',
+    cta: "Join the community",
   },
   {
-    icon: Radio,
-    title: 'Podcast',
-    text: 'Audio formation for commutes, quiet rooms, and workday resets. Press play anywhere.',
-    to: '/podcasts',
-  },
-  {
-    icon: CalendarDays,
-    title: 'Events',
-    text: 'Live moments, gatherings, and ministry rhythms gathered in one quiet place.',
-    to: '/events',
+    id: 'feature-events',
+    icon: GraduationCap,
+    label: 'Courses & Events',
+    text: "Structured studies and live online gatherings help you grow. Learn from experienced leaders who teach sound theology. Engage with practical resources designed to build up your local ministry.",
+    to: '/pricing',
+    cta: "Explore courses",
   },
 ];
 
@@ -119,44 +118,6 @@ const dailyVerse = {
   ref: 'Isaiah 40:31',
 };
 
-const appFeatures = [
-  {
-    icon: BookOpen,
-    title: 'Daily Devotionals',
-    description: 'Scripture-anchored, written and audio. Arrive daily, without fail.',
-    to: '/guided-journey',
-  },
-  {
-    icon: BookOpenCheck,
-    title: 'Bible Reader',
-    description: 'Multiple translations. Guided study. Reading plans that go somewhere.',
-    to: '/bible',
-  },
-  {
-    icon: Headphones,
-    title: 'Podcasts & Audiobooks',
-    description: 'Pastoral conversations and ministry books, so you can listen anywhere.',
-    to: '/podcasts',
-  },
-  {
-    icon: Users,
-    title: 'Community',
-    description: 'Live prayer rooms, testimonies, and people who take faith seriously.',
-    to: '/the-community',
-  },
-  {
-    icon: GraduationCap,
-    title: 'Courses & Events',
-    description: 'Structured discipleship, live gatherings, and continuing formation.',
-    to: '/pricing',
-  },
-  {
-    icon: BookOpen,
-    title: 'Scripture Study Companion',
-    description: 'Study with Scripture-anchored guidance, context, and careful reflection.',
-    to: '/guided-journey',
-  },
-];
 
 // Landing testimonials are pulled live from the Firestore `testimonies` collection
 // (the Wall of Testimony). No hardcoded/fake testimonials.
@@ -327,6 +288,30 @@ const LandingPage: React.FC = () => {
   const { user, openSignIn } = useAuth();
   const { theme } = useTheme();
 
+  const scrollToSection = (id: string) => {
+    const element = document.getElementById(id);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const feature = params.get('feature');
+    const hash = window.location.hash;
+    const targetId = feature ? `feature-${feature}` : (hash ? hash.replace('#', '') : null);
+    
+    if (targetId) {
+      const timer = setTimeout(() => {
+        const element = document.getElementById(targetId);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 150);
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
   usePageMeta({
     title: 'THE CCN DAILY: Your personal devotional space',
     rawTitle: true,
@@ -384,13 +369,15 @@ const LandingPage: React.FC = () => {
         transition={{ duration: 0.4, ease: 'easeOut' }}
       >
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-4 sm:px-6">
-          <Link to="/" aria-label="THE CCN DAILY: home" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
+          <Link to={user ? "/dashboard" : "/"} aria-label="THE CCN DAILY: home" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
             <CcnLogo size="md" theme="auto" />
           </Link>
           <nav className="hidden items-center gap-7 text-sm text-brand-text-secondary md:flex">
-            <Link to="/newsletter" className="transition-colors hover:text-brand-text-primary">Newsletter</Link>
-            <Link to="/podcasts" className="transition-colors hover:text-brand-text-primary">Podcasts</Link>
-            <Link to="/blog" className="transition-colors hover:text-brand-text-primary">Blog</Link>
+            <Link to="/?feature=devotionals" onClick={(e) => { e.preventDefault(); scrollToSection('feature-devotionals'); }} className="transition-colors hover:text-brand-text-primary">Devotionals</Link>
+            <Link to="/?feature=bible" onClick={(e) => { e.preventDefault(); scrollToSection('feature-bible'); }} className="transition-colors hover:text-brand-text-primary">Bible</Link>
+            <Link to="/?feature=audio" onClick={(e) => { e.preventDefault(); scrollToSection('feature-audio'); }} className="transition-colors hover:text-brand-text-primary">Audio</Link>
+            <Link to="/?feature=journal" onClick={(e) => { e.preventDefault(); scrollToSection('feature-journal'); }} className="transition-colors hover:text-brand-text-primary">Journal</Link>
+            <Link to="/?feature=community" onClick={(e) => { e.preventDefault(); scrollToSection('feature-community'); }} className="transition-colors hover:text-brand-text-primary">Community</Link>
             <Link to="/pricing" className="transition-colors hover:text-brand-text-primary">Pricing</Link>
           </nav>
           {user ? (
@@ -437,13 +424,14 @@ const LandingPage: React.FC = () => {
             <SunriseEmblem className="h-full w-full" />
           </motion.div>
 
-          <div className="mx-auto grid max-w-6xl gap-12 px-4 py-[4.5rem] sm:px-6 lg:grid-cols-[1.05fr_0.95fr] lg:py-28">
+          <div className={`mx-auto max-w-6xl px-4 py-[4.5rem] sm:px-6 lg:py-28 ${user ? 'grid gap-12 lg:grid-cols-[1.05fr_0.95fr]' : 'flex flex-col items-center text-center'}`}>
 
             {/* Left — copy */}
             <motion.div
               variants={staggerContainer}
               initial="hidden"
               animate="visible"
+              className={user ? '' : 'flex flex-col items-center text-center'}
             >
               <motion.p
                 variants={fadeUp}
@@ -454,7 +442,7 @@ const LandingPage: React.FC = () => {
 
               <motion.h1
                 variants={fadeUp}
-                className="max-w-[12ch] font-display text-4xl font-semibold leading-[1.08] sm:max-w-xl sm:text-5xl md:text-6xl lg:text-[4.25rem]"
+                className={`font-display text-4xl font-semibold leading-[1.08] sm:text-5xl md:text-6xl lg:text-[4.25rem] ${user ? 'max-w-[12ch] sm:max-w-xl' : 'max-w-4xl'}`}
                 style={{ color: 'var(--fg-1)' }}
               >
                 Your personal devotional space.
@@ -462,21 +450,21 @@ const LandingPage: React.FC = () => {
 
               <motion.p
                 variants={fadeUp}
-                className="mt-7 max-w-xl text-[1.125rem] leading-[1.8] text-brand-text-secondary"
+                className={`mt-7 max-w-xl text-[1.125rem] leading-[1.8] text-brand-text-secondary ${user ? '' : 'mx-auto'}`}
               >
                 A steady place to meet God each morning. We offer Scripture, prayer, and a few honest minutes of reflection, before the day starts asking everything of you.
               </motion.p>
 
               <motion.div
                 variants={fadeUp}
-                className="mt-10 flex flex-col gap-3 sm:flex-row"
+                className={`mt-10 flex flex-col gap-3 sm:flex-row ${user ? '' : 'justify-center w-full'}`}
               >
                 <motion.div whileTap={{ scale: 0.99 }}>
                   <Link
                     to="/guided-journey"
                     className="group flex items-center justify-center gap-2 rounded-md bg-brand-accent px-7 py-3.5 text-sm font-semibold text-white shadow-[0_14px_34px_rgba(94,15,15,0.18)] transition-colors hover:bg-brand-cta-light"
                   >
-                    Open today&apos;s sanctuary
+                    Open today&apos;s devotional
                     <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
                   </Link>
                 </motion.div>
@@ -493,7 +481,7 @@ const LandingPage: React.FC = () => {
               {/* Stats row */}
               <motion.div
                 variants={staggerFast}
-                className="mt-12 flex flex-wrap gap-x-8 gap-y-4"
+                className={`mt-12 flex flex-wrap gap-x-8 gap-y-4 ${user ? '' : 'justify-center'}`}
               >
                 {stats.map(({ icon: Icon, value, label }) => (
                   <motion.div
@@ -512,86 +500,63 @@ const LandingPage: React.FC = () => {
             </motion.div>
 
             {/* Right — Today preview card */}
-            <motion.aside
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.7, delay: 0.35, ease: EASE }}
-              className="relative overflow-hidden rounded-lg border border-brand-border bg-brand-secondary p-7 shadow-[0_18px_54px_rgba(42,28,21,0.13)] lg:self-start"
-            >
-              <div
-                className="pointer-events-none absolute -right-16 -top-20 h-64 w-64 opacity-[0.08]"
-                aria-hidden
+            {user && (
+              <motion.aside
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.7, delay: 0.35, ease: EASE }}
+                className="relative overflow-hidden rounded-lg border border-brand-border bg-brand-secondary p-7 shadow-[0_18px_54px_rgba(42,28,21,0.13)] lg:self-start"
               >
-                <img src="/flame-transparent.png" alt="" className="h-full w-full object-contain" />
-              </div>
+                <div
+                  className="pointer-events-none absolute -right-16 -top-20 h-64 w-64 opacity-[0.08]"
+                  aria-hidden
+                >
+                  <img src="/flame-transparent.png" alt="" className="h-full w-full object-contain" />
+                </div>
 
-              <p className="relative mb-3 text-[0.7rem] font-semibold uppercase tracking-[0.12em] text-brand-accent">
-                Today&apos;s quiet rhythm
-              </p>
+                <p className="relative mb-3 text-[0.7rem] font-semibold uppercase tracking-[0.12em] text-brand-accent">
+                  Today&apos;s quiet rhythm
+                </p>
 
-              {/* Verse preview */}
-              <blockquote className="scripture-quote relative mb-6 text-sm">
-                &ldquo;{dailyVerse.text}&rdquo;
-                <cite>{dailyVerse.ref}</cite>
-              </blockquote>
+                {/* Verse preview */}
+                <blockquote className="scripture-quote relative mb-6 text-sm">
+                  &ldquo;{dailyVerse.text}&rdquo;
+                  <cite>{dailyVerse.ref}</cite>
+                </blockquote>
 
-              <h2 className="relative font-display text-2xl font-bold leading-snug text-brand-text-primary">
-                Prepare your heart before the day takes your attention.
-              </h2>
+                <h2 className="relative font-display text-2xl font-bold leading-snug text-brand-text-primary">
+                  Prepare your heart before the day takes your attention.
+                </h2>
 
-              <div className="relative mt-7 grid gap-3 border-t border-brand-border pt-6 sm:grid-cols-2 lg:grid-cols-1">
-                {todayItems.map(([Icon, label], i) => (
-                  <motion.div
-                    key={label as string}
-                    initial={{ opacity: 0, y: 6 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.2 + i * 0.04, duration: 0.3 }}
-                    className="flex items-center gap-3 rounded-md border border-brand-border/70 bg-brand-dark/25 p-3 text-brand-text-secondary"
-                  >
-                    <div className="flex h-7 w-7 items-center justify-center rounded-md border border-brand-border bg-brand-dark/50">
-                      <Icon className="h-3.5 w-3.5 text-brand-accent" />
-                    </div>
-                    <span className="text-sm">{label as string}</span>
-                  </motion.div>
-                ))}
-              </div>
+                <div className="relative mt-7 grid gap-3 border-t border-brand-border pt-6 sm:grid-cols-2 lg:grid-cols-1">
+                  {todayItems.map(([Icon, label], i) => (
+                    <motion.div
+                      key={label as string}
+                      initial={{ opacity: 0, y: 6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.2 + i * 0.04, duration: 0.3 }}
+                      className="flex items-center gap-3 rounded-md border border-brand-border/70 bg-brand-dark/25 p-3 text-brand-text-secondary"
+                    >
+                      <div className="flex h-7 w-7 items-center justify-center rounded-md border border-brand-border bg-brand-dark/50">
+                        <Icon className="h-3.5 w-3.5 text-brand-accent" />
+                      </div>
+                      <span className="text-sm">{label as string}</span>
+                    </motion.div>
+                  ))}
+                </div>
 
-              <Link
-                to="/guided-journey"
-                className="block text-center text-xs font-semibold uppercase tracking-wider text-brand-accent hover:underline mt-7"
-              >
-                Enter the sanctuary &rarr;
-              </Link>
-            </motion.aside>
+                <Link
+                  to="/guided-journey"
+                  className="block text-center text-xs font-semibold uppercase tracking-wider text-brand-accent hover:underline mt-7"
+                >
+                  Enter the sanctuary &rarr;
+                </Link>
+              </motion.aside>
+            )}
           </div>
         </section>
 
-        {/* ── Channels bar ──────────────────────────────────────────────────── */}
-        <Reveal>
-          <section className="border-y border-brand-border bg-brand-dark">
-            <div className="mx-auto grid max-w-6xl divide-y divide-brand-border px-6 md:grid-cols-3 md:divide-x md:divide-y-0">
-              {channels.map(({ icon: Icon, title, text, to }, i) => (
-                <Link key={title} to={to} className="block">
-                  <motion.div
-                    initial={{ opacity: 0, y: 12 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: i * 0.1, duration: 0.5 }}
-                    whileHover={{ y: -3, transition: { type: 'spring', stiffness: 340, damping: 22 } }}
-                    className="group cursor-pointer py-10 md:px-8"
-                  >
-                    <Icon className="mb-5 h-5 w-5 text-brand-accent transition-transform group-hover:scale-110" />
-                    <h3 className="font-display text-xl font-bold">{title}</h3>
-                    <p className="mt-3 text-base leading-7 text-brand-text-secondary">{text}</p>
-                    <span className="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold text-brand-accent opacity-0 transition-opacity group-hover:opacity-100">
-                      Explore <ArrowRight className="h-3 w-3" />
-                    </span>
-                  </motion.div>
-                </Link>
-              ))}
-            </div>
-          </section>
-        </Reveal>
+
 
         {/* ── Features ──────────────────────────────────────────────────────── */}
         <section className="mx-auto max-w-6xl px-6 py-20 md:py-28" ref={featuresRef}>
@@ -608,10 +573,10 @@ const LandingPage: React.FC = () => {
             variants={staggerContainer}
             initial="hidden"
             animate={featuresInView ? 'visible' : 'hidden'}
-            className="grid gap-px border border-brand-border bg-brand-border md:grid-cols-2"
+            className="grid gap-px border border-brand-border bg-brand-border md:grid-cols-2 lg:grid-cols-3"
           >
-            {features.map(({ icon: Icon, label, text, to, cta }) => (
-              <Link key={label} to={to} className="block group">
+            {detailedFeatures.map(({ id, icon: Icon, label, text, to, cta }) => (
+              <Link key={label} to={to} id={id} className="block group scroll-mt-24">
                 <motion.article
                   variants={fadeUp}
                   whileHover={{ y: -4, transition: { type: 'spring', stiffness: 340, damping: 22 } }}
@@ -622,7 +587,7 @@ const LandingPage: React.FC = () => {
                       <Icon className="h-5 w-5 text-brand-accent" />
                     </div>
                     <h3 className="font-display text-base font-bold text-brand-text-primary">{label}</h3>
-                    <p className="mt-3 text-sm leading-7 text-brand-text-secondary">{text}</p>
+                    <p className="mt-3 text-sm leading-7 text-brand-text-secondary font-serif">{text}</p>
                   </div>
                   <span
                     className="mt-4 inline-flex items-center gap-1 text-xs font-semibold text-brand-accent opacity-0 transition-opacity group-hover:opacity-100"
@@ -736,45 +701,7 @@ const LandingPage: React.FC = () => {
           verseRef="Matthew 4:4"
         />
 
-        {/* ── What's Inside (Feature Grid) ──────────────────────────────────── */}
-        <section className="bg-brand-secondary py-20 px-6 md:py-28">
-          <div className="mx-auto max-w-6xl">
-            <Reveal className="mb-14 text-center">
-              <p className="text-xs font-bold uppercase tracking-widest text-brand-accent mb-4">
-                Everything You Need
-              </p>
-              <h2 className="font-display text-3xl font-bold leading-tight text-brand-text-primary md:text-4xl max-w-2xl mx-auto">
-                One app. Every dimension of your faith.
-              </h2>
-            </Reveal>
 
-            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {appFeatures.map(({ icon: Icon, title, description, to }, i) => (
-                <Link key={title} to={to} className="block group cursor-pointer">
-                  <motion.div
-                    initial={{ opacity: 0, y: 28 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.55, delay: i * 0.07, ease: [0.22, 1, 0.36, 1] }}
-                    whileHover={{ y: -4, transition: { type: 'spring', stiffness: 340, damping: 22 } }}
-                    className="h-full rounded-xl border border-brand-border bg-brand-dark p-7"
-                    style={{ borderTop: '2px solid var(--color-brand-accent, #F27D26)' }}
-                  >
-                    <div className="mb-5 flex h-10 w-10 items-center justify-center rounded-lg border border-brand-border bg-brand-secondary transition-colors group-hover:border-brand-accent/40 group-hover:bg-brand-accent/10">
-                      <Icon className="h-5 w-5 text-brand-accent" />
-                    </div>
-                    <h3 className="font-display text-lg font-bold text-brand-text-primary mb-3">
-                      {title}
-                    </h3>
-                    <p className="text-sm leading-[1.8] text-brand-text-secondary font-serif">
-                      {description}
-                    </p>
-                  </motion.div>
-                </Link>
-              ))}
-            </div>
-          </div>
-        </section>
 
         {/* ── Scripture Ticker Strip ─────────────────────────────────────────── */}
         <div

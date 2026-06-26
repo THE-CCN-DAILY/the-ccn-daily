@@ -215,13 +215,6 @@
     html { font-size: 108%; }
   }
 
-  /* Mobile: keep the same comfortable scale as desktop. The earlier 118%/125%
-     bumps zoomed content in and made phones feel cramped and oversized (huge
-     headings, heavy wrapping); 110% reads well without the zoom. */
-  @media (max-width: 640px) {
-    html { font-size: 110%; }
-  }
-
   body {
     background-color: rgb(var(--bg-raw));
     color: rgb(var(--text-primary-raw));

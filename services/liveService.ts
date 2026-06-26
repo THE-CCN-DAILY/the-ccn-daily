@@ -73,10 +73,12 @@ const fallbackResponse = (text: string) => {
   return 'I hear you. Hold that before God for a breath, then ask: what is the faithful response for today?';
 };
 
+
 // Global speaking state to block audio echo loop in microphone capture
 let isSpeaking = false;
 let speakingTimeout: any = null;
 let currentAudioElement: HTMLAudioElement | null = null;
+let activeRecognition: any = null;
 
 const speakLocalFallback = (text: string) => {
   if (!('speechSynthesis' in window)) {
@@ -84,6 +86,16 @@ const speakLocalFallback = (text: string) => {
     return;
   }
   window.speechSynthesis.cancel();
+
+  // Stop recognition to prevent echo loop
+  if (activeRecognition) {
+    try {
+      activeRecognition.stop();
+    } catch (e) {
+      console.error('Failed to stop recognition', e);
+    }
+  }
+
   const utterance = new SpeechSynthesisUtterance(text);
   utterance.rate = 0.88;
   utterance.pitch = 0.92;
@@ -96,10 +108,24 @@ const speakLocalFallback = (text: string) => {
     if (speakingTimeout) clearTimeout(speakingTimeout);
     speakingTimeout = setTimeout(() => {
       isSpeaking = false;
-    }, 1000); // 1 second decay buffer to ensure mic doesn't capture trailing echo
+      if (activeRecognition) {
+        try {
+          activeRecognition.start();
+        } catch (e) {
+          console.error('Failed to restart recognition', e);
+        }
+      }
+    }, 1200); // 1.2s decay buffer for echo to clear
   };
   utterance.onerror = () => {
     isSpeaking = false;
+    if (activeRecognition) {
+      try {
+        activeRecognition.start();
+      } catch (e) {
+        console.error('Failed to restart recognition', e);
+      }
+    }
   };
   window.speechSynthesis.speak(utterance);
 };
@@ -113,6 +139,15 @@ const speakResponse = async (text: string) => {
   if (currentAudioElement) {
     currentAudioElement.pause();
     currentAudioElement = null;
+  }
+
+  // Stop recognition to prevent echo loop
+  if (activeRecognition) {
+    try {
+      activeRecognition.stop();
+    } catch (e) {
+      console.error('Failed to stop recognition', e);
+    }
   }
 
   try {
@@ -136,7 +171,14 @@ const speakResponse = async (text: string) => {
         if (speakingTimeout) clearTimeout(speakingTimeout);
         speakingTimeout = setTimeout(() => {
           isSpeaking = false;
-        }, 1000);
+          if (activeRecognition) {
+            try {
+              activeRecognition.start();
+            } catch (e) {
+              console.error('Failed to restart recognition', e);
+            }
+          }
+        }, 1200);
         URL.revokeObjectURL(audioUrl);
       };
 
@@ -215,6 +257,7 @@ Do not use em-dashes (—).`,
 
   if (RecognitionCtor) {
     recognition = new RecognitionCtor();
+    activeRecognition = recognition;
     recognition.continuous = true;
     recognition.interimResults = false;
     recognition.lang = 'en-US';
@@ -233,7 +276,7 @@ Do not use em-dashes (—).`,
       callbacks.onError(error);
     };
     recognition.onend = () => {
-      if (!closed) {
+      if (!closed && !isSpeaking) {
         try {
           recognition?.start();
         } catch {
@@ -256,6 +299,9 @@ Do not use em-dashes (—).`,
     close: () => {
       closed = true;
       recognition?.abort();
+      if (activeRecognition === recognition) {
+        activeRecognition = null;
+      }
       if (currentAudioElement) {
         currentAudioElement.pause();
         currentAudioElement = null;

@@ -12,7 +12,11 @@ const ReaderPrototype: React.FC = () => {
       </div>
       
       <div className="flex-1 min-h-0">
-        <EpubReader />
+        <EpubReader
+          url="/sample.epub"
+          title="Prototype Book"
+          onClose={() => {}}
+        />
       </div>
     </div>
   );

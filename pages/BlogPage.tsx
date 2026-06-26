@@ -5,6 +5,7 @@ import usePageMeta from '../hooks/usePageMeta';
 import { ArrowRight, BookOpen, PenLine, RefreshCw, Search } from 'lucide-react';
 import { listPublishedBlogPosts, type BlogPost } from '../services/blogService';
 import CcnLogo from '../components/CcnLogo';
+import { useAuth } from '../contexts/AuthContext';
 
 const EASE = [0.2, 0.6, 0.2, 1] as [number, number, number, number];
 const fadeUp = { hidden: { opacity: 0, y: 24 }, visible: { opacity: 1, y: 0 } };
@@ -61,6 +62,7 @@ const formatDate = (value?: string) => {
 };
 
 const BlogPage: React.FC = () => {
+  const { user } = useAuth();
   usePageMeta({
     title: 'Blog',
     description: 'Essays and devotionals on faith, work, leadership, and endurance — Scripture-anchored writing from THE CCN DAILY.',
@@ -101,7 +103,7 @@ const BlogPage: React.FC = () => {
     <div className="min-h-screen text-brand-text-primary" style={{ background: 'var(--bg-paper, #F6EFE1)' }}>
       <header className="border-b border-brand-border" style={{ background: 'var(--bg-paper, #F6EFE1)' }}>
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-6 py-5">
-          <Link to="/" aria-label="THE CCN DAILY — home">
+          <Link to={user ? "/dashboard" : "/"} aria-label="THE CCN DAILY — home">
             <CcnLogo size="md" theme="auto" />
           </Link>
           <nav className="flex w-full items-center justify-between border-t border-brand-border pt-4 text-sm font-semibold text-brand-text-secondary sm:w-auto sm:justify-start sm:gap-5 sm:border-t-0 sm:pt-0" style={{ fontFamily: 'var(--sans-ui, "Inter Tight", -apple-system, sans-serif)' }}>

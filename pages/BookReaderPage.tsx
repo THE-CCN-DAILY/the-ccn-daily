@@ -8,6 +8,7 @@ import { getBook } from '../services/booksService';
 import PrintEditionPanel from '../components/PrintEditionPanel';
 import ProductReviews from '../components/ProductReviews';
 import type { Book, BookVariant } from '../types';
+import EpubReader from '../components/reader/EpubReader';
 
 // POD platform display config
 const POD_PLATFORMS: Record<string, { name: string; color: string }> = {
@@ -92,33 +93,39 @@ const BookReaderPage: React.FC = () => {
     }
   };
   if (mode === 'reading' && activeVariant?.fileUrl) {
-    return (
-      <div className="max-w-2xl mx-auto py-16 px-4">
-        <Card className="text-center">
-          <button
-            onClick={() => setMode('info')}
-            className="mb-6 inline-flex items-center gap-1.5 text-sm text-brand-text-secondary transition-colors hover:text-brand-accent"
-          >
-            <ArrowLeft className="w-4 h-4" /> Back to Book
-          </button>
-          <BookOpen className="mx-auto mb-4 h-12 w-12 text-brand-accent" />
-          <p className="mb-2 text-xs font-bold uppercase tracking-widest text-brand-accent">Reader</p>
-          <h1 className="mb-3 text-3xl font-semibold text-brand-text-primary" style={{ fontFamily: 'var(--serif-display)' }}>{book.title}</h1>
-          <p className="mx-auto mb-6 max-w-md text-sm leading-relaxed text-brand-text-secondary">
-            This edition is hosted as a file. Open it in your browser or download it for quiet reading on your preferred device.
-          </p>
-          <a
-            href={activeVariant.fileUrl}
-            target="_blank"
-            rel="noreferrer"
-            className="inline-flex items-center justify-center gap-2 rounded-xl bg-brand-accent px-5 py-3 text-sm font-bold text-white transition-opacity hover:opacity-90"
-          >
-            <Download className="h-4 w-4" />
-            Open Edition
-          </a>
-        </Card>
-      </div>
-    );
+    if (activeVariant.format === 'epub' || activeVariant.fileUrl.endsWith('.epub')) {
+      return (
+        <EpubReader
+          url={activeVariant.fileUrl}
+          title={book.title}
+          author={book.author}
+          onClose={() => setMode('info')}
+        />
+      );
+    }
+
+    // Default to PDF or other formats rendered in a premium iframe/download view
+    if (activeVariant.format === 'pdf' || activeVariant.fileUrl.endsWith('.pdf')) {
+      return (
+        <div className="fixed inset-0 z-50 flex flex-col bg-brand-dark">
+          <header className="flex items-center justify-between border-b border-brand-border px-4 py-3 bg-brand-secondary">
+            <button
+              onClick={() => setMode('info')}
+              className="flex items-center gap-1.5 text-sm font-semibold hover:text-brand-accent text-brand-text-primary"
+            >
+              <ArrowLeft className="w-4 h-4" /> Back to Book
+            </button>
+            <h3 className="font-bold text-sm text-brand-text-primary truncate max-w-xs sm:max-w-md">{book.title}</h3>
+            <div className="w-10" />
+          </header>
+          <iframe
+            src={activeVariant.fileUrl}
+            title={book.title}
+            className="flex-1 w-full border-none"
+          />
+        </div>
+      );
+    }
   }
 
   return (

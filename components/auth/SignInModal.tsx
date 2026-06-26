@@ -28,8 +28,13 @@ const SignInModal: React.FC = () => {
 
   // After auth, take the user into the app — unless they were on /pricing (where they
   // likely want to finish choosing a plan) so they can resume the purchase.
+  // If they were redirected to /pricing from a protected route, state.from contains
+  // the original path — take them back there.
   const goAfterAuth = () => {
-    if (!location.pathname.startsWith('/pricing')) navigate('/dashboard');
+    const from = (location.state as any)?.from?.pathname || (location.state as any)?.from || '/dashboard';
+    if (!location.pathname.startsWith('/pricing') || from !== '/dashboard') {
+      navigate(from, { replace: true });
+    }
   };
 
   const [activeTab, setActiveTab] = useState<AuthTab>('email');

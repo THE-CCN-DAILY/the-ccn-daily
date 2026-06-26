@@ -7,6 +7,7 @@ import { useAudioPlayer } from '../contexts/AudioPlayerContext';
 import { PlayIcon, PauseIcon } from '../components/icons';
 import CcnLogo from '../components/CcnLogo';
 import usePageMeta from '../hooks/usePageMeta';
+import { useAuth } from '../contexts/AuthContext';
 
 const formatDate = (value?: string) => {
   if (!value) return 'Unscheduled';
@@ -20,6 +21,7 @@ const formatDate = (value?: string) => {
 };
 
 const BlogPostPage: React.FC = () => {
+  const { user } = useAuth();
   const { slug = '' } = useParams();
   const [post, setPost] = React.useState<BlogPost | null>(null);
   const [loading, setLoading] = React.useState(true);
@@ -78,7 +80,7 @@ const BlogPostPage: React.FC = () => {
     <div className="min-h-screen bg-brand-secondary text-brand-text-primary">
       <header className="border-b border-brand-border bg-brand-secondary/95">
         <div className="mx-auto flex max-w-4xl items-center justify-between px-6 py-5">
-          <Link to="/" aria-label="THE CCN DAILY — home">
+          <Link to={user ? "/dashboard" : "/"} aria-label="THE CCN DAILY — home">
             <CcnLogo size="sm" />
           </Link>
           <Link to="/blog" className="inline-flex items-center gap-2 text-sm font-semibold text-brand-text-secondary hover:text-brand-accent">

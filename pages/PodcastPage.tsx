@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import usePageMeta from '../hooks/usePageMeta';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
+import { useAuth } from '../contexts/AuthContext';
 import type { PodcastEpisode, SearchResult } from '../types';
 import { useAudioPlayer } from '../contexts/AudioPlayerContext';
 import { Headphones } from 'lucide-react';
@@ -36,6 +37,7 @@ const formatMinutes = (seconds: number) => {
 };
 
 const PodcastPage: React.FC = () => {
+  const { user } = useAuth();
   usePageMeta({
     title: 'Podcast',
     description: 'Audio formation for commutes, quiet rooms, and workday resets — pastoral conversations from THE CCN DAILY.',
@@ -260,7 +262,7 @@ const PodcastPage: React.FC = () => {
       {/* Header */}
       <header className="mb-8 border-b border-brand-border pb-6">
         <div className="mb-4 flex items-center justify-between text-xs font-semibold uppercase tracking-widest text-brand-text-secondary">
-          <Link to="/" aria-label="THE CCN DAILY — home"><CcnLogo size="sm" /></Link>
+          <Link to={user ? "/dashboard" : "/"} aria-label="THE CCN DAILY — home"><CcnLogo size="sm" /></Link>
           <Link to="/newsletter" className="hover:text-brand-accent transition-colors">Newsletter</Link>
         </div>
         <p className="text-xs font-bold uppercase tracking-widest text-brand-accent mb-2">Listen</p>

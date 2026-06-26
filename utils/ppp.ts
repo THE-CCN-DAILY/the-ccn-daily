@@ -37,6 +37,9 @@ export const PPP_MULTIPLIERS: Record<PPPTier, number> = {
   TIER_4: 0.3, // 30%  — lower-middle / emerging (India, Nigeria, Kenya, Uganda, Philippines)
 };
 
+// Mapped countries where the local currency is charged directly (unlocking Mobile Money & local cards)
+export const SUPPORTED_LOCAL_CHARGE_COUNTRIES = ['UG', 'KE', 'TZ', 'RW', 'GH', 'NG', 'ZM', 'MW', 'CM', 'CI', 'SN', 'ZA'];
+
 // Standard USD → local exchange rates (1 USD = N local units). Approximate
 // industry-standard rates; refresh periodically. Used for DISPLAY only — billing is USD.
 export const STANDARD_USD_RATES: Record<string, number> = {

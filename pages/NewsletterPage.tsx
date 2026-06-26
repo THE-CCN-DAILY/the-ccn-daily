@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import DOMPurify from 'dompurify';
 import Card from '../components/Card';
 import CcnLogo from '../components/CcnLogo';
+import { useAuth } from '../contexts/AuthContext';
 import { FeedItem, fetchRSSFeed } from '../services/rssService';
 import { Newspaper } from 'lucide-react';
 import { ReaderIcon, SpinnerIcon } from '../components/icons';
@@ -30,6 +31,7 @@ function getNewsletterThumbnail(item: FeedItem): string | null {
 }
 
 const NewsletterPage: React.FC = () => {
+  const { user } = useAuth();
   usePageMeta({
     title: 'Newsletter',
     description: 'Essays and devotionals for faith, work, leadership, and endurance — delivered to your inbox by THE CCN DAILY.',
@@ -72,7 +74,7 @@ const NewsletterPage: React.FC = () => {
 
   const publicNav = (
     <nav className="mb-8 flex items-center justify-between border-b border-brand-border pb-5">
-      <Link to="/" aria-label="THE CCN DAILY — home">
+      <Link to={user ? "/dashboard" : "/"} aria-label="THE CCN DAILY — home">
         <CcnLogo size="sm" />
       </Link>
       <div className="flex items-center gap-5 text-sm font-semibold text-brand-text-secondary">

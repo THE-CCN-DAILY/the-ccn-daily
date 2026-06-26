@@ -294,9 +294,22 @@ const Sidebar: React.FC<SidebarProps> = ({ className = '', onNavigate, collapsib
             ) : (
               <div className="flex items-center">
                 <UserCircleIcon className="w-8 h-8 mr-3 text-brand-text-secondary"/>
-                <div className="flex-grow">
+                <div className="flex-grow min-w-0">
                   <p className="font-semibold text-sm text-brand-text-primary truncate">{user.displayName || (user.role === 'admin' || user.role === 'lead_developer' ? 'Founder' : 'Member')}</p>
-                  <button onClick={signOut} className="text-xs text-brand-accent hover:underline">Sign Out</button>
+                  <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                    <button onClick={signOut} className="text-xs text-brand-accent hover:underline">Sign Out</button>
+                    {canStrategy && (
+                      <>
+                        <span className="text-[10px] text-brand-text-secondary opacity-40">•</span>
+                        <NavLink
+                          to={effectiveStrategyMode ? "/dashboard" : "/studio/admin"}
+                          className="text-xs text-brand-accent hover:underline font-semibold"
+                        >
+                          {effectiveStrategyMode ? "Sanctuary" : "Admin Studio"}
+                        </NavLink>
+                      </>
+                    )}
+                  </div>
                 </div>
               </div>
             )

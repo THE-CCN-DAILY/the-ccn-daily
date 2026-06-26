@@ -15,7 +15,7 @@ import {
 const EASE = [0.22, 1, 0.36, 1] as [number, number, number, number];
 const fadeUp = { hidden: { opacity: 0, y: 24 }, visible: { opacity: 1, y: 0 } };
 const stagger = { hidden: {}, visible: { transition: { staggerChildren: 0.1, delayChildren: 0.05 } } };
-import { getLocalizedPrice, formatLocalPrice, isLocalCurrencyNonUsd } from '../utils/ppp';
+import { getLocalizedPrice, formatLocalPrice, isLocalCurrencyNonUsd, SUPPORTED_LOCAL_CHARGE_COUNTRIES } from '../utils/ppp';
 import { useAuth } from '../contexts/AuthContext';
 import usePageMeta from '../hooks/usePageMeta';
 import { useNotifications } from '../contexts/NotificationContext';
@@ -478,10 +478,14 @@ const PricingPage: React.FC = () => {
         )}
       </div>
 
-      {/* Local-currency clarity — prices display in the visitor's currency; billing is USD */}
+      {/* Local-currency clarity — prices display in the visitor's currency; billing is local currency or USD */}
       {showsLocalCurrency && (
         <p className="mb-6 text-center text-xs text-brand-text-secondary">
-          Prices shown in your local currency at standard exchange rates · billed securely in USD.
+          {SUPPORTED_LOCAL_CHARGE_COUNTRIES.includes(userCountry) ? (
+            <>Prices shown in your local currency · billed securely in your local currency (supports Mobile Money & Cards).</>
+          ) : (
+            <>Prices shown in your local currency at standard exchange rates · billed securely in USD.</>
+          )}
         </p>
       )}
 
@@ -673,6 +677,29 @@ const PricingPage: React.FC = () => {
             </button>
           </Card>
         </motion.div>
+      </motion.div>
+
+      {/* Resource Access & Ownership Explanation */}
+      <motion.div
+        className="mt-12 bg-brand-secondary rounded-2xl p-8 border border-brand-border"
+        variants={fadeUp} initial="hidden" whileInView="visible"
+        viewport={{ once: true }} transition={{ duration: 0.5, ease: EASE }}
+      >
+        <h3 className="text-xl font-bold text-brand-text-primary mb-4 text-center" style={{ fontFamily: 'var(--serif-display)' }}>Access & Permanent Ownership</h3>
+        <div className="grid gap-6 md:grid-cols-2 text-sm text-brand-text-secondary leading-relaxed">
+          <div className="p-5 rounded-xl bg-brand-dark/20 border border-brand-border/40">
+            <h4 className="font-semibold text-brand-text-primary mb-2">For Premium Members</h4>
+            <p>
+              Subscribers on the Growth or Family plans receive full, unrestricted access to the entire library of courses, audiobooks, and studies as part of their membership, as long as their subscription remains active.
+            </p>
+          </div>
+          <div className="p-5 rounded-xl bg-brand-dark/20 border border-brand-border/40">
+            <h4 className="font-semibold text-brand-text-primary mb-2">For Free Members</h4>
+            <p>
+              Free members can purchase specific premium resources or study books individually. Once purchased, these resources belong to you forever and remain accessible in your personal library even on the free plan.
+            </p>
+          </div>
+        </div>
       </motion.div>
 
       <motion.div
