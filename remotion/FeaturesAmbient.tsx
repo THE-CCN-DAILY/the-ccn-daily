@@ -1,5 +1,6 @@
 import React from 'react';
 import { AbsoluteFill, useCurrentFrame, useVideoConfig, interpolate } from 'remotion';
+import { BookOpen, BookOpenCheck, Headphones, NotebookPen, Users, GraduationCap } from 'lucide-react';
 
 export interface FeaturesAmbientProps {
   theme?: 'dark' | 'light' | 'sepia';
@@ -10,37 +11,37 @@ const FEATURES = [
     label: 'Daily Devotionals',
     text: 'A structured, quiet rhythm to meet God. Scripture, reflection, and journaling every morning.',
     accent: '#E8645A', // Crimson
-    iconPath: 'M12 21c-1.17 0-2.07-.93-2.07-2.1v-13.8c0-1.17.9-2.1 2.07-2.1h8c1.17 0 2.07.93 2.07 2.1v13.8c0 1.17-.9 2.1-2.07 2.1h-8zm0 0c-1.17 0-2.07-.93-2.07-2.1v-13.8c0-1.17-.9-2.1-2.07-2.1h-4c-1.17 0-2.07.93-2.07 2.1v13.8c0 1.17.9 2.1 2.07 2.1h4',
+    icon: BookOpen,
   },
   {
     label: 'Bible Reader',
     text: 'Read the Word without distraction. Support for multiple translations and reading plans.',
     accent: '#F08060', // Ember
-    iconPath: 'M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14l-5-5 1.41-1.41L12 14.17l7.59-7.59L21 8l-9 9z',
+    icon: BookOpenCheck,
   },
   {
     label: 'Podcasts & Audio',
     text: 'Listen to careful, sound teaching. Faith-building conversations while you commute or walk.',
     accent: '#F5A855', // Amber
-    iconPath: 'M12 2a5 5 0 0 0-5 5v5a5 5 0 0 0 10 0V7a5 5 0 0 0-5-5zm7 10h-1.7a5.3 5.3 0 0 1-10.6 0H5a7 7 0 0 0 14 0z',
+    icon: Headphones,
   },
   {
     label: 'Private Journal',
     text: 'Record your choices, prayers, and convictions in a quiet space without public feeds.',
     accent: '#D4A840', // Gold
-    iconPath: 'M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a.996.996 0 0 0 0-1.41l-2.34-2.34a.996.996 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z',
+    icon: NotebookPen,
   },
   {
     label: 'Community & Prayer',
     text: 'Share requests, stand with others, and carry each other\'s burdens in digital rooms.',
     accent: '#8EB470', // Sage
-    iconPath: 'M16.5 13c-1.2 0-3.07.34-3.5 1-1 .2-2 .2-3 0-.43-.66-2.3-1-3.5-1C4.3 13 2 14.8 2 17v2h18v-2c0-2.2-2.3-4-3.5-4zM6 11c1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3 1.34 3 3 3zm12 0c1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3 1.34 3 3 3z',
+    icon: Users,
   },
   {
     label: 'Courses & Events',
     text: 'Structured online studies and gatherings to build up your faith and local ministry.',
     accent: '#5E88B5', // Blue
-    iconPath: 'M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM5.47 12.5L12 16l6.53-3.5L12 9.5 5.47 12.5z',
+    icon: GraduationCap,
   },
 ];
 
@@ -62,24 +63,33 @@ export const FeaturesAmbient: React.FC<FeaturesAmbientProps> = ({ theme = 'dark'
   
   const activeFeature = FEATURES[index];
   
-  // Transition timing: 15 frames for transition window. Skip transition on first frame to prevent slide 5 flash/lag.
-  const isTransitioning = localFrame < 15 && frame >= 15;
-  const prevIndex = (index - 1 + FEATURES.length) % FEATURES.length;
-  const prevFeature = FEATURES[prevIndex];
+  // Transition timing: 15 frames for transition window at the end of each slide.
+  const transitionFrames = 15;
+  const isTransitioning = localFrame >= (slideDuration - transitionFrames);
   
-  // Opacity rates
-  const currOpacity = isTransitioning ? localFrame / 15 : 1;
-  const prevOpacity = isTransitioning ? 1 - localFrame / 15 : 0;
+  const nextIndex = (index + 1) % FEATURES.length;
+  const nextFeature = FEATURES[nextIndex];
   
-  // yOffsets for sliding transition
-  const currYOffset = isTransitioning ? interpolate(localFrame, [0, 15], [20, 0], { extrapolateRight: 'clamp' }) : 0;
-  const prevYOffset = isTransitioning ? interpolate(localFrame, [0, 15], [0, -20], { extrapolateRight: 'clamp' }) : 0;
+  let currOpacity = 1;
+  let nextOpacity = 0;
+  let currYOffset = 0;
+  let nextYOffset = 20;
   
-  // Background scale
+  if (isTransitioning) {
+    const progress = (localFrame - (slideDuration - transitionFrames)) / transitionFrames;
+    currOpacity = 1 - progress;
+    nextOpacity = progress;
+    currYOffset = interpolate(progress, [0, 1], [0, -20], { extrapolateRight: 'clamp' });
+    nextYOffset = interpolate(progress, [0, 1], [20, 0], { extrapolateRight: 'clamp' });
+  }
+  
+  // Background scale pulsing
   const scale = 1.0 + 0.05 * Math.sin((2 * Math.PI * frame) / 180);
  
   const renderSlide = (idx: number, opacity: number, yOffset: number) => {
     const feat = FEATURES[idx];
+    const IconComponent = feat.icon;
+    
     return (
       <div
         style={{
@@ -111,18 +121,7 @@ export const FeaturesAmbient: React.FC<FeaturesAmbientProps> = ({ theme = 'dark'
             boxShadow: `0 8px 24px ${feat.accent}0f`,
           }}
         >
-          <svg
-            width="28"
-            height="28"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.6"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d={feat.iconPath} />
-          </svg>
+          <IconComponent size={32} strokeWidth={1.6} />
         </div>
 
         {/* Feature Title */}
@@ -142,11 +141,11 @@ export const FeaturesAmbient: React.FC<FeaturesAmbientProps> = ({ theme = 'dark'
         {/* Feature Subtext */}
         <p
           style={{
-            fontFamily: '"Inter Tight", -apple-system, sans-serif',
-            fontSize: 21,
+            fontFamily: '"EB Garamond", "Cormorant Garamond", "Garamond", Georgia, serif',
+            fontSize: 22,
             fontWeight: 400,
-            lineHeight: 1.6,
-            color: theme === 'dark' ? 'rgba(250,248,245,0.65)' : 'rgba(42,28,21,0.65)',
+            lineHeight: 1.55,
+            color: theme === 'dark' ? 'rgba(250,248,245,0.72)' : 'rgba(42,28,21,0.72)',
             marginTop: 20,
             maxWidth: 620,
           }}
@@ -189,20 +188,20 @@ export const FeaturesAmbient: React.FC<FeaturesAmbientProps> = ({ theme = 'dark'
           transform: `scale(${scale})`,
         }}
       />
-      {/* Background glow cross-fade: previous glow */}
+      {/* Background glow cross-fade: next glow */}
       {isTransitioning && (
         <AbsoluteFill
           style={{
-            background: `radial-gradient(circle 500px at center, ${prevFeature.accent}12 0%, transparent 80%)`,
-            opacity: prevOpacity,
+            background: `radial-gradient(circle 500px at center, ${nextFeature.accent}12 0%, transparent 80%)`,
+            opacity: nextOpacity,
             transform: `scale(${scale})`,
           }}
         />
       )}
 
-      {/* Render slides */}
-      {isTransitioning && renderSlide(prevIndex, prevOpacity, prevYOffset)}
+      {/* Render slides: current slide and next slide (fading in on top during transition) */}
       {renderSlide(index, currOpacity, currYOffset)}
+      {isTransitioning && renderSlide(nextIndex, nextOpacity, nextYOffset)}
     </AbsoluteFill>
   );
 };

@@ -17,7 +17,7 @@ const FeaturesPlayer: React.FC<FeaturesPlayerProps> = ({ theme }) => (
   <Player
     component={FA}
     inputProps={{ theme }}
-    durationInFrames={600}
+    durationInFrames={450}
     compositionWidth={1920}
     compositionHeight={800}
     fps={30}

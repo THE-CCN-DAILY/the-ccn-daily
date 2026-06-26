@@ -516,7 +516,7 @@ const LandingPage: React.FC = () => {
             <p className="mb-4 text-xs font-semibold uppercase tracking-[0.12em] text-brand-accent">
               A quieter way to begin
             </p>
-            <h2 className="font-display text-4xl font-bold leading-tight">
+            <h2 className="font-display text-4xl font-bold leading-[1.1]">
               One rhythm for Scripture, prayer, learning, and shared encouragement.
             </h2>
           </Reveal>
@@ -598,19 +598,17 @@ const LandingPage: React.FC = () => {
                 viewport={{ once: true }}
                 transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
               >
-                <div className="relative overflow-hidden rounded-2xl aspect-[3/4] max-h-[560px]">
+                <div className="relative aspect-[3/4] max-h-[560px]">
                   <img
                     src="/pr-eryeza.jpg"
                     alt="Eryeza Kalalu"
                     className="w-full h-full object-cover object-top"
-                  />
-                  {/* dark editorial gradient overlay */}
-                  <div
-                    className="absolute inset-0"
                     style={{
-                      background: 'linear-gradient(to top, rgba(13,11,9,0.75) 0%, rgba(13,11,9,0.30) 40%, transparent 70%)',
+                      maskImage: 'radial-gradient(ellipse at 50% 45%, black 40%, transparent 95%)',
+                      WebkitMaskImage: 'radial-gradient(ellipse at 50% 45%, black 40%, transparent 95%)',
+                      mixBlendMode: 'luminosity',
+                      opacity: 0.82,
                     }}
-                    aria-hidden
                   />
                 </div>
               </motion.div>
@@ -623,7 +621,7 @@ const LandingPage: React.FC = () => {
                 viewport={{ once: true }}
                 transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
               >
-                <h2 className="font-display text-3xl font-bold leading-tight text-brand-text-primary md:text-4xl mb-8">
+                <h2 className="font-display text-3xl font-bold leading-[1.1] text-brand-text-primary md:text-4xl mb-8">
                   Welcome to your digital spiritual home
                 </h2>
                 <div className="space-y-5 text-base leading-[1.9] text-brand-text-secondary font-serif">
@@ -914,7 +912,7 @@ const LandingPage: React.FC = () => {
 
             <div className="relative mx-auto max-w-6xl px-6 py-24 text-center md:py-36">
               <h2
-                className="font-display text-4xl font-bold leading-tight md:text-5xl lg:text-6xl"
+                className="font-display text-4xl font-bold leading-[1.1] md:text-5xl lg:text-6xl"
                 style={{ color: cta.headingColor }}
               >
                 New mercies wait in the morning.

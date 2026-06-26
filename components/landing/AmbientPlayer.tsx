@@ -23,7 +23,7 @@ const AmbientPlayer: React.FC<AmbientPlayerProps> = ({ verseText, verseRef, them
     inputProps={{ verseText, verseRef, theme }}
     durationInFrames={240}
     compositionWidth={1920}
-    compositionHeight={800}
+    compositionHeight={550}
     fps={30}
     loop
     autoPlay

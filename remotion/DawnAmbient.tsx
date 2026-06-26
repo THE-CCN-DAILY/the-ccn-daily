@@ -63,14 +63,14 @@ export const DawnAmbient: React.FC<DawnAmbientProps> = ({
   const drift = Math.sin(TAU * t);
 
   const cx = width / 2;
-  const horizon = height * 0.54;
+  const horizon = height * 0.50;
 
   // Dawn glow rises and settles a touch with the breath.
-  const glowY = horizon - 40 - breath * 26;
+  const glowY = horizon - 30 - breath * 18;
   const glowOpacity = 0.28 + breath * 0.22;
 
   // Flame breathes: scales and brightens gently.
-  const flameScale = 0.94 + breath * 0.12;
+  const flameScale = 0.82 + breath * 0.10;
   const flameOpacity = 0.7 + breath * 0.3;
 
   // Verse fades up softly then settles — never fully out, so it reads the whole loop.
@@ -115,7 +115,7 @@ export const DawnAmbient: React.FC<DawnAmbientProps> = ({
           position: 'absolute',
           left: 0,
           right: 0,
-          top: horizon - 150,
+          top: horizon - 110,
           display: 'flex',
           justifyContent: 'center',
           transform: `scale(${flameScale})`,
@@ -124,7 +124,7 @@ export const DawnAmbient: React.FC<DawnAmbientProps> = ({
           filter: `drop-shadow(0 0 30px ${p.flame}66)`,
         }}
       >
-        <svg width="120" height="150" viewBox="0 0 120 150" fill="none">
+        <svg width="88" height="110" viewBox="0 0 120 150" fill="none">
           <path d="M60 8 C 84 44, 80 78, 60 96 C 40 78, 36 44, 60 8 Z" fill={p.flame} />
           <path d="M60 34 C 72 56, 70 74, 60 86 C 50 74, 48 56, 60 34 Z" fill={p.flameCore} fillOpacity="0.9" />
         </svg>
@@ -136,8 +136,8 @@ export const DawnAmbient: React.FC<DawnAmbientProps> = ({
           position: 'absolute',
           left: 0,
           right: 0,
-          top: horizon + 40,
-          padding: '0 8%',
+          top: horizon + 25,
+          padding: '0 10%',
           textAlign: 'center',
           opacity: verseOpacity,
         }}
@@ -146,8 +146,8 @@ export const DawnAmbient: React.FC<DawnAmbientProps> = ({
           style={{
             fontFamily: '"EB Garamond", "Cormorant Garamond", "Garamond", Georgia, serif',
             fontStyle: 'italic',
-            fontSize: Math.round(width * 0.022),
-            lineHeight: 1.5,
+            fontSize: Math.round(width * 0.019),
+            lineHeight: 1.45,
             color: p.text,
             margin: 0,
           }}
@@ -157,12 +157,12 @@ export const DawnAmbient: React.FC<DawnAmbientProps> = ({
         <p
           style={{
             fontFamily: '"Inter Tight", -apple-system, sans-serif',
-            fontSize: Math.round(width * 0.011),
+            fontSize: Math.round(width * 0.010),
             fontWeight: 700,
             letterSpacing: '0.18em',
             textTransform: 'uppercase',
             color: p.ref,
-            marginTop: Math.round(height * 0.02),
+            marginTop: Math.round(height * 0.035),
           }}
         >
           {verseRef}

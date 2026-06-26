@@ -69,14 +69,14 @@ export const RemotionRoot: React.FC = () => (
       durationInFrames={240}
       fps={30}
       width={1920}
-      height={800}
+      height={550}
       defaultProps={dawnDefaults as unknown as Record<string, unknown>}
     />
     {/* Animated app features slideshow — highlight and transition features. */}
     <Composition
       id="FeaturesAmbient"
       component={FA}
-      durationInFrames={600}
+      durationInFrames={450}
       fps={30}
       width={1920}
       height={800}
