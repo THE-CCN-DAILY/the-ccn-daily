@@ -525,14 +525,14 @@ const LandingPage: React.FC = () => {
             variants={staggerContainer}
             initial="hidden"
             animate={featuresInView ? 'visible' : 'hidden'}
-            className="flex overflow-x-auto snap-x snap-mandatory scrollbar-none pb-6 md:grid md:grid-cols-2 lg:grid-cols-3 gap-6"
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
           >
             {detailedFeatures.map(({ id, icon: Icon, label, text, to, cta, accent }) => (
               <Link
                 key={label}
                 to={to}
                 id={id}
-                className="block group scroll-mt-24 w-[85vw] shrink-0 snap-center md:w-auto md:shrink md:snap-align-none"
+                className="block group scroll-mt-24"
                 style={{ '--accent-color': accent } as React.CSSProperties}
               >
                 <motion.article
