@@ -68,6 +68,10 @@ type Env = {
   // Cloudflare Turnstile secret (wrangler secret). When unset, Turnstile
   // verification is skipped and D1 rate limiting remains the abuse floor.
   TURNSTILE_SECRET_KEY?: string;
+  // Google Gemini REST API key. When present, /api/ai/generate uses Gemini
+  // as the primary model and falls back to Workers AI if the call fails.
+  GEMINI_API_KEY?: string;
+  GEMINI_MODEL?: string;
 };
 
 const app = new Hono<{
@@ -1237,7 +1241,7 @@ app.post('/api/ai/generate', async (c) => {
   // cost-abuse. Signed-in users get their UID from the auth middleware set above.
   if (!c.get('idTokenUid')) return c.json({ error: 'Authentication required' }, 401);
 
-  // Per-user quota: caps Workers AI cost even from signed-in accounts.
+  // Per-user quota: caps AI cost even from signed-in accounts.
   const limited = await enforceRateLimit(c, 'ai-generate', String(c.get('idTokenUid')), 30, 600);
   if (limited) return limited;
 
@@ -1247,46 +1251,100 @@ app.post('/api/ai/generate', async (c) => {
   const systemInstruction = String(body.systemInstruction || '').trim();
   const history = Array.isArray(body.history) ? body.history.slice(-12) : [];
   const userId = String(body.userId || 'anonymous');
-  const model = String(
-    body.model ||
-    c.env.WORKERS_AI_TEXT_MODEL ||
-    '@cf/meta/llama-3.1-8b-instruct'
-  );
 
   if (!prompt && history.length === 0) return c.json({ error: 'prompt is required' }, 400);
 
   let text = '';
-  let provider = 'cloudflare-workers-ai';
+  let provider = 'unknown';
   let fallback = false;
+  let modelUsed = '';
 
-  if (c.env.AI?.run) {
-    const messages = [
-      ...(systemInstruction ? [{ role: 'system', content: systemInstruction }] : []),
-      ...history.map((message: any) => ({
-        role: message.role === 'assistant' || message.role === 'model' ? 'assistant' : 'user',
-        content: String(message.content || message.text || ''),
-      })).filter((message: any) => message.content),
-      ...(prompt ? [{ role: 'user', content: prompt }] : []),
-    ];
+  // ── Strategy 1: Google Gemini REST API (preferred when key is set) ─────
+  const geminiKey = c.env.GEMINI_API_KEY;
+  if (geminiKey) {
+    const geminiModel = c.env.GEMINI_MODEL || 'gemini-2.0-flash';
+    modelUsed = geminiModel;
+    provider = 'google-gemini';
 
-    // Workers AI defaults to a small output budget (~256 tokens), which
-    // truncates long generations (devotionals) mid-JSON. The client's `units`
-    // hint doubles as the output budget, bounded to keep costs sane.
-    const maxTokens = Math.max(256, Math.min(4096, Number(body.maxTokens || body.units || 1024)));
+    const geminiMessages: Array<{ role: string; parts: Array<{ text: string }> }> = [];
+
+    // Map history into Gemini content format
+    for (const msg of history) {
+      const role = msg.role === 'assistant' || msg.role === 'model' ? 'model' : 'user';
+      const content = String(msg.content || msg.text || '').trim();
+      if (content) geminiMessages.push({ role, parts: [{ text: content }] });
+    }
+    if (prompt) {
+      geminiMessages.push({ role: 'user', parts: [{ text: prompt }] });
+    }
+
+    const geminiBody: Record<string, unknown> = { contents: geminiMessages };
+    if (systemInstruction) {
+      geminiBody.systemInstruction = { parts: [{ text: systemInstruction }] };
+    }
+    geminiBody.generationConfig = {
+      maxOutputTokens: Math.max(256, Math.min(4096, Number(body.maxTokens || body.units || 1024))),
+      temperature: 0.7,
+    };
 
     try {
-      const result = await c.env.AI.run(model, { messages, max_tokens: maxTokens });
-      text = extractAiText(result);
-    } catch (error) {
-      console.error('Workers AI generation failed', error);
+      const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${geminiKey}`;
+      const resp = await fetch(geminiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(geminiBody),
+      });
+
+      if (resp.ok) {
+        const data = await resp.json() as any;
+        text = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+      } else {
+        // Gemini call failed; fall through to Workers AI below.
+        console.error('Gemini API error', resp.status, await resp.text().catch(() => ''));
+        text = '';
+      }
+    } catch (err) {
+      console.error('Gemini fetch failed', err);
+      text = '';
+    }
+  }
+
+  // ── Strategy 2: Cloudflare Workers AI (fallback or primary if no Gemini key) ──
+  if (!text) {
+    const model = String(
+      body.model ||
+      c.env.WORKERS_AI_TEXT_MODEL ||
+      '@cf/meta/llama-3.1-8b-instruct'
+    );
+    modelUsed = modelUsed || model;
+
+    if (c.env.AI?.run) {
+      const messages = [
+        ...(systemInstruction ? [{ role: 'system', content: systemInstruction }] : []),
+        ...history.map((message: any) => ({
+          role: message.role === 'assistant' || message.role === 'model' ? 'assistant' : 'user',
+          content: String(message.content || message.text || ''),
+        })).filter((message: any) => message.content),
+        ...(prompt ? [{ role: 'user', content: prompt }] : []),
+      ];
+
+      const maxTokens = Math.max(256, Math.min(4096, Number(body.maxTokens || body.units || 1024)));
+
+      try {
+        const result = await c.env.AI.run(model, { messages, max_tokens: maxTokens });
+        text = extractAiText(result);
+        provider = geminiKey ? 'cloudflare-workers-ai-gemini-fallback' : 'cloudflare-workers-ai';
+      } catch (error) {
+        console.error('Workers AI generation failed', error);
+        text = fallbackAiText(feature, prompt);
+        fallback = true;
+        provider = 'static-fallback';
+      }
+    } else {
       text = fallbackAiText(feature, prompt);
       fallback = true;
-      provider = 'cloudflare-workers-ai-fallback';
+      provider = 'static-fallback';
     }
-  } else {
-    text = fallbackAiText(feature, prompt);
-    fallback = true;
-    provider = 'cloudflare-workers-ai-fallback';
   }
 
   const units = Number(body.units || Math.ceil((prompt.length + text.length) / 4) || 0);
@@ -1299,13 +1357,13 @@ app.post('/api/ai/generate', async (c) => {
       userId,
       feature,
       provider,
-      model,
+      modelUsed,
       units,
       JSON.stringify({ fallback })
     ).run();
   }
 
-  return c.json({ text, model, provider, fallback });
+  return c.json({ text, model: modelUsed, provider, fallback });
 });
 
 app.post('/api/ai/usage', async (c) => {

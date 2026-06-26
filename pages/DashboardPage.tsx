@@ -85,18 +85,13 @@ interface DevotionalCardProps {
 
 const DevotionalCard: React.FC<DevotionalCardProps> = ({ devotional, loading, dateLabel }) => {
   const excerpt = devotional?.body
-    ? devotional.body.replace(/\n+/g, ' ').trim().slice(0, 160) + '…'
+    ? devotional.body.replace(/\n+/g, ' ').trim().slice(0, 160) + '\u2026'
     : null;
 
   return (
-    <div
-      className="w-full rounded-lg overflow-hidden"
-      style={{
-        // A warm dawn gradient rather than a flat near-black slab — softer and more
-        // intentional against the light dashboard, while staying a rich spotlight in dark.
-        background: 'linear-gradient(135deg, #241410 0%, #190E08 55%, #3A1C0B 100%)',
-        boxShadow: '0 1px 2px rgba(42,28,21,.08), 0 14px 36px rgba(42,28,21,.12)',
-      }}
+    <Link
+      to="/guided-journey"
+      className="block w-full rounded-2xl overflow-hidden glass-panel border border-brand-border/30 hover:border-brand-accent/40 shadow-lg hover:shadow-[0_0_35px_rgba(242,125,38,0.15)] transition-all duration-300 group cursor-pointer"
     >
       {loading ? (
         <div className="p-8 md:p-12 flex flex-col gap-4">
@@ -109,77 +104,34 @@ const DevotionalCard: React.FC<DevotionalCardProps> = ({ devotional, loading, da
       ) : (
         <div className="p-8 md:p-12">
           {/* Eyebrow */}
-          <p
-            style={{
-              fontFamily: 'var(--sans-ui)',
-              fontSize: '11px',
-              fontWeight: 700,
-              letterSpacing: '0.14em',
-              textTransform: 'uppercase',
-              color: 'var(--ember)',
-            }}
-            className="mb-4"
-          >
+          <p className="ds-eyebrow mb-4 tracking-widest text-brand-accent">
             Today&apos;s Devotional &middot; {dateLabel}
           </p>
 
           {/* Title */}
-          <h2
-            style={{
-              fontFamily: 'var(--serif-display)',
-              fontSize: 'clamp(1.75rem, 4vw, 2.75rem)',
-              fontWeight: 600,
-              lineHeight: 1.1,
-              color: '#FAF6EE',
-            }}
-            className="mb-4"
-          >
+          <h2 className="ds-display text-3xl sm:text-4xl md:text-5xl font-semibold leading-tight text-brand-text-primary mb-4">
             {devotional?.title ?? 'Your next devotional is being prepared.'}
           </h2>
 
           {/* Excerpt */}
           {excerpt ? (
-            <p
-              style={{
-                fontFamily: 'var(--serif-body)',
-                fontSize: '1.1rem',
-                lineHeight: 1.6,
-                color: 'rgba(250,244,235,0.76)',
-              }}
-              className="mb-8 max-w-2xl"
-            >
+            <p className="font-serif text-base sm:text-lg leading-relaxed text-brand-text-secondary mb-8 max-w-2xl">
               {excerpt}
             </p>
           ) : (
-            <p
-              style={{
-                fontFamily: 'var(--serif-body)',
-                fontSize: '1.1rem',
-                lineHeight: 1.6,
-                color: 'rgba(250,244,235,0.76)',
-              }}
-              className="mb-8"
-            >
-              Begin with the Guided Journey. A path is already waiting for you.
+            <p className="font-serif text-base sm:text-lg leading-relaxed text-brand-text-secondary mb-8">
+              Begin with the Daily Sanctuary. A quiet path is already waiting for you.
             </p>
           )}
 
           {/* CTA */}
-          <Link
-            to="/guided-journey"
-            className="inline-flex items-center gap-2 rounded-md px-5 py-2.5 text-sm font-semibold transition-colors hover:opacity-90"
-            style={{
-              fontFamily: 'var(--sans-ui)',
-              background: 'var(--ember)',
-              color: '#fff',
-            }}
-          >
-            Open Daily Journey
+          <span className="inline-flex items-center gap-2 rounded-md bg-brand-accent hover:bg-brand-cta-light px-5 py-2.5 text-sm font-semibold text-white shadow-md transition-all duration-200 group-hover:translate-x-0.5">
+            Open Daily Sanctuary
             <ArrowRight className="w-4 h-4" />
-          </Link>
+          </span>
         </div>
       )}
-    </div>
+    </Link>
   );
 };
 
@@ -222,14 +174,14 @@ const QUICK_LINKS = [
 const DashboardPage: React.FC = () => {
   const { user } = useAuth();
 
-  // ── Time-aware greeting ──────────────────────────────────────────────────
+  // Time-aware greeting
   const now = new Date();
   const hour = now.getHours();
   const greeting =
     hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
   const firstName = user?.displayName?.split(' ')[0] ?? 'Friend';
 
-  // ── Date labels ──────────────────────────────────────────────────────────
+  // Date labels
   const dayLabel = now.toLocaleDateString('en-US', {
     weekday: 'long',
     day: 'numeric',
@@ -244,10 +196,10 @@ const DashboardPage: React.FC = () => {
     year: 'numeric',
   });
 
-  // ── Prayer prompt — one per day of week ─────────────────────────────────
+  // Prayer prompt: one per day of week
   const prayerPrompt = PRAYER_PROMPTS[now.getDay()];
 
-  // ── Firestore data ───────────────────────────────────────────────────────
+  // Firestore data
   const [devotional, setDevotional] = useState<Devotional | null>(null);
   const [devotionalLoading, setDevotionalLoading] = useState(true);
 
@@ -263,8 +215,6 @@ const DashboardPage: React.FC = () => {
     const fetchDevotional = async () => {
       try {
         // Match the guided journey: latest PUBLISHED devotional dated on/before today.
-        // (Devotionals store a `date` string, not `publishedAt` — ordering by the missing
-        // field was returning nothing.) Filter in JS to avoid a composite index.
         const today = new Date();
         const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
         const snap = await getDocs(query(collection(db, 'devotionals'), orderBy('date', 'desc'), limit(30)));
@@ -280,14 +230,13 @@ const DashboardPage: React.FC = () => {
           });
         }
       } catch {
-        // Firestore unavailable — show placeholder
+        // Firestore unavailable: show placeholder
       } finally {
         setDevotionalLoading(false);
       }
     };
 
     // Fetch latest podcast episode
-    // Podcasts: the Anchor.fm RSS feed is the source of truth (same as the public library).
     const fetchPodcast = async () => {
       try {
         const { fetchRSSFeed } = await import('../services/rssService');
@@ -312,14 +261,13 @@ const DashboardPage: React.FC = () => {
     fetchPodcast();
   }, [user?.uid]);
 
-  // ────────────────────────────────────────────────────────────────────────
   return (
-    <div className="max-w-5xl mx-auto pb-24 px-0">
+    <div className="max-w-5xl mx-auto pb-24 px-4 md:px-0">
 
       {/* Admin-authored promo banner (schedule + audience filtered) */}
       <AnnouncementBanner />
 
-      {/* ── 1. Greeting Header ─────────────────────────────────────────────── */}
+      {/* 1. Greeting Header */}
       <motion.section
         className="mb-10 overflow-hidden rounded-lg border border-brand-border p-7 md:p-9"
         style={{
@@ -330,49 +278,23 @@ const DashboardPage: React.FC = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: EASE }}
       >
-        {/* Prayer prompt — pull quote eyebrow */}
-        <p
-          style={{
-            fontFamily: 'var(--serif-body)',
-            fontStyle: 'italic',
-            fontSize: '0.9375rem',
-            lineHeight: 1.6,
-            color: 'var(--fg-3)',
-          }}
-          className="mb-4 max-w-2xl"
-        >
+        {/* Prayer prompt */}
+        <p className="font-serif italic text-sm leading-relaxed text-brand-text-secondary mb-4 max-w-2xl">
           &ldquo;{prayerPrompt}&rdquo;
         </p>
 
         {/* Main greeting */}
-        <h1
-          style={{
-            fontFamily: 'var(--serif-display)',
-            fontSize: 'clamp(2rem, 5vw, 3.25rem)',
-            fontWeight: 600,
-            lineHeight: 1.05,
-            color: 'var(--fg-1)',
-          }}
-          className="mb-2"
-        >
+        <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-semibold tracking-tight text-brand-text-primary mb-2">
           {greeting}, {firstName}.
         </h1>
 
         {/* Date */}
-        <p
-          style={{
-            fontFamily: 'var(--sans-ui)',
-            fontSize: '0.8125rem',
-            fontWeight: 500,
-            letterSpacing: '0.04em',
-            color: 'var(--fg-3)',
-          }}
-        >
+        <p className="font-sans text-xs font-medium tracking-wider text-brand-text-tertiary">
           {dayLabel}
         </p>
       </motion.section>
 
-      {/* ── 2. Today's Featured Devotional ────────────────────────────────── */}
+      {/* 2. Today's Featured Devotional */}
       <motion.section
         className="mb-10"
         initial={{ opacity: 0, y: 22 }}
@@ -386,24 +308,14 @@ const DashboardPage: React.FC = () => {
         />
       </motion.section>
 
-      {/* ── 3. Continue Where You Left Off ────────────────────────────────── */}
+      {/* 3. Continue Where You Left Off */}
       <motion.section
         className="mb-10"
         initial={{ opacity: 0, y: 18 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: EASE, delay: 0.18 }}
       >
-        <p
-          style={{
-            fontFamily: 'var(--sans-ui)',
-            fontSize: '11px',
-            fontWeight: 700,
-            letterSpacing: '0.12em',
-            textTransform: 'uppercase',
-            color: 'var(--fg-3)',
-          }}
-          className="mb-4"
-        >
+        <p className="ds-eyebrow mb-4 tracking-wider text-brand-text-tertiary">
           Continue
         </p>
 
@@ -421,32 +333,16 @@ const DashboardPage: React.FC = () => {
             >
               <Link
                 to={card.route}
-                className="flex flex-col gap-3 p-5 rounded-lg border border-brand-border transition-colors duration-200 w-48 group"
-                style={{
-                  background: 'var(--bg-card)',
-                  boxShadow: 'var(--sh-card)',
-                }}
+                className="flex flex-col gap-3 p-5 border border-brand-border transition-all duration-200 w-48 group ds-card"
               >
-                <div
-                  className="w-9 h-9 rounded-lg flex items-center justify-center transition-colors duration-200 group-hover:bg-ember/15"
-                  style={{ background: 'rgba(var(--cta-raw), 0.10)' }}
-                >
-                  <card.icon
-                    className="w-4 h-4 transition-colors duration-200"
-                    style={{ color: 'var(--ember)' }}
-                  />
+                <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-brand-accent/10 transition-colors duration-200 group-hover:bg-brand-accent/20">
+                  <card.icon className="w-4 h-4 text-brand-accent" />
                 </div>
                 <div>
-                  <p
-                    className="font-semibold text-brand-text-primary text-sm mb-0.5"
-                    style={{ fontFamily: 'var(--sans-ui)' }}
-                  >
+                  <p className="font-sans font-semibold text-brand-text-primary text-sm mb-0.5">
                     {card.title}
                   </p>
-                  <p
-                    className="text-xs leading-snug"
-                    style={{ fontFamily: 'var(--sans-ui)', color: 'var(--fg-3)' }}
-                  >
+                  <p className="font-sans text-xs text-brand-text-tertiary leading-snug">
                     {card.desc}
                   </p>
                 </div>
@@ -456,7 +352,7 @@ const DashboardPage: React.FC = () => {
         </div>
       </motion.section>
 
-      {/* ── 4. Community & Momentum ───────────────────────────────────────── */}
+      {/* 4. Community and Momentum */}
       <motion.section
         className="mb-10 grid grid-cols-1 gap-5 md:grid-cols-2"
         variants={stagger}
@@ -466,62 +362,24 @@ const DashboardPage: React.FC = () => {
       >
         {/* Streak counter */}
         <motion.div variants={fadeUp}>
-          <div
-            className="h-full rounded-lg border border-brand-border p-6 flex flex-col justify-between"
-            style={{ background: 'var(--bg-card)', boxShadow: 'var(--sh-card)' }}
-          >
+          <div className="h-full border border-brand-border p-6 flex flex-col justify-between ds-card">
             <div className="flex items-start justify-between mb-4">
               <div>
-                <p
-                  style={{
-                    fontFamily: 'var(--sans-ui)',
-                    fontSize: '11px',
-                    fontWeight: 700,
-                    letterSpacing: '0.12em',
-                    textTransform: 'uppercase',
-                    color: 'var(--fg-3)',
-                  }}
-                  className="mb-1"
-                >
+                <p className="ds-eyebrow mb-1 tracking-wider text-brand-text-tertiary">
                   Streak
                 </p>
                 <div className="flex items-baseline gap-2">
-                  <span
-                    style={{
-                      fontFamily: 'var(--serif-display)',
-                      fontSize: '3.5rem',
-                      fontWeight: 700,
-                      lineHeight: 1,
-                      color: 'var(--fg-1)',
-                    }}
-                  >
+                  <span className="font-display text-5xl sm:text-6xl font-bold leading-none text-brand-text-primary">
                     {streak}
                   </span>
-                  <span
-                    style={{
-                      fontFamily: 'var(--sans-ui)',
-                      fontSize: '0.875rem',
-                      color: 'var(--fg-3)',
-                    }}
-                  >
+                  <span className="font-sans text-sm text-brand-text-secondary">
                     day{streak !== 1 ? 's' : ''}
                   </span>
                 </div>
               </div>
-              <Flame
-                className="w-8 h-8 mt-1"
-                style={{ color: 'var(--ember)' }}
-              />
+              <Flame className="w-8 h-8 mt-1 text-brand-accent" />
             </div>
-            <p
-              style={{
-                fontFamily: 'var(--serif-body)',
-                fontStyle: 'italic',
-                fontSize: '0.9375rem',
-                lineHeight: 1.55,
-                color: 'var(--fg-3)',
-              }}
-            >
+            <p className="font-serif italic text-sm leading-relaxed text-brand-text-secondary">
               Every day you show up is a seed sown.
             </p>
           </div>
@@ -529,22 +387,9 @@ const DashboardPage: React.FC = () => {
 
         {/* Latest podcast */}
         <motion.div variants={fadeUp}>
-          <div
-            className="h-full rounded-2xl border border-brand-border p-6 flex flex-col justify-between"
-            style={{ background: 'rgb(var(--surface-raw))' }}
-          >
+          <div className="h-full border border-brand-border p-6 flex flex-col justify-between ds-card">
             <div className="mb-4">
-              <p
-                style={{
-                  fontFamily: 'var(--sans-ui)',
-                  fontSize: '11px',
-                  fontWeight: 700,
-                  letterSpacing: '0.12em',
-                  textTransform: 'uppercase',
-                  color: 'var(--fg-3)',
-                }}
-                className="mb-3"
-              >
+              <p className="ds-eyebrow mb-3 tracking-wider text-brand-text-tertiary">
                 Latest Episode
               </p>
 
@@ -555,39 +400,17 @@ const DashboardPage: React.FC = () => {
                 </div>
               ) : podcast ? (
                 <>
-                  <p
-                    style={{
-                      fontFamily: 'var(--serif-display)',
-                      fontSize: '1.125rem',
-                      fontWeight: 600,
-                      lineHeight: 1.25,
-                      color: 'var(--fg-1)',
-                    }}
-                    className="mb-1"
-                  >
+                  <p className="font-display text-lg sm:text-xl font-semibold leading-snug text-brand-text-primary mb-1">
                     {podcast.title}
                   </p>
                   {podcast.duration && (
-                    <p
-                      style={{
-                        fontFamily: 'var(--sans-ui)',
-                        fontSize: '0.8125rem',
-                        color: 'var(--fg-3)',
-                      }}
-                    >
+                    <p className="font-sans text-xs text-brand-text-tertiary">
                       {podcast.duration}
                     </p>
                   )}
                 </>
               ) : (
-                <p
-                  style={{
-                    fontFamily: 'var(--serif-body)',
-                    fontStyle: 'italic',
-                    fontSize: '0.9375rem',
-                    color: 'var(--fg-3)',
-                  }}
-                >
+                <p className="font-serif italic text-sm leading-relaxed text-brand-text-secondary">
                   The next episode will appear here when it is published.
                 </p>
               )}
@@ -595,11 +418,7 @@ const DashboardPage: React.FC = () => {
 
             <Link
               to="/podcasts"
-              className="inline-flex items-center gap-1.5 text-sm font-semibold transition-colors hover:opacity-80"
-              style={{
-                fontFamily: 'var(--sans-ui)',
-                color: 'rgb(var(--cta-raw))',
-              }}
+              className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-accent transition-colors hover:text-brand-cta-light mt-4"
             >
               <Headphones className="w-4 h-4" />
               Listen now
@@ -609,24 +428,14 @@ const DashboardPage: React.FC = () => {
         </motion.div>
       </motion.section>
 
-      {/* ── 5. Quick Links Grid ───────────────────────────────────────────── */}
+      {/* 5. Quick Links Grid */}
       <motion.section
         initial={{ opacity: 0, y: 14 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: '-40px' }}
         transition={{ duration: 0.45, ease: EASE }}
       >
-        <p
-          style={{
-            fontFamily: 'var(--sans-ui)',
-            fontSize: '11px',
-            fontWeight: 700,
-            letterSpacing: '0.12em',
-            textTransform: 'uppercase',
-            color: 'var(--fg-3)',
-          }}
-          className="mb-4"
-        >
+        <p className="ds-eyebrow mb-4 tracking-wider text-brand-text-tertiary">
           Explore
         </p>
 
@@ -639,20 +448,10 @@ const DashboardPage: React.FC = () => {
             >
               <Link
                 to={link.route}
-                className="flex flex-col items-center gap-2 py-4 px-2 rounded-xl border border-brand-border transition-colors duration-200 group"
-                style={{
-                  background: 'var(--bg-card)',
-                  boxShadow: 'var(--sh-card)',
-                }}
+                className="flex flex-col items-center gap-2 py-4 px-2 border border-brand-border transition-all duration-200 group ds-card"
               >
-                <link.icon
-                  className="w-5 h-5 transition-colors duration-200"
-                  style={{ color: 'var(--fg-3)' }}
-                />
-                <span
-                  className="text-[11px] font-medium text-center leading-tight transition-colors duration-200"
-                  style={{ fontFamily: 'var(--sans-ui)', color: 'var(--fg-3)' }}
-                >
+                <link.icon className="w-5 h-5 text-brand-text-secondary group-hover:text-brand-accent transition-colors duration-200" />
+                <span className="font-sans text-xs font-medium text-brand-text-secondary group-hover:text-brand-text-primary text-center leading-tight transition-colors duration-200">
                   {link.label}
                 </span>
               </Link>

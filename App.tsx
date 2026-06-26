@@ -168,6 +168,7 @@ const App: React.FC = () => {
                           <Route path="/app" element={<Navigate to="/dashboard" replace />} />
                           <Route path="/app/podcasts" element={<Navigate to="/podcast-library" replace />} />
                           <Route path="/app/*" element={<LegacyAppRedirect />} />
+                          <Route path="/admin" element={<Navigate to="/studio/admin" replace />} />
 
                           {/* Founder Command Center Routes (Admin Only) */}
                           {/* Single hard boundary for the entire admin surface: any non-privileged

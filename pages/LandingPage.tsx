@@ -53,7 +53,7 @@ const features = [
   {
     icon: BookOpen,
     label: 'Bible & devotional reading',
-    text: 'Start with Scripture, then move into a guided reflection that respects your working life — not a performance, just presence.',
+    text: "Start with Scripture, then move into a guided reflection that respects your working life. Here, you simply rest in God's presence.",
     to: '/guided-journey',
     cta: "Open today's devotional",
   },
@@ -84,7 +84,7 @@ const channels = [
   {
     icon: Mail,
     title: 'Newsletter',
-    text: 'Essays and devotionals for faith, work, leadership, and endurance — direct to your inbox.',
+    text: 'We send essays and devotionals for faith, work, leadership, and endurance straight to your inbox.',
     to: '/newsletter',
   },
   {
@@ -104,13 +104,13 @@ const channels = [
 const stats = [
   { icon: Globe, value: '40+', label: 'Countries reached' },
   { icon: Flame, value: 'Daily', label: 'Scripture rhythm' },
-  { icon: Clock, value: '10 min', label: 'Morning reset' },
+  { icon: Clock, value: 'Quiet', label: 'Morning reset' },
 ];
 
 const todayItems = [
-  [BookOpen, 'Scripture & guided devotional'],
-  [NotebookPen, 'Journal response prompt'],
-  [Headphones, 'Audio devotional'],
+  [BookOpen, 'Isaiah 40:31 passage study'],
+  [NotebookPen, 'Reflective journal prompt'],
+  [Headphones, 'Audio devotion and prayer'],
   [Users, 'Community prayer wall'],
 ];
 
@@ -123,32 +123,38 @@ const appFeatures = [
   {
     icon: BookOpen,
     title: 'Daily Devotionals',
-    description: 'Scripture-anchored, written and audio. Arrive daily — without fail.',
+    description: 'Scripture-anchored, written and audio. Arrive daily, without fail.',
+    to: '/guided-journey',
   },
   {
     icon: BookOpenCheck,
     title: 'Bible Reader',
     description: 'Multiple translations. Guided study. Reading plans that go somewhere.',
+    to: '/bible',
   },
   {
     icon: Headphones,
     title: 'Podcasts & Audiobooks',
-    description: 'Pastoral conversations and ministry books — listen anywhere.',
+    description: 'Pastoral conversations and ministry books, so you can listen anywhere.',
+    to: '/podcasts',
   },
   {
     icon: Users,
     title: 'Community',
     description: 'Live prayer rooms, testimonies, and people who take faith seriously.',
+    to: '/the-community',
   },
   {
     icon: GraduationCap,
     title: 'Courses & Events',
     description: 'Structured discipleship, live gatherings, and continuing formation.',
+    to: '/pricing',
   },
   {
     icon: BookOpen,
     title: 'Scripture Study Companion',
     description: 'Study with Scripture-anchored guidance, context, and careful reflection.',
+    to: '/guided-journey',
   },
 ];
 
@@ -322,10 +328,10 @@ const LandingPage: React.FC = () => {
   const { theme } = useTheme();
 
   usePageMeta({
-    title: 'THE CCN DAILY — Your personal devotional space',
+    title: 'THE CCN DAILY: Your personal devotional space',
     rawTitle: true,
     description:
-      'A steady daily place to meet God — Scripture, prayer, audio devotionals, and guided reflection for believers who want to walk closely with God wherever they are.',
+      'A steady daily place to meet God with Scripture, prayer, audio devotionals, and guided reflection for believers who want to walk closely with God wherever they are.',
   });
 
   // Live testimonials from the Wall of Testimony (latest 3 published). Public read.
@@ -378,7 +384,7 @@ const LandingPage: React.FC = () => {
         transition={{ duration: 0.4, ease: 'easeOut' }}
       >
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-4 sm:px-6">
-          <Link to="/" aria-label="THE CCN DAILY — home" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
+          <Link to="/" aria-label="THE CCN DAILY: home" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
             <CcnLogo size="md" theme="auto" />
           </Link>
           <nav className="hidden items-center gap-7 text-sm text-brand-text-secondary md:flex">
@@ -448,7 +454,8 @@ const LandingPage: React.FC = () => {
 
               <motion.h1
                 variants={fadeUp}
-                className="max-w-[12ch] font-display text-4xl font-semibold leading-[1.08] text-brand-text-primary sm:max-w-xl sm:text-5xl md:text-6xl lg:text-[4.25rem]"
+                className="max-w-[12ch] font-display text-4xl font-semibold leading-[1.08] sm:max-w-xl sm:text-5xl md:text-6xl lg:text-[4.25rem]"
+                style={{ color: 'var(--fg-1)' }}
               >
                 Your personal devotional space.
               </motion.h1>
@@ -457,7 +464,7 @@ const LandingPage: React.FC = () => {
                 variants={fadeUp}
                 className="mt-7 max-w-xl text-[1.125rem] leading-[1.8] text-brand-text-secondary"
               >
-                A steady place to meet God each morning — Scripture, prayer, and a few honest minutes of reflection — before the day starts asking everything of you.
+                A steady place to meet God each morning. We offer Scripture, prayer, and a few honest minutes of reflection, before the day starts asking everything of you.
               </motion.p>
 
               <motion.div
@@ -469,7 +476,7 @@ const LandingPage: React.FC = () => {
                     to="/guided-journey"
                     className="group flex items-center justify-center gap-2 rounded-md bg-brand-accent px-7 py-3.5 text-sm font-semibold text-white shadow-[0_14px_34px_rgba(94,15,15,0.18)] transition-colors hover:bg-brand-cta-light"
                   >
-                    Open today&apos;s journey
+                    Open today&apos;s sanctuary
                     <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
                   </Link>
                 </motion.div>
@@ -519,7 +526,7 @@ const LandingPage: React.FC = () => {
               </div>
 
               <p className="relative mb-3 text-[0.7rem] font-semibold uppercase tracking-[0.12em] text-brand-accent">
-                Today&apos;s quiet table
+                Today&apos;s quiet rhythm
               </p>
 
               {/* Verse preview */}
@@ -549,20 +556,12 @@ const LandingPage: React.FC = () => {
                 ))}
               </div>
 
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.85 }}
-                whileTap={{ scale: 0.99 }}
-                className="relative mt-7"
+              <Link
+                to="/guided-journey"
+                className="block text-center text-xs font-semibold uppercase tracking-wider text-brand-accent hover:underline mt-7"
               >
-                <Link
-                  to="/guided-journey"
-                  className="block w-full rounded-md border border-brand-accent bg-brand-accent/10 py-3 text-center text-xs font-semibold uppercase tracking-widest text-brand-accent transition-colors hover:bg-brand-accent hover:text-white"
-                >
-                  Enter the journey
-                </Link>
-              </motion.div>
+                Enter the sanctuary &rarr;
+              </Link>
             </motion.aside>
           </div>
         </section>
@@ -612,24 +611,26 @@ const LandingPage: React.FC = () => {
             className="grid gap-px border border-brand-border bg-brand-border md:grid-cols-2"
           >
             {features.map(({ icon: Icon, label, text, to, cta }) => (
-              <motion.article
-                key={label}
-                variants={fadeUp}
-                whileHover={{ y: -4, transition: { type: 'spring', stiffness: 340, damping: 22 } }}
-                className="group bg-brand-secondary p-8 transition-colors hover:bg-brand-dark cursor-pointer"
-              >
-                <div className="mb-5 flex h-10 w-10 items-center justify-center rounded-lg border border-brand-border bg-brand-dark transition-colors group-hover:border-brand-accent/40 group-hover:bg-brand-accent/10">
-                  <Icon className="h-5 w-5 text-brand-accent" />
-                </div>
-                <h3 className="font-display text-base font-bold">{label}</h3>
-                <p className="mt-3 text-sm leading-7 text-brand-text-secondary">{text}</p>
-                <Link
-                  to={to}
-                  className="mt-4 inline-flex items-center gap-1 text-xs font-semibold text-brand-accent opacity-0 transition-opacity group-hover:opacity-100"
+              <Link key={label} to={to} className="block group">
+                <motion.article
+                  variants={fadeUp}
+                  whileHover={{ y: -4, transition: { type: 'spring', stiffness: 340, damping: 22 } }}
+                  className="bg-brand-secondary p-8 transition-colors hover:bg-brand-dark h-full flex flex-col justify-between"
                 >
-                  {cta} <ArrowRight className="h-3 w-3" />
-                </Link>
-              </motion.article>
+                  <div>
+                    <div className="mb-5 flex h-10 w-10 items-center justify-center rounded-lg border border-brand-border bg-brand-dark transition-colors group-hover:border-brand-accent/40 group-hover:bg-brand-accent/10">
+                      <Icon className="h-5 w-5 text-brand-accent" />
+                    </div>
+                    <h3 className="font-display text-base font-bold text-brand-text-primary">{label}</h3>
+                    <p className="mt-3 text-sm leading-7 text-brand-text-secondary">{text}</p>
+                  </div>
+                  <span
+                    className="mt-4 inline-flex items-center gap-1 text-xs font-semibold text-brand-accent opacity-0 transition-opacity group-hover:opacity-100"
+                  >
+                    {cta} <ArrowRight className="h-3 w-3" />
+                  </span>
+                </motion.article>
+              </Link>
             ))}
           </motion.div>
         </section>
@@ -718,10 +719,10 @@ const LandingPage: React.FC = () => {
                   </p>
                 </div>
                 <p className="mt-8 font-serif italic text-brand-text-primary text-base">
-                  Welcome to the journey.
+                  Welcome to the sanctuary.
                 </p>
                 <p className="mt-3 text-xs font-semibold uppercase tracking-widest text-brand-accent">
-                  — Eryeza Kalalu
+                  Pastor Eryeza Kalalu
                 </p>
               </motion.div>
 
@@ -748,27 +749,28 @@ const LandingPage: React.FC = () => {
             </Reveal>
 
             <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {appFeatures.map(({ icon: Icon, title, description }, i) => (
-                <motion.div
-                  key={title}
-                  initial={{ opacity: 0, y: 28 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.55, delay: i * 0.07, ease: [0.22, 1, 0.36, 1] }}
-                  whileHover={{ y: -4, transition: { type: 'spring', stiffness: 340, damping: 22 } }}
-                  className="group rounded-xl border border-brand-border bg-brand-dark p-7 cursor-default"
-                  style={{ borderTop: '2px solid var(--color-brand-accent, #F27D26)' }}
-                >
-                  <div className="mb-5 flex h-10 w-10 items-center justify-center rounded-lg border border-brand-border bg-brand-secondary transition-colors group-hover:border-brand-accent/40 group-hover:bg-brand-accent/10">
-                    <Icon className="h-5 w-5 text-brand-accent" />
-                  </div>
-                  <h3 className="font-display text-lg font-bold text-brand-text-primary mb-3">
-                    {title}
-                  </h3>
-                  <p className="text-sm leading-[1.8] text-brand-text-secondary font-serif">
-                    {description}
-                  </p>
-                </motion.div>
+              {appFeatures.map(({ icon: Icon, title, description, to }, i) => (
+                <Link key={title} to={to} className="block group cursor-pointer">
+                  <motion.div
+                    initial={{ opacity: 0, y: 28 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.55, delay: i * 0.07, ease: [0.22, 1, 0.36, 1] }}
+                    whileHover={{ y: -4, transition: { type: 'spring', stiffness: 340, damping: 22 } }}
+                    className="h-full rounded-xl border border-brand-border bg-brand-dark p-7"
+                    style={{ borderTop: '2px solid var(--color-brand-accent, #F27D26)' }}
+                  >
+                    <div className="mb-5 flex h-10 w-10 items-center justify-center rounded-lg border border-brand-border bg-brand-secondary transition-colors group-hover:border-brand-accent/40 group-hover:bg-brand-accent/10">
+                      <Icon className="h-5 w-5 text-brand-accent" />
+                    </div>
+                    <h3 className="font-display text-lg font-bold text-brand-text-primary mb-3">
+                      {title}
+                    </h3>
+                    <p className="text-sm leading-[1.8] text-brand-text-secondary font-serif">
+                      {description}
+                    </p>
+                  </motion.div>
+                </Link>
               ))}
             </div>
           </div>
@@ -882,7 +884,7 @@ const LandingPage: React.FC = () => {
                   A daily place to return to God.
                 </h2>
                 <p className="text-lg leading-relaxed text-brand-text-secondary mb-10">
-                  No card to start — just Scripture, prayer, and a quiet rhythm you can keep. More opens up when you&apos;re ready to go deeper.
+                  No card is required to start. Enjoy Scripture, prayer, and a quiet rhythm you can keep. More options open up when you are ready to go deeper.
                 </p>
                 <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
                   <motion.div
@@ -893,7 +895,7 @@ const LandingPage: React.FC = () => {
                       to="/guided-journey"
                       className="group flex items-center gap-2 bg-brand-accent px-8 py-4 text-sm font-semibold text-white transition-all hover:opacity-90"
                     >
-                      Begin Your Journey
+                      Begin today
                       <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
                     </Link>
                   </motion.div>
@@ -1043,7 +1045,7 @@ const LandingPage: React.FC = () => {
                     to="/guided-journey"
                     className="group flex items-center gap-2 rounded-md bg-brand-accent px-8 py-4 text-sm font-semibold text-white transition-colors hover:bg-brand-cta-light"
                   >
-                    Open today&apos;s journey
+                    Open today&apos;s devotional
                     <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
                   </Link>
                 </motion.div>

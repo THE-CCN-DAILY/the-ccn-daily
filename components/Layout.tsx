@@ -147,10 +147,7 @@ const groupLabelStyle = (color: string): React.CSSProperties => ({
 
 const Sidebar: React.FC<SidebarProps> = ({ className = '', onNavigate, collapsible = false }) => {
   const { user, loading, openSignIn, signOut } = useAuth();
-
-  const [isStrategyMode, setIsStrategyMode] = React.useState(() => {
-    return localStorage.getItem('phoenix_mode') === 'strategy';
-  });
+  const location = useLocation();
 
   const [isCollapsed, setIsCollapsed] = React.useState(() => localStorage.getItem('phoenix_sidebar_collapsed') === '1');
   const collapsed = collapsible && isCollapsed;
@@ -162,23 +159,10 @@ const Sidebar: React.FC<SidebarProps> = ({ className = '', onNavigate, collapsib
     });
   };
 
-  const { notify } = useNotifications();
-
   // Only ministry operators may even SEE the Strategy/Command Center surface. Regular
-  // members never get the toggle, and a stale `phoenix_mode=strategy` in localStorage
-  // can't drop them into the admin nav — effectiveStrategyMode forces sanctuary for them.
+  // members never see it, and they are restricted to the Sanctuary.
   const canStrategy = user?.role === 'admin' || user?.role === 'lead_developer';
-  const effectiveStrategyMode = isStrategyMode && canStrategy;
-
-  const toggleMode = () => {
-    if (!canStrategy) {
-      notify("Strategy mode is reserved for Admins and Lead Developers.", "error");
-      return;
-    }
-    const newMode = !isStrategyMode;
-    setIsStrategyMode(newMode);
-    localStorage.setItem('phoenix_mode', newMode ? 'strategy' : 'sanctuary');
-  };
+  const effectiveStrategyMode = location.pathname.startsWith('/studio') && canStrategy;
 
   const filteredCommandCenterItems = commandCenterItems.filter(item => {
     if (user?.role === 'admin') return true;
@@ -233,21 +217,6 @@ const Sidebar: React.FC<SidebarProps> = ({ className = '', onNavigate, collapsib
         )}
       </div>
 
-      {!collapsed && canStrategy && (
-        <div className="mb-6">
-          <button
-            onClick={toggleMode}
-            className={`w-full p-1 rounded-full border border-brand-border flex items-center transition-all ${effectiveStrategyMode ? 'bg-brand-accent/10 border-brand-accent/30' : 'bg-brand-secondary'}`}
-          >
-            <div className={`flex-1 py-1.5 rounded-full text-[12px] font-bold uppercase tracking-tighter transition-all ${!effectiveStrategyMode ? 'bg-brand-accent text-white shadow-md' : 'text-brand-text-secondary'}`}>
-              Sanctuary
-            </div>
-            <div className={`flex-1 py-1.5 rounded-full text-[12px] font-bold uppercase tracking-tighter transition-all ${effectiveStrategyMode ? 'bg-brand-accent text-white shadow-md' : 'text-brand-text-secondary'}`}>
-              Strategy
-            </div>
-          </button>
-        </div>
-      )}
 
       <nav className="flex-grow overflow-y-auto custom-scrollbar pr-2">
         {effectiveStrategyMode ? (
