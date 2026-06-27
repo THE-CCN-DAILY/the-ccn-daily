@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
+import { useTheme } from '../contexts/ThemeContext';
 import Card from '../components/Card';
 import ShareCardModal from '../components/ShareCardModal';
 import { Share2 } from 'lucide-react';
@@ -103,6 +104,100 @@ const FURTHER_STUDY_TEXTS: Record<string, string> = {
     '2 Timothy 1:7': 'For the Spirit God gave us does not make us timid, but gives us power, love and self-discipline.',
 };
 
+const getStepTonalStyle = (step: number, isDark: boolean) => {
+  if (isDark) {
+    switch (step) {
+      case 0: return { bg: 'rgba(23, 19, 16, 0.98)', border: 'rgba(242, 125, 38, 0.1)' };
+      case 1: return { bg: 'rgba(27, 20, 20, 0.98)', border: 'rgba(232, 100, 90, 0.15)' };
+      case 2: return { bg: 'rgba(17, 19, 21, 0.98)', border: 'rgba(240, 128, 96, 0.1)' };
+      case 3: return { bg: 'rgba(24, 22, 19, 0.98)', border: 'rgba(214, 168, 64, 0.1)' };
+      case 4: return { bg: 'rgba(10, 13, 16, 0.98)', border: 'rgba(94, 136, 181, 0.15)' }; // Deep silent prayer navy
+      case 5: return { bg: 'rgba(25, 21, 16, 0.98)', border: 'rgba(245, 168, 85, 0.1)' };
+      case 6: return { bg: 'rgba(16, 21, 17, 0.98)', border: 'rgba(142, 180, 112, 0.1)' };
+      case 7: return { bg: 'rgba(26, 24, 16, 0.98)', border: 'rgba(212, 168, 64, 0.2)' };
+      default: return { bg: 'var(--bg-card, #1A1310)', border: 'rgba(255,255,255,0.08)' };
+    }
+  } else {
+    switch (step) {
+      case 0: return { bg: '#FBF6EA', border: 'rgba(42, 28, 21, 0.08)' };
+      case 1: return { bg: '#FFF5F4', border: 'rgba(232, 100, 90, 0.15)' }; // Rose/Crimson tint
+      case 2: return { bg: '#FDFBFA', border: 'rgba(240, 128, 96, 0.12)' }; // Devotional paper white
+      case 3: return { bg: '#FAF6EF', border: 'rgba(214, 168, 64, 0.15)' }; // Journal cream
+      case 4: return { bg: '#F0F4F8', border: 'rgba(94, 136, 181, 0.18)' }; // Soft calm blue/gray
+      case 5: return { bg: '#FFFBF5', border: 'rgba(245, 168, 85, 0.15)' }; // Amber glow
+      case 6: return { bg: '#F6F9F5', border: 'rgba(142, 180, 112, 0.15)' }; // Sage green tint
+      case 7: return { bg: '#FFFDF0', border: 'rgba(212, 168, 64, 0.25)' }; // Celebration gold tint
+      default: return { bg: 'var(--bg-card, #FBF6EA)', border: 'rgba(42, 28, 21, 0.08)' };
+    }
+  }
+};
+
+const BreathingGuide: React.FC = () => {
+    const [phase, setPhase] = useState<'inhale' | 'hold' | 'exhale'>('inhale');
+    const [seconds, setSeconds] = useState(4);
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setSeconds((prev) => {
+                if (prev <= 1) {
+                    if (phase === 'inhale') {
+                        setPhase('hold');
+                        return 4;
+                    } else if (phase === 'hold') {
+                        setPhase('exhale');
+                        return 4;
+                    } else {
+                        setPhase('inhale');
+                        return 4;
+                    }
+                }
+                return prev - 1;
+            });
+        }, 1000);
+        return () => clearInterval(interval);
+    }, [phase]);
+
+    return (
+        <div className="flex flex-col items-center justify-center my-6">
+            <div className="relative w-40 h-40 flex items-center justify-center">
+                <motion.div
+                    animate={{
+                        scale: phase === 'inhale' ? [1, 1.4] : phase === 'hold' ? 1.4 : [1.4, 1],
+                    }}
+                    transition={{
+                        duration: 4,
+                        ease: "easeInOut"
+                    }}
+                    className="absolute inset-0 rounded-full bg-brand-accent/10 border border-brand-accent/30"
+                />
+                <motion.div
+                    animate={{
+                        scale: phase === 'inhale' ? [1, 1.25] : phase === 'hold' ? 1.25 : [1.25, 1],
+                        backgroundColor: phase === 'inhale' ? 'rgba(242, 125, 38, 0.15)' : phase === 'hold' ? 'rgba(242, 125, 38, 0.25)' : 'rgba(242, 125, 38, 0.08)',
+                    }}
+                    transition={{
+                        duration: 4,
+                        ease: "easeInOut"
+                    }}
+                    className="w-28 h-28 rounded-full flex flex-col items-center justify-center border border-brand-accent/20 shadow-lg z-10"
+                >
+                    <span className="text-xs font-bold uppercase tracking-widest text-brand-accent">
+                        {phase}
+                    </span>
+                    <span className="text-xl font-bold mt-1 text-brand-text-primary">
+                        {seconds}s
+                    </span>
+                </motion.div>
+            </div>
+            <p className="mt-6 text-sm text-brand-text-secondary italic font-serif text-center">
+                {phase === 'inhale' && "Slowly fill your lungs with His presence..."}
+                {phase === 'hold' && "Rest in the stillness of His sanctuary..."}
+                {phase === 'exhale' && "Exhale all stress, worry, and distractions..."}
+            </p>
+        </div>
+    );
+};
+
 const StepContent: React.FC<{ stepIndex: number; onComplete: () => void; devotional: Devotional | null; onOpenVoice: (ctx: string) => void; onSaveJournal: (text: string) => void; prayerPeople?: Array<{ id: string; name: string; prayerPoints: string[]; }> }> = ({ stepIndex, onComplete, devotional, onOpenVoice, onSaveJournal, prayerPeople = [] }) => {
     const [isPrayerComplete, setIsPrayerComplete] = useState(false);
     const [activeSnippet, setActiveSnippet] = useState<string | null>(null);
@@ -157,6 +252,10 @@ const StepContent: React.FC<{ stepIndex: number; onComplete: () => void; devotio
         }
     };
 
+    const { theme } = useTheme();
+    const isDark = theme === 'dark';
+    const tonal = getStepTonalStyle(stepIndex, isDark);
+
     const renderContent = () => {
         switch (stepIndex) {
             case 0:
@@ -169,15 +268,18 @@ const StepContent: React.FC<{ stepIndex: number; onComplete: () => void; devotio
                 );
             case 1:
                 return (
-                    <div className="py-4">
+                    <div className="py-4 relative overflow-hidden min-h-[16rem] flex flex-col justify-center">
+                        {/* Praying Hands watermark background */}
+                        <div className="absolute right-0 bottom-0 w-36 h-36 opacity-[0.03] text-brand-accent pointer-events-none">
+                            <PrayingHandsIcon className="w-full h-full" />
+                        </div>
                         <p style={{ fontFamily: 'var(--sans-ui, "Inter Tight", -apple-system, sans-serif)', fontSize: '12px', fontWeight: 700, letterSpacing: '0.10em', textTransform: 'uppercase', color: 'var(--crimson, #8E1B1B)', marginBottom: '0.5rem' }}>Step 1</p>
                         <h2 style={{ fontFamily: 'var(--serif-display, "Cormorant Garamond", "Didot", Georgia, serif)', fontWeight: 600, fontSize: '1.75rem', lineHeight: 1.2, color: 'var(--fg-1, #2A1C15)', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                            <PrayingHandsIcon className="w-8 h-8 text-brand-accent"/>
+                            <PrayingHandsIcon className="w-8 h-8 text-brand-accent animate-pulse"/>
                             Opening Prayer
                         </h2>
-                        <div className="p-5 sm:p-8 relative overflow-hidden" style={{ background: 'var(--bg-paper, #F6EFE1)', borderRadius: '1rem', border: '1px solid rgba(42,28,21,0.08)' }}>
-                            <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-brand-accent/30 to-transparent" aria-hidden />
-                            <blockquote style={{ fontFamily: 'var(--serif-display, "Cormorant Garamond", "Didot", Georgia, serif)', fontStyle: 'italic', fontSize: '21px', lineHeight: 1.6, textAlign: 'center', maxWidth: '440px', margin: '0 auto', color: 'var(--fg-1, #2A1C15)' }}>
+                        <div className="p-6 relative overflow-hidden" style={{ background: isDark ? 'rgba(255,255,255,0.02)' : 'rgba(42,28,21,0.03)', borderRadius: '1.5rem' }}>
+                            <blockquote style={{ fontFamily: 'var(--serif-display, "Cormorant Garamond", "Didot", Georgia, serif)', fontStyle: 'italic', fontSize: '20px', lineHeight: 1.6, textAlign: 'center', maxWidth: '440px', margin: '0 auto', color: isDark ? '#E5E7FA' : '#2A1C15' }}>
                                 {devotional?.openingPrayer || "Father, I acknowledge Your presence here with me. As I step away from the noise of the world, I ask that You would tune my heart to Your frequency. Speak through the stillness."}
                                 <cite style={{ display: 'block', marginTop: '1em', fontStyle: 'normal', fontFamily: 'var(--sans-ui, "Inter Tight", -apple-system, sans-serif)', fontSize: '11px', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--crimson, #8E1B1B)' }}>Amen</cite>
                             </blockquote>
@@ -186,13 +288,13 @@ const StepContent: React.FC<{ stepIndex: number; onComplete: () => void; devotio
                 );
             case 2:
                 return (
-                    <div className="p-5 sm:p-8 rounded-2xl shadow-sm" style={{ background: 'var(--bg-paper, #F6EFE1)' }}>
+                    <div className="py-4">
                         <p style={{ fontFamily: 'var(--sans-ui, "Inter Tight", -apple-system, sans-serif)', fontSize: '12px', fontWeight: 700, letterSpacing: '0.10em', textTransform: 'uppercase', color: 'var(--crimson, #8E1B1B)', marginBottom: '0.5rem', textAlign: 'center' }}>Step 2</p>
                         <h2 style={{ fontFamily: 'var(--serif-display, "Cormorant Garamond", "Didot", Georgia, serif)', fontWeight: 600, fontSize: '1.75rem', lineHeight: 1.2, color: 'var(--fg-1, #2A1C15)', marginBottom: '1.5rem', textAlign: 'center' }}>Today's Reflection</h2>
                         {devotional ? (
                             <div className="text-left max-w-2xl mx-auto">
                                 <h3 style={{ fontFamily: 'var(--serif-display, "Cormorant Garamond", "Didot", Georgia, serif)', fontWeight: 600, fontSize: '1.4rem', color: 'var(--crimson, #8E1B1B)', marginBottom: '1rem', textAlign: 'center' }}>{devotional.title}</h3>
-                                {/* Study passage button for today's devotional */}
+                                
                                 <div className="mb-5 flex justify-center">
                                     <button
                                         onClick={() => openStudy(devotional.title, devotional.content.slice(0, 300))}
@@ -223,7 +325,7 @@ const StepContent: React.FC<{ stepIndex: number; onComplete: () => void; devotio
                                         }
                                     };
                                     return (
-                                        <div className="mb-6 flex items-center gap-4 p-4 bg-brand-secondary/50 rounded-2xl border border-brand-border">
+                                        <div className="mb-6 flex items-center gap-4 p-4 bg-brand-secondary/40 rounded-2xl border border-brand-border/40">
                                             <button
                                                 onClick={handleAudio}
                                                 aria-label={isThisPlaying ? 'Pause devotional audio' : 'Play devotional audio'}
@@ -243,7 +345,7 @@ const StepContent: React.FC<{ stepIndex: number; onComplete: () => void; devotio
                                         </div>
                                     );
                                 })()}
-                                <div style={{ fontFamily: 'var(--serif-body, "EB Garamond", "Garamond", Georgia, serif)', fontSize: '18px', lineHeight: 1.75, color: 'var(--fg-1, #2A1C15)' }}>
+                                <div style={{ fontFamily: 'var(--serif-body, "EB Garamond", "Garamond", Georgia, serif)', fontSize: '18px', lineHeight: 1.75, color: isDark ? '#E5E7FA' : '#2A1C15' }}>
                                     <ReactMarkdown>{devotional.content}</ReactMarkdown>
                                 </div>
                             </div>
@@ -256,24 +358,31 @@ const StepContent: React.FC<{ stepIndex: number; onComplete: () => void; devotio
                 );
             case 3:
                 return (
-                     <div>
+                     <div className="py-4">
                         <p style={{ fontFamily: 'var(--sans-ui, "Inter Tight", -apple-system, sans-serif)', fontSize: '12px', fontWeight: 700, letterSpacing: '0.10em', textTransform: 'uppercase', color: 'var(--crimson, #8E1B1B)', marginBottom: '0.5rem' }}>Step 3</p>
                         <h2 style={{ fontFamily: 'var(--serif-display, "Cormorant Garamond", "Didot", Georgia, serif)', fontWeight: 600, fontSize: '1.75rem', lineHeight: 1.2, color: 'var(--fg-1, #2A1C15)', marginBottom: '1rem' }}>Journal Your Response</h2>
                         <p style={{ fontFamily: 'var(--serif-body, "EB Garamond", "Garamond", Georgia, serif)', fontSize: '18px', lineHeight: 1.75, color: 'var(--fg-2, #5B4A3C)', marginBottom: '1.5rem' }}>Where in your life do you need God's strength today? Type it out—the act of writing is an act of release.</p>
-                        <RichTextJournal
+                        
+                        <textarea
                             value={journalText}
-                            onChange={setJournalText}
-                            placeholder="Where in your life do you need God's strength today?"
+                            onChange={(e) => setJournalText(e.target.value)}
+                            placeholder="Where in your life do you need God's strength today?..."
+                            className="w-full h-44 bg-transparent text-brand-text-primary placeholder-brand-text-secondary/40 focus:outline-none border-b border-brand-accent/30 focus:border-brand-accent py-2 resize-none transition-all duration-300"
+                            style={{
+                                fontFamily: 'var(--serif-body, "EB Garamond", "Garamond", Georgia, serif)',
+                                fontSize: '20px',
+                                lineHeight: 1.75,
+                            }}
                         />
                         <p style={{ marginTop: '0.5rem', fontSize: '12px', color: 'var(--fg-3, #9B8E87)', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
                             <span aria-hidden="true">🎙</span>
-                            Type or use your phone's microphone to speak.
+                            Type or speak your reflection.
                         </p>
                     </div>
                 );
             case 4:
                 return (
-                    <div>
+                    <div className="py-4">
                         <p style={{ fontFamily: 'var(--sans-ui, "Inter Tight", -apple-system, sans-serif)', fontSize: '12px', fontWeight: 700, letterSpacing: '0.10em', textTransform: 'uppercase', color: 'var(--crimson, #8E1B1B)', marginBottom: '0.5rem' }}>Step 4</p>
                         {prayerPeople.length > 0 && (
                             <motion.div
@@ -302,21 +411,31 @@ const StepContent: React.FC<{ stepIndex: number; onComplete: () => void; devotio
                                 </div>
                             </motion.div>
                         )}
-                        <h2 style={{ fontFamily: 'var(--serif-display, "Cormorant Garamond", "Didot", Georgia, serif)', fontWeight: 600, fontSize: '1.75rem', lineHeight: 1.2, color: 'var(--fg-1, #2A1C15)', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                        <h2 style={{ fontFamily: 'var(--serif-display, "Cormorant Garamond", "Didot", Georgia, serif)', fontWeight: 600, fontSize: '1.75rem', lineHeight: 1.2, color: isDark ? '#E5E7FA' : '#2A1C15', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                             <SoundWaveIcon className="w-8 h-8 text-brand-accent animate-pulse"/>
                             Guided Prayer Sanctuary
                         </h2>
+                        
+                        {/* Interactive breathing pulsing visual guide */}
+                        <BreathingGuide />
+                        
                         <PrayerTimer duration={120} onComplete={() => setIsPrayerComplete(true)} />
                     </div>
                 );
             case 5:
                 return (
-                     <div style={{ paddingTop: '2.5rem', paddingBottom: '2.5rem', maxWidth: '42rem', margin: '0 auto' }}>
-                        <p style={{ fontFamily: 'var(--sans-ui, "Inter Tight", -apple-system, sans-serif)', fontSize: '12px', fontWeight: 700, letterSpacing: '0.10em', textTransform: 'uppercase', color: 'var(--crimson, #8E1B1B)', marginBottom: '1.5rem', textAlign: 'center' }}>Daily Declaration</p>
-                        <blockquote style={{ fontFamily: 'var(--serif-display, "Cormorant Garamond", "Didot", Georgia, serif)', fontStyle: 'italic', fontSize: '21px', lineHeight: 1.6, textAlign: 'center', maxWidth: '440px', margin: '0 auto', color: 'var(--fg-1, #2A1C15)' }}>
-                            {devotional?.declaration || "I am not a slave to fear. I am a child of God. His peace, which surpasses understanding, guards my mind and my heart today."}
-                            <cite style={{ display: 'block', marginTop: '1em', fontStyle: 'normal', fontFamily: 'var(--sans-ui, "Inter Tight", -apple-system, sans-serif)', fontSize: '11px', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--crimson, #8E1B1B)' }}>Speak it aloud. Receive it.</cite>
-                        </blockquote>
+                     <div className="py-8 max-w-xl mx-auto text-center relative">
+                        <span className="absolute -top-6 left-4 text-7xl font-serif text-brand-accent/15 pointer-events-none">“</span>
+                        <div className="p-8 sm:p-12 rounded-3xl border-2 border-double border-brand-accent/20 bg-brand-accent/5 shadow-inner">
+                            <p style={{ fontFamily: 'var(--sans-ui, "Inter Tight", -apple-system, sans-serif)', fontSize: '12px', fontWeight: 700, letterSpacing: '0.10em', textTransform: 'uppercase', color: 'var(--crimson, #8E1B1B)', marginBottom: '1.5rem', textAlign: 'center' }}>Daily Declaration</p>
+                            <blockquote style={{ fontFamily: 'var(--serif-display, "Cormorant Garamond", "Didot", Georgia, serif)', fontStyle: 'italic', fontSize: '24px', lineHeight: 1.6, textAlign: 'center', maxWidth: '440px', margin: '0 auto', color: isDark ? '#E5E7FA' : '#2A1C15' }}>
+                                "{devotional?.declaration || "I am not a slave to fear. I am a child of God. His peace, which surpasses understanding, guards my mind and my heart today."}"
+                            </blockquote>
+                            <div className="w-16 h-px bg-brand-accent/30 mx-auto my-6" />
+                            <cite className="block not-italic text-xs font-semibold tracking-widest uppercase text-brand-text-secondary" style={{ fontFamily: 'var(--sans-ui, "Inter Tight", sans-serif)' }}>
+                                Speak it aloud. Receive it.
+                            </cite>
+                        </div>
                     </div>
                 );
             case 6: {
@@ -330,11 +449,37 @@ const StepContent: React.FC<{ stepIndex: number; onComplete: () => void; devotio
                         <p style={{ fontFamily: 'var(--sans-ui, "Inter Tight", -apple-system, sans-serif)', fontSize: '12px', fontWeight: 700, letterSpacing: '0.10em', textTransform: 'uppercase', color: 'var(--crimson, #8E1B1B)', marginBottom: '0.5rem' }}>Step 6</p>
                         <h2 style={{ fontFamily: 'var(--serif-display, "Cormorant Garamond", "Didot", Georgia, serif)', fontWeight: 600, fontSize: '1.75rem', lineHeight: 1.2, color: 'var(--fg-1, #2A1C15)', marginBottom: '1.5rem' }}>For Further Study</h2>
                         <p style={{ fontFamily: 'var(--serif-body, "EB Garamond", "Garamond", Georgia, serif)', fontSize: '18px', lineHeight: 1.75, color: 'var(--fg-2, #5B4A3C)', marginBottom: '1.5rem' }}>Click a verse to read it instantly in your sanctuary. Tap "Study" to go deeper.</p>
-                         <div className="grid gap-3">
+                        
+                        {/* Selected passage display styled as a beautiful dark black well */}
+                        {activeSnippet && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="mb-6 p-6 rounded-2xl bg-black border border-brand-accent/20 relative shadow-2xl overflow-hidden"
+                            >
+                                <span className="absolute -top-3 -left-1 text-8xl font-serif text-brand-accent/5 pointer-events-none">“</span>
+                                <p style={{ fontFamily: 'var(--sans-ui)', fontSize: '10px', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--crimson, #8E1B1B)', marginBottom: '0.5rem' }}>
+                                    {activeSnippet}
+                                </p>
+                                <blockquote
+                                    style={{
+                                        fontFamily: 'var(--serif-body, "EB Garamond", serif)',
+                                        fontStyle: 'italic',
+                                        fontSize: '18px',
+                                        lineHeight: 1.65,
+                                        color: '#F3EFE9'
+                                    }}
+                                >
+                                    {studyText || "Loading scripture text..."}
+                                </blockquote>
+                            </motion.div>
+                        )}
+
+                        <div className="grid gap-3">
                             {furtherStudyRefs.map(ref => (
                                 <div
                                     key={ref}
-                                    className="p-5 bg-brand-secondary/50 rounded-2xl border border-brand-border flex items-center justify-between gap-4 group hover:border-brand-accent transition-all"
+                                    className="p-5 bg-brand-secondary/40 rounded-2xl border border-brand-border/40 flex items-center justify-between gap-4 group hover:border-brand-accent transition-all"
                                 >
                                     <button
                                         onClick={() => setActiveSnippet(ref)}
@@ -392,7 +537,14 @@ const StepContent: React.FC<{ stepIndex: number; onComplete: () => void; devotio
     
     return (
         <>
-            <Card className="relative flex flex-col items-center justify-center overflow-hidden p-6 sm:p-10 min-h-[30rem] sm:min-h-[35rem]" style={{ background: 'var(--bg-card, #FBF6EA)', boxShadow: 'var(--sh-card, 0 1px 2px rgba(42,28,21,.06), 0 8px 24px rgba(42,28,21,.05))' }}>
+            <Card
+                className="relative flex flex-col items-center justify-center overflow-hidden p-6 sm:p-10 min-h-[30rem] sm:min-h-[35rem] transition-all duration-500 border-2"
+                style={{
+                    background: tonal.bg,
+                    borderColor: tonal.border,
+                    boxShadow: 'var(--sh-card, 0 1px 2px rgba(42,28,21,.06), 0 8px 24px rgba(42,28,21,.05))'
+                }}
+            >
                 {/* Ambient inner glow */}
                 <div
                     className="pointer-events-none absolute inset-x-0 -top-24 h-64 opacity-10"
@@ -400,7 +552,19 @@ const StepContent: React.FC<{ stepIndex: number; onComplete: () => void; devotio
                     style={{ background: 'radial-gradient(ellipse 70% 60% at 50% 0%, rgb(242 125 38) 0%, transparent 70%)' }}
                 />
                 <div className="relative z-10 w-full max-w-xl">
-                    {renderContent()}
+                    <AnimatePresence mode="wait">
+                        <motion.div
+                            key={stepIndex}
+                            initial={{ opacity: 0, y: 15 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -15 }}
+                            transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                            className="w-full"
+                        >
+                            {renderContent()}
+                        </motion.div>
+                    </AnimatePresence>
+                    
                     <div className="mt-12 flex flex-col items-center gap-4">
                         <motion.button
                             onClick={() => {
