@@ -2,7 +2,7 @@
 import React from 'react';
 import type { Theme } from './contexts/ThemeContext';
 
-export type UserRoleType = 'admin' | 'lead_developer' | 'group_lead' | 'family_lead' | 'user';
+export type UserRoleType = 'admin' | 'lead_developer' | 'developer' | 'editor' | 'community_moderator' | 'group_lead' | 'family_lead' | 'user';
 
 export interface AppUser {
   uid: string;

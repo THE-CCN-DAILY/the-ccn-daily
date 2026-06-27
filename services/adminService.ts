@@ -47,7 +47,7 @@ export const listAdminUsers = async (): Promise<{ users: AdminUser[]; stats: Adm
   };
 };
 
-export type AssignableRole = 'user' | 'family_lead' | 'group_lead' | 'lead_developer' | 'admin';
+export type AssignableRole = 'user' | 'family_lead' | 'group_lead' | 'lead_developer' | 'developer' | 'editor' | 'community_moderator' | 'admin';
 
 /**
  * Promote or demote a user. Authority lives in D1 (`users.role`); the worker verifies the

@@ -981,6 +981,57 @@ const requireAdmin = (c: any) => {
   }, 401);
 };
 
+const requireEditor = (c: any) => {
+  const sessionEmail = (c.get('idTokenEmail') || '').toLowerCase();
+  const role = c.get('idTokenRole');
+  const isVerified = c.get('idTokenEmailVerified') === true;
+  const isAllowed = isVerified && (
+    ADMIN_EMAILS.includes(sessionEmail) ||
+    role === 'admin' ||
+    role === 'lead_developer' ||
+    role === 'developer' ||
+    role === 'editor'
+  );
+  if (isAllowed) return null;
+  return c.json({
+    error: 'EDITOR_AUTH_REQUIRED',
+    message: 'This action requires editor, developer, or administrator privileges.',
+  }, 401);
+};
+
+const requireModerator = (c: any) => {
+  const sessionEmail = (c.get('idTokenEmail') || '').toLowerCase();
+  const role = c.get('idTokenRole');
+  const isVerified = c.get('idTokenEmailVerified') === true;
+  const isAllowed = isVerified && (
+    ADMIN_EMAILS.includes(sessionEmail) ||
+    role === 'admin' ||
+    role === 'community_moderator'
+  );
+  if (isAllowed) return null;
+  return c.json({
+    error: 'MODERATOR_AUTH_REQUIRED',
+    message: 'This action requires community moderator or administrator privileges.',
+  }, 401);
+};
+
+const requireDeveloper = (c: any) => {
+  const sessionEmail = (c.get('idTokenEmail') || '').toLowerCase();
+  const role = c.get('idTokenRole');
+  const isVerified = c.get('idTokenEmailVerified') === true;
+  const isAllowed = isVerified && (
+    ADMIN_EMAILS.includes(sessionEmail) ||
+    role === 'admin' ||
+    role === 'lead_developer' ||
+    role === 'developer'
+  );
+  if (isAllowed) return null;
+  return c.json({
+    error: 'DEVELOPER_AUTH_REQUIRED',
+    message: 'This action requires engineering or lead developer privileges.',
+  }, 401);
+};
+
 // ─── Abuse protection: durable rate limiting + Turnstile ─────────────────────
 // Rate limits are stored in D1 (fixed-window counters) so they survive isolate
 // recycling and apply across all edge locations sharing the database. The table
@@ -1504,7 +1555,7 @@ app.get('/api/blog/posts/:slug', async (c) => {
 });
 
 app.get('/api/admin/blog/posts', async (c) => {
-  const denied = requireAdmin(c);
+  const denied = requireEditor(c);
   if (denied) return denied;
 
   if (!c.env.DB) return c.json({ posts: fallbackPosts.map(mapPost), source: 'fallback' });
@@ -1517,7 +1568,7 @@ app.get('/api/admin/blog/posts', async (c) => {
 });
 
 app.post('/api/admin/blog/posts', async (c) => {
-  const denied = requireAdmin(c);
+  const denied = requireEditor(c);
   if (denied) return denied;
   if (!c.env.DB) return c.json({ error: 'D1 database binding is not configured' }, 503);
 
@@ -1573,7 +1624,7 @@ app.post('/api/admin/blog/posts', async (c) => {
 });
 
 app.delete('/api/admin/blog/posts/:id', async (c) => {
-  const denied = requireAdmin(c);
+  const denied = requireEditor(c);
   if (denied) return denied;
   if (!c.env.DB) return c.json({ error: 'D1 database binding is not configured' }, 503);
 
@@ -1835,7 +1886,7 @@ app.post('/api/challenges/:id/invite', async (c) => {
 });
 
 app.post('/api/admin/challenges', async (c) => {
-  const denied = requireAdmin(c);
+  const denied = requireEditor(c);
   if (denied) return denied;
   if (!c.env.DB) return c.json({ error: 'D1 database binding is not configured' }, 503);
 
@@ -1935,7 +1986,7 @@ app.post('/api/admin/challenges', async (c) => {
 });
 
 app.post('/api/admin/challenges/:id/modules', async (c) => {
-  const denied = requireAdmin(c);
+  const denied = requireEditor(c);
   if (denied) return denied;
   const challengeId = c.req.param('id');
   if (!isSafeId(challengeId)) return c.json({ error: 'Invalid challenge id' }, 400);
@@ -2084,7 +2135,7 @@ app.post('/api/courses/:id/modules/:moduleId/complete', async (c) => {
 });
 
 app.post('/api/admin/courses', async (c) => {
-  const denied = requireAdmin(c);
+  const denied = requireEditor(c);
   if (denied) return denied;
   if (!c.env.DB) return c.json({ error: 'D1 database binding is not configured' }, 503);
 
@@ -2128,7 +2179,7 @@ app.post('/api/admin/courses', async (c) => {
 });
 
 app.post('/api/admin/courses/:id/modules', async (c) => {
-  const denied = requireAdmin(c);
+  const denied = requireEditor(c);
   if (denied) return denied;
   const courseId = c.req.param('id');
   if (!isSafeId(courseId)) return c.json({ error: 'Invalid course id' }, 400);
@@ -2179,7 +2230,7 @@ app.post('/api/admin/courses/:id/modules', async (c) => {
 });
 
 app.delete('/api/admin/courses/:id/modules/:moduleId', async (c) => {
-  const denied = requireAdmin(c);
+  const denied = requireEditor(c);
   if (denied) return denied;
   const courseId = c.req.param('id');
   const moduleId = c.req.param('moduleId');
@@ -2239,7 +2290,7 @@ app.post('/api/events/:id/register', async (c) => {
 });
 
 app.post('/api/admin/events', async (c) => {
-  const denied = requireAdmin(c);
+  const denied = requireEditor(c);
   if (denied) return denied;
   if (!c.env.DB) return c.json({ error: 'D1 database binding is not configured' }, 503);
 
@@ -2278,7 +2329,7 @@ app.post('/api/admin/events', async (c) => {
 });
 
 app.delete('/api/admin/events/:id', async (c) => {
-  const denied = requireAdmin(c);
+  const denied = requireEditor(c);
   if (denied) return denied;
   const id = c.req.param('id');
   if (!isSafeId(id)) return c.json({ error: 'Invalid event id' }, 400);
@@ -2565,7 +2616,7 @@ const resolveStreamCustomerSubdomain = (env: Env, ...candidates: unknown[]): str
 
 // POST /api/stream/live — create a Cloudflare Stream live input (RTMPS ingest + uid).
 app.post('/api/stream/live', async (c) => {
-  const denied = requireAdmin(c);
+  const denied = requireDeveloper(c);
   if (denied) return denied;
 
   if (!streamConfigured(c.env)) {
@@ -2634,7 +2685,7 @@ app.post('/api/stream/live', async (c) => {
 
 // POST /api/stream/upload — one-time direct creator upload URL for VOD.
 app.post('/api/stream/upload', async (c) => {
-  const denied = requireAdmin(c);
+  const denied = requireDeveloper(c);
   if (denied) return denied;
 
   if (!streamConfigured(c.env)) {
@@ -2828,7 +2879,7 @@ app.get('/api/audiobooks/:id/reviews', listReviewsHandler('audiobook'));
 
 // Admin moderation queue + decision.
 app.get('/api/admin/reviews', async (c) => {
-  const denied = requireAdmin(c); if (denied) return denied;
+  const denied = requireModerator(c); if (denied) return denied;
   if (!c.env.DB) return c.json({ reviews: [], source: 'fallback' });
   await ensureBookReviewsTable(c.env.DB);
   const status = String(c.req.query('status') || 'pending');
@@ -2839,7 +2890,7 @@ app.get('/api/admin/reviews', async (c) => {
 });
 
 app.post('/api/admin/reviews/:id/status', async (c) => {
-  const denied = requireAdmin(c); if (denied) return denied;
+  const denied = requireModerator(c); if (denied) return denied;
   if (!c.env.DB) return c.json({ error: 'D1 database binding is not configured' }, 503);
   const id = c.req.param('id');
   if (!isSafeId(id)) return c.json({ error: 'Invalid review id' }, 400);
@@ -2856,7 +2907,7 @@ app.post('/api/admin/reviews/:id/status', async (c) => {
 // Admin: permanently remove a review (e.g. un-publish a previously-approved one).
 // Deleting frees the (content_type, book_id, user_id) slot so the reader can review again.
 app.delete('/api/admin/reviews/:id', async (c) => {
-  const denied = requireAdmin(c); if (denied) return denied;
+  const denied = requireModerator(c); if (denied) return denied;
   if (!c.env.DB) return c.json({ error: 'D1 database binding is not configured' }, 503);
   const id = c.req.param('id');
   if (!isSafeId(id)) return c.json({ error: 'Invalid review id' }, 400);
@@ -3012,7 +3063,7 @@ app.post('/api/admin/books/:id/print', async (c) => {
 });
 
 app.post('/api/admin/content/media', async (c) => {
-  const denied = requireAdmin(c);
+  const denied = requireEditor(c);
   if (denied) return denied;
   if (!c.env.MEDIA_BUCKET) {
     return c.json({
@@ -3058,7 +3109,7 @@ app.post('/api/admin/content/media', async (c) => {
 });
 
 app.get('/api/admin/content/:type', async (c) => {
-  const denied = requireAdmin(c);
+  const denied = requireEditor(c);
   if (denied) return denied;
   const type = contentTypeFromParam(c);
   if (!type) return c.json({ error: 'Unsupported content type' }, 400);
@@ -3066,7 +3117,7 @@ app.get('/api/admin/content/:type', async (c) => {
 });
 
 app.post('/api/admin/content/:type', async (c) => {
-  const denied = requireAdmin(c);
+  const denied = requireEditor(c);
   if (denied) return denied;
   const type = contentTypeFromParam(c);
   if (!type) return c.json({ error: 'Unsupported content type' }, 400);
@@ -3248,7 +3299,7 @@ app.post('/api/admin/content/:type', async (c) => {
 });
 
 app.delete('/api/admin/content/:type/:id', async (c) => {
-  const denied = requireAdmin(c);
+  const denied = requireEditor(c);
   if (denied) return denied;
   const type = contentTypeFromParam(c);
   const id = c.req.param('id');
@@ -4042,7 +4093,7 @@ app.get('/api/admin/users', async (c) => {
 // POST /api/admin/users/:id/role — promote/demote a user. D1 users.role is the single
 // source of truth (see isAdminRequest). Admin-guarded. The bootstrap super-admin emails
 // can never be demoted here so the founder is never locked out of the role table.
-const ASSIGNABLE_ROLES = ['user', 'family_lead', 'group_lead', 'lead_developer', 'admin'] as const;
+const ASSIGNABLE_ROLES = ['user', 'family_lead', 'group_lead', 'lead_developer', 'developer', 'editor', 'community_moderator', 'admin'] as const;
 
 app.post('/api/admin/users/:id/role', async (c) => {
   const denied = requireAdmin(c);

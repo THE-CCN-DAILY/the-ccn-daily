@@ -76,6 +76,9 @@ interface DevotionalDoc {
   authorBio?: string;
   authorWebsiteUrl?: string;
   authorTwitterHandle?: string;
+  openingPrayer?: string;
+  declaration?: string;
+  furtherStudy?: string;
 }
 
 const emptyForm = () => ({
@@ -91,6 +94,9 @@ const emptyForm = () => ({
   authorBio: '',
   authorWebsiteUrl: '',
   authorTwitterHandle: '',
+  openingPrayer: '',
+  declaration: '',
+  furtherStudy: '',
 });
 
 const DevotionalsTab: React.FC = () => {
@@ -166,6 +172,9 @@ const DevotionalsTab: React.FC = () => {
       authorBio: dev.authorBio ?? '',
       authorWebsiteUrl: dev.authorWebsiteUrl ?? '',
       authorTwitterHandle: dev.authorTwitterHandle ?? '',
+      openingPrayer: dev.openingPrayer ?? '',
+      declaration: dev.declaration ?? '',
+      furtherStudy: dev.furtherStudy ?? '',
     });
     setEditingId(dev.id);
     setShowForm(true);
@@ -208,7 +217,7 @@ const DevotionalsTab: React.FC = () => {
               <h2 className="text-xl font-bold text-brand-text-primary mb-6 border-b border-brand-border pb-4">
                 {editingId ? 'Edit Devotional' : 'New Devotional'}
               </h2>
-              <div className="space-y-5">
+              <div className="space-y-5 max-h-[60vh] overflow-y-auto pr-1 custom-scrollbar">
                 {field('Title', <input type="text" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} className={inputCls} placeholder="Devotional title..." />)}
                 {field('Scripture Reference', <input type="text" value={form.scriptureRef} onChange={e => setForm(f => ({ ...f, scriptureRef: e.target.value }))} className={inputCls} placeholder="e.g. John 3:16" />)}
                 {field('Scripture Text', <textarea value={form.scriptureText} onChange={e => setForm(f => ({ ...f, scriptureText: e.target.value }))} rows={3} className={`${inputCls} resize-none`} placeholder="The scripture passage..." />)}
@@ -221,6 +230,9 @@ const DevotionalsTab: React.FC = () => {
                     <option value="published">Published</option>
                   </select>
                 ))}
+                {field('Opening Prayer', <textarea value={form.openingPrayer} onChange={e => setForm(f => ({ ...f, openingPrayer: e.target.value }))} rows={3} className={`${inputCls} resize-none`} placeholder="Opening prayer for the sanctuary step..." />)}
+                {field('Daily Declaration', <textarea value={form.declaration} onChange={e => setForm(f => ({ ...f, declaration: e.target.value }))} rows={3} className={`${inputCls} resize-none`} placeholder="Daily declaration for the sanctuary step..." />)}
+                {field('Further Study References', <input type="text" value={form.furtherStudy} onChange={e => setForm(f => ({ ...f, furtherStudy: e.target.value }))} className={inputCls} placeholder="e.g. Joshua 1:9, Deuteronomy 31:6 (comma-separated)" />)}
 
                 {/* Author Information */}
                 <div className="border-t border-brand-border pt-5">

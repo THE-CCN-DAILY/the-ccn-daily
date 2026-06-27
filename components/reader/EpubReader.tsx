@@ -2,6 +2,9 @@ import React, { useEffect, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight, X, List, Settings } from 'lucide-react';
 import ReaderSettingsModal from './ReaderSettingsModal';
 import type { ReaderSettings } from '../../types';
+import ShareCardModal from '../ShareCardModal';
+import { motion, AnimatePresence } from 'motion/react';
+import { toast } from 'sonner';
 
 interface EpubReaderProps {
   url: string;
@@ -29,6 +32,8 @@ const EpubReader: React.FC<EpubReaderProps> = ({ url, title, author, onClose }) 
     margins: 'normal',
     narratorVoice: 'Zephyr'
   });
+  const [selectedText, setSelectedText] = useState<string | null>(null);
+  const [shareCardOpen, setShareCardOpen] = useState(false);
 
   // Dynamically load JSZip and EpubJS
   useEffect(() => {
@@ -92,6 +97,23 @@ const EpubReader: React.FC<EpubReaderProps> = ({ url, title, author, onClose }) 
       if (location?.start?.percentage) {
         setProgress(Math.round(location.start.percentage * 100));
       }
+    });
+
+    rendition.on('selected', (cfiRange: string, contents: any) => {
+      const selection = contents.window.getSelection();
+      const text = selection ? selection.toString().trim() : '';
+      if (text) {
+        if (text.length > 1500) {
+          toast.warning("For copyright compliance, book sharing is limited to 1,500 characters.");
+          setSelectedText(text.slice(0, 1500) + '...');
+        } else {
+          setSelectedText(text);
+        }
+      }
+    });
+
+    rendition.on('click', () => {
+      setSelectedText(null);
     });
 
     return () => {
@@ -219,6 +241,42 @@ const EpubReader: React.FC<EpubReaderProps> = ({ url, title, author, onClose }) 
           onClose={() => setIsSettingsOpen(false)}
         />
       )}
+
+      {/* Selection floating bar */}
+      <AnimatePresence>
+        {selectedText && (
+          <motion.div
+            className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[60] flex items-center gap-3 bg-brand-dark border border-brand-border rounded-full px-5 py-2.5 shadow-xl"
+            initial={{ opacity: 0, y: 12, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 8, scale: 0.95 }}
+            transition={{ duration: 0.2 }}
+          >
+            <button
+              onClick={() => setShareCardOpen(true)}
+              className="text-xs text-brand-accent font-bold uppercase tracking-wider hover:opacity-85 transition-opacity"
+            >
+              ✦ Share Quote Card
+            </button>
+            <span className="text-brand-border select-none">|</span>
+            <button
+              onClick={() => setSelectedText(null)}
+              className="text-xs text-brand-text-secondary hover:text-brand-text-primary transition-colors"
+            >
+              Cancel
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <ShareCardModal
+        isOpen={shareCardOpen}
+        onClose={() => { setShareCardOpen(false); setSelectedText(null); }}
+        title={title || "Book Quote"}
+        text={selectedText ?? ''}
+        author={author || "CCN Daily Books"}
+        type="scripture"
+      />
     </div>
   );
 };

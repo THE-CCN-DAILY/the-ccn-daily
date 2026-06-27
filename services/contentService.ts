@@ -23,6 +23,9 @@ export interface CatalogContentItem {
   moduleCount?: number;
   /** Admin-settable external marketplace review links (books & audiobooks). */
   reviewLinks?: Record<string, string>;
+  openingPrayer?: string;
+  declaration?: string;
+  furtherStudy?: string;
 }
 
 const ADMIN_EMAIL = 'pastor.eryeza@gmail.com';
@@ -131,6 +134,9 @@ export const getTodayDevotional = async (date: string): Promise<CatalogContentIt
       date: typeof doc.date === 'string' ? doc.date : undefined,
       audioUrl: typeof doc.audioUrl === 'string' ? doc.audioUrl : undefined,
       status: 'published',
+      openingPrayer: typeof doc.openingPrayer === 'string' ? doc.openingPrayer : undefined,
+      declaration: typeof doc.declaration === 'string' ? doc.declaration : undefined,
+      furtherStudy: typeof doc.furtherStudy === 'string' ? doc.furtherStudy : undefined,
     };
   } catch {
     return null;

@@ -6,7 +6,8 @@ import { listTestimonies } from '../services/testimonyService';
 import { useTheme } from '../contexts/ThemeContext';
 import CcnLogo from '../components/CcnLogo';
 import AmbientDevotionalMotion from '../components/landing/AmbientDevotionalMotion';
-import FeaturesDevotionalMotion from '../components/landing/FeaturesDevotionalMotion';
+import InteractiveFeaturesCarousel from '../components/landing/InteractiveFeaturesCarousel';
+import CcnFlame from '../components/CcnFlame';
 import usePageMeta from '../hooks/usePageMeta';
 import {
   BookOpen,
@@ -428,7 +429,7 @@ const LandingPage: React.FC = () => {
             }}
             transition={{ duration: 1.4, ease: [0.22, 1, 0.36, 1] }}
           >
-            <SunriseEmblem className="h-full w-full" />
+            <CcnFlame size={420} className="h-full w-full object-contain filter grayscale" />
           </motion.div>
 
           <div className="mx-auto max-w-6xl px-4 py-[4.5rem] sm:px-6 lg:py-28 flex flex-col items-center text-center">
@@ -558,7 +559,7 @@ const LandingPage: React.FC = () => {
           </motion.div>
         </section>
 
-        <FeaturesDevotionalMotion />
+        <InteractiveFeaturesCarousel />
 
         {/* ── Scripture Accent — Psalm 119:105 ───────────────────────────────── */}
         <div className="py-10 px-6 text-center bg-brand-dark border-t border-brand-border/40">
@@ -958,6 +959,8 @@ const LandingPage: React.FC = () => {
               <Link to="/blog" className="hover:text-brand-text-primary">Blog</Link>
               <Link to="/pricing" className="hover:text-brand-text-primary">Pricing</Link>
               <Link to="/giving" className="hover:text-brand-text-primary">Support</Link>
+              <Link to="/privacy" className="hover:text-brand-text-primary">Privacy Policy</Link>
+              <Link to="/terms" className="hover:text-brand-text-primary">Terms</Link>
               <Link to="/help" className="hover:text-brand-text-primary">Help</Link>
             </nav>
             <span>© {new Date().getFullYear()} THE CCN DAILY</span>

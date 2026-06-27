@@ -87,6 +87,8 @@ import HelpPage from './pages/HelpPage';
 import OnboardingPage from './pages/OnboardingPage';
 import DonationPage from './pages/DonationPage';
 import PlannerPage from './pages/PlannerPage';
+import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
+import TermsOfServicePage from './pages/TermsOfServicePage';
 
 // Strips the legacy /app prefix and redirects to the clean path, so old links,
 // bookmarks, and already-sent emails (e.g. /app/giving) keep working.
@@ -121,6 +123,8 @@ const App: React.FC = () => {
                           <Route path="/give" element={<DonationPage />} />
                           <Route path="/onboarding" element={<OnboardingPage />} />
                           <Route path="/join" element={<JoinPage />} />
+                          <Route path="/privacy" element={<PrivacyPolicyPage />} />
+                          <Route path="/terms" element={<TermsOfServicePage />} />
                           
                           {/* Member Sanctuary Routes — now at clean root paths (no /app prefix). */}
                           <Route path="/dashboard" element={<RequireAuth><DashboardPage /></RequireAuth>} />
@@ -178,14 +182,14 @@ const App: React.FC = () => {
                           <Route
                             path="/studio/*"
                             element={
-                              <RequireRole allowedRoles={['admin', 'lead_developer']}>
+                              <RequireRole allowedRoles={['admin', 'lead_developer', 'developer', 'editor', 'community_moderator']}>
                                 <Outlet />
                               </RequireRole>
                             }
                           >
                             <Route index element={<Navigate to="admin" replace />} />
                             <Route path="admin" element={<RequireRole allowedRoles={['admin']}><AdminDashboard /></RequireRole>} />
-                            <Route path="blog" element={<RequireRole allowedRoles={['admin']}><BlogStudioPage /></RequireRole>} />
+                            <Route path="blog" element={<RequireRole allowedRoles={['admin', 'editor']}><BlogStudioPage /></RequireRole>} />
                             <Route path="plan" element={<RequireRole allowedRoles={['admin']}><MasterPlan /></RequireRole>} />
                             <Route path="roadmap-evolution" element={<RequireRole allowedRoles={['admin']}><RoadmapEvolution /></RequireRole>} />
                             <Route path="visionary-lab" element={<RequireRole allowedRoles={['admin']}><VisionaryLab /></RequireRole>} />
@@ -199,16 +203,16 @@ const App: React.FC = () => {
                             <Route path="atmospheric-music" element={<RequireRole allowedRoles={['admin']}><AtmosphericMusicPage /></RequireRole>} />
                             <Route path="media-plan" element={<RequireRole allowedRoles={['admin']}><MediaPlayerPlan /></RequireRole>} />
                             <Route path="design-system" element={<RequireRole allowedRoles={['admin']}><DesignSystem /></RequireRole>} />
-                            <Route path="diagnostics" element={<RequireRole allowedRoles={['admin']}><DiagnosticsPage /></RequireRole>} />
-                            <Route path="content-manager" element={<RequireRole allowedRoles={['admin', 'lead_developer']}><ContentManagerPage /></RequireRole>} />
-                            <Route path="comments" element={<RequireRole allowedRoles={['admin']}><CommentModerationPage /></RequireRole>} />
-                            <Route path="reviews" element={<RequireRole allowedRoles={['admin']}><ReviewModerationPage /></RequireRole>} />
-                            <Route path="announcements" element={<RequireRole allowedRoles={['admin']}><AnnouncementsManagerPage /></RequireRole>} />
+                            <Route path="diagnostics" element={<RequireRole allowedRoles={['admin', 'lead_developer', 'developer']}><DiagnosticsPage /></RequireRole>} />
+                            <Route path="content-manager" element={<RequireRole allowedRoles={['admin', 'lead_developer', 'developer', 'editor']}><ContentManagerPage /></RequireRole>} />
+                            <Route path="comments" element={<RequireRole allowedRoles={['admin', 'community_moderator']}><CommentModerationPage /></RequireRole>} />
+                            <Route path="reviews" element={<RequireRole allowedRoles={['admin', 'community_moderator']}><ReviewModerationPage /></RequireRole>} />
+                            <Route path="announcements" element={<RequireRole allowedRoles={['admin', 'editor']}><AnnouncementsManagerPage /></RequireRole>} />
                             <Route path="scholarships" element={<RequireRole allowedRoles={['admin']}><ScholarshipReviewPage /></RequireRole>} />
-                            <Route path="challenges/:challengeId/modules" element={<RequireRole allowedRoles={['admin', 'lead_developer']}><ChallengeModuleManagerPage /></RequireRole>} />
-                            <Route path="courses/:courseId/modules" element={<RequireRole allowedRoles={['admin', 'lead_developer']}><CourseModuleManagerPage /></RequireRole>} />
+                            <Route path="challenges/:challengeId/modules" element={<RequireRole allowedRoles={['admin', 'lead_developer', 'developer', 'editor']}><ChallengeModuleManagerPage /></RequireRole>} />
+                            <Route path="courses/:courseId/modules" element={<RequireRole allowedRoles={['admin', 'lead_developer', 'developer', 'editor']}><CourseModuleManagerPage /></RequireRole>} />
                             <Route path="growth" element={<RequireRole allowedRoles={['admin']}><GrowthConsole /></RequireRole>} />
-                            <Route path="release-ops" element={<RequireRole allowedRoles={['admin', 'lead_developer']}><ReleaseOpsConsole /></RequireRole>} />
+                            <Route path="release-ops" element={<RequireRole allowedRoles={['admin', 'lead_developer', 'developer']}><ReleaseOpsConsole /></RequireRole>} />
                             <Route path="team" element={<RequireRole allowedRoles={['admin']}><Team /></RequireRole>} />
                             <Route path="next-steps" element={<RequireRole allowedRoles={['admin']}><NextSteps /></RequireRole>} />
                             <Route path="chat" element={<RequireRole allowedRoles={['admin']}><ChatWithTeam /></RequireRole>} />

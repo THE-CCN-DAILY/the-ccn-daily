@@ -20,6 +20,9 @@ const ROLE_OPTIONS: { value: AssignableRole; label: string }[] = [
   { value: 'user', label: 'User' },
   { value: 'family_lead', label: 'Family Lead' },
   { value: 'group_lead', label: 'Group Lead' },
+  { value: 'developer', label: 'Developer' },
+  { value: 'editor', label: 'Editor' },
+  { value: 'community_moderator', label: 'Community Moderator' },
   { value: 'lead_developer', label: 'Lead Developer' },
   { value: 'admin', label: 'Admin' },
 ];
@@ -38,8 +41,20 @@ const ROLE_GLOSSARY: { name: string; blurb: string }[] = [
     blurb: 'A member who shepherds a small group: sees the Leader Dashboard to assign and track shared progress.',
   },
   {
+    name: 'Developer',
+    blurb: 'Engineering access to technical systems, diagnostics, stream inputs, and content managers. Cannot manage billing, secrets, or user roles.',
+  },
+  {
+    name: 'Editor',
+    blurb: 'Content creator: full access to devotionals, announcements, challenges, courses, and blog pages inside the Content Manager.',
+  },
+  {
+    name: 'Community Moderator',
+    blurb: 'Moderation steward: read and approve/reject comments, product reviews, and public testimonies.',
+  },
+  {
     name: 'Lead Developer',
-    blurb: 'Engineering access to technical and content tooling (content manager, release ops). No billing or secrets.',
+    blurb: 'Engineering supervisor: technical and content tooling + release ops. No billing or secrets.',
   },
   {
     name: 'Admin',

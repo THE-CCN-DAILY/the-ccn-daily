@@ -3,6 +3,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import Card from '../components/Card';
+import ShareCardModal from '../components/ShareCardModal';
+import { Share2 } from 'lucide-react';
 import ManuscriptQuote from '../components/ManuscriptQuote';
 import { Megaphone } from 'lucide-react';
 import { CheckIcon, FlagIcon, PencilIcon, PrayingHandsIcon, ReaderIcon, CloseIcon, ChevronLeftIcon, SoundWaveIcon, PlayIcon, PauseIcon, MicrophoneIcon } from '../components/icons';
@@ -26,6 +28,10 @@ interface Devotional {
   content: string;
   date: string;
   audioUrl?: string;
+  author?: string;
+  openingPrayer?: string;
+  declaration?: string;
+  furtherStudy?: string;
 }
 
 const journeySteps = [
@@ -104,6 +110,30 @@ const StepContent: React.FC<{ stepIndex: number; onComplete: () => void; devotio
     const [isStudyOpen, setIsStudyOpen] = useState(false);
     const [studyPassage, setStudyPassage] = useState('');
     const [studyText, setStudyText] = useState('');
+    const [shareCompletionOpen, setShareCompletionOpen] = useState(false);
+
+    useEffect(() => {
+        if (stepIndex === 7) {
+            if (!(window as any).confetti) {
+                const script = document.createElement('script');
+                script.src = 'https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js';
+                script.onload = () => {
+                    (window as any).confetti({
+                        particleCount: 150,
+                        spread: 80,
+                        origin: { y: 0.6 }
+                    });
+                };
+                document.body.appendChild(script);
+            } else {
+                (window as any).confetti({
+                    particleCount: 150,
+                    spread: 80,
+                    origin: { y: 0.6 }
+                });
+            }
+        }
+    }, [stepIndex]);
     const isPrayerStep = stepIndex === 4;
     const { playTrack, currentTrack, isPlaying, togglePlayPause } = useAudioPlayer();
 
@@ -111,6 +141,20 @@ const StepContent: React.FC<{ stepIndex: number; onComplete: () => void; devotio
         setStudyPassage(passage);
         setStudyText(text);
         setIsStudyOpen(true);
+    };
+
+    const handleOpenStudy = async (ref: string) => {
+        if (FURTHER_STUDY_TEXTS[ref]) {
+            openStudy(ref, FURTHER_STUDY_TEXTS[ref]);
+        } else {
+            try {
+                const res = await getScriptureSnippet(ref);
+                const plainText = res.text.replace(/<[^>]*>/g, '');
+                openStudy(ref, plainText);
+            } catch {
+                openStudy(ref, "Scripture passage for study.");
+            }
+        }
     };
 
     const renderContent = () => {
@@ -131,10 +175,10 @@ const StepContent: React.FC<{ stepIndex: number; onComplete: () => void; devotio
                             <PrayingHandsIcon className="w-8 h-8 text-brand-accent"/>
                             Opening Prayer
                         </h2>
-                        <div style={{ background: 'var(--bg-paper, #F6EFE1)', borderRadius: '1rem', border: '1px solid rgba(42,28,21,0.08)', padding: '2rem', position: 'relative', overflow: 'hidden' }}>
+                        <div className="p-5 sm:p-8 relative overflow-hidden" style={{ background: 'var(--bg-paper, #F6EFE1)', borderRadius: '1rem', border: '1px solid rgba(42,28,21,0.08)' }}>
                             <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-brand-accent/30 to-transparent" aria-hidden />
                             <blockquote style={{ fontFamily: 'var(--serif-display, "Cormorant Garamond", "Didot", Georgia, serif)', fontStyle: 'italic', fontSize: '21px', lineHeight: 1.6, textAlign: 'center', maxWidth: '440px', margin: '0 auto', color: 'var(--fg-1, #2A1C15)' }}>
-                                Father, I acknowledge Your presence here with me. As I step away from the noise of the world, I ask that You would tune my heart to Your frequency. Speak through the stillness.
+                                {devotional?.openingPrayer || "Father, I acknowledge Your presence here with me. As I step away from the noise of the world, I ask that You would tune my heart to Your frequency. Speak through the stillness."}
                                 <cite style={{ display: 'block', marginTop: '1em', fontStyle: 'normal', fontFamily: 'var(--sans-ui, "Inter Tight", -apple-system, sans-serif)', fontSize: '11px', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--crimson, #8E1B1B)' }}>Amen</cite>
                             </blockquote>
                         </div>
@@ -142,7 +186,7 @@ const StepContent: React.FC<{ stepIndex: number; onComplete: () => void; devotio
                 );
             case 2:
                 return (
-                    <div style={{ background: 'var(--bg-paper, #F6EFE1)', borderRadius: '1rem', padding: '2rem', boxShadow: 'var(--sh-card, 0 1px 2px rgba(42,28,21,.06), 0 8px 24px rgba(42,28,21,.05))' }}>
+                    <div className="p-5 sm:p-8 rounded-2xl shadow-sm" style={{ background: 'var(--bg-paper, #F6EFE1)' }}>
                         <p style={{ fontFamily: 'var(--sans-ui, "Inter Tight", -apple-system, sans-serif)', fontSize: '12px', fontWeight: 700, letterSpacing: '0.10em', textTransform: 'uppercase', color: 'var(--crimson, #8E1B1B)', marginBottom: '0.5rem', textAlign: 'center' }}>Step 2</p>
                         <h2 style={{ fontFamily: 'var(--serif-display, "Cormorant Garamond", "Didot", Georgia, serif)', fontWeight: 600, fontSize: '1.75rem', lineHeight: 1.2, color: 'var(--fg-1, #2A1C15)', marginBottom: '1.5rem', textAlign: 'center' }}>Today's Reflection</h2>
                         {devotional ? (
@@ -270,19 +314,24 @@ const StepContent: React.FC<{ stepIndex: number; onComplete: () => void; devotio
                      <div style={{ paddingTop: '2.5rem', paddingBottom: '2.5rem', maxWidth: '42rem', margin: '0 auto' }}>
                         <p style={{ fontFamily: 'var(--sans-ui, "Inter Tight", -apple-system, sans-serif)', fontSize: '12px', fontWeight: 700, letterSpacing: '0.10em', textTransform: 'uppercase', color: 'var(--crimson, #8E1B1B)', marginBottom: '1.5rem', textAlign: 'center' }}>Daily Declaration</p>
                         <blockquote style={{ fontFamily: 'var(--serif-display, "Cormorant Garamond", "Didot", Georgia, serif)', fontStyle: 'italic', fontSize: '21px', lineHeight: 1.6, textAlign: 'center', maxWidth: '440px', margin: '0 auto', color: 'var(--fg-1, #2A1C15)' }}>
-                            I am not a slave to fear. I am a child of God. His peace, which surpasses understanding, guards my mind and my heart today.
+                            {devotional?.declaration || "I am not a slave to fear. I am a child of God. His peace, which surpasses understanding, guards my mind and my heart today."}
                             <cite style={{ display: 'block', marginTop: '1em', fontStyle: 'normal', fontFamily: 'var(--sans-ui, "Inter Tight", -apple-system, sans-serif)', fontSize: '11px', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--crimson, #8E1B1B)' }}>Speak it aloud. Receive it.</cite>
                         </blockquote>
                     </div>
                 );
-            case 6:
+            case 6: {
+                const furtherStudyStr = devotional?.furtherStudy;
+                const furtherStudyRefs = furtherStudyStr
+                    ? furtherStudyStr.split(',').map(r => r.trim()).filter(Boolean)
+                    : FURTHER_STUDY_REFS;
+
                 return (
                      <div>
                         <p style={{ fontFamily: 'var(--sans-ui, "Inter Tight", -apple-system, sans-serif)', fontSize: '12px', fontWeight: 700, letterSpacing: '0.10em', textTransform: 'uppercase', color: 'var(--crimson, #8E1B1B)', marginBottom: '0.5rem' }}>Step 6</p>
                         <h2 style={{ fontFamily: 'var(--serif-display, "Cormorant Garamond", "Didot", Georgia, serif)', fontWeight: 600, fontSize: '1.75rem', lineHeight: 1.2, color: 'var(--fg-1, #2A1C15)', marginBottom: '1.5rem' }}>For Further Study</h2>
                         <p style={{ fontFamily: 'var(--serif-body, "EB Garamond", "Garamond", Georgia, serif)', fontSize: '18px', lineHeight: 1.75, color: 'var(--fg-2, #5B4A3C)', marginBottom: '1.5rem' }}>Click a verse to read it instantly in your sanctuary. Tap "Study" to go deeper.</p>
                          <div className="grid gap-3">
-                            {FURTHER_STUDY_REFS.map(ref => (
+                            {furtherStudyRefs.map(ref => (
                                 <div
                                     key={ref}
                                     className="p-5 bg-brand-secondary/50 rounded-2xl border border-brand-border flex items-center justify-between gap-4 group hover:border-brand-accent transition-all"
@@ -295,7 +344,7 @@ const StepContent: React.FC<{ stepIndex: number; onComplete: () => void; devotio
                                     </button>
                                     <div className="flex items-center gap-2 flex-shrink-0">
                                         <button
-                                            onClick={() => openStudy(ref, FURTHER_STUDY_TEXTS[ref] ?? '')}
+                                            onClick={() => handleOpenStudy(ref)}
                                             className="px-3 py-1.5 rounded-lg border border-brand-accent/40 text-brand-accent text-xs font-bold hover:bg-brand-accent/10 transition-all"
                                             style={{ fontFamily: 'var(--sans-ui, "Inter Tight", -apple-system, sans-serif)' }}
                                         >
@@ -309,6 +358,7 @@ const StepContent: React.FC<{ stepIndex: number; onComplete: () => void; devotio
                         {activeSnippet && <ScriptureSnippetModal reference={activeSnippet} onClose={() => setActiveSnippet(null)} />}
                     </div>
                 );
+            }
             case 7:
                  return (
                     <div className="text-center py-12">
@@ -318,6 +368,15 @@ const StepContent: React.FC<{ stepIndex: number; onComplete: () => void; devotio
                         </div>
                         <h2 style={{ fontFamily: 'var(--serif-display, "Cormorant Garamond", "Didot", Georgia, serif)', fontWeight: 600, fontSize: '1.75rem', lineHeight: 1.2, color: 'var(--fg-1, #2A1C15)', marginBottom: '0.5rem' }}>Well done. You showed up.</h2>
                         <p style={{ fontFamily: 'var(--serif-body, "EB Garamond", "Garamond", Georgia, serif)', fontSize: '18px', lineHeight: 1.75, color: 'var(--fg-2, #5B4A3C)', marginBottom: '1.5rem' }}>You have set a firm foundation for your day. Go in peace and power.</p>
+                        <div className="flex justify-center mb-8">
+                            <button
+                                onClick={() => setShareCompletionOpen(true)}
+                                className="bg-brand-accent hover:opacity-90 active:scale-95 text-white font-bold text-sm px-6 py-3 rounded-xl transition-all shadow-md flex items-center gap-2"
+                                style={{ fontFamily: 'var(--sans-ui, "Inter Tight", -apple-system, sans-serif)' }}
+                            >
+                                <Share2 className="w-4 h-4" /> Share Completion Card
+                            </button>
+                        </div>
                         <div className="max-w-xs mx-auto">
                             <ManuscriptQuote
                                 quote="Faithfulness matters more than flash."
@@ -333,7 +392,7 @@ const StepContent: React.FC<{ stepIndex: number; onComplete: () => void; devotio
     
     return (
         <>
-            <Card className="relative flex flex-col items-center justify-center overflow-hidden p-10 min-h-[35rem]" style={{ background: 'var(--bg-card, #FBF6EA)', boxShadow: 'var(--sh-card, 0 1px 2px rgba(42,28,21,.06), 0 8px 24px rgba(42,28,21,.05))' }}>
+            <Card className="relative flex flex-col items-center justify-center overflow-hidden p-6 sm:p-10 min-h-[30rem] sm:min-h-[35rem]" style={{ background: 'var(--bg-card, #FBF6EA)', boxShadow: 'var(--sh-card, 0 1px 2px rgba(42,28,21,.06), 0 8px 24px rgba(42,28,21,.05))' }}>
                 {/* Ambient inner glow */}
                 <div
                     className="pointer-events-none absolute inset-x-0 -top-24 h-64 opacity-10"
@@ -376,6 +435,16 @@ const StepContent: React.FC<{ stepIndex: number; onComplete: () => void; devotio
                 passageText={studyText}
                 isOpen={isStudyOpen}
                 onClose={() => setIsStudyOpen(false)}
+            />
+
+            {/* Share Card Modal */}
+            <ShareCardModal
+                isOpen={shareCompletionOpen}
+                onClose={() => setShareCompletionOpen(false)}
+                title="Sanctuary Encounter"
+                text={`I completed my Daily Devotional Journey: "${devotional?.title || 'Daily Sanctuary Walk'}" on CCN Daily.`}
+                author={devotional?.author || "CCN Daily"}
+                type="completion"
             />
         </>
     );
@@ -451,7 +520,7 @@ const GuidedJourneyPage: React.FC = () => {
     const progressPct = (currentStep / (journeySteps.length - 1)) * 100;
 
     return (
-        <div className="max-w-5xl mx-auto pb-20">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 pb-20">
 
             {/* Header */}
             <motion.div
@@ -494,9 +563,9 @@ const GuidedJourneyPage: React.FC = () => {
                                         boxShadow: isCurrent ? '0 0 18px rgb(242 125 38 / 0.45)' : '0 0 0px transparent',
                                     }}
                                     transition={{ duration: 0.35, ease: STEP_EASE }}
-                                    className={`flex flex-shrink-0 items-center justify-center w-10 h-10 rounded-full ${isCurrent ? 'bg-brand-accent text-white' : isCompleted ? 'bg-brand-accent/60 text-white' : 'bg-brand-secondary text-brand-text-secondary border border-brand-border'}`}
+                                    className={`flex flex-shrink-0 items-center justify-center w-7 h-7 sm:w-10 sm:h-10 rounded-full ${isCurrent ? 'bg-brand-accent text-white' : isCompleted ? 'bg-brand-accent/60 text-white' : 'bg-brand-secondary text-brand-text-secondary border border-brand-border'}`}
                                 >
-                                    {isCompleted ? <CheckIcon className="w-5 h-5" /> : <step.icon className="w-5 h-5" />}
+                                    {isCompleted ? <CheckIcon className="w-3.5 h-3.5 sm:w-5 sm:h-5" /> : <step.icon className="w-3.5 h-3.5 sm:w-5 sm:h-5" />}
                                 </motion.div>
                             </li>
                         );

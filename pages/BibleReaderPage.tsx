@@ -8,6 +8,7 @@ import Card from '../components/Card';
 import ContentDisplay from '../components/reader/ContentDisplay';
 import BibleStudyGuide from '../components/BibleStudyGuide';
 import ScriptureStudyCompanion from '../components/ScriptureStudyCompanion';
+import ShareCardModal from '../components/ShareCardModal';
 import { getBibleBooks, getChapterText, searchBible, type TranslationCode } from '../services/bibleService';
 import type { BibleBook, BibleSearchResult } from '../types';
 import { ChevronDownIcon, SpinnerIcon, SearchIcon, CloseIcon } from '../components/icons';
@@ -45,6 +46,7 @@ const BibleReaderPage: React.FC = () => {
   // Verse selection → quick study
   const [selectedVerse, setSelectedVerse] = useState<string | null>(null);
   const [studyOpen, setStudyOpen] = useState(false);
+  const [shareCardOpen, setShareCardOpen] = useState(false);
 
   // Reading progress
   const [readProgress, setReadProgress] = useState(0);
@@ -537,7 +539,7 @@ const BibleReaderPage: React.FC = () => {
       <AnimatePresence>
         {selectedVerse && (
           <motion.div
-            className="fixed bottom-24 left-1/2 -translate-x-1/2 z-40 flex gap-2 bg-brand-dark border border-brand-border rounded-full px-4 py-2 shadow-xl"
+            className="fixed bottom-24 left-1/2 -translate-x-1/2 z-40 flex items-center gap-3 bg-brand-dark border border-brand-border rounded-full px-5 py-2.5 shadow-xl"
             initial={{ opacity: 0, y: 12, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 8, scale: 0.95 }}
@@ -545,20 +547,27 @@ const BibleReaderPage: React.FC = () => {
           >
             <button
               onClick={handleHighlight}
-              className="text-sm text-brand-accent font-semibold hover:opacity-80 transition-opacity"
+              className="text-xs text-brand-accent font-bold uppercase tracking-wider hover:opacity-80 transition-opacity"
             >
               ✦ Highlight
             </button>
             <span className="text-brand-border select-none">|</span>
             <button
-              onClick={() => setStudyOpen(true)}
-              className="text-sm text-brand-text-primary font-semibold hover:text-brand-accent transition-colors"
+              onClick={() => setShareCardOpen(true)}
+              className="text-xs text-brand-text-primary font-bold uppercase tracking-wider hover:text-brand-accent transition-colors"
             >
-              Study this →
+              Share Card
+            </button>
+            <span className="text-brand-border select-none">|</span>
+            <button
+              onClick={() => setStudyOpen(true)}
+              className="text-xs text-brand-text-primary font-bold uppercase tracking-wider hover:text-brand-accent transition-colors"
+            >
+              Study
             </button>
             <button
               onClick={() => setSelectedVerse(null)}
-              className="text-sm text-brand-text-secondary ml-2 hover:text-brand-text-primary transition-colors"
+              className="text-xs text-brand-text-secondary ml-1 hover:text-brand-text-primary transition-colors"
               aria-label="Dismiss"
             >
               ✕
@@ -573,6 +582,16 @@ const BibleReaderPage: React.FC = () => {
         passageText={selectedVerse ?? ''}
         isOpen={studyOpen}
         onClose={() => { setStudyOpen(false); setSelectedVerse(null); }}
+      />
+
+      {/* Share Card Modal */}
+      <ShareCardModal
+        isOpen={shareCardOpen}
+        onClose={() => setShareCardOpen(false)}
+        title="Scripture Study"
+        text={selectedVerse ?? ''}
+        author={`${currentPassageString} (${translation.toUpperCase()})`}
+        type="scripture"
       />
     </div>
   );
