@@ -46,8 +46,8 @@ const CoursesPage: React.FC = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
       >
-        <p className="text-xs font-bold uppercase tracking-widest text-brand-accent mb-2">LEARN</p>
-        <h1 className="text-3xl sm:text-4xl font-black text-brand-text-primary mb-2" style={{ fontFamily: 'var(--font-display)' }}>
+        <p className="ds-eyebrow text-amber-ds mb-2">LEARN</p>
+        <h1 className="ds-display text-3xl sm:text-4xl font-black text-brand-text-primary mb-2">
           Courses
         </h1>
         <p className="text-brand-text-secondary">Structured paths to grow in faith, Scripture, and spiritual practice.</p>
@@ -67,7 +67,7 @@ const CoursesPage: React.FC = () => {
             <motion.div key={course.id} variants={fadeUp} transition={{ duration: 0.5, ease: EASE }}>
             <Card
               onClick={() => handleOpenCourse(course)}
-              className="flex flex-col border-brand-border bg-brand-dark/30 overflow-hidden p-0 group cursor-pointer hover:border-brand-accent/50 transition-colors h-full"
+              className="flex flex-col border-brand-border/15 bg-brand-dark/20 overflow-hidden p-0 group cursor-pointer hover:border-brand-accent/50 transition-colors h-full"
             >
               <div className="relative h-48 w-full bg-brand-secondary flex items-center justify-center overflow-hidden">
                 {course.coverUrl ? (
@@ -75,19 +75,19 @@ const CoursesPage: React.FC = () => {
                 ) : (
                   <GraduationCap className="w-16 h-16 text-brand-text-secondary/50" />
                 )}
-                <div className="absolute top-4 right-4 bg-brand-dark/80 backdrop-blur-sm px-3 py-1 rounded-full border border-brand-border/50 text-xs font-bold text-brand-text-primary">
+                <div className="absolute top-4 right-4 bg-brand-dark/80 backdrop-blur-sm px-3 py-1 rounded-full border border-brand-border/15 text-xs font-bold text-brand-text-primary">
                   {course.moduleCount || 0} Modules
                 </div>
               </div>
               
               <div className="p-6 flex flex-col flex-1">
-                <h3 className="text-xl font-bold text-brand-text-primary mb-2 line-clamp-2 group-hover:text-brand-accent transition-colors">{course.title}</h3>
+                <h3 className="font-display text-xl font-bold text-brand-text-primary mb-2 line-clamp-2 group-hover:text-brand-accent transition-colors">{course.title}</h3>
                 <p className="text-brand-text-secondary text-sm mb-4">By {course.instructor || 'Guest Instructor'}</p>
                 <p className="text-brand-text-secondary text-sm mb-6 flex-1 line-clamp-3">
                   {course.description}
                 </p>
                 
-                <div className="mt-auto pt-4 border-t border-brand-border flex items-center justify-between">
+                <div className="mt-auto pt-4 border-t border-brand-border/15 flex items-center justify-between">
                   {course.isPremium ? (
                     <span className="text-xs font-bold text-brand-accent uppercase tracking-wider">Premium</span>
                   ) : (
@@ -107,7 +107,7 @@ const CoursesPage: React.FC = () => {
           ))}
         </motion.div>
       ) : (
-        <Card className="text-center py-20 border-brand-border border-dashed bg-transparent">
+        <Card className="text-center py-20 border-brand-border/15 border-dashed bg-transparent">
           <GraduationCap className="w-12 h-12 text-brand-text-secondary mx-auto mb-4" />
           <h3 className="text-xl font-bold text-brand-text-primary mb-2">No courses available yet</h3>
           <p className="text-brand-text-secondary" style={{ fontFamily: 'var(--serif-body)', lineHeight: 1.65 }}>

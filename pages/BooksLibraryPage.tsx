@@ -44,16 +44,10 @@ const BooksLibraryPage: React.FC = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: EASE }}
       >
-        <p
-          className="text-xs font-bold uppercase tracking-widest mb-2"
-          style={{ fontFamily: 'var(--sans-ui)', color: 'var(--ember, #C23B1E)' }}
-        >
+        <p className="ds-eyebrow text-ember mb-2">
           Read
         </p>
-        <h1
-          className="text-3xl sm:text-4xl font-black text-brand-text-primary mb-2"
-          style={{ fontFamily: 'var(--serif-display)' }}
-        >
+        <h1 className="ds-display text-3xl sm:text-4xl font-black text-brand-text-primary mb-2">
           Books &amp; Library
         </h1>
         <p className="text-brand-text-secondary">
@@ -62,7 +56,7 @@ const BooksLibraryPage: React.FC = () => {
       </motion.div>
 
       {/* Filter tabs */}
-      <div className="flex gap-1 mb-6 border-b border-brand-border">
+      <div className="flex gap-1 mb-6 border-b border-brand-border/15">
         {(['all', 'ebook', 'audiobook', 'print'] as const).map(f => (
           <button
             key={f}
@@ -127,10 +121,7 @@ const BooksLibraryPage: React.FC = () => {
 
               {/* Info */}
               <div className="flex flex-col flex-1 p-4">
-                <h3
-                  className="font-bold text-brand-text-primary leading-snug mb-0.5"
-                  style={{ fontFamily: 'var(--serif-display)' }}
-                >
+                <h3 className="font-display font-bold text-brand-text-primary leading-snug mb-0.5">
                   {book.title}
                 </h3>
                 {book.subtitle && (
@@ -143,12 +134,7 @@ const BooksLibraryPage: React.FC = () => {
                 {/* CTA */}
                 <Link
                   to={`/book/${book.id}`}
-                  className="flex items-center justify-between gap-2 px-4 py-2.5 rounded-xl font-semibold text-sm transition-all"
-                  style={{
-                    background: 'var(--ember, #C23B1E)18',
-                    color: 'var(--ember, #C23B1E)',
-                    border: '1px solid var(--ember, #C23B1E)33',
-                  }}
+                  className="flex items-center justify-between gap-2 px-4 py-2.5 rounded-xl font-semibold text-sm transition-all bg-ember/10 text-ember border border-ember/20 hover:bg-ember/20 hover:border-ember/30"
                 >
                   <span>Open Book</span>
                   <ChevronRight className="w-4 h-4" />

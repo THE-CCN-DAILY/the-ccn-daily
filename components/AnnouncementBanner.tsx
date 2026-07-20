@@ -69,7 +69,7 @@ const AnnouncementBanner = () => {
         transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
         className="relative mb-6 overflow-hidden rounded-2xl border"
         style={{
-          borderColor: `color-mix(in srgb, ${theme.seed} 35%, transparent)`,
+          borderColor: `color-mix(in srgb, ${theme.seed} 15%, transparent)`,
           background: `linear-gradient(135deg, color-mix(in srgb, ${theme.seed} 14%, var(--bg-card)) 0%, var(--bg-card) 70%)`,
           boxShadow: 'var(--sh-card)',
         }}

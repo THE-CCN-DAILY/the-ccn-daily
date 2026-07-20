@@ -76,14 +76,14 @@ const ChallengesPage: React.FC = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.42, ease: EASE }}
       >
-        <p style={{ fontFamily: 'var(--sans-ui)', fontSize: '12px', fontWeight: 700, letterSpacing: '0.10em', textTransform: 'uppercase', color: '#E87A2C' }} className="mb-2">Community</p>
-        <h1 className="text-3xl sm:text-4xl text-brand-text-primary mb-2" style={{ fontFamily: 'var(--serif-display, var(--font-display))', fontWeight: 600, lineHeight: 1.2 }}>
+        <p className="ds-eyebrow text-amber-ds mb-2">Community</p>
+        <h1 className="ds-display text-3xl sm:text-4xl text-brand-text-primary mb-2">
           Challenges
         </h1>
         <p style={{ fontFamily: 'var(--serif-body)', fontSize: '18px', lineHeight: 1.65, color: 'var(--fg-2, #5B4A3C)' }}>Step into growth together — Scripture readings, prayer streaks, and community milestones.</p>
       </motion.div>
 
-      <div className="flex gap-4 mb-8 border-b border-brand-border pb-2">
+      <div className="flex gap-4 mb-8 border-b border-brand-border/15 pb-2">
         <button
           onClick={() => setActiveTab('active')}
           className={`px-6 py-2 rounded-full text-sm font-bold transition-colors ${
@@ -122,16 +122,15 @@ const ChallengesPage: React.FC = () => {
           {displayChallenges.map((challenge) => (
             <motion.div key={challenge.id} variants={fadeUp} transition={{ duration: 0.42, ease: EASE }}>
             <Card
-              className="flex flex-col overflow-hidden p-0 cursor-pointer transition-colors group h-full"
-              style={{ background: 'var(--bg-card, #FBF6EA)', boxShadow: 'var(--sh-card, 0 1px 2px rgba(42,28,21,.06), 0 8px 24px rgba(42,28,21,.05))', borderRadius: '6px', borderTop: '2px solid #E87A2C' }}
+              className="ds-card border-t-2 border-amber-ds flex flex-col overflow-hidden p-0 cursor-pointer transition-colors group h-full"
               onClick={() => navigate(`/challenges/${challenge.id}`)}
             >
               <div className="relative h-48 w-full bg-brand-secondary flex items-center justify-center overflow-hidden">
                 {challenge.coverUrl ? (
                   <img src={challenge.coverUrl} alt={challenge.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" referrerPolicy="no-referrer" />
                 ) : (
-                  <div className="w-16 h-16 rounded-full flex items-center justify-center" style={{ background: 'var(--crimson, #8E1B1B)18', border: '1px solid var(--crimson, #8E1B1B)33' }}>
-                    <Target className="w-8 h-8" style={{ color: 'var(--crimson, #8E1B1B)' }} />
+                  <div className="w-16 h-16 rounded-full flex items-center justify-center bg-crimson/10 border border-crimson/20">
+                    <Target className="w-8 h-8 text-crimson" />
                   </div>
                 )}
               </div>
@@ -152,12 +151,12 @@ const ChallengesPage: React.FC = () => {
                   )}
                 </div>
                 <div className="flex justify-between items-start mb-4">
-                  <h3 className="text-xl group-hover:text-brand-accent transition-colors" style={{ fontFamily: 'var(--serif-display, var(--font-display))', fontWeight: 600, color: 'var(--fg-1, #2A1C15)' }}>{challenge.title}</h3>
+                  <h3 className="font-display text-brand-text-primary text-xl group-hover:text-brand-accent transition-colors">{challenge.title}</h3>
                 </div>
                 <p className="mb-6 flex-1 line-clamp-3" style={{ fontFamily: 'var(--serif-body)', lineHeight: 1.65, color: 'var(--fg-2, #5B4A3C)' }}>
                   {challenge.description}
                 </p>
-                <div className="flex items-center justify-between mt-auto pt-4 border-t border-brand-border">
+                <div className="flex items-center justify-between mt-auto pt-4 border-t border-brand-border/15">
                   <div className="flex items-center text-sm" style={{ fontFamily: 'var(--sans-ui)', color: 'var(--fg-3, #8A7A6A)' }}>
                     <TeamIcon className="w-4 h-4 mr-2" />
                     {challenge.participantsCount} joined
@@ -173,11 +172,11 @@ const ChallengesPage: React.FC = () => {
         </motion.div>
         </AnimatePresence>
       ) : (
-        <Card className="text-center py-20 border-brand-border border-dashed bg-transparent">
-          <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style={{ background: 'var(--crimson, #8E1B1B)18', border: '1px solid var(--crimson, #8E1B1B)33' }}>
-            <Flame className="w-8 h-8" style={{ color: 'var(--crimson, #8E1B1B)' }} />
+        <Card className="text-center py-20 border-brand-border/15 border-dashed bg-transparent">
+          <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 bg-crimson/10 border border-crimson/20">
+            <Flame className="w-8 h-8 text-crimson" />
           </div>
-          <h3 className="text-xl mb-2" style={{ fontFamily: 'var(--serif-display, var(--font-display))', fontWeight: 600, color: 'var(--fg-1, #2A1C15)' }}>No {activeTab} challenges</h3>
+          <h3 className="font-display text-brand-text-primary text-xl mb-2">No {activeTab} challenges</h3>
           <p style={{ fontFamily: 'var(--serif-body)', lineHeight: 1.65, color: 'var(--fg-2, #5B4A3C)' }}>
             {activeTab === 'active'
               ? "No active challenges — a new one is on the way."

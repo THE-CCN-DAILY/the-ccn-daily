@@ -156,13 +156,13 @@ const BibleReaderPage: React.FC = () => {
     : [];
 
   const selectClass =
-    'w-full appearance-none bg-brand-secondary border border-brand-border rounded-xl py-2.5 px-3 text-sm text-brand-text-primary focus:outline-none focus:ring-2 focus:ring-brand-accent transition-colors';
+    'w-full appearance-none bg-brand-secondary border border-brand-border/15 rounded-xl py-2.5 px-3 text-sm text-brand-text-primary focus:outline-none focus:ring-2 focus:ring-brand-accent transition-colors';
 
   const fontSizeButtonClass = (size: FontSize) =>
     `px-2 py-1 rounded font-bold transition-colors ${
       fontSize === size
         ? 'bg-brand-accent text-white'
-        : 'bg-brand-secondary text-brand-text-secondary hover:text-brand-text-primary border border-brand-border'
+        : 'bg-brand-secondary text-brand-text-secondary hover:text-brand-text-primary border border-brand-border/15'
     }`;
 
   return (
@@ -186,8 +186,7 @@ const BibleReaderPage: React.FC = () => {
         </motion.p>
         <div className="flex items-center justify-between gap-3">
           <motion.h1
-            className="text-3xl md:text-4xl font-black text-brand-text-primary"
-            style={{ fontFamily: 'var(--font-display)' }}
+            className="ds-display text-3xl md:text-4xl font-black text-brand-text-primary"
             initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, ease: EASE }}
           >
@@ -228,7 +227,7 @@ const BibleReaderPage: React.FC = () => {
               className={`flex items-center gap-2 text-sm font-bold px-4 py-2 rounded-full transition-colors ${
                 studyGuideOpen
                   ? 'bg-brand-accent text-white'
-                  : 'bg-brand-secondary border border-brand-border text-brand-text-secondary hover:text-brand-accent'
+                  : 'bg-brand-secondary border border-brand-border/15 text-brand-text-secondary hover:text-brand-accent'
               }`}
             >
               <ScrollText className="w-4 h-4" />
@@ -337,7 +336,7 @@ const BibleReaderPage: React.FC = () => {
                 </div>
 
                 {/* Search */}
-                <div className="pt-4 border-t border-brand-border space-y-3">
+                <div className="pt-4 border-t border-brand-border/15 space-y-3">
                   <h2 className="text-xs font-bold uppercase tracking-widest text-brand-text-secondary">Search Scripture</h2>
                   <form onSubmit={handleSearch} className="space-y-3">
                     <input
@@ -345,7 +344,7 @@ const BibleReaderPage: React.FC = () => {
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       placeholder="John 3:16 or keyword…"
-                      className="w-full bg-brand-secondary border border-brand-border rounded-xl py-2.5 px-3 text-sm text-brand-text-primary focus:outline-none focus:ring-2 focus:ring-brand-accent"
+                      className="w-full bg-brand-secondary border border-brand-border/15 rounded-xl py-2.5 px-3 text-sm text-brand-text-primary focus:outline-none focus:ring-2 focus:ring-brand-accent"
                     />
                     <div className="relative">
                       <select
@@ -432,7 +431,7 @@ const BibleReaderPage: React.FC = () => {
                           <div
                             key={index}
                             onClick={() => handleResultClick(result)}
-                            className="cursor-pointer rounded-xl border border-brand-border p-4 hover:border-brand-accent hover:bg-brand-accent/5 transition-all"
+                            className="cursor-pointer rounded-xl border border-brand-border/15 p-4 hover:border-brand-accent hover:bg-brand-accent/5 transition-all"
                           >
                             <h4 className="font-bold text-brand-text-primary text-sm mb-1">
                               {result.book} {result.chapter}
@@ -539,7 +538,7 @@ const BibleReaderPage: React.FC = () => {
       <AnimatePresence>
         {selectedVerse && (
           <motion.div
-            className="fixed bottom-24 left-1/2 -translate-x-1/2 z-40 flex items-center gap-3 bg-brand-dark border border-brand-border rounded-full px-5 py-2.5 shadow-xl"
+            className="fixed bottom-24 left-1/2 -translate-x-1/2 z-40 flex items-center gap-3 bg-brand-dark border border-brand-border/15 rounded-full px-5 py-2.5 shadow-xl"
             initial={{ opacity: 0, y: 12, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 8, scale: 0.95 }}

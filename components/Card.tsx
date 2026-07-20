@@ -11,14 +11,14 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(({ children, className 
   const cardStyle: React.CSSProperties = {
     // Default to global variables, but allow reader-specific variables to override
     backgroundColor: `var(--reader-bg, var(--bg-card))`,
-    borderColor: `rgb(var(--reader-border, var(--color-brand-border)))`,
+    borderColor: 'rgba(var(--border-raw), 0.15)',
     // Inner top highlight simulates ambient light from above — depth without heavy shadow
     boxShadow: 'var(--sh-card, var(--card-shine))',
   };
 
   return (
     // FIX: Spread the rest of the props onto the div.
-    <div ref={ref} {...props} style={{ ...cardStyle, ...props.style }} className={`rounded-lg border p-6 ${className}`}>
+    <div ref={ref} {...props} style={{ ...cardStyle, ...props.style }} className={`rounded-lg border border-brand-border/15 p-6 ${className}`}>
       {children}
     </div>
   );

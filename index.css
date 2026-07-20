@@ -154,6 +154,7 @@
   --color-crimson: #8E1B1B;
   --color-crimson-deep: #5E0F0F;
   --color-ember: #C23B1E;
+  --color-amber-ds: var(--amber-ds);
   --color-gold-ds: #B7892E;
   --color-sage: #6B7A5A;
 
