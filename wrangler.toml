@@ -12,7 +12,7 @@ ADMIN_EMAIL = "pastor.eryeza@gmail.com"
 # Flutterwave PUBLISHABLE public key — safe to commit (it ships in every client
 # checkout). The SECRET key (FLWSECK) and webhook hash are wrangler secrets, never here.
 # Returned by /api/payments/intent so the client uses one authoritative key.
-FLUTTERWAVE_PUBLIC_KEY = "FLWPUBK-11618c011d36777393259ef9581bce5f-X"
+FLUTTERWAVE_PUBLIC_KEY = "FLWPUBK-a26bb13d8888c5e65e81359aae2df53c-X"
 # Cloudflare Turnstile (bot protection on public forms) — REST API, no binding.
 #   Create a widget at dash.cloudflare.com → Turnstile, then:
 #     wrangler pages secret put TURNSTILE_SECRET_KEY   # server-side siteverify secret
